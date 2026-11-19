@@ -251,10 +251,10 @@ function createPen(name) {
       emit(pathData(gen.linearPath(placed, hand(seed, o, { preserveVertices: true })), { join: true }), o);
     },
 
-    /** One smooth stroke through the points. */
+    /** One smooth stroke through the points. `tight` (0–1) pulls it towards straight lines between them. */
     curve(points, o = {}) {
       const seed = nextSeed(o.salt);
-      emit(pathData(gen.curve(points.map(place), hand(seed, { rough: 0.45, ...o }))), o);
+      emit(pathData(gen.curve(points.map(place), hand(seed, { rough: 0.45, ...o }, { curveTightness: o.tight ?? 0 }))), o);
     },
 
     /** Part of a circle or an ellipse (`r` or [rx, ry]); angles in degrees, clockwise on screen from the x axis. */
@@ -430,18 +430,18 @@ sketch('journey', 360, 140, (p) => {
   p.dashed([92, 84], [76, G], dash);
   p.line([22, G + 1.5], [22, 91]);
   p.line([76, G + 1.5], [76, 91]);
-  p.line([38, 85.5], [38, 77]);
-  p.line([92, 85.5], [92, 58]);
+  p.line([92, 85.5], [92, 77]);
+  p.line([38, 85.5], [38, 58]);
   p.poly([
-    [92, 59],
-    [105.5, 63.5],
-    [92, 68.5],
+    [38, 59],
+    [51.5, 63.5],
+    [38, 68.5],
   ]);
 
   p.part('frame');
-  p.line([126, G], [126, 66], { over: [0, 1.6] });
-  p.line([144, G], [144, 66], { over: [0, 1.6] });
-  p.line([162, G], [162, 78]);
+  p.line([126, G], [126, 66], { over: [0, 1.6], rough: 0.5 });
+  p.line([144, G], [144, 66], { over: [0, 1.6], rough: 0.5 });
+  p.line([162, G], [162, 78], { rough: 0.5 });
   p.line([126, 83], [162, 83], { over: 1.4 });
   p.line([126, 66], [144, 66], { over: 1.4 });
 
@@ -912,7 +912,7 @@ sketch('contract', 240, 160, (p) => {
     });
 
     p.part('seal');
-    p.circle([80, 113], 13, { accent: true });
+    p.circle([80, 113], 13, { accent: true, tail: 34 });
     p.circle([80, 113], 8.2, { accent: true });
   });
 });
@@ -1047,15 +1047,17 @@ sketch('tools', 240, 160, (p) => {
 
 sketch('allclear', 240, 160, (p) => {
   const H = 100;
-  const sun = [120, 94];
+  const sun = [120, 106];
+  const R = 42;
+  const dip = Math.asin((sun[1] - H) / R) / RAD; // where the sun meets the horizon
   p.part('horizon');
   p.line([14, H], [226, H]);
 
   p.part('sun');
-  p.arc(sun, 40, 171.4, 368.6);
+  p.arc(sun, R, 180 + dip, 360 - dip);
   for (const a of [-150, -120, -90, -60, -30]) {
     const [x, y] = [Math.cos(a * RAD), Math.sin(a * RAD)];
-    p.line([sun[0] + x * 48.5, sun[1] + y * 48.5], [sun[0] + x * 57, sun[1] + y * 57]);
+    p.line([sun[0] + x * (R + 8.5), sun[1] + y * (R + 8.5)], [sun[0] + x * (R + 17), sun[1] + y * (R + 17)]);
   }
 
   p.part('haze');
@@ -1066,9 +1068,9 @@ sketch('allclear', 240, 160, (p) => {
   p.part('tick');
   p.poly(
     [
-      [104, 80],
+      [104.5, 80.5],
       [115.5, 91.5],
-      [137, 66.5],
+      [135.5, 68.5],
     ],
     { accent: true, loose: 0.2 },
   );
@@ -1105,7 +1107,6 @@ sketch('search', 240, 160, (p) => {
       [30.5, 3.2],
     ]);
   });
-  p.arc([149.5, 83.5], 24.5, 112, 150);
 
   p.part('found');
   p.at(tilt, () => plot(128, 74, { accent: true }));
@@ -1216,26 +1217,28 @@ sketch('handover', 240, 160, (p) => {
     { pegs: [11, 10, 8, 10], dash: 8, gap: 5.5 },
   );
 
+  // A tag on a string, as keys are handed over.
   p.part('tag');
   p.curve(
     [
-      [66.5, 43],
-      [62.5, 51],
-      [61.5, 60.5],
+      [66.5, 42.5],
+      [62.5, 50],
+      [61.3, 58.5],
     ],
     { rough: 0.15 },
   );
   p.poly(
     [
-      [57.5, 60],
-      [66, 61],
-      [68.5, 64.5],
-      [66.5, 82],
-      [54, 80.5],
-      [56, 63],
+      [54.5, 62.5],
+      [58.5, 58],
+      [64.5, 58.7],
+      [67.5, 63.8],
+      [65.5, 83],
+      [52.5, 81.5],
     ],
     { close: true, loose: 0.3 },
   );
+  p.circle([61, 64.5], 1.5);
 
   p.part('key');
   p.at({ move: [72, 38], rotate: 15 }, () => {
@@ -1269,9 +1272,10 @@ sketch('map', 240, 160, (p) => {
   const ring = [...source.path.matchAll(/[ML]([\d.]+) ([\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])]);
   const scale = 128 / source.viewBox[3];
   const left = 120 - (source.viewBox[2] * scale) / 2;
-  const coast = simplifyRing(ring, 2.6).map(([x, y]) => [left + x * scale, 16 + y * scale]);
+  // Traced with a steady hand: enough of the coast to know the peninsula by, none of its fiddly inlets.
+  const coast = simplifyRing(ring, 3.2).map(([x, y]) => [left + x * scale, 16 + y * scale]);
   p.part('coast');
-  p.curve(coast, { rough: 0.3 });
+  p.curve(coast, { rough: 0.25, tight: 0.4 });
 
   p.part('sea');
   const wave = (x, y) =>
@@ -1299,30 +1303,48 @@ sketch('map', 240, 160, (p) => {
 
 sketch('shield', 240, 160, (p) => {
   const centre = [120, 104];
-  const RX = 58;
-  const RY = 66;
-  /** A line running over the shell from brim to crown, `k` of the way from the middle to the edge. */
-  const meridian = (k, heights) => heights.map((y) => [centre[0] + k * RX * Math.sqrt(1 - ((centre[1] - y) / RY) ** 2), y]);
+  const RX = 56;
+  const RY = 60;
+  /** A point on the shell: `k` of the way from the middle to the edge, at height `y`. */
+  const onShell = (k, y) => [centre[0] + k * RX * Math.sqrt(1 - ((centre[1] - y) / RY) ** 2), y];
 
+  // The shell stops either side of the raised rib that runs over the crown.
   p.part('shell');
-  p.arc(centre, [RX, RY], -180, 0, { step: 24 });
+  p.arc(centre, [RX, RY], 180, 260.5, { step: 24 });
+  p.arc(centre, [RX, RY], 279.5, 360, { step: 24 });
+  p.curve(
+    [
+      [109, 103],
+      [109.6, 82],
+      [110.3, 62],
+      [111, 47.5],
+      [113.4, 40.6],
+      [120, 38.8],
+      [126.6, 40.6],
+      [129, 47.5],
+      [129.7, 62],
+      [130.4, 82],
+      [131, 103],
+    ],
+    { rough: 0.15 },
+  );
+  p.curve([onShell(-0.6, 102), onShell(-0.6, 84), onShell(-0.6, 67)], { rough: 0.15 });
+  p.curve([onShell(0.6, 102), onShell(0.6, 84), onShell(0.6, 67)], { rough: 0.15 });
+
+  p.part('brim');
   p.poly(
     [
       [52, 104],
       [188, 104],
       ...arcPoints([188, 110], 6, -90, 90, 5).slice(1),
-      [160, 117.2],
-      [120, 117.8],
-      [80, 117.2],
+      [160, 117],
+      [120, 117.6],
+      [80, 117],
       [52, 116],
       ...arcPoints([52, 110], 6, 90, 270, 5).slice(1, -1),
     ],
     { close: true, loose: 0.2, rough: 0.5 },
   );
-  p.curve(meridian(-0.22, [103, 88, 73, 60, 50, 43.5]), { rough: 0.2 });
-  p.curve(meridian(0.22, [103, 88, 73, 60, 50, 43.5]), { rough: 0.2 });
-  p.curve(meridian(-0.6, [103, 88, 74, 62, 53]), { rough: 0.2 });
-  p.curve(meridian(0.6, [103, 88, 74, 62, 53]), { rough: 0.2 });
 
   p.part('ground');
   p.line([64, 134], [158, 134]);
@@ -1331,11 +1353,11 @@ sketch('shield', 240, 160, (p) => {
   p.part('badge');
   p.poly(
     [
-      [114, 76],
-      [126, 76],
-      [126, 83.5],
-      [120, 90],
-      [114, 83.5],
+      [114, 68],
+      [126, 68],
+      [126, 75.5],
+      [120, 82],
+      [114, 75.5],
     ],
     { accent: true, close: true, loose: 0.2 },
   );
@@ -1367,6 +1389,9 @@ export function renderModule(sketches) {
     '// Generated by scripts/build-sketches.mjs — do not edit by hand.',
     '// To change a drawing, edit the script and run: node scripts/build-sketches.mjs',
     "import type { SketchData } from './types';",
+    '',
+    "/** The pen's weight in viewBox units. A stroke carries its own `w` only when it differs. */",
+    `export const SKETCH_INK = ${INK};`,
     '',
     'export const SKETCHES = {',
     blocks.join('\n'),

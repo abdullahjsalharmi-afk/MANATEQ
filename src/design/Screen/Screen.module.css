@@ -169,3 +169,11 @@
   margin-inline: auto;
   padding: var(--s-3) var(--gutter) calc(var(--s-3) + var(--footer-safe, 0px));
 }
+
+/* On wide screens a full-width button would be absurdly long: keep it to a comfortable size. */
+@media (min-width: 960px) {
+  .content :global([data-block]),
+  .footerInner :global([data-block]) {
+    max-width: 420px;
+  }
+}

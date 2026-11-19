@@ -16,9 +16,12 @@
  *  3. Without a requested zone the check answers for every zone that fits. With one, it answers for
  *     that zone only; when it does not fit, the outcome says why and offers the zones and solutions
  *     that do.
- *  4. Where availability is known, a zone only counts when it has a free plot of the requested size.
+ *  4. Where availability is known, the request is eligible only if a zone that fits has a free plot of
+ *     the requested size; otherwise the outcome points to the zones that have one and to the alerts.
  *  5. Rent is the requested area × the published price of the solution. Warehousing has no published
  *     price: the park operators set it, and Manateq refers the investor to them.
+ *
+ * Nothing here is persisted or asynchronous: the same question always gets the same answer.
  */
 import { activities, getActivity, getSolution, getZone } from '@/data/catalog';
 import type { Activity, L10n, Lang, SolutionKey, Zone } from '@/data/types';
@@ -307,23 +310,46 @@ const GENERIC: ReadonlySet<string> = new Set(['شركه', 'موسسه', 'نشا�
 
 const isOnly = (word: string, words: ReadonlySet<string>): boolean => tokens(word).every((token) => words.has(token));
 
+/** Arabic: a final ة (often typed ه) is dropped so that the singular also finds the plural — "ورشة" finds "ورش", "ساحة" finds "ساحات". */
+const loosen = (word: string): string => (word.length > 3 && /[ةه]$/.test(word) ? word.slice(0, -1) : word);
+
+/** What is searched, most important first: the name in the reader's language, the other name, the everyday words, the sector. */
+function searchFields(activity: Activity, lang: Lang): (L10n | string | undefined)[] {
+  return [activity.name[lang], activity.name[lang === 'ar' ? 'en' : 'ar'], (activity as Searchable).keywords, activity.sector];
+}
+
 const indexes = new Map<Lang, SearchIndex<Activity>>();
 
-/** One index per language: the name in the reader's language counts most, then the other name, the search words and the sector. */
 function indexFor(lang: Lang): SearchIndex<Activity> {
   let index = indexes.get(lang);
   if (!index) {
-    const other: Lang = lang === 'ar' ? 'en' : 'ar';
-    index = buildIndex(
-      activities.map((activity) => ({
-        item: activity,
-        fields: [activity.name[lang], activity.name[other], (activity as Searchable).keywords, activity.sector],
-        keys: [activity.code],
-      })),
-    );
+    index = buildIndex(activities.map((activity) => ({ item: activity, fields: searchFields(activity, lang), keys: [activity.code] })));
     indexes.set(lang, index);
   }
   return index;
+}
+
+const vocabularies = new Map<Activity, string[]>();
+
+/** Every word an activity can be found by. */
+function vocabularyOf(activity: Activity): string[] {
+  let words = vocabularies.get(activity);
+  if (!words) {
+    words = [activity.code, ...searchFields(activity, 'ar')].flatMap((field) => (typeof field === 'string' ? tokens(field) : field ? tokens(`${field.ar} ${field.en}`) : []));
+    vocabularies.set(activity, words);
+  }
+  return words;
+}
+
+/**
+ * The shared index also finds a word inside a longer one. Arabic needs that ("تخزين" inside "وتخزينها"),
+ * but it also finds "housing" in "warehousing". So whole words and word beginnings win: activities
+ * that only hold the query inside a longer word are kept when there is nothing better.
+ */
+function preferWholeWords(found: Activity[], text: string): Activity[] {
+  const wanted = tokens(text);
+  const whole = found.filter((activity) => wanted.every((want) => vocabularyOf(activity).some((have) => have === want || (want.length > 1 && have.startsWith(want)))));
+  return whole.length ? whole : found;
 }
 
 /**
@@ -333,10 +359,13 @@ function indexFor(lang: Lang): SearchIndex<Activity> {
  */
 export function searchActivities(query: string, lang: Lang, limit = Number.POSITIVE_INFINITY): Activity[] {
   if (!tokens(query).length) return activities.slice(0, limit);
-  const index = indexFor(lang);
+  const find = (words: string[]): Activity[] => {
+    const text = words.map(loosen).join(' ');
+    return preferWholeWords(indexFor(lang).search(text, Number.POSITIVE_INFINITY), text).slice(0, limit);
+  };
   const words = query.split(/\s+/).filter((word) => !isOnly(word, PARTICLES));
-  const found = index.search(words.join(' '), limit);
+  const found = find(words);
   if (found.length) return found;
   const specific = words.filter((word) => !isOnly(word, GENERIC));
-  return specific.length < words.length ? index.search(specific.join(' '), limit) : [];
+  return specific.length < words.length ? find(specific) : [];
 }

@@ -157,41 +157,84 @@ export interface LabelPlace {
   /** Top-left corner of the label. */
   left: number;
   top: number;
-  side: 'above' | 'below';
+  side: 'above' | 'below' | 'left' | 'right';
+  /** Where the stem from the marker meets the label. */
+  stem: Point;
 }
 
 function clamp(value: number, min: number, max: number): number {
   return max < min ? min : Math.max(min, Math.min(max, value));
 }
 
-/** How much further than the nearest spot the label may sit, and how far it may slide sideways (share of its width). */
-const LABEL_LIFTS = [0, 6, 12, 18];
+/** Distance from a point to the nearest point of a rectangle (0 inside it). */
+function distanceToBox(point: Point, left: number, top: number, size: Size): number {
+  const nearX = clamp(point.x, left, left + size.width);
+  const nearY = clamp(point.y, top, top + size.height);
+  return Math.hypot(point.x - nearX, point.y - nearY);
+}
+
+/** Distance from a point to the segment a–b. */
+function distanceToSegment(point: Point, a: Point, b: Point): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const length = dx * dx + dy * dy;
+  const t = length === 0 ? 0 : clamp(((point.x - a.x) * dx + (point.y - a.y) * dy) / length, 0, 1);
+  return Math.hypot(point.x - (a.x + dx * t), point.y - (a.y + dy * t));
+}
+
+/** How much further than the nearest spot the label may sit. */
+const LABEL_LIFTS = [0, 8, 16, 24];
+/** How far the label may slide along its side, as a share of its length on that side. */
 const LABEL_SLIDES = [0, -0.25, 0.25, -0.45, 0.45];
+/** The stem meets the label at least this far from its corners. */
+const STEM_INSET = 10;
 
 /**
  * Where the name of the selected marker goes. The label tries the spot right above the marker first,
- * then a little further, to one side, or below — and takes the first spot that covers none of the other
- * markers (or the spot that covers the fewest). It always stays inside the bounds.
+ * then further away, slid to one side, below, or beside the marker — and takes the spot that covers
+ * the fewest other markers, with a stem that crosses none. It always stays inside the bounds and
+ * never sits on its own marker.
  */
-export function placeLabel(marker: Point, size: Size, others: Point[], bounds: Bounds, offset: number, markerRadius: number): LabelPlace {
+export function placeLabel(marker: Point, size: Size, others: Point[], bounds: Bounds, offset: number, clearance: number): LabelPlace {
   let best: LabelPlace | undefined;
   let bestCost = Infinity;
-  for (const side of ['above', 'below'] as const) {
+  const sides = [
+    { side: 'above', preference: 0 },
+    { side: 'below', preference: 0.05 },
+    { side: 'left', preference: 0.1 },
+    { side: 'right', preference: 0.1 },
+  ] as const;
+
+  for (const { side, preference } of sides) {
+    const upright = side === 'above' || side === 'below';
     for (const lift of LABEL_LIFTS) {
       for (const slide of LABEL_SLIDES) {
-        const left = clamp(marker.x - size.width / 2 + slide * size.width, bounds.minX, bounds.maxX - size.width);
-        const top = side === 'above' ? marker.y - offset - lift - size.height : marker.y + offset + lift;
+        let left: number;
+        let top: number;
+        if (upright) {
+          left = marker.x - size.width / 2 + slide * size.width;
+          top = side === 'above' ? marker.y - offset - lift - size.height : marker.y + offset + lift;
+        } else {
+          left = side === 'left' ? marker.x - offset - lift - size.width : marker.x + offset + lift;
+          top = marker.y - size.height / 2 + slide * size.height;
+        }
+        left = clamp(left, bounds.minX, bounds.maxX - size.width);
+
+        const stem: Point = upright
+          ? { x: clamp(marker.x, left + STEM_INSET, left + size.width - STEM_INSET), y: side === 'above' ? top + size.height - 2 : top + 2 }
+          : { x: side === 'left' ? left + size.width - 2 : left + 2, y: clamp(marker.y, top + STEM_INSET / 2, top + size.height - STEM_INSET / 2) };
+
         // Small preferences: above, close, centred. Covering a marker or leaving the map costs far more.
-        let cost = (side === 'above' ? 0 : 0.05) + lift * 0.01 + Math.abs(slide) * 0.2;
+        let cost = preference + lift * 0.01 + Math.abs(slide) * 0.2;
         if (top < bounds.minY) cost += 100 + (bounds.minY - top);
         if (top + size.height > bounds.maxY) cost += 100 + (top + size.height - bounds.maxY);
+        if (distanceToBox(marker, left, top, size) < offset - 1) cost += 50;
         for (const other of others) {
-          const nearX = clamp(other.x, left, left + size.width);
-          const nearY = clamp(other.y, top, top + size.height);
-          if (Math.hypot(other.x - nearX, other.y - nearY) < markerRadius) cost += 1;
+          if (distanceToBox(other, left, top, size) < clearance) cost += 1;
+          else if (distanceToSegment(other, marker, stem) < clearance - 2) cost += 0.6;
         }
         if (cost < bestCost) {
-          best = { left, top, side };
+          best = { left, top, side, stem };
           bestCost = cost;
         }
       }

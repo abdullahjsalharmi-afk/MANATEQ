@@ -26,7 +26,10 @@ const MARKER_GAP = 28;
 const MAX_TARGET = 44;
 /** A tap this close to a marker counts as a tap on it. */
 const TAP_REACH = 30;
+/** From the centre of the selected marker to the near edge of its name tag. */
 const LABEL_OFFSET = 18;
+/** The name tag keeps this far from the centre of every other marker. */
+const MARKER_CLEARANCE = 10;
 const KEYS: Record<string, Direction> = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
 
 /**
@@ -77,7 +80,8 @@ export function QatarMap({ selected, onSelect, highlight, height = 440, label, c
     return () => observer.disconnect();
   }, [chosenName, width]);
 
-  let tagStyle: { left: number; top: number } | undefined;
+  // The name tag of the selected zone, and the short stem that ties it to its marker.
+  let tag: { left: number; top: number; stemX: number; stemY: number } | undefined;
   if (chosen) {
     // Before the first measurement, estimate from the length of the name.
     const size = measured && measured.label.width > 0 ? measured.label : { width: Math.min(220, chosenName.length * 7 + 20), height: 26 };
@@ -88,9 +92,9 @@ export function QatarMap({ selected, onSelect, highlight, height = 440, label, c
       active.filter((marker) => marker.id !== chosen.id),
       { minX: 4 - side, maxX: width + side - 4, minY: 0, maxY: height },
       LABEL_OFFSET,
-      9,
+      MARKER_CLEARANCE,
     );
-    tagStyle = { left: place.left, top: place.top };
+    tag = { left: place.left, top: place.top, stemX: place.stem.x, stemY: place.stem.y };
   }
 
   const focusMarker = (id: string) => stageRef.current?.querySelector<HTMLButtonElement>(`[data-zone="${id}"]`)?.focus();
@@ -152,10 +156,15 @@ export function QatarMap({ selected, onSelect, highlight, height = 440, label, c
             );
           })}
 
-          {chosen ? (
-            <span ref={labelRef} className={styles.tag} style={tagStyle} aria-hidden="true">
-              {chosenName}
-            </span>
+          {chosen && tag ? (
+            <>
+              <svg className={styles.stem} width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true" focusable="false">
+                <line x1={chosen.x} y1={chosen.y} x2={tag.stemX} y2={tag.stemY} />
+              </svg>
+              <span ref={labelRef} className={styles.tag} style={{ left: tag.left, top: tag.top }} aria-hidden="true">
+                {chosenName}
+              </span>
+            </>
           ) : null}
         </div>
       </div>

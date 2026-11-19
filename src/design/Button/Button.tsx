@@ -37,13 +37,13 @@ export function Button({ children, variant = 'primary', size = 'lg', block = fal
   );
   if (to !== undefined && !disabled && !loading) {
     return (
-      <Link to={to} className={classes} aria-label={rest['aria-label']}>
+      <Link to={to} className={classes} aria-label={rest['aria-label']} data-block={block || undefined}>
         {content}
       </Link>
     );
   }
   return (
-    <button type={type ?? 'button'} className={classes} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
+    <button type={type ?? 'button'} className={classes} disabled={disabled || loading} aria-busy={loading || undefined} data-block={block || undefined} {...rest}>
       {content}
     </button>
   );

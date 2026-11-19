@@ -111,6 +111,17 @@
   border-radius: 1.5px;
 }
 
+/* a short stem from the selected marker to its name */
+.stem {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  stroke: var(--accent);
+  stroke-width: 1.5px;
+  stroke-linecap: round;
+}
+
 /* the name of the selected zone */
 .tag {
   position: absolute;

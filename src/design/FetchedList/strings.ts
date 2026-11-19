@@ -1,5 +1,5 @@
 export const strings = {
-  from: { ar: 'من {name}', en: 'From {name}' },
+  source: { ar: 'من {name}', en: 'Source: {name}' },
   planned: { ar: 'قيد الربط', en: 'Integration planned' },
   onceOnly: {
     ar: 'مرة واحدة فقط: ما تعرفه الجهات الحكومية عنك نجلبه نحن، ولا نطلبه منك.',

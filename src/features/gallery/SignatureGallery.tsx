@@ -114,7 +114,7 @@ const demo = {
   docReceipt: { ar: 'إيصال سداد التأمين', en: 'Deposit payment receipt' },
   issuer: { ar: 'مناطق', en: 'Manateq' },
   tenant: { ar: 'المستأجر', en: 'Tenant' },
-  company: { ar: 'شركة الريان للصناعات', en: 'Al Rayyan Industries' },
+  company: { ar: 'شركة المثال لتجارة قطع غيار السيارات ذ.م.م.', en: 'Al Mithal Auto Parts Trading W.L.L.' },
   plot: { ar: 'القطعة', en: 'Plot' },
   area: { ar: 'المساحة', en: 'Area' },
   term: { ar: 'مدة العقد', en: 'Lease term' },
@@ -123,9 +123,9 @@ const demo = {
   qrDoc: { ar: 'رمز التحقق من عقد الإيجار', en: 'Verification code of the lease contract' },
 
   // pass
-  holder: { ar: 'خالد بن ناصر المري', en: 'Khalid bin Nasser Al Marri' },
-  contractor: { ar: 'شركة البناء الحديث للمقاولات', en: 'Modern Build Contracting' },
-  visitor: { ar: 'سارة عبدالله الكواري', en: 'Sara Abdullah Al Kuwari' },
+  holder: { ar: 'مهندس الموقع (تجريبي)', en: 'Site engineer (demo)' },
+  contractor: { ar: 'شركة المثال للمقاولات ذ.م.م.', en: 'Al Mithal Contracting W.L.L.' },
+  visitor: { ar: 'زائر الشركة (تجريبي)', en: 'Company visitor (demo)' },
   qrPass: { ar: 'رمز تصريح الدخول', en: 'Gate pass code' },
 
   // map

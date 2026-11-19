@@ -63,7 +63,10 @@ interface ChoiceProps<V extends string> {
   disabled: boolean;
 }
 
-/** Radio tiles: native radios, so arrow keys, forms and screen readers behave as expected. */
+/**
+ * Radio tiles: native radios, so arrow keys, forms and screen readers behave as expected.
+ * When the choice is missing the tiles stay calm: one message under the group is clearer than five red boxes.
+ */
 function Tiles<V extends string>({ control, options, value, onChange, disabled }: ChoiceProps<V>) {
   const name = useId();
   return (
@@ -79,7 +82,7 @@ function Tiles<V extends string>({ control, options, value, onChange, disabled }
       {options.map((option) => {
         const selected = option.value === value;
         return (
-          <label key={option.value} className={cx(styles.tile, selected && styles.tileOn, control.invalid && styles.tileInvalid, disabled && styles.tileDisabled)}>
+          <label key={option.value} className={cx(styles.tile, selected && styles.tileOn, disabled && styles.tileDisabled)}>
             <input type="radio" className={styles.radio} name={name} value={option.value} checked={selected} disabled={disabled} onChange={() => onChange(option.value)} />
             <span className={styles.mark} aria-hidden="true" />
             <span className={styles.tileText}>

@@ -134,13 +134,15 @@ const strings = {
   statZones: { ar: 'منطقة ومجمّعًا', en: 'Zones and parks' },
   statArea: { ar: 'المساحة الإجمالية', en: 'Total area' },
   statRate: { ar: 'نسبة التشغيل', en: 'Operational rate' },
-  statSource: { ar: 'دليل الخدمات 4.1', en: 'Service Guide 4.1' },
+  statSource: { ar: 'المصدر: دليل الخدمات، الإصدار 4.1', en: 'Source: Service Guide, version 4.1' },
+  millionSqm: { ar: 'مليون م²', en: 'M m²' },
   rentDue: { ar: 'إيجار الربع الرابع', en: 'Q4 rent' },
   roleSignatory: { ar: 'المخوَّل بالتوقيع', en: 'Authorised signatory' },
   roleEngineer: { ar: 'مهندسة المشروع', en: 'Project engineer' },
 } as const;
 
-const PLOT = 'BA-2-117';
+/** Non-breaking hyphens keep the plot number on one line. */
+const PLOT = 'BA\u20112\u2011117';
 const DUE = new Date(2026, 11, 5, 12).getTime();
 const QUARTER_RENT = 18_750;
 const ANNUAL_RENT = 75_000;
@@ -376,11 +378,12 @@ export function FormsGallery() {
 
       <Section title="Figures, people and honesty marks">
         <Card>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 0.8fr) minmax(0, 1.5fr) minmax(0, 1fr)', gap: 12 }}>
             <Stat value={fmt.num(totals.zones)} label={t('statZones')} />
-            <Stat value={fmt.areaShort(totals.totalSqm)} label={t('statArea')} />
-            <Stat value={fmt.pct(totals.operationalRatePct)} label={t('statRate')} hint={t('statSource')} />
+            <Stat value={fmt.num(totals.totalSqm / 1_000_000, 1)} unit={t('millionSqm')} label={t('statArea')} />
+            <Stat value={fmt.pct(totals.operationalRatePct)} label={t('statRate')} />
           </div>
+          <p style={{ marginBlockStart: 12, fontSize: 'var(--t-cap)', color: 'var(--ink-3)' }}>{t('statSource')}</p>
         </Card>
         <Card>
           <Stat size="lg" align="center" value={<Money amount={QUARTER_RENT} />} label={t('rentDue')} hint={fmt.date(DUE)} />

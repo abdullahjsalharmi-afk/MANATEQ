@@ -7,11 +7,11 @@
  * request ends, the documents of a finished request, the services that follow by themselves, and the
  * service's own effects (`effects.ts`). Nothing here reads the clock or the store.
  */
-import type { ServiceDetail, ServiceId } from '@/data/types';
+import type { ActionAtom, ServiceDetail, ServiceId } from '@/data/types';
 import { followers, oncePerPlot } from '@/domain/chains';
 import { requestDocs } from '@/domain/documents';
 import type { Appointment, Doc, FormValue, RequestState, Visit, World } from '@/domain/types';
-import { act, advance, begin, currentStep, currentVisit, findStep, isTerminal, waitsForInvestor, type EngineEvent, type Timing } from '@/domain/workflow';
+import { act, advance, begin, currentStep, currentVisit, findStep, isTerminal, mainPath, waitsForInvestor, type EngineEvent, type Timing } from '@/domain/workflow';
 import { addPass, atomEffects, recordPayload, settleInvoice, whenFinished, whenStarted, whenStopped, whenWaiting, type EffectContext } from './effects';
 import { allocate, docRef, requestRef } from './refs';
 import { dateText, dots, fill, moneyText, text } from './strings';
@@ -48,20 +48,39 @@ const MAX_PASSES = 60;
 
 const isFile = (value: FormValue): boolean => value !== null && typeof value === 'object' && !('id' in value) && !('phone' in value);
 
+/** What a start flow collects before it submits: answers and documents. */
+const ENTRY_TASKS: ReadonlySet<ActionAtom> = new Set<ActionAtom>(['form', 'upload', 'acknowledge']);
+
+const entryStepsCache = new WeakMap<ServiceDetail, number[]>();
+
+/** The investor steps on the usual path that only ask for answers and documents. */
+function entrySteps(service: ServiceDetail): number[] {
+  let steps = entryStepsCache.get(service);
+  if (!steps) {
+    const usual = new Set(mainPath(service.workflow));
+    steps = service.workflow.steps
+      .filter((step) => usual.has(step.id) && waitsForInvestor(step))
+      .filter((step) => service.actions.find((action) => action.step === step.id)?.flow.every((task) => ENTRY_TASKS.has(task)) === true)
+      .map((step) => step.id);
+    entryStepsCache.set(service, steps);
+  }
+  return steps;
+}
+
 /**
- * Investor steps that a start flow already covers, so the request never asks twice. The land
- * application collects the documents and the preferred plot in one sitting before it is submitted;
- * vendor registration collects its three documents in the form.
+ * Services whose start flow already covers their entry steps, so the request never asks twice. The
+ * land application collects the documents and the preferred plot in one sitting before it is
+ * submitted; vendor registration collects its three documents in the form.
  */
-const ANSWERED_AT_START: Partial<Record<ServiceId, (request: RequestState) => number[]>> = {
-  A4: (request) => (request.plotId !== undefined || typeof request.form.preferredPlot === 'string' ? [4, 8] : []),
-  G1: (request) => (Object.values(request.form).filter(isFile).length >= 3 ? [4] : []),
+const COVERED_BY_START: Partial<Record<ServiceId, (request: RequestState) => boolean>> = {
+  A4: (request) => request.plotId !== undefined || typeof request.form.preferredPlot === 'string',
+  G1: (request) => Object.values(request.form).filter(isFile).length >= 3,
 };
 
 /** True when the investor already answered this step in the start flow, the first time the request reaches it. */
-function answeredAtStart(request: RequestState, step: number): boolean {
-  const covered = ANSWERED_AT_START[request.serviceId]?.(request) ?? [];
-  return covered.includes(step) && !request.visits.some((visit) => visit.step === step && visit.doneAt !== undefined);
+function answeredAtStart(request: RequestState, service: ServiceDetail, step: number): boolean {
+  if (!COVERED_BY_START[service.id]?.(request)) return false;
+  return entrySteps(service).includes(step) && !request.visits.some((visit) => visit.step === step && visit.doneAt !== undefined);
 }
 
 /* ───────────────────────────── consequences of engine events ───────────────────────────── */
@@ -114,7 +133,7 @@ function settle(world: World, id: string, events: EngineEvent[], env: Env, now: 
     const ctx: EffectContext = { id, service, at: event.at };
 
     if (event.type === 'needs_you') {
-      if (answeredAtStart(request, event.step)) continue;
+      if (answeredAtStart(request, service, event.step)) continue;
       const action = service.actions.find((candidate) => candidate.step === event.step);
       next = whenWaiting(next, { ...ctx, action });
       next = notify(next, {
@@ -177,8 +196,7 @@ function run(world: World, id: string, env: Env, now: number): World {
     const base = env.timing(service);
 
     if (isQueued(request)) {
-      const { visits: _v, current: _c, status: _s, investorMs: _i, ...blank } = request;
-      next = putRequest(next, begin(blank, wf, request.createdAt));
+      next = putRequest(next, begin(request, wf, request.createdAt));
       next = whenStarted[service.id]?.(next, { id, service, at: request.createdAt }) ?? next;
       continue;
     }
@@ -188,7 +206,7 @@ function run(world: World, id: string, env: Env, now: number): World {
     if (!step || !open) return next;
 
     if (request.status === 'needs_you') {
-      if (!answeredAtStart(request, step.id)) return next;
+      if (!answeredAtStart(request, service, step.id)) return next;
       const result = act(request, wf, open.enteredAt, base);
       next = settle(putRequest(next, result.req), id, result.events, env, now);
       continue;

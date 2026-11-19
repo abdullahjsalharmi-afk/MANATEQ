@@ -593,6 +593,27 @@ describe('activity search', () => {
     expect(first('ورشه')).toBe(first('ورشة'));
   });
 
+  it('finds the plural from the singular', () => {
+    expect(first('ورشة')).toBe('ACT-601');
+    expect(first('ورشه')).toBe('ACT-601');
+    expect(first('حاوية')).toBe(CONTAINERS);
+    expect(first('سيارة')).toBe(AUTO_PARTS);
+    expect(codes('ساحة')).toEqual(['ACT-305', 'ACT-603', CONTAINERS]);
+    expect(codes('cars', 'en')).toEqual(['ACT-601', AUTO_PARTS, SHOWROOMS]);
+    // The shorter stem must not drag in words that merely contain it ("ميا" is inside "كيميائية").
+    expect(codes('مياه')).toEqual([BEVERAGES]);
+  });
+
+  it('prefers whole words to words found inside longer ones', () => {
+    // "housing" is inside "warehousing", "tiles" inside "textiles", "shops" inside "workshops".
+    expect(codes('housing', 'en')).toEqual([RESIDENTIAL, LABOUR_ACCOMMODATION]);
+    expect(codes('tiles', 'en')).toEqual(['ACT-303']);
+    expect(codes('shops', 'en')).toEqual([RETAIL_MALL]);
+    expect(codes('آليات')).toEqual(['ACT-603']);
+    // …and still finds a word that only exists inside a longer one: "الألمنيوم", however it is typed.
+    for (const spelling of ['الألمنيوم', 'ألمنيوم', 'المنيوم', 'aluminium', 'aluminum']) expect(codes(spelling), spelling).toEqual(['ACT-304']);
+  });
+
   it('finds an activity by its code', () => {
     expect(codes('ACT-201')).toEqual([PLASTICS]);
     expect(codes('act-602', 'en')).toEqual([AUTO_PARTS]);
