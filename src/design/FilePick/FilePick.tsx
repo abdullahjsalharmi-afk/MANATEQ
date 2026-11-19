@@ -151,9 +151,12 @@ export function FilePickView({ id, label, hint, required = false, error, state, 
         <p id={labelId} className={styles.label}>
           {label}
           {required ? (
-            <span className={styles.required} aria-hidden="true">
-              *
-            </span>
+            <>
+              <span className={styles.required} aria-hidden="true">
+                *
+              </span>
+              <span className="visually-hidden"> ({t('required')})</span>
+            </>
           ) : null}
         </p>
         {file ? (
@@ -188,7 +191,6 @@ export function FilePickView({ id, label, hint, required = false, error, state, 
             className={styles.action}
             aria-labelledby={`${chooseId} ${labelId}`}
             aria-describedby={describedBy}
-            aria-required={required || undefined}
             aria-disabled={checking || undefined}
             onClick={checking ? undefined : onChoose}
           >

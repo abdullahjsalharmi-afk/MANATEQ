@@ -40,21 +40,27 @@ export function StandardBadge({ standard, variant = 'full', showText = true, cla
 
   const figure = standardFigure(standard, lang);
   const text = pick(standard);
+  const tag = <span className={styles.tag}>{t('indicative')}</span>;
+  if (!figure) {
+    // No headline duration: the sentence is the standard.
+    return (
+      <div className={cx(styles.badge, className)}>
+        <p className={styles.plain}>{text}</p>
+        {tag}
+      </div>
+    );
+  }
   return (
     <div className={cx(styles.badge, className)}>
       <div className={styles.top}>
-        {figure ? (
-          <p className={styles.figure}>
-            <span className="visually-hidden">{t('label')}: </span>
-            {figure.value !== null ? <span className={cx(styles.value, 'num')}>{figure.value}</span> : null}
-            <span className={figure.value !== null ? styles.unit : styles.words}>{figure.words}</span>
-          </p>
-        ) : (
-          <p className={styles.plain}>{text}</p>
-        )}
-        <span className={styles.tag}>{t('indicative')}</span>
+        <p className={styles.figure}>
+          <span className="visually-hidden">{t('label')}: </span>
+          {figure.value !== null ? <span className={cx(styles.value, 'num')}>{figure.value}</span> : null}
+          <span className={figure.value !== null ? styles.unit : styles.words}>{figure.words}</span>
+        </p>
+        {tag}
       </div>
-      {figure && showText && text ? <p className={styles.text}>{text}</p> : null}
+      {showText && text ? <p className={styles.text}>{text}</p> : null}
     </div>
   );
 }

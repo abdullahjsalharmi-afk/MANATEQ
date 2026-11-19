@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>13 · المناطق — دفتر رسومات مناطق ون</title>
+<link rel="stylesheet" href="../kit/sketch.css">
+</head>
+<body>
+<article class="board" id="b13">
+  <header class="board-head">
+    <span class="board-no" data-sk="circle">13</span>
+    <div>
+      <h2>المناطق — <span data-sk="hl">خريطة، ثم سعر، ثم خطوة</span></h2>
+      <p style="max-width:none">ثلاث عشرة منطقة على خريطة تخطيطية؛ نقرة تفتح صفحة المنطقة بسعرها المنشور، وتنتهي بـ«افحص الأهلية».</p>
+    </div>
+  </header>
+
+  <div class="stage">
+    <!-- الخريطة -->
+    <div class="phone-wrap">
+      <div class="phone tall" data-sk="phone">
+        <div class="rowx sp">
+          <span class="t-xl">المناطق</span>
+          <div class="rowx" style="gap:4px">
+            <span class="w-chip on" data-sk="chip-on" style="padding:0 10px">خريطة</span>
+            <span class="w-chip" data-sk="chip" style="padding:0 10px">قائمة</span>
+          </div>
+        </div>
+        <div class="rowx" id="b13-chips" style="gap:5px;flex-wrap:wrap">
+          <span class="w-chip t-a" data-sk="btn2" style="padding:0 9px;font-weight:700">الكل · 13</span>
+          <span class="w-chip" data-sk="chip" style="padding:0 9px">صناعي</span>
+          <span class="w-chip" data-sk="chip" style="padding:0 9px">لوجستي</span>
+          <span class="w-chip" data-sk="chip" style="padding:0 9px">تجاري</span>
+          <span class="w-chip" data-sk="chip" style="padding:0 9px">ساحات مفتوحة</span>
+          <span class="w-chip" data-sk="chip" style="padding:0 9px">تخزين</span>
+        </div>
+        <div class="w-map" id="b13-map" data-sk="map" data-pins="8" data-hot="0" style="height:290px">
+          <!-- مجمّعات التخزين الخمسة: مربعات فوق الخريطة (إحداثيات فيزيائية لأن الجغرافيا لا تنعكس) -->
+          <i data-sk="plots" data-cols="1" data-rows="1" data-sel="0,0" style="position:absolute;left:114px;top:161px;width:14px;height:14px"></i>
+          <i data-sk="plots" data-cols="1" data-rows="1" data-sel="0,0" style="position:absolute;left:110px;top:183px;width:14px;height:14px"></i>
+          <i data-sk="plots" data-cols="1" data-rows="1" data-sel="0,0" style="position:absolute;left:140px;top:114px;width:14px;height:14px"></i>
+          <i data-sk="plots" data-cols="1" data-rows="1" data-sel="0,0" style="position:absolute;left:119px;top:119px;width:14px;height:14px"></i>
+          <i data-sk="plots" data-cols="1" data-rows="1" data-sel="0,0" style="position:absolute;left:130px;top:133px;width:14px;height:14px"></i>
+          <span class="t-s t-a" style="position:absolute;left:170px;top:180px;font-weight:700">مسيعيد</span>
+        </div>
+        <div class="rowx t-s" style="gap:6px;justify-content:center">
+          <i data-sk="badge" style="width:8px;height:8px;flex:none"></i><span>منطقة أراضٍ · 8</span>
+          <i data-sk="plots" data-cols="1" data-rows="1" data-sel="0,0" style="width:14px;height:14px;flex:none;margin-inline-start:10px"></i><span>مجمّع تخزين · 5</span>
+        </div>
+        <div class="w-card" id="b13-card" data-sk="card-a" style="padding:10px 12px">
+          <div class="rowx sp">
+            <div class="colx" style="gap:1px"><span class="t-l">منطقة مسيعيد الصناعية</span><span class="t-s">صناعي · 5 ر.ق/م²/سنة · 856 قطعة</span></div>
+            <i class="w-icon sm" data-sk="icon" data-icon="fwd" data-c="a"></i>
+          </div>
+        </div>
+        <div class="grow"></div>
+        <nav class="w-tabbar" data-sk="tabbar">
+          <span class="w-tab"><i class="w-icon" data-sk="icon" data-icon="home" data-c="p"></i>الرئيسية</span>
+          <span class="w-tab"><i class="w-icon" data-sk="icon" data-icon="grid" data-c="p"></i>الخدمات</span>
+          <span class="w-tab"><i class="w-icon" data-sk="icon" data-icon="list" data-c="p"></i>طلباتي</span>
+          <span class="w-tab on"><i class="w-icon" data-sk="icon" data-icon="pin"></i>المناطق</span>
+          <span class="w-tab"><i class="w-icon" data-sk="icon" data-icon="user" data-c="p"></i>حسابي</span>
+        </nav>
+      </div>
+      <p class="cap"><b>1</b> · الخريطة</p>
+    </div>
+
+    <div class="col" style="padding-top:8px;gap:0">
+      <div data-sk="arrow-l" style="height:30px;margin:0 56px"></div>
+      <p class="cap" style="margin-top:2px">نقرة على البطاقة تفتح صفحة المنطقة</p>
+      <p class="note" data-to="#b13-chips" style="margin-top:14px"><b class="n" data-sk="circle">1</b>التصفية حسب الحل<small>يختار المستثمر ما يحتاجه، فتبقى المناطق التي تقدّمه.</small></p>
+      <p class="note ink" data-to="#b13-map" style="margin-top:22px"><b class="n" data-sk="circle">2</b>خريطة تخطيطية بثلاث عشرة علامة<small>دائرة لمنطقة الأراضي ومربع لمجمّع التخزين: الشكل يميّز النوع، لا اللون وحده.</small></p>
+      <p class="note" data-to="#b13-price" style="margin-top:16px"><b class="n" data-sk="circle">3</b>السعر المنشور في الواجهة<small>كما نُشر، ومعه مدة العقد.</small></p>
+      <p class="note ink" data-to="#b13-plots" style="margin-top:119px"><b class="n" data-sk="circle">4</b>التوافر مثال توضيحي<small>شبكة القطع في النسخة التجريبية ليست حقيقية، ومكتوب عليها ذلك.</small></p>
+      <p class="note" data-to="#b13-card" style="margin-top:7px"><b class="n" data-sk="circle">5</b>نقرة على العلامة تفتح بطاقة<small>الاسم والحل والسعر، ثم الصفحة.</small></p>
+      <p class="note ink" data-to="#b13-cta" style="margin-top:39px"><b class="n" data-sk="circle">6</b>كل صفحة تنتهي بخطوة<small>«افحص الأهلية» تحمل المنطقة معها.</small></p>
+    </div>
+
+    <!-- صفحة المنطقة -->
+    <div class="phone-wrap">
+      <div class="phone tall" data-sk="phone">
+        <div class="rowx sp">
+          <div class="rowx" style="gap:4px"><i class="w-icon sm" data-sk="icon" data-icon="back" data-c="p"></i><span class="t-s">المناطق</span></div>
+          <i class="w-icon sm" data-sk="icon" data-icon="bell" data-c="p"></i>
+        </div>
+        <div class="colx gap4">
+          <span class="t-l" style="font-size:18px">منطقة مسيعيد الصناعية</span>
+          <span class="t-s">صناعية · 12 كم من الميناء · 42 كم من الدوحة</span>
+        </div>
+        <div class="w-card" data-sk="card-dash" style="height:62px;padding:0;align-items:center;justify-content:center;flex-direction:row;gap:10px">
+          <i class="w-icon lg" data-sk="icon" data-icon="factory" style="width:40px;height:40px"></i>
+          <span class="t-s">رسم خطّي للمنطقة</span>
+        </div>
+        <div class="rowx" style="justify-content:space-between;text-align:center">
+          <div class="colx" style="gap:0;flex:1"><span class="w-stat" style="font-size:18px">11.1</span><span class="t-s">مليون م²</span></div>
+          <div class="colx" style="gap:0;flex:1"><span class="w-stat" style="font-size:18px">50%</span><span class="t-s">مخصَّص</span></div>
+          <div class="colx" style="gap:0;flex:1"><span class="w-stat" style="font-size:18px">856</span><span class="t-s">قطعة</span></div>
+        </div>
+        <div class="w-card" id="b13-price" data-sk="card-fill" style="padding:10px 12px;gap:2px">
+          <span class="t-s t-a">السعر المنشور</span>
+          <div class="rowx sp"><span class="t-xl">5 ر.ق <span class="t-m">/ م² / سنة</span></span><span class="t-s">عقد طويل الأجل</span></div>
+        </div>
+        <div class="w-grid4">
+          <div><i class="w-icon" data-sk="icon" data-icon="truck" data-c="p"></i>طرق</div>
+          <div><i class="w-icon" data-sk="icon" data-icon="bolt" data-c="p"></i>كهرباء وماء</div>
+          <div><i class="w-icon" data-sk="icon" data-icon="globe" data-c="p"></i>اتصالات</div>
+          <div><i class="w-icon" data-sk="icon" data-icon="shield" data-c="p"></i>أمن</div>
+        </div>
+        <div class="colx gap4">
+          <span class="t-s">القطاعات المستهدفة</span>
+          <div class="rowx" style="gap:5px"><span class="w-chip" data-sk="chip" style="padding:0 9px">البلاستيك</span><span class="w-chip" data-sk="chip" style="padding:0 9px">المعادن</span><span class="w-chip" data-sk="chip" style="padding:0 9px">الكيماويات</span><span class="t-s">و6 غيرها</span></div>
+        </div>
+        <div class="colx" id="b13-plots" style="gap:5px">
+          <div class="rowx sp"><span class="t-m">القطع</span><span class="t-s">الأبيض متاح · توافر توضيحي</span></div>
+          <div data-sk="plots" data-cols="8" data-rows="3" data-sel="-1,-1" style="height:76px"></div>
+        </div>
+        <div class="grow"></div>
+        <div class="w-btn" id="b13-cta" data-sk="btn">افحص الأهلية</div>
+        <span class="t-s t-a center" style="font-weight:600">أبدِ اهتمامك بهذه المنطقة</span>
+      </div>
+      <p class="cap"><b>2</b> · صفحة المنطقة</p>
+    </div>
+  </div>
+
+  <!-- جدول الحلول الخمسة -->
+  <p class="cap" style="margin-top:26px;text-align:start"><b>الحلول الخمسة وأسعارها المنشورة</b> · تظهر في الخريطة وفي صفحة «الحلول والأسعار»</p>
+  <div class="dia-row" style="margin-top:10px">
+    <div data-sk="card"><span class="t-m">لوجستي</span><br><span class="t-xl">15</span><br><span class="t-s">ر.ق / م² / سنة<br>عقد 25 سنة</span></div>
+    <div data-sk="card-fill"><span class="t-m">صناعي</span><br><span class="t-xl t-a">5</span><br><span class="t-s">ر.ق / م² / سنة<br>عقد طويل الأجل</span></div>
+    <div data-sk="card"><span class="t-m">تجاري</span><br><span class="t-xl">50</span><br><span class="t-s">ر.ق / م² / سنة<br>عقد 30 سنة</span></div>
+    <div data-sk="card"><span class="t-m">ساحات مفتوحة</span><br><span class="t-xl">10</span><br><span class="t-s">ر.ق / م² / سنة<br>سنة قابلة للتجديد</span></div>
+    <div data-sk="card-dash"><span class="t-m">التخزين</span><br><span class="t-l" style="line-height:1.75">حسب المشغّل</span><br><span class="t-s">مستودعات جاهزة<br>في 5 مجمّعات</span></div>
+  </div>
+
+  <p class="board-foot"><b>القاعدة:</b> السعر المنشور يظهر قبل أن يسأل عنه المستثمر، وكل ما هو توضيحي مكتوب عليه أنه توضيحي.</p>
+</article>
+<script src="../kit/rough.js"></script>
+<script src="../kit/sketch.js"></script>
+</body>
+</html>

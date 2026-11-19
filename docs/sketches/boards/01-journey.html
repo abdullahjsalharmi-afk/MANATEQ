@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1000">
+<title>مناطق ون — دفتر التصميم · 01 رحلة المستثمر</title>
+<link rel="stylesheet" href="../kit/sketch.css">
+</head>
+<body>
+<article class="board" id="b01">
+  <style>
+    /* layout of this board only: one wide diagram; every row shares the same four columns */
+    #b01 .cols { display: flex; align-items: flex-start; }
+    #b01 .cols > .cell { flex: 1; min-width: 0; }
+    #b01 .cols > .gapc { flex: 0 0 46px; }
+    #b01 .note { text-align: center; }
+    #b01 .note small { text-wrap: balance; }
+    #b01 .above { margin-bottom: 40px; align-items: flex-end; }
+    #b01 .st { gap: 5px; padding: 14px 10px 16px; }
+    #b01 .st .num { width: 34px; height: 34px; display: grid; place-items: center; font-size: 15px; font-weight: 700; color: var(--accent); }
+    #b01 .st b.name { font-size: 21px; line-height: 1.3; }
+    #b01 .st .tag { font-size: 13px; color: var(--pencil); line-height: 1.5; min-height: 39px; text-wrap: balance; }
+    #b01 .st .cnt { display: flex; align-items: baseline; gap: 6px; margin-top: 2px; }
+    #b01 .st .cnt b { font-size: 30px; line-height: 1.1; color: var(--ink); }
+    #b01 .st .cnt em { font-style: normal; font-size: 13px; color: var(--pencil); }
+    #b01 .st ul { list-style: none; margin: 6px 0 0; padding: 8px 0 0; width: 100%; font-size: 12px; line-height: 1.75; color: var(--ink); }
+    #b01 .st .dom { font-size: 11.5px; color: var(--pencil); }
+    #b01 .here { height: 22px; font-size: 11px; padding: 0 10px; color: #fff; font-style: normal; }
+    #b01 .nohere { height: 22px; }
+    #b01 .down { height: 30px; }
+    #b01 .hold { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 8px 11px; text-align: center; }
+    #b01 .hold em { font-style: normal; font-size: 11.5px; color: var(--pencil); }
+    #b01 .hold b { font-size: 16px; color: var(--gold); }
+    #b01 .between { margin: 36px 0 34px; align-items: center; }
+    #b01 .lead { text-align: center; font-size: 17px; font-weight: 600; line-height: 1.6; }
+    #b01 .lead small { display: block; font-size: 13.5px; font-weight: 400; color: var(--pencil); }
+    #b01 .bands { display: flex; flex-direction: column; gap: 10px; }
+    #b01 .band { display: flex; align-items: center; gap: 14px; padding: 10px 18px; }
+    #b01 .band .colx { flex: 1; min-width: 0; gap: 0; }
+    #b01 .band b.name { font-size: 17px; }
+    #b01 .band .t-s { font-size: 13px; }
+    #b01 .band .cnt { display: flex; align-items: baseline; gap: 6px; flex: none; }
+    #b01 .band .cnt b { font-size: 26px; line-height: 1.1; }
+    #b01 .band .cnt em { font-style: normal; font-size: 13px; color: var(--pencil); }
+    #b01 .band .dom { font-size: 11.5px; color: var(--pencil); flex: none; width: 58px; }
+    #b01 .total { display: flex; align-items: flex-start; gap: 22px; margin-top: 34px; }
+    #b01 .sum { display: flex; align-items: flex-start; gap: 8px; flex: none; }
+    #b01 .sum .t { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11.5px; color: var(--pencil); width: 58px; text-align: center; }
+    #b01 .sum .t b { width: 44px; height: 44px; display: grid; place-items: center; font-size: 19px; color: var(--ink); }
+    #b01 .sum .op { height: 44px; display: grid; place-items: center; font-size: 20px; color: var(--pencil); }
+    #b01 .sum .all { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; color: var(--pencil); padding-inline: 6px; }
+    #b01 .sum .all b { height: 44px; display: grid; place-items: center; font-size: 34px; color: var(--accent); }
+    #b01 .total .note { flex: 1; text-align: start; margin-top: 4px; margin-inline-start: 26px; }
+    #b01 .legend { margin-top: 26px; }
+  </style>
+  <header class="board-head">
+    <span class="board-no" data-sk="circle">01</span>
+    <div>
+      <h2>رحلة المستثمر — <span data-sk="hl">أربع محطات</span></h2>
+      <p>الخدمات الخمسون مرتّبة كما يعيشها المستثمر: من أول سؤال إلى منشأة تعمل.</p>
+    </div>
+  </header>
+
+  <!-- ملاحظتان فوق المحطات -->
+  <div class="cols above">
+    <p class="cell note" data-to="#j1"><b class="n" data-sk="circle">1</b>أربع محطات متتابعة<small>رحلة المستثمر كما يعيشها، لا إدارات الشركة.</small></p>
+    <i class="gapc"></i><i class="cell"></i><i class="gapc"></i>
+    <p class="cell note ink" data-to="#j3"><b class="n" data-sk="circle">2</b>وأنت في واحدة منها<small>محطتك معلَّمة في الرئيسية وفي الخدمات.</small></p>
+    <i class="gapc"></i><i class="cell"></i>
+  </div>
+
+  <!-- المحطات الأربع -->
+  <div class="dia">
+    <div class="dia-node st" id="j1" data-sk="card">
+      <i class="nohere"></i>
+      <b class="num" data-sk="circle">1</b>
+      <b class="name">الانضمام</b>
+      <div class="tag">من أول سؤال إلى قطعة أرض مسلَّمة</div>
+      <div class="cnt"><b>8</b><em>خدمات</em></div>
+      <ul data-sk="hr" style="border:0"></ul>
+      <ul><li>تحقّق من أهلية نشاطك</li><li>قدّم طلب أرض</li><li>احجز موعد التسليم</li></ul>
+      <div class="dom">المجال A</div>
+    </div>
+    <div class="dia-arrow" data-sk="arrow-l"></div>
+    <div class="dia-node st" id="j2" data-sk="card">
+      <i class="nohere"></i>
+      <b class="num" data-sk="circle">2</b>
+      <b class="name">العقد</b>
+      <div class="tag">فواتير وتجديد وتعديلات على العقد</div>
+      <div class="cnt"><b>10</b><em>خدمات</em></div>
+      <ul data-sk="hr" style="border:0"></ul>
+      <ul><li>فواتير إيجارك وسدادها</li><li>عرض تجديد عقدك</li><li>أصدر كشفًا أو شهادة</li></ul>
+      <div class="dom">المجال B</div>
+    </div>
+    <div class="dia-arrow" data-sk="arrow-l"></div>
+    <div class="dia-node st" id="j3" data-sk="card-fill">
+      <i class="w-chip here" data-sk="chip-a">أنت هنا · مثال</i>
+      <b class="num" data-sk="circle">3</b>
+      <b class="name">البناء</b>
+      <div class="tag">تصميم وتراخيص وإنشاء</div>
+      <div class="cnt"><b>9</b><em>خدمات</em></div>
+      <ul data-sk="hr" style="border:0"></ul>
+      <ul><li>قدّم تصميمك للمراجعة</li><li>حالة رخصة البناء</li><li>توصيل الكهرباء والماء</li></ul>
+      <div class="dom">المجال C</div>
+    </div>
+    <div class="dia-arrow" data-sk="arrow-l"></div>
+    <div class="dia-node st" id="j4" data-sk="card">
+      <i class="nohere"></i>
+      <b class="num" data-sk="circle">4</b>
+      <b class="name">التشغيل</b>
+      <div class="tag">صيانة وتصاريح وسلامة</div>
+      <div class="cnt"><b>7</b><em>خدمات</em></div>
+      <ul data-sk="hr" style="border:0"></ul>
+      <ul><li>أبلغ عن عطل في المنطقة</li><li>اطلب تصريح دخول</li><li>أبلغ عن طارئ</li></ul>
+      <div class="dom">المجال D</div>
+    </div>
+  </div>
+
+  <!-- ما في يد المستثمر عند نهاية كل محطة -->
+  <div class="cols">
+    <div class="cell"><div class="down" data-sk="arrow-d"></div><div class="hold" id="h1" data-sk="card-dash"><em>في يدك عند نهايتها</em><b>قطعة مسلَّمة</b></div></div>
+    <i class="gapc"></i>
+    <div class="cell"><div class="down" data-sk="arrow-d"></div><div class="hold" id="h2" data-sk="card-dash"><em>في يدك عند نهايتها</em><b>عقد وحساب</b></div></div>
+    <i class="gapc"></i>
+    <div class="cell"><div class="down" data-sk="arrow-d"></div><div class="hold" id="h3" data-sk="card-dash"><em>في يدك عند نهايتها</em><b>منشأة مرخّصة</b></div></div>
+    <i class="gapc"></i>
+    <div class="cell"><div class="down" data-sk="arrow-d"></div><div class="hold" id="h4" data-sk="card-dash"><em>في يدك عند نهايتها</em><b>منشأة عاملة</b></div></div>
+  </div>
+
+  <!-- بين المحطات والمسارات المساندة -->
+  <div class="cols between">
+    <p class="cell note gold" data-to="#h1"><b class="n" data-sk="circle">3</b>كل محطة تنتهي بشيء<small>وثيقة أو أصل في يدك، لا «معاملة منجزة».</small></p>
+    <i class="gapc"></i>
+    <p class="lead" style="flex:2 0 46px">وثلاثة مسارات ترافق الرحلة كلها<small>تحتاجها في أي محطة، فلا نرسمها محطة خامسة</small></p>
+    <i class="gapc"></i>
+    <p class="cell note ink" data-to="#e-cnt"><b class="n" data-sk="circle">4</b>وأين تظهر؟<small>في «الخدمات»، بعد المحطات الأربع.</small></p>
+  </div>
+
+  <!-- المسارات المساندة -->
+  <div class="bands">
+    <div class="band" data-sk="card-dash">
+      <div class="colx"><b class="name">الدعم</b><span class="t-s">مركز خدمات الأعمال، والخطابات، والشكاوى، والإشعارات</span></div>
+      <div class="dom">المجال E</div>
+      <div class="cnt" id="e-cnt"><b>7</b><em>خدمات</em></div>
+    </div>
+    <div class="band" data-sk="card-dash">
+      <div class="colx"><b class="name">التخزين</b><span class="t-s">خمسة مجمّعات تخزين جاهزة لدى أربعة مشغّلين</span></div>
+      <div class="dom">المجال F</div>
+      <div class="cnt"><b>4</b><em>خدمات</em></div>
+    </div>
+    <div class="band" data-sk="card-dash">
+      <div class="colx"><b class="name">الخدمات المؤسسية</b><span class="t-s">تسجيل الموردين، وسجل القطع، والوثائق، ومتابعة الأداء</span></div>
+      <div class="dom">المجال G</div>
+      <div class="cnt"><b>5</b><em>خدمات</em></div>
+    </div>
+  </div>
+
+  <!-- المجموع -->
+  <div class="total">
+    <div class="sum">
+      <div class="t"><b data-sk="circle">8</b>الانضمام</div><span class="op">+</span>
+      <div class="t"><b data-sk="circle">10</b>العقد</div><span class="op">+</span>
+      <div class="t"><b data-sk="circle">9</b>البناء</div><span class="op">+</span>
+      <div class="t"><b data-sk="circle">7</b>التشغيل</div><span class="op">+</span>
+      <div class="t"><b data-sk="circle">7</b>الدعم</div><span class="op">+</span>
+      <div class="t"><b data-sk="circle">4</b>التخزين</div><span class="op">+</span>
+      <div class="t"><b data-sk="circle">5</b>المؤسسية</div><span class="op">=</span>
+      <div class="all" id="all"><b><span data-sk="hl">50</span></b>خدمة</div>
+    </div>
+    <p class="note" data-to="#all"><b class="n" data-sk="circle">5</b>خمسون خدمة، رحلة واحدة<small>كلها في التطبيق، وكل واحدة في مكانها.</small></p>
+  </div>
+
+  <div class="legend"><span>الحروف A–G: مجالات «دليل الخدمات»، الإصدار 4.1</span><span>الأعداد وأسماء الخدمات من الدليل نفسه</span></div>
+
+  <p class="board-foot"><b>القاعدة:</b> التطبيق يرتّب الخدمات على رحلة المستثمر، لا على إدارات الشركة.</p>
+</article>
+<script src="../kit/rough.js"></script>
+<script src="../kit/sketch.js"></script>
+</body>
+</html>

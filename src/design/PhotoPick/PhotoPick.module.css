@@ -1,0 +1,130 @@
+/* A photo to add: a thumbnail at the start, what the photo shows, and its actions. Measures match FilePick. */
+.pick {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: 14px var(--s-4) 10px;
+  border-radius: var(--r-control);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  transition: box-shadow var(--d-1) var(--ease);
+}
+
+.invalid {
+  box-shadow: inset 0 0 0 1px var(--bad);
+}
+
+.thumb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-block-end: 4px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--sunken);
+  color: var(--ink-2);
+}
+
+.thumbFilled {
+  color: var(--ink-3);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.image,
+.standIn {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.image {
+  object-fit: cover;
+  animation: appear var(--d-2) var(--ease);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: var(--t-callout);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.required {
+  margin-inline-start: 3px;
+  color: var(--accent-ink);
+}
+
+.hint,
+.file {
+  font-size: var(--t-foot);
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.file {
+  display: flex;
+  min-width: 0;
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-block-start: 2px;
+  font-size: var(--t-foot);
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--bad);
+}
+
+.errorIcon {
+  margin-block-start: 0.18em;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 4px;
+  margin-block-start: var(--s-2);
+}
+
+/* Text-only actions line up with the text above them. */
+.actionsFlush {
+  margin-block-start: 2px;
+  margin-inline-start: -14px;
+}
+
+/* Small buttons, full-size touch targets. */
+.action {
+  position: relative;
+}
+
+.action::before {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+}

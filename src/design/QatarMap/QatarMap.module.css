@@ -1,0 +1,159 @@
+.map {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+  margin: 0;
+}
+
+.wrap {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  padding-block: var(--s-2);
+}
+
+/* The map box. Everything inside is placed in map pixels: a map does not mirror in Arabic. */
+.stage {
+  position: relative;
+  flex: none;
+}
+
+.outline {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+/* a very light band of shallow water along the coast */
+.shore {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 8px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.ground {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 1px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* markers: the button is the touch target, the glyph inside it is what is seen */
+.marker {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.marker:focus-visible {
+  border-radius: 50%;
+  outline-offset: 0;
+}
+
+.glyph {
+  width: 14px;
+  height: 14px;
+  background: var(--ink);
+  transition:
+    transform var(--d-2) var(--ease),
+    background-color var(--d-1) var(--ease),
+    box-shadow var(--d-2) var(--ease);
+}
+
+.land {
+  border-radius: 50%;
+}
+
+.warehousing {
+  border-radius: 3px;
+}
+
+.glyph.warehousing {
+  width: 12.5px;
+  height: 12.5px;
+}
+
+.marker:hover .glyph {
+  transform: scale(1.15);
+}
+
+.on {
+  z-index: 2;
+}
+
+.on .glyph,
+.on:hover .glyph {
+  transform: scale(1.5);
+  background: var(--accent);
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 3.2px var(--accent);
+}
+
+/* zones outside the current filter: small, quiet, not selectable */
+.faint {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--ink-3);
+  opacity: 0.5;
+  transform: translate(-50%, -50%);
+}
+
+.faint.warehousing {
+  border-radius: 1.5px;
+}
+
+/* the name of the selected zone */
+.tag {
+  position: absolute;
+  z-index: 3;
+  width: max-content;
+  max-width: 220px;
+  padding: 3px 10px;
+  border-radius: 9px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: var(--t-cap);
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  pointer-events: none;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-4);
+  font-size: var(--t-cap);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-4);
+}
+
+.key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sample {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  background: var(--ink);
+}

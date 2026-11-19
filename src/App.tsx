@@ -1,13 +1,13 @@
 import { CircleUserRound, House, LayoutGrid, ListChecks, MapPinned } from 'lucide-react';
 import { Suspense, useEffect, useMemo } from 'react';
 import { ErrorBoundary } from '@/app/ErrorBoundary';
-import { LangProvider, useT } from '@/app/i18n';
+import { LangProvider, useLang, useT } from '@/app/i18n';
 import { navigate, useLocation } from '@/app/router';
 import { resolveRoute, RouteContext, type TabKey } from '@/app/routes';
 import { shell } from '@/app/strings';
 import { useAppearance } from '@/app/theme';
-import { Button, Screen, TabBar, ToastHost, type TabItem } from '@/design/core';
-import { tick } from '@/state/actions';
+import { Button, Mark, Screen, Segmented, SideNav, TabBar, ToastHost, type TabItem } from '@/design/core';
+import { setLang, tick } from '@/state/actions';
 import { useApp } from '@/state/store';
 import styles from './App.module.css';
 
@@ -41,6 +41,7 @@ export function App() {
 
 function Shell() {
   const t = useT(shell);
+  const { lang } = useLang();
   const location = useLocation();
   const onboarded = useApp((s) => s.settings.onboarded);
   const persona = useApp((s) => s.world.persona);
@@ -82,7 +83,36 @@ function Shell() {
           <Suspense fallback={<div className={styles.loading} role="status" aria-label={t('loading')} />}>{content}</Suspense>
         </ErrorBoundary>
       </div>
-      {chrome === 'tabs' ? <TabBar items={tabs} activeKey={activeTab} label={t('tabsLabel')} /> : null}
+      {chrome === 'tabs' ? (
+        <>
+          <TabBar items={tabs} activeKey={activeTab} label={t('tabsLabel')} />
+          <SideNav
+            items={tabs}
+            activeKey={activeTab}
+            label={t('tabsLabel')}
+            brand={
+              <>
+                <Mark size={36} />
+                <span className={styles.brandName}>{t('appName')}</span>
+              </>
+            }
+            footer={
+              <>
+                <Segmented
+                  label={t('language')}
+                  value={lang}
+                  onChange={setLang}
+                  options={[
+                    { value: 'ar', label: 'العربية' },
+                    { value: 'en', label: 'English' },
+                  ]}
+                />
+                <p className={styles.sideNote}>{t('sideNote')}</p>
+              </>
+            }
+          />
+        </>
+      ) : null}
     </RouteContext.Provider>
   );
 }

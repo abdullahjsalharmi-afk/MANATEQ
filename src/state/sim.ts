@@ -1,0 +1,402 @@
+/**
+ * The simulation — pure reducers over the demo world. `actions.ts` binds them to the store and the
+ * clock; `seed.ts` replays them on calendar time to build each persona's history.
+ *
+ * A request moves through its real workflow with the engine (`src/domain/workflow.ts`). Every engine
+ * event is turned into its consequences here: a notification when the investor is needed and when a
+ * request ends, the documents of a finished request, the services that follow by themselves, and the
+ * service's own effects (`effects.ts`). Nothing here reads the clock or the store.
+ */
+import type { ServiceDetail, ServiceId } from '@/data/types';
+import { followers, oncePerPlot } from '@/domain/chains';
+import { requestDocs } from '@/domain/documents';
+import type { Appointment, Doc, FormValue, RequestState, Visit, World } from '@/domain/types';
+import { act, advance, begin, currentStep, currentVisit, findStep, isTerminal, waitsForInvestor, type EngineEvent, type Timing } from '@/domain/workflow';
+import { addPass, atomEffects, recordPayload, settleInvoice, whenFinished, whenStarted, whenStopped, whenWaiting, type EffectContext } from './effects';
+import { allocate, docRef, requestRef } from './refs';
+import { dateText, dots, fill, moneyText, text } from './strings';
+import { holdOf, type ActPayload, type AppointmentInput, type Env, type PassInput, type SimRequest, type StartOptions } from './types';
+import {
+  DAY,
+  HOUR,
+  RENEWAL_WINDOW_MS,
+  addDocs,
+  docFacts,
+  findPlotRecord,
+  findRequest,
+  isFinished,
+  isOpen,
+  isQueued,
+  notify,
+  patchInvoice,
+  patchLease,
+  patchRequest,
+  putRequest,
+} from './world';
+
+export interface StartInput extends StartOptions {
+  serviceId: ServiceId;
+  form?: Record<string, FormValue>;
+  /** Scripted gate outcomes; gates not listed take the usual branch. */
+  decisions?: Record<number, 'yes' | 'no'>;
+}
+
+/** A request never takes more passes than this through `run` in one go (a guard against malformed data). */
+const MAX_PASSES = 60;
+
+/* ───────────────────────────── steps answered at start ───────────────────────────── */
+
+const isFile = (value: FormValue): boolean => value !== null && typeof value === 'object' && !('id' in value) && !('phone' in value);
+
+/**
+ * Investor steps that a start flow already covers, so the request never asks twice. The land
+ * application collects the documents and the preferred plot in one sitting before it is submitted;
+ * vendor registration collects its three documents in the form.
+ */
+const ANSWERED_AT_START: Partial<Record<ServiceId, (request: RequestState) => number[]>> = {
+  A4: (request) => (request.plotId !== undefined || typeof request.form.preferredPlot === 'string' ? [4, 8] : []),
+  G1: (request) => (Object.values(request.form).filter(isFile).length >= 3 ? [4] : []),
+};
+
+/** True when the investor already answered this step in the start flow, the first time the request reaches it. */
+function answeredAtStart(request: RequestState, step: number): boolean {
+  const covered = ANSWERED_AT_START[request.serviceId]?.(request) ?? [];
+  return covered.includes(step) && !request.visits.some((visit) => visit.step === step && visit.doneAt !== undefined);
+}
+
+/* ───────────────────────────── consequences of engine events ───────────────────────────── */
+
+function plotNumberOf(world: World, request: RequestState): string | undefined {
+  return findPlotRecord(world, request.plotId)?.number;
+}
+
+/** The finished request's documents, its notification, and the services that follow by themselves. */
+function finish(world: World, ctx: EffectContext, env: Env, now: number): World {
+  let next = whenFinished[ctx.service.id]?.(world, ctx) ?? world;
+  const request = findRequest(next, ctx.id);
+  if (!request) return next;
+
+  const made: Doc[] = requestDocs(request, ctx.service, docFacts(next, request.plotId), ctx.at, (spec) => {
+    const slot = allocate(next, 'd');
+    next = slot.world;
+    return { id: slot.id, ref: docRef(spec.kind, slot.seq, ctx.at) };
+  });
+  if (made.length) {
+    next = addDocs(next, made);
+    next = patchRequest(next, request.id, { docIds: [...request.docIds, ...made.map((doc) => doc.id)] });
+  }
+
+  const last = request.visits[request.visits.length - 1];
+  const end = last ? findStep(ctx.service.workflow, last.step) : undefined;
+  next = notify(next, {
+    at: ctx.at,
+    kind: 'done',
+    title: end && isTerminal(end) ? end.label : ctx.service.output,
+    body: dots(ctx.service.label, plotNumberOf(next, request)),
+    route: `/requests/${request.id}`,
+  });
+
+  for (const follower of followers(ctx.service.id)) {
+    const already = next.requests.some((other) => other.serviceId === follower && (other.parentId === request.id || (oncePerPlot(follower) && other.plotId === request.plotId && other.status !== 'stopped')));
+    if (already) continue;
+    const fresh = findRequest(next, request.id) ?? request;
+    next = startIn(next, { serviceId: follower, plotId: fresh.plotId, zoneCode: fresh.zoneCode, threadId: fresh.threadId, parentId: fresh.id }, ctx.at, env, now).world;
+  }
+  return next;
+}
+
+function settle(world: World, id: string, events: EngineEvent[], env: Env, now: number): World {
+  let next = world;
+  for (const event of events) {
+    const request = findRequest(next, id);
+    const service = request ? env.detail(request.serviceId) : undefined;
+    if (!request || !service) break;
+    const ctx: EffectContext = { id, service, at: event.at };
+
+    if (event.type === 'needs_you') {
+      if (answeredAtStart(request, event.step)) continue;
+      const action = service.actions.find((candidate) => candidate.step === event.step);
+      next = whenWaiting(next, { ...ctx, action });
+      next = notify(next, {
+        at: event.at,
+        kind: 'action',
+        title: action?.title ?? text.needsYou,
+        body: dots(service.label, plotNumberOf(next, request)),
+        route: `/requests/${id}`,
+      });
+    } else if (event.type === 'finished') {
+      next = finish(next, ctx, env, now);
+    } else if (event.type === 'stopped') {
+      next = whenStopped[service.id]?.(next, ctx) ?? next;
+      const reason = findStep(service.workflow, event.step);
+      next = notify(next, {
+        at: event.at,
+        kind: 'update',
+        title: reason?.label ?? service.label,
+        body: dots(service.label, plotNumberOf(next, request)),
+        route: `/requests/${id}`,
+      });
+    }
+  }
+  return next;
+}
+
+/* ───────────────────────────── moving one request ───────────────────────────── */
+
+/** The request without its hold. */
+function released(request: RequestState): RequestState {
+  if (holdOf(request) === undefined) return request;
+  const { holdUntil: _dropped, ...rest } = request as SimRequest;
+  return rest;
+}
+
+/** When the open step of a request will finish by itself, or undefined when it waits for the investor or is finished. */
+export function dueAtOf(request: RequestState, service: ServiceDetail, timing: Timing): number | undefined {
+  const step = currentStep(service.workflow, request);
+  const open = currentVisit(request);
+  if (!step || !open || waitsForInvestor(step)) return undefined;
+  const hold = holdOf(request);
+  if (hold !== undefined) return Math.max(hold, open.enteredAt);
+  if (isTerminal(step) || (step.kind === 'start' && step.lane === 'inv')) return open.enteredAt;
+  return open.enteredAt + timing.duration(step);
+}
+
+/**
+ * Moves one request as far as `now` allows: starts it when its workflow has just arrived in memory,
+ * completes the steps the start flow already answered, lets every step that is due finish, and applies
+ * the consequences. Returns the same world when nothing was due.
+ */
+function run(world: World, id: string, env: Env, now: number): World {
+  let next = world;
+  for (let pass = 0; pass < MAX_PASSES; pass++) {
+    const request = findRequest(next, id);
+    if (!request || isFinished(request)) return next;
+    const service = env.detail(request.serviceId);
+    if (!service) return next;
+    const wf = service.workflow;
+    const base = env.timing(service);
+
+    if (isQueued(request)) {
+      const { visits: _v, current: _c, status: _s, investorMs: _i, ...blank } = request;
+      next = putRequest(next, begin(blank, wf, request.createdAt));
+      next = whenStarted[service.id]?.(next, { id, service, at: request.createdAt }) ?? next;
+      continue;
+    }
+
+    const step = currentStep(wf, request);
+    const open = currentVisit(request);
+    if (!step || !open) return next;
+
+    if (request.status === 'needs_you') {
+      if (!answeredAtStart(request, step.id)) return next;
+      const result = act(request, wf, open.enteredAt, base);
+      next = settle(putRequest(next, result.req), id, result.events, env, now);
+      continue;
+    }
+
+    const due = dueAtOf(request, service, base);
+    if (due === undefined) {
+      // An investor step the engine has not flagged yet: let it do so.
+      if (!waitsForInvestor(step)) return next;
+    } else if (now < due) {
+      return next;
+    }
+
+    // A held step takes exactly until its hold; every later step takes its usual time.
+    const hold = holdOf(request);
+    let held: number | undefined = hold !== undefined ? Math.max(0, hold - open.enteredAt) : undefined;
+    const timing: Timing = {
+      duration(candidate) {
+        if (held !== undefined && candidate.id === step.id) {
+          const once = held;
+          held = undefined;
+          return once;
+        }
+        return base.duration(candidate);
+      },
+    };
+    const result = advance(request, wf, now, timing);
+    if (!result.events.length && result.req.status === request.status) return next;
+    next = settle(putRequest(next, released(result.req)), id, result.events, env, now);
+  }
+  return next;
+}
+
+/* ───────────────────────────── requests ───────────────────────────── */
+
+/**
+ * Creates a request at `at` and moves it up to `now`. When the service's workflow is not in memory
+ * yet the request is queued and starts at the next tick.
+ */
+export function startIn(world: World, input: StartInput, at: number, env: Env, now: number = at): { world: World; id: string } {
+  const slot = allocate(world, 'r');
+  const form = { ...(input.form ?? {}) };
+  // A generic form names the plot in its own `plot` field.
+  const plotId = input.plotId ?? (typeof form.plot === 'string' && findPlotRecord(world, form.plot) ? form.plot : undefined);
+  const zoneCode = input.zoneCode ?? findPlotRecord(world, plotId)?.zoneCode;
+  const queued: RequestState = {
+    id: slot.id,
+    ref: requestRef(slot.seq, at),
+    serviceId: input.serviceId,
+    threadId: input.threadId ?? slot.id,
+    ...(input.parentId !== undefined ? { parentId: input.parentId } : {}),
+    createdAt: at,
+    updatedAt: at,
+    form,
+    ...(plotId !== undefined ? { plotId } : {}),
+    ...(zoneCode !== undefined ? { zoneCode } : {}),
+    visits: [],
+    current: null,
+    status: 'active',
+    ...(input.decisions ? { decisions: input.decisions } : {}),
+    investorMs: 0,
+    docIds: [],
+  };
+  return { world: run(putRequest(slot.world, queued), slot.id, env, now), id: slot.id };
+}
+
+/** The investor completes the step that was waiting for them: answers are recorded, the step's tasks take effect, the request moves on. */
+export function actIn(world: World, id: string, payload: ActPayload, now: number, env: Env): World {
+  const request = findRequest(world, id);
+  if (!request || request.status !== 'needs_you' || request.current === null) return world;
+  const service = env.detail(request.serviceId);
+  if (!service) return world;
+  const stepId = request.current;
+  const action = service.actions.find((candidate) => candidate.step === stepId);
+
+  let next = recordPayload(world, id, stepId, payload);
+  if (action) {
+    for (const atom of action.flow) next = atomEffects[atom]?.(next, { id, service, at: now, action, payload }) ?? next;
+  }
+  const ready = findRequest(next, id);
+  if (!ready) return next;
+  const result = act(ready, service.workflow, now, env.timing(service));
+  next = settle(putRequest(next, result.req), id, result.events, env, now);
+  return run(next, id, env, now);
+}
+
+/** Demo control: the open step finishes right now instead of taking its time. Does nothing while the investor holds the request. */
+export function fastForwardIn(world: World, id: string, now: number, env: Env): World {
+  const request = findRequest(world, id);
+  if (!request || isFinished(request) || isQueued(request) || request.status === 'needs_you') return world;
+  const open = currentVisit(request);
+  if (!open) return world;
+  const due: SimRequest = { ...request, holdUntil: Math.max(open.enteredAt, now) };
+  return run(putRequest(world, due), id, env, now);
+}
+
+/** The investor withdraws a request that has not finished. */
+export function cancelIn(world: World, id: string, now: number, env: Env): World {
+  const request = findRequest(world, id);
+  if (!request || isFinished(request)) return world;
+  const last = request.visits.length - 1;
+  const visits: Visit[] = request.visits.map((visit, index) => (index === last && visit.doneAt === undefined ? { ...visit, doneAt: Math.max(now, visit.enteredAt) } : visit));
+  const open = currentVisit(request);
+  const waited = request.status === 'needs_you' && open ? Math.max(0, now - open.enteredAt) : 0;
+  const closed: RequestState = { ...released(request), visits, current: null, status: 'stopped', updatedAt: now, investorMs: request.investorMs + waited };
+  const next = putRequest(world, closed);
+  const service = env.detail(request.serviceId);
+  return service ? (whenStopped[service.id]?.(next, { id, service, at: now }) ?? next) : next;
+}
+
+/** Parks a request at its open step until `until` (the seed uses it to hold the story still). */
+export function holdIn(world: World, id: string, until: number): World {
+  const request = findRequest(world, id);
+  if (!request || isFinished(request)) return world;
+  const held: SimRequest = { ...request, holdUntil: until };
+  return putRequest(world, held);
+}
+
+/** After a pause, open steps start their time again from `now` instead of all finishing at once. */
+export function resumeIn(world: World, now: number, env: Env): World {
+  let changed = false;
+  const requests = world.requests.map((request) => {
+    if (isFinished(request) || request.status === 'needs_you' || holdOf(request) !== undefined) return request;
+    const service = env.detail(request.serviceId);
+    const open = currentVisit(request);
+    if (!service || !open || open.enteredAt >= now) return request;
+    changed = true;
+    return { ...request, visits: request.visits.map((visit) => (visit === open ? { ...visit, enteredAt: now } : visit)) };
+  });
+  return changed ? { ...world, requests } : world;
+}
+
+/* ───────────────────────────── invoices, passes, appointments ───────────────────────────── */
+
+export function payInvoiceIn(world: World, invoiceId: string, now: number): { world: World; docId: string | null } {
+  return settleInvoice(world, invoiceId, now);
+}
+
+export function issuePassIn(world: World, input: PassInput, now: number): { world: World; id: string } {
+  return addPass(world, input, now);
+}
+
+export function revokePassIn(world: World, id: string): World {
+  if (!world.passes.some((pass) => pass.id === id && pass.status === 'active')) return world;
+  return { ...world, passes: world.passes.map((pass) => (pass.id === id ? { ...pass, status: 'revoked' } : pass)) };
+}
+
+export function bookAppointmentIn(world: World, input: AppointmentInput): { world: World; id: string } {
+  const slot = allocate(world, 'ap');
+  const appointment: Appointment = { id: slot.id, at: input.at, topic: input.topic, channel: input.channel, status: 'booked' };
+  return { world: { ...slot.world, appointments: [...slot.world.appointments, appointment] }, id: slot.id };
+}
+
+export function cancelAppointmentIn(world: World, id: string): World {
+  if (!world.appointments.some((appointment) => appointment.id === id && appointment.status === 'booked')) return world;
+  return { ...world, appointments: world.appointments.map((appointment) => (appointment.id === id ? { ...appointment, status: 'cancelled' } : appointment)) };
+}
+
+/* ───────────────────────────── the calendar ───────────────────────────── */
+
+/**
+ * Things that happen because time passes, not because a request moved: invoices fall overdue, passes
+ * and appointments end, and a renewal request opens 120 days before a lease ends.
+ */
+function calendar(world: World, now: number, env: Env): World {
+  let next = world;
+
+  for (const invoice of next.invoices) {
+    if (invoice.status !== 'due' || now <= invoice.dueAt) continue;
+    next = patchInvoice(next, invoice.id, { status: 'overdue' });
+    next = notify(next, {
+      at: invoice.dueAt,
+      kind: 'action',
+      title: text.invoiceOverdue,
+      body: dots(invoice.title, moneyText(invoice.amount), fill(text.dueOn, { date: dateText(invoice.dueAt) })),
+      route: `/account/payments/${invoice.id}`,
+    });
+  }
+
+  for (const lease of next.leases) {
+    if (lease.status === 'ended') continue;
+    const opensAt = lease.endsAt - RENEWAL_WINDOW_MS;
+    const status = now > lease.endsAt + DAY ? 'ended' : now >= opensAt ? 'expiring' : 'active';
+    if (status !== lease.status) next = patchLease(next, lease.id, { status });
+    if (status !== 'expiring') continue;
+    const opened = next.requests.some((request) => request.serviceId === 'B3' && request.plotId === lease.plotId && request.createdAt >= opensAt);
+    if (!opened) next = startIn(next, { serviceId: 'B3', plotId: lease.plotId }, Math.max(opensAt, lease.startsAt), env, now).world;
+  }
+
+  if (next.passes.some((pass) => pass.status === 'active' && pass.to < now)) {
+    next = { ...next, passes: next.passes.map((pass) => (pass.status === 'active' && pass.to < now ? { ...pass, status: 'expired' } : pass)) };
+  }
+
+  if (next.appointments.some((appointment) => appointment.status === 'booked' && appointment.at + HOUR < now)) {
+    next = { ...next, appointments: next.appointments.map((appointment) => (appointment.status === 'booked' && appointment.at + HOUR < now ? { ...appointment, status: 'done' } : appointment)) };
+  }
+
+  return next;
+}
+
+/**
+ * One beat of the simulation. Moves every open request whose workflow is in memory, then lets the
+ * calendar act. Idempotent, and cheap when nothing is due: it returns the very same world.
+ */
+export function tickWorld(world: World, now: number, env: Env): World {
+  let next = world;
+  for (const request of world.requests) {
+    if (isOpen(request) && (request.status !== 'needs_you' || isQueued(request))) next = run(next, request.id, env, now);
+  }
+  return calendar(next, now, env);
+}

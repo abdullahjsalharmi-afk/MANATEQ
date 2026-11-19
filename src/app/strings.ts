@@ -3,6 +3,8 @@ export const shell = {
   appName: { ar: 'مناطق ون', en: 'Manateq One' },
   tagline: { ar: 'خمسون خدمة. رحلة واحدة.', en: 'Fifty services. One journey.' },
   tabsLabel: { ar: 'التنقّل الرئيسي', en: 'Main navigation' },
+  language: { ar: 'اللغة', en: 'Language' },
+  sideNote: { ar: 'نسخة تجريبية للعرض. جميع البيانات توضيحية.', en: 'A prototype for demonstration. All data is illustrative.' },
   tabHome: { ar: 'الرئيسية', en: 'Home' },
   tabServices: { ar: 'الخدمات', en: 'Services' },
   tabRequests: { ar: 'طلباتي', en: 'Requests' },

@@ -1,5 +1,5 @@
 // Takes phone-size screenshots of app routes from the single-file build (preview/index.html).
-// Usage: node scripts/screenshots.mjs <outDir> [--routes=/,/services] [--lang=ar,en] [--theme=light,dark] [--demo=tenant] [--full] [--scale=2] [--wait=600]
+// Usage: node scripts/screenshots.mjs <outDir> [--routes=/,/services] [--lang=ar,en] [--theme=light,dark] [--demo=tenant] [--full] [--scale=2] [--wait=600] [--width=390 --height=844]
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright';
@@ -19,6 +19,9 @@ const full = args.includes('--full');
 const scale = Number(opt('scale', '2'));
 const wait = Number(opt('wait', '600'));
 const text = opt('text', '');
+const width = Number(opt('width', '390'));
+const height = Number(opt('height', '844'));
+const mobile = width < 900;
 const file = path.resolve(opt('file', 'preview/index.html'));
 if (!fs.existsSync(file)) {
   console.error(`missing ${file} — run "npm run build:single" first`);
@@ -30,7 +33,7 @@ const browser = await chromium.launch();
 const problems = [];
 for (const lang of langs) {
   for (const theme of themes) {
-    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: scale, isMobile: true, hasTouch: true, colorScheme: theme === 'dark' ? 'dark' : 'light', reducedMotion: 'reduce' });
+    const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: scale, isMobile: mobile, hasTouch: mobile, colorScheme: theme === 'dark' ? 'dark' : 'light', reducedMotion: 'reduce' });
     const page = await context.newPage();
     page.on('pageerror', (error) => problems.push(`[${lang}/${theme}] page error: ${error.message}`));
     page.on('console', (message) => {
@@ -41,7 +44,7 @@ for (const lang of langs) {
       await page.goto(`file://${file}${query}#${route}`);
       await page.evaluate(() => document.fonts.ready);
       await page.waitForTimeout(wait);
-      const name = `${route === '/' ? 'home' : route.replace(/^\//, '').replace(/[/?=&]/g, '-')}.${lang}.${theme}${text ? `.t${text}` : ''}.png`;
+      const name = `${route === '/' ? 'home' : route.replace(/^\//, '').replace(/[/?=&]/g, '-')}.${lang}.${theme}${text ? `.t${text}` : ''}${mobile ? '' : `.w${width}`}.png`;
       await page.screenshot({ path: path.join(outDir, name), fullPage: full });
       console.log('shot', name);
     }

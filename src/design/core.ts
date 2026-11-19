@@ -12,3 +12,4 @@ export { TabBar, type TabBarProps, type TabItem } from './TabBar/TabBar';
 export { Sheet, type SheetProps } from './Sheet/Sheet';
 export { ToastHost, toast, dismissToast, type ToastOptions } from './Toast/Toast';
 export { Mark, type MarkProps } from './Mark/Mark';
+export { SideNav, type SideNavProps } from './SideNav/SideNav';

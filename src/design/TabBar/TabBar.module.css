@@ -84,3 +84,10 @@
   font-variant-numeric: tabular-nums;
   box-shadow: 0 0 0 2px var(--bg);
 }
+
+/* On wide screens the side rail replaces the tab bar. */
+@media (min-width: 960px) {
+  .bar {
+    display: none;
+  }
+}

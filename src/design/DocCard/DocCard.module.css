@@ -10,6 +10,14 @@
   color: var(--ink-2);
 }
 
+/* the row's title, with the gold mark right after it */
+.rowTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px var(--s-2);
+}
+
 /* the document on a sheet of paper */
 .paper {
   display: flex;

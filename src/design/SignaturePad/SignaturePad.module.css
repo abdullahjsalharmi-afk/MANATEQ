@@ -1,0 +1,147 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* The paper. Its edge is the same inset hairline as a text field. */
+.pad {
+  position: relative;
+  height: 168px;
+  overflow: hidden;
+  border-radius: var(--r-control);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+}
+
+.invalid {
+  box-shadow: inset 0 0 0 1px var(--bad);
+}
+
+/* The canvas lies over everything else in the pad and takes the pointer; dragging on it never scrolls the page. */
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--ink);
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.padTyped .canvas {
+  cursor: default;
+}
+
+/* The line to sign on, with the customary cross at its start. */
+.line {
+  position: absolute;
+  inset-inline: 18px;
+  inset-block-end: 46px;
+  display: flex;
+  align-items: flex-end;
+  border-block-end: 1px dashed var(--line-strong);
+  pointer-events: none;
+}
+
+.cross {
+  margin-block-end: 7px;
+  color: var(--ink-3);
+}
+
+.signer {
+  position: absolute;
+  inset-inline: 18px;
+  inset-block-end: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--t-cap);
+  line-height: 1.5;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0 0 46px;
+  display: grid;
+  place-items: center;
+  font-size: var(--t-callout);
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+/* The adopted signature: the typed name, set on the line with the slant of a hand. */
+.typed {
+  position: absolute;
+  inset-inline: 44px 18px;
+  inset-block-end: 48px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.typedName {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-inline: 8px;
+  font-size: 1.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink);
+  transform: rotate(-4deg) skewX(-10deg);
+  transform-origin: 50% 100%;
+  animation: write var(--d-3) var(--ease);
+}
+
+/* Arabic handwriting leans the other way. */
+:global([dir='rtl']) .typedName {
+  transform: rotate(4deg) skewX(10deg);
+}
+
+/* The buttons are text only; their 18px padding puts their text level with the ends of the line above. */
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.off {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* The name appears the way it is written: from the left in English, from the right in Arabic. */
+:global([dir='rtl']) .typedName {
+  animation-name: write-rtl;
+}
+
+@keyframes write {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes write-rtl {
+  from {
+    opacity: 0;
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}

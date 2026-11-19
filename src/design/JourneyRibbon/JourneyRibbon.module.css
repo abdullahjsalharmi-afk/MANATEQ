@@ -4,6 +4,7 @@
   min-width: 0;
   --node: 20px;
   --pad: 6px;
+  --gap: 6px;
   --rail-done: var(--ink);
   --rail-next: var(--line-strong);
 }
@@ -24,34 +25,26 @@
   min-width: 0;
 }
 
-/* The connecting track: half a segment on each side of the node, so it never runs under a hollow node. */
-.station::before,
+/* The connecting track: one segment from each node to the next, stopping short of both, so it never
+   runs under a hollow node. A segment is "travelled" once the station it leaves is done. */
 .station::after {
   content: '';
   position: absolute;
+  z-index: 1;
   inset-block-start: calc(var(--pad) + var(--node) / 2 - 1px);
+  inset-inline-start: calc(50% + var(--node) / 2 + var(--gap));
+  width: calc(100% - var(--node) - var(--gap) * 2);
   height: 2px;
   border-radius: 1px;
   background: var(--rail-next);
   pointer-events: none;
 }
 
-.station::before {
-  inset-inline: 0 calc(50% + var(--node) / 2 + 5px);
-}
-
-.station::after {
-  inset-inline: calc(50% + var(--node) / 2 + 5px) 0;
-}
-
-.station:first-child::before,
 .station:last-child::after {
   display: none;
 }
 
-.done::before,
-.done::after,
-.current::before {
+.done::after {
   background: var(--rail-done);
 }
 

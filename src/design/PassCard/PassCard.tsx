@@ -76,7 +76,7 @@ export function PassCard({ kind, holder, idOrPlate, company, zone, plot, validFr
               <dt>{t('zone')}</dt>
               <dd>{zone}</dd>
             </div>
-            <div className={styles.fact}>
+            <div className={cx(styles.fact, !idOrPlate && styles.wide)}>
               <dt>{t('plot')}</dt>
               <dd className="ltr num">{plot}</dd>
             </div>

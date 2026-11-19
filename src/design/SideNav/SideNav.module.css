@@ -1,0 +1,98 @@
+/* Hidden on phones; the tab bar is used there. */
+.rail {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .rail {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-6);
+    width: var(--side-w);
+    padding: var(--s-6) var(--s-4) var(--s-5);
+    background: var(--surface-2);
+    box-shadow: inset -1px 0 0 var(--line);
+  }
+
+  :global([dir='rtl']) .rail {
+    box-shadow: inset 1px 0 0 var(--line);
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding-inline: var(--s-2);
+  min-height: 44px;
+}
+
+.nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 48px;
+  padding-inline: var(--s-3);
+  border-radius: 12px;
+  color: var(--ink-2);
+  font-size: var(--t-callout);
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color var(--d-1) var(--ease),
+    color var(--d-1) var(--ease);
+}
+
+.item:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.active,
+.active:hover {
+  background: var(--accent-tint);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+}
+
+.badge {
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 6px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding-inline: var(--s-2);
+}

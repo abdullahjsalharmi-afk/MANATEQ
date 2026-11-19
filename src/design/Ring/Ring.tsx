@@ -24,10 +24,11 @@ export interface RingProps {
   className?: string;
 }
 
-const GEOMETRY: Record<RingSize, { box: number; stroke: number; glyph: number }> = {
-  sm: { box: 36, stroke: 3, glyph: 16 },
-  md: { box: 52, stroke: 4, glyph: 22 },
-  lg: { box: 84, stroke: 6, glyph: 34 },
+/** `dots`: how many dots the track has when there is no clock. */
+const GEOMETRY: Record<RingSize, { box: number; stroke: number; glyph: number; dots: number }> = {
+  sm: { box: 36, stroke: 3, glyph: 16, dots: 14 },
+  md: { box: 52, stroke: 4, glyph: 22, dots: 18 },
+  lg: { box: 84, stroke: 6, glyph: 34, dots: 24 },
 };
 
 /** The tone a ring takes for a value: calm up to 0.8, a warning above it, past the standard above 1. */
@@ -43,7 +44,7 @@ export function ringTone(value: number | null, complete = false): RingTone {
  * the centre content and the label say the same thing.
  */
 export function Ring({ value, label, size = 'md', complete = false, children, className }: RingProps) {
-  const { box, stroke, glyph } = GEOMETRY[size];
+  const { box, stroke, glyph, dots } = GEOMETRY[size];
   const tone = ringTone(value, complete);
   const share = complete ? 1 : value === null || Number.isNaN(value) ? 0 : Math.max(0, Math.min(1, value));
   const centre = box / 2;
@@ -56,7 +57,7 @@ export function Ring({ value, label, size = 'md', complete = false, children, cl
   return (
     <span role="img" aria-label={label} data-tone={tone} className={cx(styles.ring, styles[size], styles[tone], className)}>
       <svg className={styles.svg} width={box} height={box} viewBox={`0 0 ${box} ${box}`} aria-hidden="true" focusable="false">
-        <circle className={styles.track} cx={centre} cy={centre} r={radius} strokeWidth={stroke} />
+        <circle className={styles.track} cx={centre} cy={centre} r={radius} strokeWidth={tone === 'idle' ? stroke - 1 : stroke} pathLength={tone === 'idle' ? dots : undefined} />
         {share > 0 ? (
           <circle className={styles.arc} cx={centre} cy={centre} r={radius} strokeWidth={stroke} pathLength={100} strokeDasharray="100 100" strokeDashoffset={100 - share * 100} />
         ) : null}

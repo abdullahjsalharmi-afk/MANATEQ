@@ -1,5 +1,6 @@
 .app {
   min-height: 100dvh;
+  padding-inline-start: var(--side, 0px);
 }
 
 .loading {
@@ -9,4 +10,16 @@
 .actions {
   display: grid;
   gap: var(--s-3);
+}
+
+.brandName {
+  font-size: var(--t-heading);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.sideNote {
+  font-size: var(--t-cap);
+  line-height: 1.6;
+  color: var(--ink-3);
 }

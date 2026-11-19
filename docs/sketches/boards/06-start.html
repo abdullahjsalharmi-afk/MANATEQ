@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1000">
+<title>مناطق ون — دفتر التصميم · 06 بدء خدمة</title>
+<link rel="stylesheet" href="../kit/sketch.css">
+</head>
+<body>
+<article class="board" id="b06">
+  <style>
+    /* layout of this board only: four small phones in two rows, one notes column between each pair */
+    #b06 .phone { height: 456px; gap: 9px; }
+    #b06 .mid { position: relative; flex: 0 0 284px; height: 456px; padding: 0; display: block; }
+    #b06 .mid .note { position: absolute; inset-inline: 0; }
+    #b06 .note .t { display: inline-block; }
+    #b06 .note small { text-wrap: balance; }
+    #b06 .note.to-a { padding-inline-end: 34px; }
+    #b06 .note.to-b { padding-inline-start: 34px; }
+    #b06 .next { position: absolute; inset-inline: 0; top: 382px; height: 30px; padding: 0; width: auto; }
+    #b06 .next-cap { position: absolute; inset-inline: 0; top: 416px; margin: 0; text-align: center; font-size: 13.5px; color: var(--pencil); }
+    #b06 .ret { height: 44px; margin: 4px 150px 12px; padding: 0; width: auto; }
+    #b06 .bar { display: flex; align-items: center; gap: 10px; }
+    #b06 .bar .w-step { flex: 1; }
+    #b06 .tiny { height: 20px; font-size: 10px; padding: 0 8px; }
+    #b06 .w-row { padding: 5px 0 6px; }
+    #b06 .file { flex-direction: row; align-items: center; gap: 9px; padding: 8px 10px; }
+    #b06 .file .colx { flex: 1; min-width: 0; gap: 0; }
+    #b06 .drop { justify-content: center; }
+    #b06 .quiet { display: flex; align-items: center; justify-content: center; gap: 6px; }
+    #b06 .done { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+    #b06 .w-tl li { padding-bottom: 8px; font-size: 12px; }
+    #b06 .w-tl li small { font-size: 10.5px; }
+    #b06 .bolt { width: 11px; height: 11px; vertical-align: -1px; margin-inline-end: 2px; }
+  </style>
+  <header class="board-head">
+    <span class="board-no" data-sk="circle">06</span>
+    <div>
+      <h2>بدء خدمة — <span data-sk="hl">أسئلة قليلة، ومرة واحدة</span></h2>
+      <p>كل خدمة تبدأ بالشكل نفسه: ما نعرفه عنك، ثم الباقي فقط، ثم المراجعة، ثم رقم مرجعي.</p>
+    </div>
+  </header>
+
+  <!-- الصف الأول: 1 ← 2 -->
+  <div class="stage">
+    <div class="phone-wrap">
+      <div class="phone" data-sk="phone">
+        <div class="bar"><i class="w-icon sm" data-sk="icon" data-icon="cross" data-c="p"></i><div class="w-step"><i data-sk="step" class="on"></i><i data-sk="step"></i><i data-sk="step"></i><i data-sk="step"></i></div></div>
+        <div class="colx gap4" id="k-head">
+          <span class="t-xl">نعرفك مسبقًا</span>
+          <span class="t-s">هذه بياناتك كما وردت من مصادرها. أكّدها فقط.</span>
+        </div>
+        <div class="colx" style="gap:0">
+          <div class="w-row" data-sk="row"><i class="w-icon sm" data-sk="check"></i><div class="colx"><span class="t-s">الشركة</span><span class="t-m">شركة الريان للصناعات</span></div><span class="w-chip tiny" data-sk="chip">GDX</span></div>
+          <div class="w-row" data-sk="row"><i class="w-icon sm" data-sk="check"></i><div class="colx"><span class="t-s">السجل التجاري</span><span class="t-m">ساري المفعول</span></div><span class="w-chip tiny" data-sk="chip">GDX</span></div>
+          <div class="w-row" data-sk="row"><i class="w-icon sm" data-sk="check"></i><div class="colx"><span class="t-s">المفوّض بالتوقيع</span><span class="t-m">أنت، بهويتك الوطنية</span></div><span class="w-chip tiny" data-sk="chip">توثيق</span></div>
+          <div class="w-row"><i class="w-icon sm" data-sk="check"></i><div class="colx"><span class="t-s">القطعة</span><span class="t-m"><bdi>BA-2-117</bdi> · 5,000 م²</span></div><span class="w-chip tiny" data-sk="chip">GIS</span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="w-btn" data-sk="btn">صحيحة، تابِع</div>
+      </div>
+      <p class="cap"><b>1 · نعرفك مسبقًا</b></p>
+    </div>
+
+    <div class="col mid">
+      <p class="note to-a" style="top:54px"><span class="t" data-to="#k-head"><b class="n" data-sk="circle">1</b>نبدأ بما نعرفه</span><small>بياناتك للتأكيد لا للإدخال، ومع كل معلومة مصدرها.</small></p>
+      <p class="note to-b" style="top:130px"><span class="t" data-to="#d-plot"><b class="n" data-sk="circle">2</b>أربعة حقول على الأكثر</span><small>وما زاد يُقسَّم على صفحات.</small></p>
+      <p class="note ink to-b" style="top:206px"><span class="t" data-to="#d-file"><b class="n" data-sk="circle">3</b>فحص فوري للوثيقة</span><small>تعرف حالًا هل هي مقروءة، قبل الإرسال لا بعده.</small></p>
+      <p class="note to-b" style="top:306px"><span class="t" data-to="#d-saved"><b class="n" data-sk="circle">4</b>المسودة تحفظ نفسها</span><small>اخرج وعُد متى شئت.</small></p>
+      <div class="flow next" data-sk="arrow-l"></div>
+      <p class="next-cap">متابعة</p>
+    </div>
+
+    <div class="phone-wrap">
+      <div class="phone" data-sk="phone">
+        <div class="bar"><i class="w-icon sm" data-sk="icon" data-icon="cross" data-c="p"></i><div class="w-step"><i data-sk="step" class="on"></i><i data-sk="step" class="on"></i><i data-sk="step"></i><i data-sk="step"></i></div></div>
+        <span class="t-xl">التفاصيل</span>
+        <div class="colx gap4" id="d-plot">
+          <span class="t-s">القطعة</span>
+          <div class="w-field" data-sk="field"><span class="v">BA-2-117 · بركة العوامر</span><i class="w-icon sm end" data-sk="check"></i></div>
+        </div>
+        <div class="colx gap4" id="d-file">
+          <span class="t-s">المخططات (CAD أو BIM أو PDF)</span>
+          <div class="w-card file" data-sk="card-a">
+            <i class="w-icon" data-sk="icon" data-icon="doc"></i>
+            <div class="colx"><span class="t-m"><bdi>Warehouse-Drawings.pdf</bdi></span><span class="t-s t-ok">تم التحقق — الوثيقة مقروءة</span></div>
+            <i class="w-icon sm" data-sk="check"></i>
+          </div>
+        </div>
+        <div class="colx gap4">
+          <span class="t-s">الحسابات التصميمية</span>
+          <div class="w-field drop" data-sk="card-dash"><i class="w-icon sm" data-sk="icon" data-icon="upload" data-c="p"></i>ارفع الملف</div>
+        </div>
+        <div class="quiet" id="d-saved"><i class="w-icon sm" data-sk="check"></i><span class="t-s">حُفظت المسودة تلقائيًا</span></div>
+        <div class="grow"></div>
+        <div class="w-btn" data-sk="btn">متابعة</div>
+      </div>
+      <p class="cap"><b>2 · التفاصيل</b></p>
+    </div>
+  </div>
+
+  <div class="flow ret" data-sk="arrow-r"></div>
+
+  <!-- الصف الثاني: 3 ← 4 -->
+  <div class="stage">
+    <div class="phone-wrap">
+      <div class="phone" data-sk="phone">
+        <div class="bar"><i class="w-icon sm" data-sk="icon" data-icon="cross" data-c="p"></i><div class="w-step"><i data-sk="step" class="on"></i><i data-sk="step" class="on"></i><i data-sk="step" class="on"></i><i data-sk="step"></i></div></div>
+        <span class="t-xl">راجِع وأرسِل</span>
+        <div class="colx" id="r-list" style="gap:0">
+          <div class="w-row" data-sk="row"><div class="colx"><span class="t-s">القطعة</span><span class="t-m">BA-2-117 · بركة العوامر</span></div><span class="w-chip tiny" data-sk="chip">GIS</span></div>
+          <div class="w-row" data-sk="row"><div class="colx"><span class="t-s">المخططات</span><span class="t-m"><bdi>Warehouse-Drawings.pdf</bdi></span></div><span class="t-s t-a">تعديل</span></div>
+          <div class="w-row" data-sk="row"><div class="colx"><span class="t-s">الحسابات التصميمية</span><span class="t-m"><bdi>Design-Calculations.pdf</bdi></span></div><span class="t-s t-a">تعديل</span></div>
+        </div>
+        <div class="quiet" style="justify-content:flex-start"><i class="w-icon sm" data-sk="check"></i><span class="t-s">نُرفق عنك: سجل القطعة وأنظمة المنطقة</span></div>
+        <div class="rowx" style="gap:9px"><span class="w-toggle" data-sk="toggle"></span><span class="t-s">أقرّ بصحة البيانات والوثائق</span></div>
+        <div class="grow"></div>
+        <span class="t-s center">معيار الخدمة: 3 أيام عمل · استرشادي</span>
+        <div class="w-btn" data-sk="btn">أرسِل الطلب</div>
+      </div>
+      <p class="cap"><b>3 · راجِع وأرسِل</b></p>
+    </div>
+
+    <div class="col mid">
+      <p class="note ink to-a" style="top:118px"><span class="t" data-to="#r-list"><b class="n" data-sk="circle">5</b>راجِع قبل الإرسال</span><small>كل إجابة أمامك، وبجانبها «تعديل».</small></p>
+      <p class="note to-b" style="top:212px"><span class="t" data-to="#o-next"><b class="n" data-sk="circle">6</b>ثم: ماذا يحدث الآن؟</span><small>أولى خطوات سير العمل الحقيقي، ومَن بيده كل خطوة.</small></p>
+      <div class="flow next" data-sk="arrow-l"></div>
+      <p class="next-cap">إرسال</p>
+    </div>
+
+    <div class="phone-wrap">
+      <div class="phone" data-sk="phone">
+        <div class="bar"><i class="w-icon sm" data-sk="icon" data-icon="cross" data-c="p"></i><div class="w-step"><i data-sk="step" class="on"></i><i data-sk="step" class="on"></i><i data-sk="step" class="on"></i><i data-sk="step" class="on"></i></div></div>
+        <div class="done">
+          <span class="w-ico lg" data-sk="circle"><i class="w-icon" data-sk="check"></i></span>
+          <span class="t-xl">تم استلام طلبك</span>
+          <span class="w-chip" data-sk="chip">MQ-2611-0042</span>
+        </div>
+        <div class="colx" id="o-next" style="gap:8px">
+          <span class="t-m">ماذا يحدث الآن؟</span>
+          <ol class="w-tl">
+            <li class="now">إرفاق سجل القطعة وأنظمة المنطقة<small><i class="w-icon bolt" data-sk="icon" data-icon="bolt" data-c="p"></i>آلي · فوري</small></li>
+            <li class="todo">القواعد تفحص مقابل أنظمة المنطقة<small><i class="w-icon bolt" data-sk="icon" data-icon="bolt" data-c="p"></i>آلي · فوري</small></li>
+            <li class="todo" style="padding-bottom:0">إصدار الشهادة بشروطها ورمز QR<small>مناطق · خلال 3 أيام عمل</small></li>
+          </ol>
+        </div>
+        <div class="grow"></div>
+        <div class="w-btn" data-sk="btn">تتبّع الطلب</div>
+      </div>
+      <p class="cap"><b>4 · تم الاستلام</b></p>
+    </div>
+  </div>
+
+  <p class="board-foot"><b>القاعدة:</b> لا تزيد الصفحة على نحو أربعة حقول، ولا يُكتب شيء مرتين.</p>
+</article>
+<script src="../kit/rough.js"></script>
+<script src="../kit/sketch.js"></script>
+</body>
+</html>

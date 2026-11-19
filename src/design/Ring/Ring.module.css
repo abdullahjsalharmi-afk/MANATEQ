@@ -97,7 +97,9 @@
   color: var(--ok);
 }
 
+/* no clock: a dotted track, clearly not a progress */
 .idle .track {
-  stroke-dasharray: 2 4;
   stroke: var(--line-strong);
+  stroke-linecap: round;
+  stroke-dasharray: 0.001 0.999;
 }

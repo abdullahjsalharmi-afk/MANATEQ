@@ -82,6 +82,7 @@
 
   /* layout */
   --content-max: 560px;
+  --side-w: 264px;
   --tabbar-h: 64px;
   --topbar-h: 52px;
   --tap: 44px;

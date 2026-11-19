@@ -42,7 +42,6 @@
   position: absolute;
   inset-inline-start: 11px;
   width: 2px;
-  border-radius: 1px;
 }
 
 .item::before {
@@ -310,7 +309,6 @@
   position: absolute;
   inset-inline-start: 11px;
   width: 2px;
-  border-radius: 1px;
 }
 
 .past::after {

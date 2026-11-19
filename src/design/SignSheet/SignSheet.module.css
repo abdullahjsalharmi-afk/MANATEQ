@@ -1,0 +1,82 @@
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  transition: opacity var(--d-2) var(--ease);
+}
+
+/* While the signature is processing the review stays in place, out of reach. */
+.busy {
+  opacity: 0.55;
+}
+
+/* what is being signed */
+.document {
+  border-radius: var(--r-control);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  padding: 14px var(--s-4) 2px;
+}
+
+.documentHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding-block-end: 12px;
+}
+
+.tile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--accent-tint);
+  color: var(--accent-ink);
+}
+
+.documentText {
+  flex: 1;
+  min-width: 0;
+}
+
+.kicker {
+  font-size: var(--t-cap);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.documentName {
+  font-size: var(--t-body);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.documentLines {
+  box-shadow: 0 -1px 0 var(--line);
+}
+
+/* confirmation */
+.signedName {
+  font-size: var(--t-body);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.signedNote {
+  max-width: 26em;
+  font-size: var(--t-callout);
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+.signedDemo {
+  margin-block-start: var(--s-2);
+  font-size: var(--t-foot);
+  line-height: 1.55;
+  color: var(--ink-2);
+}

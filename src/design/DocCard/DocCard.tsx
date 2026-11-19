@@ -91,7 +91,13 @@ export function DocCard(props: DocCardProps) {
       <Row
         className={className}
         leading={<DocIcon kind={kind} />}
-        title={title}
+        title={
+          <span className={styles.rowTitle}>
+            <span>{title}</span>
+            {mark}
+          </span>
+        }
+        wrap
         subtitle={
           <>
             <span className="ltr num">{reference}</span>
@@ -99,7 +105,6 @@ export function DocCard(props: DocCardProps) {
             <span className="num">{date}</span>
           </>
         }
-        trailing={mark}
         to={to}
         onClick={onClick}
         chevron={to !== undefined || onClick !== undefined}
