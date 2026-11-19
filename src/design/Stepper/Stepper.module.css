@@ -1,0 +1,42 @@
+.stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.track {
+  display: flex;
+  gap: 4px;
+}
+
+.segment {
+  flex: 1;
+  min-width: 0;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--line-strong);
+  overflow: hidden;
+}
+
+/* The fill grows from the start of the segment, in the reading direction. */
+.fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width var(--d-3) var(--ease);
+}
+
+.done .fill {
+  width: 100%;
+}
+
+.label {
+  font-size: var(--t-cap);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}

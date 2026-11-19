@@ -1,0 +1,50 @@
+.avatar {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sm {
+  width: 32px;
+  height: 32px;
+  font-size: var(--t-cap);
+}
+
+.md {
+  width: 40px;
+  height: 40px;
+  font-size: var(--t-callout);
+}
+
+.lg {
+  width: 56px;
+  height: 56px;
+  font-size: var(--t-heading);
+}
+
+.xl {
+  width: 72px;
+  height: 72px;
+  font-size: var(--t-title);
+}
+
+.neutral {
+  background: var(--sunken);
+  color: var(--ink-2);
+}
+
+.accent {
+  background: var(--accent-tint);
+  color: var(--accent-ink);
+}
+
+.gold {
+  background: var(--gold-tint);
+  color: var(--gold);
+}

@@ -1,0 +1,103 @@
+.ring {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  color: var(--ink);
+  --ring-color: var(--accent);
+}
+
+.sm {
+  width: 36px;
+  height: 36px;
+}
+
+.md {
+  width: 52px;
+  height: 52px;
+}
+
+.lg {
+  width: 84px;
+  height: 84px;
+}
+
+/* The arc starts at twelve o'clock and runs clockwise in both directions of reading, like a clock. */
+.svg {
+  grid-area: 1 / 1;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.track {
+  fill: none;
+  stroke: var(--line);
+}
+
+.arc {
+  fill: none;
+  stroke: var(--ring-color);
+  stroke-linecap: round;
+  transition:
+    stroke-dashoffset var(--d-3) var(--ease),
+    stroke var(--d-2) var(--ease);
+  animation: draw 900ms var(--ease) backwards;
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+}
+
+.centre {
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+  max-width: 100%;
+  padding: 0 6px;
+  text-align: center;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sm .centre {
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.md .centre {
+  font-size: var(--t-foot);
+  font-weight: 600;
+}
+
+.lg .centre {
+  font-size: var(--t-heading);
+  font-weight: 700;
+}
+
+.warn {
+  --ring-color: var(--warn);
+}
+
+.bad {
+  --ring-color: var(--bad);
+}
+
+.bad .centre {
+  color: var(--bad);
+}
+
+.ok {
+  --ring-color: var(--ok);
+}
+
+.ok .centre {
+  color: var(--ok);
+}
+
+.idle .track {
+  stroke-dasharray: 2 4;
+  stroke: var(--line-strong);
+}

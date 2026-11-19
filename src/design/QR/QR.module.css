@@ -1,0 +1,19 @@
+/* The plate keeps its own two colours in both themes on purpose: a QR code is read by cameras, and
+   cameras need dark modules on a light ground. */
+.plate {
+  --qr-plate: #ffffff;
+  --qr-ink: #1f1b1c;
+  flex: none;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--r-tile);
+  background: var(--qr-plate);
+  color: var(--qr-ink);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.code {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

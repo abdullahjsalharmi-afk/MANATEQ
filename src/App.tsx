@@ -1,5 +1,6 @@
 import { CircleUserRound, House, LayoutGrid, ListChecks, MapPinned } from 'lucide-react';
 import { Suspense, useEffect, useMemo } from 'react';
+import { ErrorBoundary } from '@/app/ErrorBoundary';
 import { LangProvider, useT } from '@/app/i18n';
 import { navigate, useLocation } from '@/app/router';
 import { resolveRoute, RouteContext, type TabKey } from '@/app/routes';
@@ -77,10 +78,26 @@ function Shell() {
   return (
     <RouteContext.Provider value={routeValue}>
       <div className={styles.app} key={location.path}>
-        <Suspense fallback={<div className={styles.loading} role="status" aria-label={t('loading')} />}>{content}</Suspense>
+        <ErrorBoundary resetKey={location.path} fallback={(retry) => <Broken onRetry={retry} />}>
+          <Suspense fallback={<div className={styles.loading} role="status" aria-label={t('loading')} />}>{content}</Suspense>
+        </ErrorBoundary>
       </div>
       {chrome === 'tabs' ? <TabBar items={tabs} activeKey={activeTab} label={t('tabsLabel')} /> : null}
     </RouteContext.Provider>
+  );
+}
+
+function Broken({ onRetry }: { onRetry: () => void }) {
+  const t = useT(shell);
+  return (
+    <Screen title={t('brokenTitle')} large subtitle={t('brokenBody')}>
+      <div className={styles.actions}>
+        <Button onClick={onRetry}>{t('tryAgain')}</Button>
+        <Button to="/" variant="secondary">
+          {t('goHome')}
+        </Button>
+      </div>
+    </Screen>
   );
 }
 

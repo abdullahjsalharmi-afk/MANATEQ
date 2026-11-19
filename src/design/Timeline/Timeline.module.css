@@ -1,0 +1,324 @@
+.timeline {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  --rail-done: var(--ink);
+  --rail-next: var(--line-strong);
+  --rail-gap: 3px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* One step: a rail column with the dot, then the words. */
+.item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  column-gap: var(--s-3);
+  padding-block-end: var(--s-4);
+  /* The dot sits on the first line of the title. */
+  --dot-r: 9px;
+  --dot-y: calc(var(--t-callout) * 0.75);
+  --rail-above: var(--rail-next);
+  --rail-below: var(--rail-next);
+}
+
+.item:last-child {
+  padding-block-end: 0;
+}
+
+.list[data-tail] .item:last-child {
+  padding-block-end: var(--s-2);
+}
+
+/* The rail: one segment above the dot and one below it, so it never crosses a hollow dot. */
+.item::before,
+.item::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 11px;
+  width: 2px;
+  border-radius: 1px;
+}
+
+.item::before {
+  inset-block-start: 0;
+  height: calc(var(--dot-y) - var(--dot-r) - var(--rail-gap));
+  background: var(--rail-above);
+}
+
+.item::after {
+  inset-block: calc(var(--dot-y) + var(--dot-r) + var(--rail-gap)) 0;
+  background: var(--rail-below);
+}
+
+.item:first-child::before,
+.item:last-child::after {
+  display: none;
+}
+
+.list[data-lead] .item:first-child::before,
+.list[data-tail] .item:last-child::after {
+  display: block;
+}
+
+.done,
+.item[data-past] {
+  --rail-above: var(--rail-done);
+  --rail-below: var(--rail-done);
+}
+
+.current {
+  --dot-r: 10px;
+  --dot-y: calc(var(--s-3) + var(--t-body) * 0.75);
+  --rail-above: var(--rail-done);
+}
+
+.upcoming,
+.skipped {
+  --dot-r: 6px;
+}
+
+/* dots */
+.dot {
+  position: relative;
+  grid-column: 1;
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  width: calc(var(--dot-r) * 2);
+  height: calc(var(--dot-r) * 2);
+  margin-block-start: calc(var(--dot-y) - var(--dot-r));
+  border-radius: 50%;
+}
+
+.done .dot,
+.stack {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.current .dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-tint);
+}
+
+/* the small light centre of the current dot */
+.current .dot::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--on-accent);
+}
+
+/* a soft ring that breathes out from the current dot */
+.current .dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  animation: pulse 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  70%,
+  100% {
+    transform: scale(2.3);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .current .dot::before {
+    animation: none !important;
+  }
+}
+
+.upcoming .dot {
+  box-shadow: inset 0 0 0 1.5px var(--ink-3);
+}
+
+.skipped .dot {
+  border: 1.5px dashed var(--ink-3);
+}
+
+/* words */
+.body {
+  grid-column: 2;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.title {
+  font-size: var(--t-callout);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.upcoming .title,
+.skipped .title {
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: var(--t-cap);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.part {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.part + .part::before {
+  content: '·';
+  margin-inline: 6px;
+  color: var(--ink-3);
+}
+
+.auto {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 500;
+}
+
+.outcome {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-block-start: 2px;
+  font-size: var(--t-foot);
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.outcome > svg {
+  margin-block-start: 3px;
+  color: var(--ink-3);
+}
+
+/* the current step */
+.card {
+  grid-column: 2;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--s-3) var(--s-4) 14px;
+  border-radius: 16px;
+  background: var(--accent-tint);
+}
+
+.card .title {
+  font-size: var(--t-body);
+  font-weight: 600;
+}
+
+.text {
+  font-size: var(--t-foot);
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+.now {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px var(--s-3);
+  margin-block-start: 4px;
+}
+
+.chip {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.eta,
+.now .auto {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--t-cap);
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* "show earlier steps" and "show all steps" */
+.toggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  column-gap: var(--s-3);
+  align-items: center;
+  width: 100%;
+  min-height: var(--tap);
+  border-radius: 10px;
+  color: var(--accent-ink);
+  font-size: var(--t-callout);
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: start;
+  --dot-r: 9px;
+}
+
+.toggle .dot {
+  margin-block-start: 0;
+}
+
+.toggleLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ellipsis {
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  color: var(--ink-3);
+}
+
+/* the rail runs on from the folded steps to the first visible one, and into the "show all" row */
+.past::after,
+.more::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 11px;
+  width: 2px;
+  border-radius: 1px;
+}
+
+.past::after {
+  inset-block: calc(50% + var(--dot-r) + var(--rail-gap)) 0;
+  background: var(--rail-done);
+}
+
+.more::before {
+  inset-block: 0 calc(50% + 8px + var(--rail-gap));
+  background: var(--rail-next);
+}

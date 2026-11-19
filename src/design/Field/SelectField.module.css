@@ -1,0 +1,240 @@
+/* radio tiles: a handful of options, all visible */
+.tiles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 52px;
+  padding: 10px var(--s-4);
+  border-radius: var(--r-control);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    box-shadow var(--d-1) var(--ease),
+    background-color var(--d-1) var(--ease);
+}
+
+@media (hover: hover) {
+  .tile:hover {
+    box-shadow: inset 0 0 0 1px var(--ink-3);
+  }
+}
+
+.tileOn,
+.tileOn:hover {
+  background: var(--accent-tint);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.tileInvalid:not(.tileOn) {
+  box-shadow: inset 0 0 0 1px var(--bad);
+}
+
+.tileDisabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* The native radio stays in the tile (for focus and scrolling) but is not seen. */
+.radio {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: var(--s-4);
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tile:has(.radio:focus-visible) {
+  outline: 2px solid var(--field-focus);
+  outline-offset: 2px;
+}
+
+@supports not selector(:has(*)) {
+  .tile:focus-within {
+    outline: 2px solid var(--field-focus);
+    outline-offset: 2px;
+  }
+}
+
+/* The radio mark: a ring that fills in when chosen. */
+.mark {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--ink-3);
+  transition: box-shadow var(--d-2) var(--ease);
+}
+
+.tileOn .mark {
+  box-shadow: inset 0 0 0 7px var(--accent);
+}
+
+.tileText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tileLabel {
+  font-size: var(--t-body);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.tileHint {
+  font-size: var(--t-foot);
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.tileIcon {
+  color: var(--ink-3);
+  transition: color var(--d-1) var(--ease);
+}
+
+.tileOn .tileIcon {
+  color: var(--accent-ink);
+}
+
+/* the field-shaped button that opens the sheet */
+.trigger {
+  width: 100%;
+  gap: var(--s-2);
+  padding-inline: var(--s-4) 14px;
+  font-size: max(16px, var(--t-body));
+  line-height: 1.5;
+  text-align: start;
+  cursor: pointer;
+}
+
+.trigger:focus-visible {
+  outline: none;
+  border-radius: var(--r-control);
+}
+
+.trigger:disabled {
+  cursor: default;
+}
+
+.triggerValue {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  color: var(--ink-3);
+}
+
+/* the sheet: a steady height, so the list can be filtered without the sheet jumping */
+.sheet {
+  height: min(88dvh, 760px);
+}
+
+.search {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  margin-block-start: calc(var(--s-2) * -1);
+  padding-block: var(--s-2) var(--s-3);
+  background: var(--surface);
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  margin-inline: calc(var(--s-3) * -1);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 52px;
+  padding: var(--s-2) var(--s-3);
+  border-radius: 12px;
+  color: var(--ink);
+  text-align: start;
+  transition: background-color var(--d-1) var(--ease);
+}
+
+@media (hover: hover) {
+  .option:hover {
+    background: var(--surface-2);
+  }
+}
+
+.option:active {
+  background: var(--sunken);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--field-focus, var(--accent));
+  outline-offset: -2px;
+  border-radius: 12px;
+}
+
+.optionOn {
+  background: var(--accent-tint);
+}
+
+.optionOn:hover {
+  background: var(--accent-tint);
+}
+
+.optionIcon {
+  color: var(--ink-3);
+}
+
+.optionText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.optionLabel {
+  font-size: var(--t-body);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.optionOn .optionLabel {
+  font-weight: 600;
+}
+
+.optionHint {
+  font-size: var(--t-foot);
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.optionCheck {
+  color: var(--accent-ink);
+}
+
+.empty {
+  padding-block: var(--s-10);
+  text-align: center;
+  font-size: var(--t-callout);
+  color: var(--ink-2);
+}

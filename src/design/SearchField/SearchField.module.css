@@ -1,0 +1,101 @@
+.search {
+  --search-focus: var(--accent);
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 48px;
+  border-radius: var(--r-control);
+  background: var(--sunken);
+  color: var(--ink);
+}
+
+:global([data-theme='dark']) .search {
+  --search-focus: var(--accent-ink);
+}
+
+/* The focus edge is drawn on top as an inset shadow: nothing moves when it appears. */
+.search::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px transparent;
+  pointer-events: none;
+  transition: box-shadow var(--d-1) var(--ease);
+}
+
+.search:focus-within::after {
+  box-shadow: inset 0 0 0 2px var(--search-focus);
+}
+
+.glass {
+  margin-inline-start: 14px;
+  color: var(--ink-2);
+  pointer-events: none;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0 10px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font-size: max(16px, var(--t-body));
+  line-height: 1.5;
+  text-align: start;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.input:focus-visible {
+  outline: none;
+  border-radius: inherit;
+}
+
+.input::placeholder {
+  color: var(--ink-2);
+  opacity: 1;
+}
+
+.input::-webkit-search-decoration,
+.input::-webkit-search-cancel-button {
+  display: none;
+  -webkit-appearance: none;
+}
+
+/* A small disc with a cross inside a full-size touch target. */
+.clear {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  margin-inline-end: 2px;
+  border-radius: 50%;
+}
+
+.clear:focus-visible {
+  outline-offset: -6px;
+  border-radius: 50%;
+}
+
+.clearDisc {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ink-3);
+  color: var(--sunken);
+  transition: background-color var(--d-1) var(--ease);
+}
+
+.clear:hover .clearDisc {
+  background: var(--ink-2);
+}

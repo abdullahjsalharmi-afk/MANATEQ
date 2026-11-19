@@ -1,0 +1,97 @@
+.badge {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+/* "5 أيام عمل": the number large, its words beside it on the same baseline */
+.figure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--s-2);
+  min-width: 0;
+  color: var(--ink);
+}
+
+.value {
+  font-size: var(--t-display);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.unit {
+  font-size: var(--t-heading);
+  font-weight: 600;
+  line-height: var(--lh-heading);
+}
+
+/* "يوم عمل واحد", "فوري": the whole figure is words */
+.words {
+  font-size: var(--t-title);
+  font-weight: 700;
+  line-height: 1.385;
+}
+
+:global([lang='en']) .words {
+  line-height: 1.27;
+  letter-spacing: -0.012em;
+}
+
+/* a standard without a headline duration: its sentence is the figure */
+.plain {
+  min-width: 0;
+  font-size: var(--t-body);
+  font-weight: 500;
+  line-height: var(--lh-body);
+  color: var(--ink);
+}
+
+.tag {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-block-start: 6px;
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  background: var(--sunken);
+  color: var(--ink-2);
+  font-size: var(--t-cap);
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.text {
+  max-width: 36em;
+  font-size: var(--t-callout);
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+/* compact: a quiet chip for list rows */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  min-height: 24px;
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  background: var(--sunken);
+  color: var(--ink-2);
+  font-size: var(--t-cap);
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}

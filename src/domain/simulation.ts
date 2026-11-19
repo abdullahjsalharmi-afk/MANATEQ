@@ -10,11 +10,11 @@ import type { ServiceDetail, Standard, WorkflowStep } from '@/data/types';
 import { findStep, mainPath, waitsForInvestor, type Timing } from './workflow';
 
 /** One working day of the story, in ms of real time, at speed 1. */
-export const DAY_MS = 7000;
+export const DAY_MS = 4500;
 /** An "instant" automatic step: long enough to be seen happening. */
-export const INSTANT_MS = 1300;
+export const INSTANT_MS = 1200;
 const MIN_STEP_MS = 900;
-const MAX_STEP_MS = 16000;
+const MAX_STEP_MS = 12000;
 /** The usual path may use at most this share of the published standard. */
 const STANDARD_SHARE = 0.8;
 

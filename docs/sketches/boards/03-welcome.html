@@ -16,23 +16,29 @@
     #b03 .note small { text-wrap: balance; }
     #b03 .note.to-a { padding-inline-end: 34px; }
     #b03 .note.to-b { padding-inline-start: 34px; }
-    #b03 .opens { position: absolute; inset-inline: 0; top: 508px; height: 34px; padding: 0; width: auto; }
-    #b03 .opens-cap { position: absolute; inset-inline: 0; top: 548px; text-align: center; font-size: 13.5px; color: var(--pencil); }
+    #b03 .opens { position: absolute; inset-inline: 0; top: 520px; height: 30px; padding: 0; width: auto; }
+    #b03 .opens-cap { position: absolute; inset-inline: 0; top: 556px; margin: 0; text-align: center; font-size: 13.5px; color: var(--pencil); }
     #b03 .lang { margin-inline-start: auto; }
     #b03 .lang .w-chip { height: 24px; font-size: 11px; padding: 0 10px; }
-    #b03 .scene { display: flex; align-items: flex-end; justify-content: center; gap: 12px; padding: 0 6px 3px; }
-    #b03 .scene .w-icon { width: 44px; height: 44px; }
-    #b03 .scene .w-icon.md { width: 32px; height: 32px; }
-    #b03 .scene .plots { width: 58px; height: 30px; }
-    #b03 .dim { opacity: 0.45; }
-    #b03 .who { flex-direction: row; align-items: center; gap: 10px; padding: 10px 12px; }
+    #b03 .brand { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+    #b03 .brand .name { font-size: 26px; margin-top: 6px; }
+    #b03 .brand .line { color: var(--pencil); }
+    #b03 .scene { display: flex; align-items: flex-end; justify-content: center; gap: 14px; padding: 0 4px 3px; }
+    #b03 .scene .w-icon { width: 56px; height: 56px; }
+    #b03 .scene .w-icon.md { width: 36px; height: 36px; }
+    #b03 .scene .plots { width: 66px; height: 34px; }
+    #b03 .dim { opacity: 0.42; }
+    #b03 .w-sheet { margin: 0 -11px 0; padding: 16px 14px 10px; gap: 14px; }
+    #b03 .who { flex-direction: row; align-items: center; gap: 10px; padding: 15px 12px; }
+    #b03 .who .w-ico { width: 40px; height: 40px; }
     #b03 .who .colx { flex: 1; min-width: 0; gap: 1px; }
+    #b03 .quiet { display: flex; align-items: center; justify-content: center; gap: 6px; }
   </style>
   <header class="board-head">
     <span class="board-no" data-sk="circle">03</span>
     <div>
       <h2>الترحيب والدخول — <span data-sk="hl">بلا كلمة مرور</span></h2>
-      <p>شاشة أولى هادئة: اسم، وسطر واحد، وزرّان. والدخول في هذه النسخة محاكاة: تختار ملفًا تجريبيًا ولا تكتب شيئًا.</p>
+      <p>شاشة أولى هادئة، ودخول بالمحاكاة: تختار ملفًا تجريبيًا ولا تكتب شيئًا.</p>
     </div>
   </header>
 
@@ -46,12 +52,15 @@
             <span class="w-chip" data-sk="chip">English</span>
           </div>
         </div>
-        <div class="colx center" id="w-name" style="align-items:center;gap:4px;margin-top:26px">
+        <div class="brand" style="margin-top:22px">
           <span class="w-ico lg" data-sk="circle"><span class="t-s">الشعار</span></span>
-          <span class="t-xl" style="font-size:26px;margin-top:6px">مناطق ون</span>
-          <span class="t-m" style="color:var(--pencil)">خمسون خدمة. رحلة واحدة.</span>
+          <div class="brand" id="w-name" style="gap:2px">
+            <span class="t-xl name">مناطق ون</span>
+            <span class="t-m line">خمسون خدمة. رحلة واحدة.</span>
+          </div>
         </div>
-        <div class="colx gap4" id="w-art" style="margin-top:26px">
+        <div class="grow"></div>
+        <div class="colx gap4" id="w-art">
           <div class="scene" data-sk="hr">
             <i class="w-icon md" data-sk="icon" data-icon="pin" data-c="a"></i>
             <i class="plots" data-sk="plots" data-cols="4" data-rows="2" data-sel="1,0"></i>
@@ -61,11 +70,11 @@
           <span class="t-s center">رسم خطّي يرسم نفسه مرة واحدة</span>
         </div>
         <div class="grow"></div>
-        <div class="colx" id="w-cta" style="gap:8px">
+        <div class="colx" style="gap:8px">
           <div class="w-btn" id="w-in" data-sk="btn">الدخول عبر «توثيق»</div>
-          <div class="w-btn ghost" id="w-guest" data-sk="btn2">تصفّح دون دخول</div>
+          <div class="w-btn ghost" data-sk="btn2">تصفّح دون دخول</div>
         </div>
-        <span class="t-s center" id="w-proto">نسخة تجريبية · بيانات توضيحية</span>
+        <span class="t-s center">نسخة تجريبية · بيانات توضيحية</span>
       </div>
       <p class="cap"><b>الترحيب</b> · أول ما يراه المستثمر</p>
     </div>
@@ -73,10 +82,10 @@
     <!-- الملاحظات -->
     <div class="col mid">
       <p class="note ink to-a" style="top:36px"><span class="t" data-to="#w-lang"><b class="n" data-sk="circle">1</b>اللغة أولًا</span><small>العربية أو الإنجليزية من أول لحظة، وتتبدّل في أي وقت.</small></p>
-      <p class="note to-a" style="top:128px"><span class="t" data-to="#w-name"><b class="n" data-sk="circle">2</b>اسم وسطر واحد</span><small>لا شرح أطول من ذلك. ورسم خطّي واحد هو الزينة الوحيدة.</small></p>
-      <p class="note to-b" style="top:232px"><span class="t" data-to="#s-title"><b class="n" data-sk="circle">3</b>الدخول هنا محاكاة</span><small>لا حقول ولا كلمة مرور: النسخة التجريبية لا تطلب أي بيانات دخول، ولا تتصل بأي نظام.</small></p>
-      <p class="note to-b" style="top:362px"><span class="t" data-to="#s-who"><b class="n" data-sk="circle">4</b>لماذا ملفّان؟</span><small>لأن التطبيق يتبدّل بحسب مرحلتك: من يبحث عن أرض يرى غير ما يراه من يبني منشأته.</small></p>
-      <p class="note ink to-a" style="top:462px"><span class="t" data-to="#w-in"><b class="n" data-sk="circle">5</b>زر أساسي واحد</span></p>
+      <p class="note ink to-a" style="top:154px"><span class="t" data-to="#w-name"><b class="n" data-sk="circle">2</b>اسم وسطر واحد</span><small>لا شرح أطول من ذلك. والرسم الخطّي هو الزينة الوحيدة.</small></p>
+      <p class="note to-b" style="top:278px"><span class="t" data-to="#s-title"><b class="n" data-sk="circle">3</b>الدخول هنا محاكاة</span><small>لا حقول ولا كلمة مرور، ولا اتصال بأي نظام حقيقي.</small></p>
+      <p class="note to-b" style="top:368px"><span class="t" data-to="#s-who"><b class="n" data-sk="circle">4</b>لماذا ملفّان؟</span><small>لأن التطبيق يتبدّل بحسب مرحلتك: من يبحث عن أرض يرى غير ما يراه من يبني.</small></p>
+      <p class="note ink to-a" style="top:472px"><span class="t" data-to="#w-in"><b class="n" data-sk="circle">5</b>زر أساسي واحد</span></p>
       <div class="flow opens" data-sk="arrow-l"></div>
       <p class="opens-cap">اللمس يفتح ورقة الدخول · والتصفّح متاح دون دخول</p>
     </div>
@@ -84,17 +93,17 @@
     <!-- ورقة الدخول التجريبي -->
     <div class="phone-wrap">
       <div class="phone" data-sk="phone">
-        <div class="colx center dim" style="align-items:center;gap:4px;margin-top:30px">
+        <div class="brand dim" style="margin-top:14px">
           <span class="w-ico lg" data-sk="circle"><span class="t-s">الشعار</span></span>
-          <span class="t-xl" style="font-size:26px;margin-top:6px">مناطق ون</span>
+          <span class="t-xl name">مناطق ون</span>
           <span class="t-m">خمسون خدمة. رحلة واحدة.</span>
         </div>
         <div class="grow"></div>
-        <div class="w-sheet" id="s-sheet" data-sk="sheet">
+        <div class="w-sheet" data-sk="sheet">
           <div class="w-grip" data-sk="grip"></div>
           <div class="rowx sp" id="s-title"><span class="t-l">دخول تجريبي</span><i class="w-icon sm" data-sk="icon" data-icon="cross" data-c="p"></i></div>
-          <span class="t-s">هذه النسخة تحاكي الدخول عبر نظام التوثيق الوطني. اختر ملفًا تجريبيًا:</span>
-          <div class="colx" id="s-who" style="gap:9px">
+          <span class="t-s">هذه النسخة تحاكي الدخول عبر نظام التوثيق الوطني «توثيق». اختر ملفًا تجريبيًا:</span>
+          <div class="colx" id="s-who" style="gap:12px">
             <div class="w-card who" data-sk="card">
               <span class="w-ico" data-sk="circle-fill"><i class="w-icon sm" data-sk="icon" data-icon="search" data-c="a"></i></span>
               <div class="colx"><span class="t-m">مستثمر جديد</span><span class="t-s">أبحث عن أرض لمشروعي</span></div>
@@ -106,8 +115,9 @@
               <i class="w-icon sm" data-sk="icon" data-icon="fwd" data-c="p"></i>
             </div>
           </div>
-          <div class="rowx" style="gap:6px;justify-content:center;margin-top:2px"><i class="w-icon sm" data-sk="icon" data-icon="lock" data-c="p"></i><span class="t-s">لا نطلب اسم مستخدم ولا كلمة مرور</span></div>
+          <div class="quiet"><i class="w-icon sm" data-sk="icon" data-icon="lock" data-c="p"></i><span class="t-s">لا نطلب اسم مستخدم ولا كلمة مرور</span></div>
         </div>
+        <span class="t-s center">يمكنك تبديل الملف لاحقًا من «حسابي»</span>
       </div>
       <p class="cap"><b>دخول تجريبي</b> · ورقة تصعد من الأسفل</p>
     </div>

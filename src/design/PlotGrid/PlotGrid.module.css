@@ -1,0 +1,141 @@
+.plots {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+  /* patterns: leased plots are hatched, reserved plots are dotted */
+  --hatch: repeating-linear-gradient(135deg, var(--line-strong) 0 1.5px, #0000 1.5px 6px);
+  --dots: radial-gradient(circle, var(--ink-3) 1px, #0000 1.4px) 0 0 / 6px 6px;
+}
+
+/* A plan keeps its orientation: plot 101 is top-left in both languages. */
+.grid {
+  display: grid;
+  gap: 3px;
+  direction: ltr;
+}
+
+.cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  height: 46px;
+  border-radius: 8px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1;
+  text-align: center;
+  transition:
+    background-color var(--d-1) var(--ease),
+    color var(--d-1) var(--ease),
+    transform var(--d-1) var(--ease);
+}
+
+.cell:focus-visible {
+  z-index: 1;
+}
+
+.available {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+}
+
+button.available:hover {
+  background: var(--accent-tint);
+}
+
+button.available:active {
+  transform: scale(0.94);
+}
+
+.allocated {
+  background: var(--hatch), var(--sunken);
+  color: var(--ink-3);
+}
+
+.reserved {
+  background: var(--dots), var(--sunken);
+  color: var(--ink-3);
+}
+
+/* the number of an unavailable plot sits on a small plain patch so the pattern does not cut through it */
+.allocated > span,
+.reserved > span {
+  padding: 2px 3px;
+  border-radius: 4px;
+  background: var(--sunken);
+}
+
+.on,
+button.on:hover {
+  background: var(--accent);
+  box-shadow: none;
+  color: var(--on-accent);
+  font-weight: 700;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-4);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-4);
+}
+
+.key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--t-cap);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.caption {
+  font-size: var(--t-cap);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--s-2);
+  min-height: calc(var(--t-body) * 1.6 + var(--s-3));
+  padding-block-start: var(--s-3);
+  box-shadow: 0 -1px 0 var(--line);
+  font-size: var(--t-callout);
+  line-height: 1.6;
+}
+
+.choiceLabel,
+.choiceHint {
+  color: var(--ink-2);
+}
+
+.choiceId {
+  font-size: var(--t-body);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.choiceArea {
+  margin-inline-start: auto;
+  font-weight: 500;
+  color: var(--ink);
+}

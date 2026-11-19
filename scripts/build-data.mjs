@@ -63,7 +63,8 @@ const GROUP_AR = {
   'Partners & field': 'الشركاء والميدان',
 };
 const statusOverride = readOptional('knowledge/integration-status.json', null);
-const statusById = new Map((Array.isArray(statusOverride) ? statusOverride : []).map((s) => [s.id, s]));
+const statusList = Array.isArray(statusOverride) ? statusOverride : Array.isArray(statusOverride?.integrations) ? statusOverride.integrations : [];
+const statusById = new Map(statusList.map((s) => [s.id, s]));
 
 const integrations = reference.integrations.map((i) => {
   const extra = statusById.get(i.id);

@@ -1,0 +1,304 @@
+/* Field: label above, control, then error and hint. The control box is shared by every text-like field. */
+
+.field {
+  --field-focus: var(--accent);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+/* In the dark theme the accent is too close to the surface for a 3:1 focus edge; its text shade is not. */
+:global([data-theme='dark']) .field {
+  --field-focus: var(--accent-ink);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  min-width: 0;
+}
+
+.label {
+  display: block;
+  padding-inline: 2px;
+  font-size: var(--t-callout);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.required {
+  margin-inline-start: 3px;
+  color: var(--accent-ink);
+}
+
+/* The box. Its edge is drawn on top of the content as an inset shadow, so focus and error
+   states never move the layout and browser autofill colours cannot hide it. */
+.control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 52px;
+  border-radius: var(--r-control);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.control::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  pointer-events: none;
+  transition: box-shadow var(--d-1) var(--ease);
+}
+
+@media (hover: hover) {
+  .control:hover::after {
+    box-shadow: inset 0 0 0 1px var(--ink-3);
+  }
+}
+
+.control:focus-within::after {
+  box-shadow: inset 0 0 0 2px var(--field-focus);
+}
+
+.invalid::after,
+.invalid:hover::after {
+  box-shadow: inset 0 0 0 1px var(--bad);
+}
+
+.invalid:focus-within::after {
+  box-shadow: inset 0 0 0 2px var(--bad);
+}
+
+.disabled {
+  background: var(--surface-2);
+  color: var(--ink-3);
+}
+
+.disabled::after,
+.disabled:hover::after {
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* The native input inside the box. Never smaller than 16px, so phones do not zoom on focus. */
+.input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 52px;
+  margin: 0;
+  padding: 0 var(--s-4);
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font-size: max(16px, var(--t-body));
+  line-height: 1.5;
+  text-align: start;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.input:focus-visible {
+  outline: none;
+  border-radius: inherit;
+}
+
+.input::placeholder {
+  color: var(--ink-3);
+  opacity: 1;
+}
+
+.input:disabled {
+  -webkit-text-fill-color: currentColor;
+  opacity: 1;
+}
+
+.withLead {
+  padding-inline-start: var(--s-2);
+}
+
+.withTrail {
+  padding-inline-end: var(--s-2);
+}
+
+/* Values that are always written left to right (numbers, codes, e-mail addresses). In Arabic they keep
+   their order but stay on the side where the label starts; an empty field shows its Arabic placeholder. */
+:global([dir='rtl']) .ltr {
+  direction: ltr;
+  text-align: end;
+}
+
+:global([dir='rtl']) .ltr:placeholder-shown {
+  direction: rtl;
+  text-align: start;
+}
+
+.lead {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding-inline-start: var(--s-4);
+  color: var(--ink-3);
+}
+
+/* A unit after the value: م², ر.ق */
+.unit {
+  flex: none;
+  padding-inline-end: var(--s-4);
+  font-size: var(--t-callout);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink-2);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* text area */
+.area {
+  align-items: stretch;
+}
+
+.textarea {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  min-height: 108px;
+  max-height: 260px;
+  margin: 0;
+  padding: 13px var(--s-4);
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font-size: max(16px, var(--t-body));
+  line-height: 1.65;
+  text-align: start;
+  resize: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.textarea:focus-visible {
+  outline: none;
+  border-radius: inherit;
+}
+
+.textarea::placeholder {
+  color: var(--ink-3);
+  opacity: 1;
+}
+
+/* date: the formatted date is shown; the native input lies invisibly on top and opens the system picker */
+.date {
+  cursor: pointer;
+}
+
+.dateText {
+  flex: 1;
+  min-width: 0;
+  padding-inline: var(--s-4) var(--s-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: max(16px, var(--t-body));
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+
+.placeholder {
+  color: var(--ink-3);
+}
+
+.trail {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding-inline-end: var(--s-4);
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+.dateNative {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0 var(--s-4);
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font-size: max(16px, var(--t-body));
+  opacity: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.dateNative:focus-visible {
+  outline: none;
+  border-radius: inherit;
+}
+
+/* While someone types a date with the keyboard, show the native segments they are editing. */
+.dateTyping .dateNative {
+  opacity: 1;
+}
+
+.dateTyping .dateText,
+.dateTyping .trail {
+  visibility: hidden;
+}
+
+/* messages under the control */
+.messages {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-inline: 2px;
+}
+
+.texts {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hint {
+  font-size: var(--t-foot);
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--t-foot);
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--bad);
+}
+
+.errorIcon {
+  margin-block-start: 0.15em;
+}
+
+.aside {
+  flex: none;
+  font-size: var(--t-cap);
+  line-height: 1.7;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}

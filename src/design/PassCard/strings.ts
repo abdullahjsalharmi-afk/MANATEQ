@@ -1,0 +1,16 @@
+export const strings = {
+  visitor: { ar: 'تصريح زائر', en: 'Visitor pass' },
+  contractor: { ar: 'تصريح مقاول', en: 'Contractor pass' },
+  vehicle: { ar: 'تصريح مركبة', en: 'Vehicle pass' },
+  id: { ar: 'رقم الهوية', en: 'ID number' },
+  plate: { ar: 'رقم اللوحة', en: 'Plate number' },
+  zone: { ar: 'المنطقة', en: 'Zone' },
+  plot: { ar: 'القطعة', en: 'Plot' },
+  validFrom: { ar: 'صالح من', en: 'Valid from' },
+  validTo: { ar: 'حتى', en: 'Until' },
+  active: { ar: 'سارٍ', en: 'Active' },
+  expired: { ar: 'منتهٍ', en: 'Expired' },
+  revoked: { ar: 'ملغى', en: 'Revoked' },
+  showAtGate: { ar: 'أبرِز هذا الرمز عند البوابة', en: 'Show this code at the gate' },
+  notValid: { ar: 'هذا التصريح لم يعد صالحًا للدخول', en: 'This pass no longer opens the gate' },
+} as const;

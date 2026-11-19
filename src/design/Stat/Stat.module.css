@@ -1,0 +1,38 @@
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: start;
+}
+
+.center {
+  align-items: center;
+  text-align: center;
+}
+
+.value {
+  order: 1;
+  font-size: var(--t-title);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  color: var(--ink);
+}
+
+.lg .value {
+  font-size: var(--t-display);
+}
+
+.label {
+  order: 2;
+  font-size: var(--t-foot);
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.hint {
+  order: 3;
+  font-size: var(--t-cap);
+  line-height: 1.5;
+  color: var(--ink-3);
+}

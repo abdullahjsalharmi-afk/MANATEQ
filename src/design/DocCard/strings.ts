@@ -1,0 +1,18 @@
+export const strings = {
+  verified: { ar: 'موثّق', en: 'Verified' },
+  reference: { ar: 'المرجع', en: 'Reference' },
+  issued: { ar: 'تاريخ الإصدار', en: 'Issued' },
+  verifyCode: { ar: 'رمز التحقق', en: 'Verification code' },
+  verifyHint: { ar: 'امسح الرمز أو أدخل رمز التحقق للتأكد من صحة الوثيقة.', en: 'Scan the code or enter the verification code to check this document.' },
+  signed: { ar: 'موقّعة إلكترونيًا', en: 'Signed electronically' },
+  watermark: { ar: 'نسخة تجريبية · وثيقة توضيحية غير رسمية', en: 'Prototype · illustrative document, not official' },
+  contract: { ar: 'عقد', en: 'Contract' },
+  offer: { ar: 'عرض', en: 'Offer' },
+  noc: { ar: 'شهادة عدم ممانعة', en: 'No-objection certificate' },
+  permit: { ar: 'تصريح', en: 'Permit' },
+  certificate: { ar: 'شهادة', en: 'Certificate' },
+  receipt: { ar: 'إيصال', en: 'Receipt' },
+  statement: { ar: 'كشف حساب', en: 'Statement' },
+  letter: { ar: 'خطاب', en: 'Letter' },
+  report: { ar: 'تقرير', en: 'Report' },
+} as const;

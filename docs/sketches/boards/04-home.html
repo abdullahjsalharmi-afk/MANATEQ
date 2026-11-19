@@ -13,6 +13,7 @@
     #b04 .mid { position: relative; flex: 0 0 284px; height: 680px; padding: 0; display: block; }
     #b04 .mid .note { position: absolute; inset-inline: 0; }
     #b04 .note .t { display: inline-block; }
+    #b04 .note small { text-wrap: balance; }
     #b04 .note.to-a { padding-inline-end: 34px; }
     #b04 .note.to-b { padding-inline-start: 34px; }
     #b04 .price { margin-inline-start: auto; font-size: 11.5px; color: var(--pencil); white-space: nowrap; }
@@ -56,7 +57,7 @@
         <div class="colx gap4" id="h-req">
           <div class="rowx sp"><span class="t-m">طلبات جارية</span><span class="t-s t-a">عرض الكل</span></div>
           <div class="w-row" data-sk="row"><span class="w-ring ring-s" data-sk="ring" data-v="0.4">2/5</span><div class="colx"><span class="t-m">رخصة البناء</span><span class="t-s">عند وزارة البلدية · اليوم 2 من 5</span></div></div>
-          <div class="w-row" data-sk="row"><span class="w-ring ring-s" data-sk="ring" data-v="0.7">70%</span><div class="colx"><span class="t-m">صيانة إنارة الطريق</span><span class="t-s">عند الفريق الميداني · في الطريق</span></div></div>
+          <div class="w-row" data-sk="row"><span class="w-ring ring-s" data-sk="ring" data-v="0.63">5/8</span><div class="colx"><span class="t-m">صيانة إنارة الطريق</span><span class="t-s">عند الفريق الميداني · الساعة 5 من 8</span></div></div>
         </div>
         <div class="w-card pad-s" id="h-dues" data-sk="card">
           <div class="rowx sp">
@@ -84,11 +85,11 @@
 
     <!-- الملاحظات -->
     <div class="col mid">
-      <p class="note to-a" style="top:98px"><span class="t" data-to="#h-next"><b class="n" data-sk="circle">1</b>بطاقة واحدة = أهم إجراء الآن</span><small>عنوان يبدأ بفعل، وسطر فيه المبلغ والموعد، وزر واحد.</small></p>
+      <p class="note to-a" style="top:98px"><span class="t" data-to="#h-next"><b class="n" data-sk="circle">1</b>بطاقة واحدة = أهم إجراء الآن</span><small>عنوان يبدأ بفعل، ثم سطر فيه المبلغ والموعد، ثم زر واحد.</small></p>
       <p class="note ink to-b" style="top:186px"><span class="t" data-to="#p-next"><b class="n" data-sk="circle">2</b>الشاشة نفسها، بخطوة أخرى</span><small>من لا يملك قطعة بعدُ يبدأ بفحص الأهلية، ونتيجته فورية.</small></p>
-      <p class="note to-a" style="top:274px"><span class="t" data-to="#h-journey"><b class="n" data-sk="circle">3</b>أين أنت في الرحلة؟</span><small>أربع محطات؛ الحالية معلَّمة، واللمس يعرض ما بقي فيها.</small></p>
-      <p class="note ink to-b" style="top:358px"><span class="t" data-to="#p-sol"><b class="n" data-sk="circle">4</b>الأسعار المنشورة ظاهرة</span><small>الحلول الخمسة بأسعارها، قبل أي طلب أو تسجيل.</small></p>
-      <p class="note to-a" style="top:440px"><span class="t" data-to="#h-req"><b class="n" data-sk="circle">5</b>كل طلب: عند مَن؟ وكم بقي؟</span><small>اسم الجهة التي بيدها الطلب، وحلقة معيار الخدمة.</small></p>
+      <p class="note to-a" style="top:264px"><span class="t" data-to="#h-journey"><b class="n" data-sk="circle">3</b>أين أنت في الرحلة؟</span><small>اللمس يعرض ما بقي في محطتك الحالية.</small></p>
+      <p class="note ink to-b" style="top:319px"><span class="t" data-to="#p-sol"><b class="n" data-sk="circle">4</b>الأسعار المنشورة ظاهرة</span><small>الحلول الخمسة بأسعارها، قبل أي طلب أو تسجيل.</small></p>
+      <p class="note to-a" style="top:402px"><span class="t" data-to="#h-req"><b class="n" data-sk="circle">5</b>كل طلب: عند مَن؟ وكم بقي؟</span><small>اسم الجهة التي بيدها الطلب، وحلقة معيار الخدمة.</small></p>
       <p class="note to-a" style="top:548px"><span class="t" data-to="#h-short"><b class="n" data-sk="circle">6</b>أربعة اختصارات فقط</span><small>تتبدّل بحسب مرحلتك: بلاغ، تصريح، كشف حساب، موعد.</small></p>
     </div>
 
@@ -118,8 +119,8 @@
         </div>
         <div class="w-card pad-s" id="p-map" data-sk="card">
           <div class="rowx">
-            <div class="w-map" data-sk="map" data-pins="13" data-hot="4" style="height:104px;width:84px;flex:none"></div>
-            <div class="colx gap4"><span class="t-m">13 منطقة في قطر</span><span class="t-s">8 مناطق صناعية ولوجستية و5 مجمّعات تخزين</span><span class="t-s t-a">استكشف المناطق</span></div>
+            <div class="w-map" data-sk="map" data-pins="13" data-hot="4" style="height:96px;width:80px;flex:none"></div>
+            <div class="colx gap4"><span class="t-m">13 منطقة في قطر</span><span class="t-s">8 مناطق صناعية ولوجستية<br>و5 مجمّعات تخزين</span><span class="t-s t-a">استكشف المناطق</span></div>
           </div>
         </div>
         <div class="grow"></div>

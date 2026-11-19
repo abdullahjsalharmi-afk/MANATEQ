@@ -1,0 +1,95 @@
+.skeleton {
+  --bone-glint: var(--surface);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* On dark surfaces the glint has to be lighter than the bone, not the colour of the surface. */
+:global([data-theme='dark']) .skeleton {
+  --bone-glint: var(--line);
+}
+
+.text {
+  gap: 10px;
+  padding-block: 4px;
+}
+
+.bone {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 7px;
+  background: var(--line);
+}
+
+.bone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, var(--bone-glint) 50%, transparent 100%);
+  opacity: 0.75;
+  transform: translateX(-100%);
+  animation: glint 1.9s ease-in-out infinite;
+}
+
+/* The glint travels in the reading direction. */
+:global([dir='rtl']) .bone::after {
+  animation-name: glint-rtl;
+  transform: translateX(100%);
+}
+
+.line {
+  height: 12px;
+}
+
+.thin {
+  height: 10px;
+}
+
+.block {
+  width: 100%;
+  border-radius: var(--r-card);
+}
+
+/* The same measures as a list row: a 40px tile and two lines. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 60px;
+  padding-block: var(--s-3);
+}
+
+.tile {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+.rowText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+@keyframes glint {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes glint-rtl {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bone::after {
+    display: none;
+  }
+}

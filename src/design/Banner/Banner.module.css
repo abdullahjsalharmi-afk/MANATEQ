@@ -1,0 +1,106 @@
+.banner {
+  --tone: var(--info);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: 14px var(--s-4);
+  border-radius: var(--r-control);
+  background: var(--info-tint);
+  color: var(--ink);
+}
+
+.info {
+  --tone: var(--info);
+  background: var(--info-tint);
+}
+
+.ok {
+  --tone: var(--ok);
+  background: var(--ok-tint);
+}
+
+.warn {
+  --tone: var(--warn);
+  background: var(--warn-tint);
+}
+
+.bad {
+  --tone: var(--bad);
+  background: var(--bad-tint);
+}
+
+.demo {
+  --tone: var(--gold);
+  background: var(--gold-tint);
+}
+
+.icon {
+  /* Sits level with the first line of text. */
+  margin-block-start: 2px;
+  color: var(--tone);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--t-callout);
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.text {
+  font-size: var(--t-callout);
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.title + .text {
+  color: var(--ink-2);
+}
+
+.action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  margin-block: 4px -6px;
+  font-size: var(--t-callout);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--tone);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+/* A 44px touch target around the text. */
+.action::after {
+  content: '';
+  position: absolute;
+  inset: -6px -8px;
+}
+
+.action:focus-visible {
+  outline-color: var(--tone);
+  border-radius: 6px;
+}
+
+.compact {
+  gap: 10px;
+  padding: 10px 14px;
+}
+
+.compact .icon {
+  margin-block-start: 1px;
+}
+
+.compact .title,
+.compact .text,
+.compact .action {
+  font-size: var(--t-foot);
+}

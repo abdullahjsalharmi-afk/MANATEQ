@@ -44,7 +44,7 @@
   --float-shadow: 0 10px 40px rgba(20, 16, 17, 0.12), 0 1px 3px rgba(20, 16, 17, 0.06);
 
   /* type */
-  --font: 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font: 'Manateq Sans', 'Tajawal', 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --t-display: 2.125rem; /* 34 */
   --t-title: 1.625rem; /* 26 */
   --t-heading: 1.25rem; /* 20 */

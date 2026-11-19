@@ -5,3 +5,8 @@
 .loading {
   min-height: 100dvh;
 }
+
+.actions {
+  display: grid;
+  gap: var(--s-3);
+}
