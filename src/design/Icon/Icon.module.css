@@ -1,0 +1,8 @@
+.icon {
+  flex: none;
+  display: block;
+}
+
+:global([dir='rtl']) .flip {
+  transform: scaleX(-1);
+}

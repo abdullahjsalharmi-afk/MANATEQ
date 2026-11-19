@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+test-results/
+playwright-report/
+.vite/
+
+# Content extracted from the service guides is kept out of this public repository until the owner
+# confirms it may be published. Without these folders the app does not build; see README.
+data/source/
+src/data/generated/
+preview/

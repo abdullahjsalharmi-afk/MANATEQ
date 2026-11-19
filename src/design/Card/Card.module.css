@@ -1,0 +1,55 @@
+.card {
+  display: block;
+  min-width: 0;
+  border-radius: var(--r-card);
+  color: inherit;
+  text-decoration: none;
+}
+
+.plain {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.accent {
+  background: var(--accent-tint);
+}
+
+.sunken {
+  background: var(--sunken);
+}
+
+.outline {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.pad-none {
+  padding: 0;
+}
+
+.pad-sm {
+  padding: var(--s-3) var(--s-4);
+}
+
+.pad-md {
+  padding: var(--s-5);
+}
+
+.pad-lg {
+  padding: var(--s-6);
+}
+
+.link {
+  transition:
+    transform var(--d-1) var(--ease),
+    background-color var(--d-1) var(--ease);
+}
+
+.link:active {
+  transform: scale(0.99);
+}
+
+.link.plain:hover {
+  background: var(--surface-2);
+}

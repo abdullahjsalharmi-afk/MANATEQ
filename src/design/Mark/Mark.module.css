@@ -1,0 +1,26 @@
+.mark {
+  flex: none;
+  display: block;
+}
+
+.outline {
+  stroke: var(--ink);
+}
+
+.taken {
+  stroke: var(--accent);
+  fill: var(--accent);
+}
+
+.tileBg {
+  fill: var(--accent);
+}
+
+.tile .outline {
+  stroke: rgba(255, 255, 255, 0.92);
+}
+
+.tile .taken {
+  stroke: #ffffff;
+  fill: #ffffff;
+}

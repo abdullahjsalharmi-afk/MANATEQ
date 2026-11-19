@@ -1,0 +1,79 @@
+.segmented {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 13px;
+  background: var(--sunken);
+}
+
+.option {
+  flex: 1;
+  min-width: 0;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-inline: var(--s-3);
+  border-radius: 10px;
+  font-size: var(--t-callout);
+  font-weight: 500;
+  color: var(--ink-2);
+  white-space: nowrap;
+  transition:
+    background-color var(--d-1) var(--ease),
+    color var(--d-1) var(--ease);
+}
+
+.selected {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(20, 16, 17, 0.06);
+}
+
+.count {
+  font-size: var(--t-cap);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding-inline: 14px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: var(--t-callout);
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  transition:
+    background-color var(--d-1) var(--ease),
+    color var(--d-1) var(--ease);
+}
+
+.chipOn {
+  background: var(--ink);
+  color: var(--bg);
+  box-shadow: none;
+}
+
+.chipRow {
+  display: flex;
+  gap: var(--s-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-inline: calc(var(--gutter) * -1);
+  padding-inline: var(--gutter);
+  padding-block: 2px;
+  scroll-padding-inline: var(--gutter);
+}
+
+.chipRow::-webkit-scrollbar {
+  display: none;
+}

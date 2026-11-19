@@ -1,0 +1,269 @@
+/* Manateq One — base styles: reset, document, type helpers, focus, motion, screen transitions. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--bg);
+  scroll-padding-top: calc(var(--topbar-h) + var(--safe-top) + 12px);
+  scroll-padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 24px);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: anywhere;
+  overscroll-behavior-y: none;
+}
+
+#root {
+  min-height: 100dvh;
+  isolation: isolate;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ul,
+ol,
+dl,
+dd,
+figure,
+blockquote {
+  margin: 0;
+  padding: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  line-height: var(--lh-heading);
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: inherit;
+  touch-action: manipulation;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input[type='search']::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* Numbers that change or line up. */
+.num,
+[data-num] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* A left-to-right island inside Arabic text: reference numbers, codes, Latin names. */
+.ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* One visible focus style everywhere; only for keyboard users. */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--accent-tint);
+  color: var(--ink);
+}
+
+/* Screen transitions (View Transitions API). The direction follows the reading direction:
+   going forward moves towards the inline-end side. html[data-nav] is set by the router. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--d-2);
+  animation-timing-function: var(--ease);
+}
+
+html[data-nav='tab']::view-transition-old(root) {
+  animation-name: mq-fade-out;
+  animation-duration: 120ms;
+}
+html[data-nav='tab']::view-transition-new(root) {
+  animation-name: mq-fade-in;
+  animation-duration: 180ms;
+}
+
+html[data-nav='push']::view-transition-old(root) {
+  animation-name: mq-out-back;
+}
+html[data-nav='push']::view-transition-new(root) {
+  animation-name: mq-in-forward;
+}
+html[data-nav='pop']::view-transition-old(root) {
+  animation-name: mq-out-forward;
+}
+html[data-nav='pop']::view-transition-new(root) {
+  animation-name: mq-in-back;
+}
+
+/* Left-to-right: forward enters from the right. */
+@keyframes mq-in-forward {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+}
+@keyframes mq-out-back {
+  to {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+}
+@keyframes mq-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+}
+@keyframes mq-out-forward {
+  to {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+
+/* Right-to-left: mirrored. */
+html[dir='rtl'][data-nav='push']::view-transition-new(root) {
+  animation-name: mq-in-back;
+}
+html[dir='rtl'][data-nav='push']::view-transition-old(root) {
+  animation-name: mq-out-forward;
+}
+html[dir='rtl'][data-nav='pop']::view-transition-new(root) {
+  animation-name: mq-in-forward;
+}
+html[dir='rtl'][data-nav='pop']::view-transition-old(root) {
+  animation-name: mq-out-back;
+}
+
+@keyframes mq-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes mq-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* The tab bar and overlays stay put while screens change underneath. */
+.mq-keep {
+  view-transition-name: mq-keep;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+}
+
+/* What sits at the bottom of the viewport, so sticky footers and toasts can clear it.
+   html[data-chrome] is set by the app shell: `tabs` when the tab bar is shown, `plain` for flows. */
+html[data-chrome='tabs'] {
+  --chrome-bottom: calc(var(--tabbar-h) + var(--safe-bottom));
+  --footer-safe: 0px;
+}
+
+html[data-chrome='plain'] {
+  --chrome-bottom: 0px;
+  --footer-safe: var(--safe-bottom);
+}

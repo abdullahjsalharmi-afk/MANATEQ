@@ -1,0 +1,59 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  min-height: 24px;
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  font-size: var(--t-cap);
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.neutral {
+  background: var(--sunken);
+  color: var(--ink-2);
+}
+
+.accent {
+  background: var(--accent-tint);
+  color: var(--accent-ink);
+}
+
+.ok {
+  background: var(--ok-tint);
+  color: var(--ok);
+}
+
+.warn {
+  background: var(--warn-tint);
+  color: var(--warn);
+}
+
+.bad {
+  background: var(--bad-tint);
+  color: var(--bad);
+}
+
+.info {
+  background: var(--info-tint);
+  color: var(--info);
+}
+
+.gold {
+  background: var(--gold-tint);
+  color: var(--gold);
+}
+
+.solid.accent {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.solid.neutral {
+  background: var(--ink);
+  color: var(--bg);
+}

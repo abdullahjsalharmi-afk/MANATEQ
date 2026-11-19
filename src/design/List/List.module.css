@@ -1,0 +1,124 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--r-card);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.item {
+  position: relative;
+  min-width: 0;
+}
+
+/* Inset divider between rows, starting where the text starts. */
+.item + .item::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: var(--s-5) 0;
+  height: 1px;
+  background: var(--line);
+}
+
+.plain .item + .item::before {
+  inset-inline: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 60px;
+  padding: var(--s-3) var(--s-5);
+  color: inherit;
+  text-decoration: none;
+  text-align: start;
+}
+
+.plain .row {
+  padding-inline: 2px;
+}
+
+.interactive {
+  transition: background-color var(--d-1) var(--ease);
+}
+
+.interactive:hover {
+  background: var(--surface-2);
+}
+
+.interactive:active {
+  background: var(--sunken);
+}
+
+.leading {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.eyebrow {
+  font-size: var(--t-cap);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.title {
+  font-size: var(--t-body);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.subtitle {
+  font-size: var(--t-foot);
+  line-height: 1.55;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wrap {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.trailing {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--t-callout);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.chevron {
+  color: var(--ink-3);
+  margin-inline-end: -4px;
+}
+
+:global([dir='ltr']) .chevron {
+  transform: scaleX(-1);
+}
