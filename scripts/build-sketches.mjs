@@ -266,13 +266,38 @@ function createPen(name) {
       pen.curve(arcPoints(centre, [rx, ry], from, to, steps), { rough: clamp(big / 60, 0.08, 0.35), ...o });
     },
 
-    /** A full circle, closed the way a hand closes it: the end overlaps the start a little. */
+    /**
+     * A full circle in one confident turn: slightly out of round, closed where it began.
+     * `tail` (degrees) lets the pen run on past its start and drift inside, as a quick hand does.
+     */
     circle(centre, r, o = {}) {
-      const random = randomFrom(seedOf(`${name}/${part}/${count}/circle/${o.salt ?? 0}`));
-      const start = (o.start ?? -100) + (random() - 0.5) * 36;
-      const sweep = 363 + random() * 7;
+      const random = randomFrom(nextSeed(o.salt));
+      const [cx, cy] = centre;
+      const count = clamp(Math.round((2 * Math.PI * r) / 11), 8, 14);
+      const start = (o.start ?? -100) + (random() - 0.5) * 40;
       const squash = 1 + (random() - 0.5) * 0.06;
-      pen.arc(centre, [r * squash, r / squash], start, start + sweep, o);
+      const wobble = Math.min(0.5, r * 0.035);
+      const ring = [];
+      for (let i = 0; i < count; i++) {
+        const a = (start + (360 * i) / count) * RAD;
+        const radius = r + (random() - 0.5) * 2 * wobble;
+        ring.push(place([cx + radius * squash * Math.cos(a), cy + (radius / squash) * Math.sin(a)]));
+      }
+      // Closed Catmull–Rom spline: every joint, the closing one included, is smooth.
+      const at = (i) => ring[((i % count) + count) % count];
+      const segment = (i, from, to) => {
+        const [p0, p1, p2, p3] = [at(i - 1), from ?? at(i), to ?? at(i + 1), at(i + 2)];
+        return `C${[p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6, p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6, p2[0], p2[1]].map(fmt).join(' ')}`;
+      };
+      let d = `M${fmt(ring[0][0])} ${fmt(ring[0][1])}`;
+      for (let i = 0; i < count; i++) d += segment(i);
+      if (o.tail) {
+        const a = (start + o.tail) * RAD;
+        const inside = r - Math.min(1.6, r * 0.09);
+        const end = place([cx + inside * squash * Math.cos(a), cy + (inside / squash) * Math.sin(a)]);
+        d += segment(0, undefined, end);
+      }
+      emit(d, o);
     },
 
     /** A dashed line: one hand-drawn line, lifted at even intervals. Counts as a single stroke. */
