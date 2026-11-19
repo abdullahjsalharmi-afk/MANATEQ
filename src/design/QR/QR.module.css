@@ -10,6 +10,8 @@
   background: var(--qr-plate);
   color: var(--qr-ink);
   box-shadow: 0 0 0 1px var(--line);
+  /* Also when the system forces its own colours: an inverted code does not scan. */
+  forced-color-adjust: none;
 }
 
 .code {

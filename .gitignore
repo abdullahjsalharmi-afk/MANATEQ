@@ -11,3 +11,7 @@ playwright-report/
 data/source/
 src/data/generated/
 preview/
+
+# Rendered sketchbook images and its index page are build outputs: node scripts/build-sketchbook.mjs
+docs/sketches/png/
+docs/sketches/index.html

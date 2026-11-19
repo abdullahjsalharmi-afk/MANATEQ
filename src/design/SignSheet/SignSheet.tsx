@@ -5,8 +5,9 @@ import { Banner } from '../Banner/Banner';
 import { Button } from '../Button/Button';
 import { cx } from '../cx';
 import { Checkbox } from '../Field/Checkbox';
+import { ReturnFocus } from '../Field/ReturnFocus';
 import { Icon } from '../Icon/Icon';
-import { Lines, SheetSuccess, type SheetLine } from '../PaySheet/parts';
+import { Lines, sheetActionClass, SheetSuccess, type SheetLine } from '../PaySheet/parts';
 import { Sheet } from '../Sheet/Sheet';
 import { SignaturePad } from '../SignaturePad/SignaturePad';
 import styles from './SignSheet.module.css';
@@ -99,6 +100,7 @@ export function SignSheet({ open, onClose, title, documentName, lines, signerNam
       closeLabel={t('close')}
       footer={<SignFooter phase={phase} onSign={sign} onDone={finish} doneId={doneId} />}
     >
+      <ReturnFocus />
       <div ref={contentRef}>
         <SignContent
           phase={phase}
@@ -190,13 +192,13 @@ export function SignFooter({ phase, onSign, onDone, doneId }: SignFooterProps) {
   const t = useT(strings);
   if (phase === 'success') {
     return (
-      <Button block id={doneId} onClick={onDone}>
+      <Button block id={doneId} className={sheetActionClass} onClick={onDone}>
         {t('done')}
       </Button>
     );
   }
   return (
-    <Button block loading={phase === 'processing'} onClick={onSign}>
+    <Button block className={sheetActionClass} loading={phase === 'processing'} onClick={onSign}>
       {phase === 'processing' ? t('processing') : t('sign')}
     </Button>
   );

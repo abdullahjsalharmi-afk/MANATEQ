@@ -6,6 +6,7 @@ import {
   checkEligibility,
   estimateAnnualRent,
   searchActivities,
+  targetedActivities,
   toEligibilityResult,
   UNLISTED_ACTIVITY,
   type Availability,
@@ -67,9 +68,9 @@ describe('the illustrative activity list', () => {
     for (const activity of activities) {
       for (const text of [activity.name, activity.sector, activity.reason]) {
         expect(isBilingual(text), activity.code).toBe(true);
-        expect(text?.ar, activity.code).toMatch(/[ء-ي]/);
-        expect(text?.ar, activity.code).not.toMatch(/[A-Za-z٠-٩۰-۹]/);
-        expect(text?.en, activity.code).not.toMatch(/[؀-ۿ]/);
+        expect(text?.ar, activity.code).toMatch(/[\u0621-\u064A]/); // has Arabic letters
+        expect(text?.ar, activity.code).not.toMatch(/[A-Za-z\u0660-\u0669\u06F0-\u06F9]/); // no Latin letters, no Arabic-Indic digits
+        expect(text?.en, activity.code).not.toMatch(/[\u0600-\u06FF]/); // no Arabic in the English
       }
       expect(activity.name.en, activity.code).not.toMatch(/\.$/);
       for (const sentence of [activity.reason?.ar ?? '', activity.reason?.en ?? '']) {
@@ -87,6 +88,9 @@ describe('the illustrative activity list', () => {
     }
     expect(new Set(english.values()).size).toBe(english.size);
     expect(english.size).toBeLessThanOrEqual(10);
+    // Each sector is one run of the list, so the picker can show it in groups without sorting.
+    const runs = activities.map((a) => a.sector.en).filter((sector, index, all) => sector !== all[index - 1]);
+    expect(new Set(runs).size).toBe(runs.length);
   });
 
   it('names only solutions and zones that exist and go together', () => {
@@ -113,10 +117,9 @@ describe('the illustrative activity list', () => {
     expect(activities.filter((a) => a.verdict === 'review').map((a) => a.code)).toEqual([PHARMA, 'ACT-801', FUEL_STORAGE]);
     const nonTargeted = activities.filter((a) => a.verdict === 'not_targeted');
     expect(nonTargeted.map((a) => a.code)).toEqual([RETAIL_MALL, RESIDENTIAL, LABOUR_ACCOMMODATION]);
-    for (const activity of nonTargeted) {
-      expect(activity.zones).toEqual([]);
-      expect(activity.solutions).toEqual([]);
-    }
+    for (const activity of nonTargeted) expect(activity.solutions).toEqual([]);
+    // Only a targeted activity names zones: nothing is targeted anywhere until planning has ruled.
+    for (const activity of activities) expect(activity.zones.length > 0, activity.code).toBe(activity.verdict === 'targeted');
   });
 
   it('follows the Guide: where each kind of activity is targeted', () => {
@@ -229,8 +232,7 @@ describe('a first choice that does not fit', () => {
     expect(outcome.reason.ar).toBe('فئة خطورة النشاط تستبعد مناطق الصناعات الخفيفة، ومنها منطقة الصناعات الصغيرة والمتوسطة.');
     expect(pairsOf(outcome.alternatives)).toEqual(['MIZ/industrial']);
     expect(outcome.alternatives[0]).toMatchObject({ annualRent: 100_000, plotHint: null });
-    expect(outcome.alternatives[0]?.why.en).toBe('The activity is targeted in Mesaieed Industrial Zone.');
-    expect(outcome.alternatives[0]?.why.ar).toBe('النشاط مستهدف في منطقة مسيعيد الصناعية.');
+    expect(outcome.alternatives[0]?.why).toEqual({ ar: 'النشاط مستهدف هنا بالحل نفسه.', en: 'The activity is targeted here with the same solution.' });
     expect(outcome.next).toBeNull();
   });
 
@@ -239,11 +241,11 @@ describe('a first choice that does not fit', () => {
     expect(outcome.eligible).toBe(false);
     expect(outcome.obstacle).toBe('solution');
     expect(outcome.reason.en).toBe('Industrial solutions are not offered in Al Wakra Logistics Park.');
-    expect(outcome.reason.ar).toBe('لا تتوفر الحلول الصناعية في مجمّع الوكرة اللوجستي.');
+    expect(outcome.reason.ar).toBe('الحلول الصناعية غير متاحة في مجمّع الوكرة اللوجستي.');
     expect(pairsOf(outcome.alternatives)).toEqual(['AW/logistics', 'SMI/industrial']);
     expect(outcome.alternatives.map((alternative) => alternative.annualRent)).toEqual([75_000, 25_000]);
-    expect(outcome.alternatives[0]?.why.en).toBe('Logistics solutions cover this activity in Al Wakra Logistics Park.');
-    expect(outcome.alternatives[0]?.why.ar).toBe('تشمل الحلول اللوجستية هذا النشاط في مجمّع الوكرة اللوجستي.');
+    expect(outcome.alternatives[0]?.why).toEqual({ ar: 'تشمل الحلول اللوجستية هذا النشاط في المنطقة نفسها.', en: 'Logistics solutions cover this activity in the same zone.' });
+    expect(outcome.alternatives[1]?.why.en).toBe('The activity is targeted here with the same solution.');
   });
 
   it('says when the solution does not cover the activity', () => {
@@ -271,6 +273,7 @@ describe('a first choice that does not fit', () => {
     expect(outcome.matches).toEqual([]);
     expect(pairsOf(outcome.alternatives)).toEqual(['AS/commercial', 'AW/commercial', 'BA/commercial']);
     expect(outcome.alternatives[0]?.annualRent).toBe(50_000);
+    expect(outcome.alternatives[0]?.why).toEqual({ ar: 'تشمل الحلول التجارية هذا النشاط هنا.', en: 'Commercial solutions cover this activity here.' });
   });
 
   it('sends open yards to Al Khor and Al Karaana', () => {
@@ -312,12 +315,12 @@ describe('availability', () => {
     expect(outcome.obstacle).toBe('plots');
     expect(outcome.matches).toHaveLength(1);
     expect(outcome.matches[0]).toMatchObject({ zone: getZone('AW'), plotHint: 0, annualRent: 75_000 });
-    expect(outcome.reason.en).toBe('No plot of 5,000 m² or more is free in Al Wakra Logistics Park right now.');
-    expect(outcome.reason.ar).toBe('لا تتوفر الآن في مجمّع الوكرة اللوجستي قطعة بمساحة 5,000 م² أو أكثر.');
+    // The unit is tied to its number with a no-break space, so "5,000 m²" never wraps in two.
+    expect(outcome.reason.en).toBe('No plot of 5,000\u00A0m² or more is available in Al Wakra Logistics Park right now.');
+    expect(outcome.reason.ar).toBe('لا توجد الآن في مجمّع الوكرة اللوجستي قطعة متاحة بمساحة 5,000\u00A0م² أو أكثر.');
     expect(pairsOf(outcome.alternatives)).toEqual(['BA/logistics', 'AS/logistics']);
     expect(outcome.alternatives.map((alternative) => alternative.plotHint)).toEqual([2, 1]);
-    expect(outcome.alternatives[0]?.why.en).toBe('Plots of 5,000 m² or more are free in Birkat Al Awamer Logistics Park.');
-    expect(outcome.alternatives[0]?.why.ar).toBe('تتوفر في مجمّع بركة العوامر اللوجستي قطع بمساحة 5,000 م² أو أكثر.');
+    expect(outcome.alternatives[0]?.why).toEqual({ ar: 'توجد هنا قطع متاحة بهذه المساحة.', en: 'Plots of this size are available here.' });
     // The investor's next step is to be told when a plot is released.
     expect(outcome.next).toBe('E4');
   });
@@ -328,7 +331,8 @@ describe('availability', () => {
     expect(outcome.obstacle).toBe('plots');
     expect(zonesOf(outcome.matches)).toEqual(['AW', 'BA', 'JS', 'AS']);
     expect(outcome.alternatives).toEqual([]);
-    expect(outcome.reason.en).toBe('No plot of 5,000 m² or more is free right now in the zones that target this activity.');
+    expect(outcome.reason.en).toBe('No plot of 5,000\u00A0m² or more is available right now in the zones that target this activity.');
+    expect(outcome.reason.ar).toBe('لا توجد الآن قطعة متاحة بمساحة 5,000\u00A0م² أو أكثر في المناطق المستهدفة لهذا النشاط.');
     expect(outcome.next).toBe('E4');
   });
 
@@ -351,9 +355,11 @@ describe('availability', () => {
   it('works with the illustrative plot layout', () => {
     const layout: Availability = (zoneCode, areaSqm) => plotsFor(zoneCode).filter((plot) => plot.status === 'available' && plot.areaSqm >= areaSqm).length;
     const outcome = checkEligibility({ ...food, areaSqm: 2_500 }, layout);
-    expect(outcome.eligible).toBe(true);
+    expect(zonesOf(outcome.matches).sort()).toEqual([...LOGISTICS_PARKS].sort());
     for (const match of outcome.matches) expect(match.plotHint).toBe(layout(match.zone.code, 2_500));
-    expect(outcome.matches[0]?.plotHint).toBeGreaterThan(0);
+    expect(outcome.eligible).toBe(outcome.matches.some((match) => (match.plotHint ?? 0) > 0));
+    // No plot can be larger than a zone: an impossible area is never eligible.
+    expect(checkEligibility({ ...food, areaSqm: 1e9 }, layout)).toMatchObject({ eligible: false, obstacle: 'plots', next: 'E4' });
   });
 });
 
@@ -366,8 +372,10 @@ describe('ready-built warehousing', () => {
     expect(zonesOf(outcome.matches)).toEqual(WAREHOUSING_PARKS);
     for (const match of outcome.matches) expect(match).toMatchObject({ solution: 'warehousing', annualRent: null, plotHint: null });
     expect(count).not.toHaveBeenCalled();
-    expect(isBilingual(outcome.note)).toBe(true);
-    expect(outcome.note?.en).toContain('operators');
+    expect(outcome.note).toEqual({
+      ar: 'يحدّد المشغّلون السعر والشروط، ونحيلك بموافقتك إلى المشغّل الذي تختاره.',
+      en: 'The operators set the price and terms; with your consent, we refer you to the one you choose.',
+    });
     expect(outcome.next).toBe('F1');
   });
 
@@ -504,6 +512,36 @@ describe('every activity, solution and zone', () => {
   });
 });
 
+describe('the activities of a zone', () => {
+  const codesIn = (zoneCode: string) => targetedActivities(zoneCode).map((activity) => activity.code);
+
+  it('lists what is targeted there, in catalogue order', () => {
+    expect(codesIn('MIZ')).toEqual([PLASTICS, 'ACT-202', 'ACT-203', METAL, 'ACT-302', 'ACT-303']);
+    expect(codesIn('JS')).toEqual([FOOD, METAL, 'ACT-304', DRY_WAREHOUSING, 'ACT-502', 'ACT-503', 'ACT-504', 'ACT-601', AUTO_PARTS]);
+    expect(codesIn('KH')).toEqual(['ACT-303', 'ACT-305', CONTAINERS, 'ACT-603']);
+    expect(codesIn('WK')).toEqual([DRY_WAREHOUSING, 'ACT-502', 'ACT-503']);
+    expect(codesIn('NOWHERE')).toEqual([]);
+  });
+
+  it('leaves no zone without a targeted activity, and no review or non-targeted activity in any zone', () => {
+    for (const zone of zones) {
+      const list = targetedActivities(zone.code);
+      expect(list.length, zone.code).toBeGreaterThan(0);
+      expect(list.every((activity) => activity.verdict === 'targeted'), zone.code).toBe(true);
+    }
+  });
+
+  it('agrees with the check, both ways', () => {
+    for (const zone of zones) {
+      const listed = new Set(targetedActivities(zone.code));
+      for (const activity of activities) {
+        const eligibleHere = zone.solutions.some((solution) => checkEligibility({ activityCode: activity.code, solution, areaSqm: 4_000, zoneCode: zone.code }).eligible);
+        expect(eligibleHere, `${activity.code} in ${zone.code}`).toBe(listed.has(activity));
+      }
+    }
+  });
+});
+
 describe('what comes next', () => {
   it('points to services the investor can start', () => {
     for (const id of ['A4', 'E4', 'F1']) expect(getService(id)?.startable, id).toBe(true);
@@ -556,6 +594,8 @@ describe('activity search', () => {
     ['أدوية', PHARMA],
     ['خردة', 'ACT-801'],
     ['ديزل', FUEL_STORAGE],
+    ['تجارة مواد البناء بالجملة', 'ACT-305'],
+    ['مقاولات', 'ACT-305'],
   ])('finds «%s» in Arabic', (query, code) => {
     expect(first(query, 'ar')).toBe(code);
     expect(first(query, 'en')).toBe(code);
@@ -580,6 +620,8 @@ describe('activity search', () => {
     ['medicines', PHARMA],
     ['scrap', 'ACT-801'],
     ['diesel', FUEL_STORAGE],
+    ['building materials wholesale', 'ACT-305'],
+    ['contractor', 'ACT-305'],
   ])('finds "%s" in English', (query, code) => {
     expect(first(query, 'en')).toBe(code);
     expect(first(query, 'ar')).toBe(code);

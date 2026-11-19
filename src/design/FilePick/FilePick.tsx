@@ -10,8 +10,8 @@ import { strings } from './strings';
 /** All the app keeps of a chosen file. Its content is never read or stored. */
 export interface PickedFile {
   name: string;
-  /** Size in bytes. */
-  size: number;
+  /** Size in bytes. Always set for a newly chosen file; a saved value may come back without it. */
+  size?: number;
 }
 
 export type FilePickState = 'empty' | 'checking' | 'verified';
@@ -140,7 +140,8 @@ export function FilePickView({ id, label, hint, required = false, error, state, 
   const removeId = `${id}-remove`;
   const checking = state === 'checking';
   const describedBy = [error ? errorId : null, hint && !file ? hintId : null].filter(Boolean).join(' ') || undefined;
-  const size = file ? (file.size >= 1_048_576 ? t('mb', { n: fmt.num(file.size / 1_048_576, 1) }) : t('kb', { n: fmt.num(Math.max(1, Math.round(file.size / 1024))) })) : '';
+  const bytes = file?.size;
+  const size = bytes === undefined ? '' : bytes >= 1_048_576 ? t('mb', { n: fmt.num(bytes / 1_048_576, 1) }) : t('kb', { n: fmt.num(Math.max(1, Math.round(bytes / 1024))) });
 
   return (
     <div role="group" aria-labelledby={labelId} className={cx(styles.pick, error && state === 'empty' && styles.invalid, className)} data-state={state}>
@@ -162,9 +163,11 @@ export function FilePickView({ id, label, hint, required = false, error, state, 
         {file ? (
           <p className={styles.file}>
             <bdi className={styles.name}>{file.name}</bdi>
-            <span className={styles.size} data-num="">
-              {size}
-            </span>
+            {size ? (
+              <span className={styles.size} data-num="">
+                {size}
+              </span>
+            ) : null}
           </p>
         ) : hint ? (
           <p id={hintId} className={styles.hint}>

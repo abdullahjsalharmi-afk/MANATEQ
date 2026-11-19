@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=1000">
-<title>مناطق ون — دفتر التصميم · 01 رحلة المستثمر</title>
+<title>مناطق ون · دفتر التصميم · 01 رحلة المستثمر</title>
 <link rel="stylesheet" href="../kit/sketch.css">
 </head>
 <body>
@@ -23,9 +23,10 @@
     #b01 .st .cnt { display: flex; align-items: baseline; gap: 6px; margin-top: 2px; }
     #b01 .st .cnt b { font-size: 30px; line-height: 1.1; color: var(--ink); }
     #b01 .st .cnt em { font-style: normal; font-size: 13px; color: var(--pencil); }
-    #b01 .st ul { list-style: none; margin: 6px 0 0; padding: 8px 0 0; width: 100%; font-size: 12px; line-height: 1.75; color: var(--ink); }
+    #b01 .st .rule { width: 100%; height: 14px; }
+    #b01 .st ul { list-style: none; margin: 0; padding: 14px 0 0; width: 100%; font-size: 12px; line-height: 1.75; color: var(--ink); }
     #b01 .st .dom { font-size: 11.5px; color: var(--pencil); }
-    #b01 .here { height: 22px; font-size: 11px; padding: 0 10px; color: #fff; font-style: normal; }
+    #b01 .here { height: 22px; font-size: 11px; padding: 0 10px; font-style: normal; }
     #b01 .nohere { height: 22px; }
     #b01 .down { height: 30px; }
     #b01 .hold { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 8px 11px; text-align: center; }
@@ -56,61 +57,61 @@
   <header class="board-head">
     <span class="board-no" data-sk="circle">01</span>
     <div>
-      <h2>رحلة المستثمر — <span data-sk="hl">أربع محطات</span></h2>
+      <h2>رحلة المستثمر: <span data-sk="hl">أربع محطات</span></h2>
       <p>الخدمات الخمسون مرتّبة كما يعيشها المستثمر: من أول سؤال إلى منشأة تعمل.</p>
     </div>
   </header>
 
   <!-- ملاحظتان فوق المحطات -->
   <div class="cols above">
-    <p class="cell note" data-to="#j1"><b class="n" data-sk="circle">1</b>أربع محطات متتابعة<small>رحلة المستثمر كما يعيشها، لا إدارات الشركة.</small></p>
+    <p class="cell note" data-to="#b01-j1"><b class="n" data-sk="circle">1</b>أربع محطات متتابعة<small>رحلة المستثمر كما يعيشها، لا إدارات الشركة.</small></p>
     <i class="gapc"></i><i class="cell"></i><i class="gapc"></i>
-    <p class="cell note ink" data-to="#j3"><b class="n" data-sk="circle">2</b>وأنت في واحدة منها<small>محطتك معلَّمة في الرئيسية وفي الخدمات.</small></p>
+    <p class="cell note ink" data-to="#b01-j3"><b class="n" data-sk="circle">2</b>وأنت في واحدة منها<small>محطتك معلَّمة في الرئيسية وفي الخدمات.</small></p>
     <i class="gapc"></i><i class="cell"></i>
   </div>
 
   <!-- المحطات الأربع -->
   <div class="dia">
-    <div class="dia-node st" id="j1" data-sk="card">
+    <div class="dia-node st" id="b01-j1" data-sk="card">
       <i class="nohere"></i>
       <b class="num" data-sk="circle">1</b>
       <b class="name">الانضمام</b>
       <div class="tag">من أول سؤال إلى قطعة أرض مسلَّمة</div>
       <div class="cnt"><b>8</b><em>خدمات</em></div>
-      <ul data-sk="hr" style="border:0"></ul>
+      <div class="rule" data-sk="hr"></div>
       <ul><li>تحقّق من أهلية نشاطك</li><li>قدّم طلب أرض</li><li>احجز موعد التسليم</li></ul>
       <div class="dom">المجال A</div>
     </div>
     <div class="dia-arrow" data-sk="arrow-l"></div>
-    <div class="dia-node st" id="j2" data-sk="card">
+    <div class="dia-node st" id="b01-j2" data-sk="card">
       <i class="nohere"></i>
       <b class="num" data-sk="circle">2</b>
       <b class="name">العقد</b>
       <div class="tag">فواتير وتجديد وتعديلات على العقد</div>
       <div class="cnt"><b>10</b><em>خدمات</em></div>
-      <ul data-sk="hr" style="border:0"></ul>
+      <div class="rule" data-sk="hr"></div>
       <ul><li>فواتير إيجارك وسدادها</li><li>عرض تجديد عقدك</li><li>أصدر كشفًا أو شهادة</li></ul>
       <div class="dom">المجال B</div>
     </div>
     <div class="dia-arrow" data-sk="arrow-l"></div>
-    <div class="dia-node st" id="j3" data-sk="card-fill">
-      <i class="w-chip here" data-sk="chip-a">أنت هنا · مثال</i>
+    <div class="dia-node st" id="b01-j3" data-sk="card-fill">
+      <em class="w-chip on here" data-sk="chip-a">أنت هنا · مثال</em>
       <b class="num" data-sk="circle">3</b>
       <b class="name">البناء</b>
       <div class="tag">تصميم وتراخيص وإنشاء</div>
       <div class="cnt"><b>9</b><em>خدمات</em></div>
-      <ul data-sk="hr" style="border:0"></ul>
+      <div class="rule" data-sk="hr"></div>
       <ul><li>قدّم تصميمك للمراجعة</li><li>حالة رخصة البناء</li><li>توصيل الكهرباء والماء</li></ul>
       <div class="dom">المجال C</div>
     </div>
     <div class="dia-arrow" data-sk="arrow-l"></div>
-    <div class="dia-node st" id="j4" data-sk="card">
+    <div class="dia-node st" id="b01-j4" data-sk="card">
       <i class="nohere"></i>
       <b class="num" data-sk="circle">4</b>
       <b class="name">التشغيل</b>
       <div class="tag">صيانة وتصاريح وسلامة</div>
       <div class="cnt"><b>7</b><em>خدمات</em></div>
-      <ul data-sk="hr" style="border:0"></ul>
+      <div class="rule" data-sk="hr"></div>
       <ul><li>أبلغ عن عطل في المنطقة</li><li>اطلب تصريح دخول</li><li>أبلغ عن طارئ</li></ul>
       <div class="dom">المجال D</div>
     </div>
@@ -118,22 +119,22 @@
 
   <!-- ما في يد المستثمر عند نهاية كل محطة -->
   <div class="cols">
-    <div class="cell"><div class="down" data-sk="arrow-d"></div><div class="hold" id="h1" data-sk="card-dash"><em>في يدك عند نهايتها</em><b>قطعة مسلَّمة</b></div></div>
+    <div class="cell"><div class="down" data-sk="arrow-d"></div><div class="hold" id="b01-h1" data-sk="card-dash"><em>في يدك عند نهايتها</em><b>قطعة مسلَّمة</b></div></div>
     <i class="gapc"></i>
-    <div class="cell"><div class="down" data-sk="arrow-d"></div><div class="hold" id="h2" data-sk="card-dash"><em>في يدك عند نهايتها</em><b>عقد وحساب</b></div></div>
+    <div class="cell"><div class="down" data-sk="arrow-d"></div><div class="hold" id="b01-h2" data-sk="card-dash"><em>في يدك عند نهايتها</em><b>عقد وحساب</b></div></div>
     <i class="gapc"></i>
-    <div class="cell"><div class="down" data-sk="arrow-d"></div><div class="hold" id="h3" data-sk="card-dash"><em>في يدك عند نهايتها</em><b>منشأة مرخّصة</b></div></div>
+    <div class="cell"><div class="down" data-sk="arrow-d"></div><div class="hold" id="b01-h3" data-sk="card-dash"><em>في يدك عند نهايتها</em><b>منشأة مرخّصة</b></div></div>
     <i class="gapc"></i>
-    <div class="cell"><div class="down" data-sk="arrow-d"></div><div class="hold" id="h4" data-sk="card-dash"><em>في يدك عند نهايتها</em><b>منشأة عاملة</b></div></div>
+    <div class="cell"><div class="down" data-sk="arrow-d"></div><div class="hold" id="b01-h4" data-sk="card-dash"><em>في يدك عند نهايتها</em><b>منشأة عاملة</b></div></div>
   </div>
 
   <!-- بين المحطات والمسارات المساندة -->
   <div class="cols between">
-    <p class="cell note gold" data-to="#h1"><b class="n" data-sk="circle">3</b>كل محطة تنتهي بشيء<small>وثيقة أو أصل في يدك، لا «معاملة منجزة».</small></p>
+    <p class="cell note gold" data-to="#b01-h1"><b class="n" data-sk="circle">3</b>كل محطة تنتهي بشيء<small>وثيقة أو أصل في يدك، لا «معاملة منجزة».</small></p>
     <i class="gapc"></i>
     <p class="lead" style="flex:2 0 46px">وثلاثة مسارات ترافق الرحلة كلها<small>تحتاجها في أي محطة، فلا نرسمها محطة خامسة</small></p>
     <i class="gapc"></i>
-    <p class="cell note ink" data-to="#e-cnt"><b class="n" data-sk="circle">4</b>وأين تظهر؟<small>في «الخدمات»، بعد المحطات الأربع.</small></p>
+    <p class="cell note ink" data-to="#b01-e-cnt"><b class="n" data-sk="circle">4</b>وأين تظهر؟<small>في «الخدمات»، بعد المحطات الأربع.</small></p>
   </div>
 
   <!-- المسارات المساندة -->
@@ -141,7 +142,7 @@
     <div class="band" data-sk="card-dash">
       <div class="colx"><b class="name">الدعم</b><span class="t-s">مركز خدمات الأعمال، والخطابات، والشكاوى، والإشعارات</span></div>
       <div class="dom">المجال E</div>
-      <div class="cnt" id="e-cnt"><b>7</b><em>خدمات</em></div>
+      <div class="cnt" id="b01-e-cnt"><b>7</b><em>خدمات</em></div>
     </div>
     <div class="band" data-sk="card-dash">
       <div class="colx"><b class="name">التخزين</b><span class="t-s">خمسة مجمّعات تخزين جاهزة لدى أربعة مشغّلين</span></div>
@@ -165,9 +166,9 @@
       <div class="t"><b data-sk="circle">7</b>الدعم</div><span class="op">+</span>
       <div class="t"><b data-sk="circle">4</b>التخزين</div><span class="op">+</span>
       <div class="t"><b data-sk="circle">5</b>المؤسسية</div><span class="op">=</span>
-      <div class="all" id="all"><b><span data-sk="hl">50</span></b>خدمة</div>
+      <div class="all" id="b01-all"><b><span data-sk="hl">50</span></b>خدمة</div>
     </div>
-    <p class="note" data-to="#all"><b class="n" data-sk="circle">5</b>خمسون خدمة، رحلة واحدة<small>كلها في التطبيق، وكل واحدة في مكانها.</small></p>
+    <p class="note" data-to="#b01-all"><b class="n" data-sk="circle">5</b>خمسون خدمة، رحلة واحدة<small>كلها في التطبيق، وكل واحدة في مكانها.</small></p>
   </div>
 
   <div class="legend"><span>الحروف A–G: مجالات «دليل الخدمات»، الإصدار 4.1</span><span>الأعداد وأسماء الخدمات من الدليل نفسه</span></div>

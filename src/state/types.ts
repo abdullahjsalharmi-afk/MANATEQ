@@ -3,7 +3,7 @@
  * what actions accept, and what the simulation keeps next to the engine's own request state.
  */
 import type { L10n, ServiceDetail, ServiceId } from '@/data/types';
-import type { Appointment, FormValue, Pass, RequestState } from '@/domain/types';
+import type { Appointment, FormValue, Pass, RequestState, World } from '@/domain/types';
 import type { Timing } from '@/domain/workflow';
 
 /**
@@ -22,6 +22,14 @@ export interface SimRequest extends RequestState {
 /** The time until which the open step of a request is held, if any. */
 export function holdOf(request: RequestState): number | undefined {
   return (request as SimRequest).holdUntil;
+}
+
+/**
+ * A demo world whose history could not be replayed when it was seeded, because the workflows it runs
+ * through were not in memory yet. It holds what needs no workflow and is completed at the next tick.
+ */
+export interface PendingWorld extends World {
+  historyPending?: true;
 }
 
 /**

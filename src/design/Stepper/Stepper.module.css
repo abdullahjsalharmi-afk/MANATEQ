@@ -40,3 +40,17 @@
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
+
+/* Forced colours repaint backgrounds: the segments become outlines and the done ones are filled with the
+   system's highlight colour. */
+@media (forced-colors: active) {
+  .segment {
+    height: 6px;
+    border: 1px solid ButtonText;
+  }
+
+  .fill {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+}

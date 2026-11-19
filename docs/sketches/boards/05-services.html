@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=1000">
-<title>مناطق ون — دفتر التصميم · 05 الخدمات وصفحة الخدمة</title>
+<title>مناطق ون · دفتر التصميم · 05 الخدمات وصفحة الخدمة</title>
 <link rel="stylesheet" href="../kit/sketch.css">
 </head>
 <body>
@@ -16,8 +16,8 @@
     #b05 .note small { text-wrap: balance; }
     #b05 .note.to-a { padding-inline-end: 34px; }
     #b05 .note.to-b { padding-inline-start: 34px; }
-    #b05 .opens { position: absolute; inset-inline: 0; top: 500px; height: 30px; padding: 0; width: auto; }
-    #b05 .opens-cap { position: absolute; inset-inline: 0; top: 534px; margin: 0; text-align: center; font-size: 13.5px; color: var(--pencil); }
+    #b05 .opens { position: absolute; inset-inline: 0; top: 488px; height: 30px; padding: 0; width: auto; }
+    #b05 .opens-cap { position: absolute; inset-inline: 0; top: 522px; margin: 0; text-align: center; font-size: 13.5px; color: var(--pencil); }
     #b05 .seg { flex: 1; height: 28px; font-size: 12.5px; }
     #b05 .tiny { height: 20px; font-size: 10px; padding: 0 8px; }
     #b05 .st { width: 22px; height: 22px; flex: none; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; }
@@ -25,17 +25,21 @@
     #b05 .auto { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; color: var(--pencil); flex: none; }
     #b05 .w-row { padding: 7px 0 8px; }
     #b05 .grp { padding: 7px 0 8px; }
-    #b05 .more { padding: 4px 0 5px; }
     #b05 .quote { margin: 0; font-size: 13px; line-height: 1.6; font-weight: 500; }
     #b05 .quote i { font-style: normal; color: var(--accent); font-weight: 700; }
     #b05 .item { display: flex; align-items: center; gap: 7px; font-size: 12.5px; }
     #b05 .src { margin-inline-start: auto; }
-    #b05 .foot { margin: 0 -6px; padding: 10px 6px 0; }
+    #b05 .foot { margin: 0 -6px; padding: 9px 6px 0; }
+    #b05 .from { margin-top: 30px; gap: 10px 22px; align-items: center; }
+    #b05 .from b { color: var(--ink); font-weight: 600; }
+    #b05 .from span { display: inline-flex; align-items: center; gap: 7px; }
+    #b05 .from .w-chip { color: var(--ink); font-style: normal; }
+    #b05 .from .sim { flex-basis: 100%; font-size: 13px; }
   </style>
   <header class="board-head">
     <span class="board-no" data-sk="circle">05</span>
     <div>
-      <h2>الخدمات وصفحة الخدمة — <span data-sk="hl">«جلبناها عنك»</span></h2>
+      <h2>الخدمات وصفحة الخدمة: <span data-sk="hl">«جلبناها عنك»</span></h2>
       <p>خمسون خدمة مرتّبة على محطات رحلتك، ولكل خدمة صفحة واحدة بالعناصر الأربعة نفسها.</p>
     </div>
   </header>
@@ -45,22 +49,22 @@
     <div class="phone-wrap">
       <div class="phone tall" data-sk="phone">
         <span class="t-xl">الخدمات</span>
-        <div class="w-field" id="c-search" data-sk="field"><i class="w-icon sm" data-sk="icon" data-icon="search" data-c="p"></i>ماذا تريد أن تنجز؟</div>
-        <div class="rowx gap4" id="c-seg">
+        <div class="w-field" id="b05-c-search" data-sk="field"><i class="w-icon sm" data-sk="icon" data-icon="search" data-c="p"></i>ماذا تريد أن تنجز؟</div>
+        <div class="rowx gap4" id="b05-c-seg">
           <span class="w-chip on seg" data-sk="chip-on">رحلتي</span>
           <span class="w-chip seg" data-sk="chip">الكل · 50</span>
         </div>
         <div class="colx" style="gap:0">
-          <div class="rowx grp" id="c-now">
+          <div class="rowx grp" id="b05-c-now">
             <b class="st t-a" data-sk="circle-fill">3</b><span class="t-m">التصميم والبناء</span>
             <span class="w-chip tiny end" data-sk="chip">محطتك الآن · 9</span>
           </div>
-          <div class="w-row" id="c-row" data-sk="row">
+          <div class="w-row" id="b05-c-row" data-sk="row">
             <div class="colx"><span class="t-m">قدّم تصميمك للمراجعة</span><span class="t-s off">مراجعة التصميم وشهادة عدم الممانعة</span></div>
             <span class="w-chip tiny" data-sk="chip">3 أيام عمل</span>
             <i class="w-icon sm" data-sk="icon" data-icon="fwd" data-c="p"></i>
           </div>
-          <div class="w-row" id="c-auto" data-sk="row">
+          <div class="w-row" id="b05-c-auto" data-sk="row">
             <div class="colx"><span class="t-m">حالة رخصة البناء</span><span class="t-s off">تنسيق رخصة البناء (وزارة البلدية)</span></div>
             <span class="auto"><i class="w-icon sm" data-sk="icon" data-icon="bolt" data-c="p"></i>تلقائية</span>
             <i class="w-icon sm" data-sk="icon" data-icon="fwd" data-c="p"></i>
@@ -92,14 +96,14 @@
 
     <!-- الملاحظات -->
     <div class="col mid">
-      <p class="note to-a" style="top:80px"><span class="t" data-to="#c-search"><b class="n" data-sk="circle">1</b>سؤال واحد: ماذا تريد؟</span><small>لا يلزمك اسم الخدمة الرسمي.</small></p>
-      <p class="note to-b" style="top:150px"><span class="t" data-to="#p-four"><b class="n" data-sk="circle">2</b>أربعة عناصر لكل خدمة</span><small>الوعد، ومعيار الخدمة، وما نحتاجه منك، وما تحصل عليه.</small></p>
-      <p class="note gold to-b" style="top:232px"><span class="t" data-to="#p-std">«استرشادي»: نقولها صراحة</span></p>
-      <p class="note ink to-a" style="top:268px"><span class="t" data-to="#c-auto"><b class="n" data-sk="circle">3</b>وسم «تلقائية»</span><small>خدمات تبدأ وحدها؛ لا تُطلب، ونشرح متى تبدأ.</small></p>
-      <p class="note to-b" style="top:380px"><span class="t" data-to="#p-got"><b class="n" data-sk="circle">4</b>«جلبناها عنك»</span><small>المرة الواحدة أمام عينيك: كل معلومة مع مصدرها.</small></p>
+      <p class="note to-a" style="top:80px"><span class="t" data-to="#b05-c-search"><b class="n" data-sk="circle">1</b>سؤال واحد: ماذا تريد؟</span><small>لا يلزمك اسم الخدمة الرسمي.</small></p>
+      <p class="note to-b" style="top:150px"><span class="t" data-to="#b05-p-four"><b class="n" data-sk="circle">2</b>أربعة عناصر لكل خدمة</span><small>الوعد، ومعيار الخدمة، وما نحتاجه منك، وما تحصل عليه.</small></p>
+      <p class="note gold to-b" style="top:232px"><span class="t gold" data-to="#b05-p-std">«استرشادي»: نقولها صراحة</span></p>
+      <p class="note ink to-a" style="top:268px"><span class="t ink" data-to="#b05-c-auto"><b class="n" data-sk="circle">3</b>وسم «تلقائية»</span><small>خدمات تبدأ وحدها؛ لا تُطلب، ونشرح متى تبدأ.</small></p>
+      <p class="note to-b" style="top:380px"><span class="t" data-to="#b05-p-got"><b class="n" data-sk="circle">4</b>«جلبناها عنك»</span><small>المرة الواحدة أمام عينيك: كل معلومة مع مصدرها.</small></p>
       <div class="flow opens" data-sk="arrow-l"></div>
       <p class="opens-cap">لمسة على الخدمة تفتح صفحتها</p>
-      <p class="note ink to-b" style="top:616px"><span class="t" data-to="#p-start"><b class="n" data-sk="circle">5</b>زر واحد ثابت في الأسفل</span><small>«ابدأ»، أو شرحٌ لمتى تبدأ الخدمة.</small></p>
+      <p class="note ink to-b" style="top:574px"><span class="t ink" data-to="#b05-p-start"><b class="n" data-sk="circle">5</b>زر واحد ثابت في الأسفل</span><small>«ابدأ»، أو شرحٌ لمتى تبدأ الخدمة.</small></p>
     </div>
 
     <!-- صفحة الخدمة -->
@@ -110,9 +114,9 @@
           <span class="t-xl">قدّم تصميمك للمراجعة</span>
           <span class="t-s">مراجعة التصميم وشهادة عدم الممانعة من مناطق</span>
         </div>
-        <div class="colx" id="p-four" style="gap:9px">
+        <div class="colx" id="b05-p-four" style="gap:9px">
           <p class="quote"><i>«</i>شهادة عدم ممانعة خلال أيام، مع فحوصات مسبقة آلية قبل أن تصل إلى المراجع.<i>»</i></p>
-          <div class="w-card pad-s" id="p-std" data-sk="card" style="gap:2px">
+          <div class="w-card pad-s" id="b05-p-std" data-sk="card" style="gap:2px">
             <div class="rowx sp"><span class="t-s">معيار الخدمة</span><span class="w-chip tiny" data-sk="chip">استرشادي</span></div>
             <span class="w-stat">3 أيام عمل</span>
             <span class="t-s">للبتّ في الشهادة، من تقديم مستوفٍ للشروط</span>
@@ -122,7 +126,7 @@
             <div class="item"><i class="w-icon sm" data-sk="icon" data-icon="upload" data-c="p"></i><span>المخططات التصميمية</span></div>
             <div class="item"><i class="w-icon sm" data-sk="icon" data-icon="upload" data-c="p"></i><span>الحسابات التصميمية</span></div>
           </div>
-          <div class="colx gap4" id="p-got">
+          <div class="colx gap4" id="b05-p-got">
             <span class="t-m">جلبناها عنك</span>
             <div class="item"><i class="w-icon sm" data-sk="check"></i><span>شكل القطعة ومنطقتها</span><span class="w-chip tiny src" data-sk="chip">GIS</span></div>
             <div class="item"><i class="w-icon sm" data-sk="check"></i><span>أنظمة المنطقة ونِسبها</span><span class="w-chip tiny src" data-sk="chip">سجل الأراضي</span></div>
@@ -134,15 +138,27 @@
             <div class="item"><i class="w-icon sm" data-sk="icon" data-icon="doc" data-c="p"></i><span>شهادة عدم الممانعة برمز QR</span></div>
           </div>
         </div>
-        <div class="colx" style="gap:0">
-          <div class="rowx more" data-sk="row"><span class="t-m">الخطوات</span><span class="t-s">4</span><i class="w-icon sm end" data-sk="icon" data-icon="plus" data-c="p"></i></div>
-          <div class="rowx more"><span class="t-m">خلف الكواليس</span><i class="w-icon sm end" data-sk="icon" data-icon="plus" data-c="p"></i></div>
-        </div>
         <div class="grow"></div>
-        <div class="foot" data-sk="tabbar"><div class="w-btn" id="p-start" data-sk="btn">ابدأ</div></div>
+        <div class="foot" data-sk="tabbar"><div class="w-btn" id="b05-p-start" data-sk="btn">ابدأ</div></div>
+        <nav class="w-tabbar" data-sk="tabbar">
+          <span class="w-tab"><i class="w-icon" data-sk="icon" data-icon="home" data-c="p"></i>الرئيسية</span>
+          <span class="w-tab on"><i class="w-icon" data-sk="icon" data-icon="grid"></i>الخدمات</span>
+          <span class="w-tab"><i class="w-icon" data-sk="icon" data-icon="list" data-c="p"></i>طلباتي</span>
+          <span class="w-tab"><i class="w-icon" data-sk="icon" data-icon="pin" data-c="p"></i>المناطق</span>
+          <span class="w-tab"><i class="w-icon" data-sk="icon" data-icon="user" data-c="p"></i>حسابي</span>
+        </nav>
       </div>
       <p class="cap"><b>صفحة الخدمة</b> · العناصر الأربعة المنشورة</p>
     </div>
+  </div>
+
+  <div class="legend from">
+    <b>من أين نجلب؟</b>
+    <span><em class="w-chip tiny" data-sk="chip">توثيق</em>هويتك</span>
+    <span><em class="w-chip tiny" data-sk="chip">GDX</em>السجل التجاري والمفوَّضون</span>
+    <span><em class="w-chip tiny" data-sk="chip">GIS</em>القطعة ومنطقتها</span>
+    <span><em class="w-chip tiny" data-sk="chip">ملفك الموثّق</em>ما أكّدتَه مرة</span>
+    <span class="sim">الربط بهذه المصادر محاكاة في النسخة التجريبية.</span>
   </div>
 
   <p class="board-foot"><b>القاعدة:</b> لا نسأل المستثمر عمّا نعرفه؛ نعرضه عليه مع مصدره، ونطلب الباقي فقط.</p>

@@ -17,8 +17,8 @@ export interface JourneyStation {
 export interface JourneyRibbonProps {
   /** The stations in order. The first one sits at the start of the line (on the right in Arabic). */
   stations: JourneyStation[];
-  /** Names the ribbon for screen readers, e.g. "رحلتك". */
-  label: string;
+  /** Names the ribbon for screen readers. Default "رحلتك". */
+  label?: string;
   /** One short line under the ribbon about where the investor is now. */
   caption?: string;
   /** Makes the stations buttons. Called with the station's key. */
@@ -37,7 +37,7 @@ export function JourneyRibbon({ stations, label, caption, onSelect, size = 'comp
   const expanded = size === 'expanded';
   return (
     <div className={cx(styles.ribbon, styles[size], className)}>
-      <ol className={styles.track} aria-label={label}>
+      <ol className={styles.track} aria-label={label ?? t('journey')}>
         {stations.map((station, index) => {
           const content = (
             <>

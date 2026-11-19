@@ -19,19 +19,21 @@ import type { TextSize } from '@/domain/types';
 import { catalogueLoaded, enterAs, setLang, setSpeed, setTextSize, setTheme } from './actions';
 import { getState, resetEverything } from './store';
 
-let catalogueRequested = false;
+let loading: Promise<void> | null = null;
 
-/** Loads every service's full record once and tells the simulation when they are all in memory. */
+/**
+ * Loads every service's full record once and tells the simulation when they are all in memory.
+ * Safe to call again: every caller gets the same promise.
+ */
 export function loadCatalogue(): Promise<void> {
-  if (catalogueRequested) return Promise.resolve();
-  catalogueRequested = true;
-  return loadAllServiceDetails().then(
+  loading ??= loadAllServiceDetails().then(
     () => catalogueLoaded(),
     () => {
-      // A domain file failed to load (offline before the files were cached): try again on the next call.
-      catalogueRequested = false;
+      // A domain file failed to load (offline before the files were cached): the next call tries again.
+      loading = null;
     },
   );
+  return loading;
 }
 
 export function applyBootParams(search: string): void {

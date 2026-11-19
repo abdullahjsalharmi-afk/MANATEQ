@@ -75,8 +75,10 @@ export function QatarMap({ selected, onSelect, highlight, height = 440, label, c
     };
     measure();
     if (typeof ResizeObserver === 'undefined' || !wrapRef.current) return;
+    // Measure again when the map is resized or the tag changes size (for example when the web font arrives).
     const observer = new ResizeObserver(measure);
     observer.observe(wrapRef.current);
+    if (labelRef.current) observer.observe(labelRef.current);
     return () => observer.disconnect();
   }, [chosenName, width]);
 

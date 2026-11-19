@@ -83,6 +83,9 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
   const from = pastOpen ? 0 : hiddenPast;
   const to = restOpen ? items.length : items.length - hiddenAfter;
   const visible = items.slice(from, to);
+  // While steps are folded away, the rail runs on into the button that brings them back.
+  const pastFolded = hiddenPast > 0 && !pastOpen;
+  const restFolded = hiddenAfter > 0 && !restOpen;
 
   const toggleAll = () => {
     const open = !restOpen;
@@ -93,9 +96,13 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
   return (
     <div className={cx(styles.timeline, className)}>
       {hiddenPast > 0 ? (
-        <button type="button" className={cx(styles.toggle, styles.past)} aria-expanded={pastOpen} aria-controls={listId} onClick={() => setPastOpen((open) => !open)}>
-          <span className={cx(styles.dot, styles.stack)} aria-hidden="true">
-            <Icon icon={Check} size={11} strokeWidth={3} />
+        <button type="button" className={cx(styles.toggle, pastFolded ? styles.past : styles.hide)} aria-expanded={pastOpen} aria-controls={listId} onClick={() => setPastOpen((open) => !open)}>
+          <span className={styles.lead} aria-hidden="true">
+            {pastFolded ? (
+              <span className={cx(styles.dot, styles.stack)}>
+                <Icon icon={Check} size={11} strokeWidth={3} />
+              </span>
+            ) : null}
           </span>
           <span className={styles.toggleLabel}>
             {pastOpen ? t('hidePast') : t('showPast', { n: hiddenPast })}
@@ -104,7 +111,7 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
         </button>
       ) : null}
 
-      <ol id={listId} className={styles.list} start={from + 1} aria-label={label ?? t('list')} data-lead={hiddenPast > 0 || undefined} data-tail={hiddenAfter > 0 || undefined}>
+      <ol id={listId} className={styles.list} start={from + 1} aria-label={label ?? t('list')} data-lead={pastFolded || undefined} data-tail={restFolded || undefined}>
         {visible.map((item, offset) => {
           const index = from + offset;
           const isCurrent = item.state === 'current';
@@ -124,11 +131,11 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
                   </p>
                   {item.text ? <p className={styles.text}>{item.text}</p> : null}
                   <div className={styles.now}>
-                    <HolderChip lane={item.lane} name={item.holderName} size="sm" className={item.lane === 'inv' ? undefined : styles.chip} />
+                    <HolderChip lane={item.lane} name={item.holderName} size="sm" className={item.lane === 'inv' ? undefined : styles.chip} />{' '}
                     {item.auto && item.lane !== 'eng' ? (
                       <span className={styles.auto}>
                         <Icon icon={Zap} size={12} strokeWidth={2.25} />
-                        {t('auto')}
+                        {t('auto')}{' '}
                       </span>
                     ) : null}
                     {when ? (
@@ -148,14 +155,14 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
                   </p>
                   {automatic || who || when || item.state === 'skipped' ? (
                     <p className={styles.meta}>
-                      {item.state === 'skipped' ? <span className={styles.part}>{t('skipped')}</span> : null}
+                      {item.state === 'skipped' ? <span className={styles.part}>{t('skipped')} </span> : null}
                       {automatic ? (
                         <span className={cx(styles.part, styles.auto)}>
                           <Icon icon={Zap} size={12} strokeWidth={2.25} />
-                          {t('auto')}
+                          {t('auto')}{' '}
                         </span>
                       ) : null}
-                      {who ? <span className={styles.part}>{who}</span> : null}
+                      {who ? <span className={styles.part}>{who} </span> : null}
                       {when ? <span className={cx(styles.part, 'num')}>{when}</span> : null}
                     </p>
                   ) : null}
@@ -168,9 +175,9 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
       </ol>
 
       {hiddenAfter > 0 ? (
-        <button type="button" className={cx(styles.toggle, styles.more)} aria-expanded={restOpen} aria-controls={listId} onClick={toggleAll}>
-          <span className={styles.ellipsis} aria-hidden="true">
-            <Icon icon={EllipsisVertical} size={16} strokeWidth={2} />
+        <button type="button" className={cx(styles.toggle, restFolded ? styles.more : styles.less)} aria-expanded={restOpen} aria-controls={listId} onClick={toggleAll}>
+          <span className={styles.lead} aria-hidden="true">
+            {restFolded ? <Icon icon={EllipsisVertical} size={16} strokeWidth={2} /> : null}
           </span>
           <span className={styles.toggleLabel}>
             {restOpen ? t('showLess') : t('showAll')}

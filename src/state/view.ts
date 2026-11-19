@@ -95,7 +95,8 @@ export function standardClockOf(request: RequestState, service: Pick<ServiceDeta
     usedDays += days * share;
   }
   const targetDays = standardDays(service.standard);
-  const ratio = targetDays === null ? null : targetDays <= 0 ? 1 : usedDays / targetDays;
+  // An instant standard is a promise kept at once, not a clock that runs: it has no ratio.
+  const ratio = targetDays === null || targetDays <= 0 ? null : usedDays / targetDays;
   return { usedDays, targetDays, ratio, dayNumber: Math.max(1, Math.ceil(usedDays)) };
 }
 

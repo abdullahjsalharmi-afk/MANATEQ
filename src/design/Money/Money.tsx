@@ -8,6 +8,8 @@ export interface MoneyProps {
   amount: number;
   /** A type size for an amount that stands alone; by default the amount takes the size of the text around it. */
   size?: 'inherit' | 'heading' | 'title' | 'display';
+  /** Give the currency the colour of the figure: for an amount on a coloured surface or in coloured text. */
+  plain?: boolean;
   className?: string;
 }
 
@@ -15,7 +17,7 @@ export interface MoneyProps {
  * An amount of money: the figure in tabular digits with the currency smaller beside it, in the order
  * each language writes it (30,000 ر.ق · QAR 30,000). Screen readers hear the currency's full name.
  */
-export function Money({ amount, size = 'inherit', className }: MoneyProps) {
+export function Money({ amount, size = 'inherit', plain = false, className }: MoneyProps) {
   const t = useT(strings);
   const { fmt } = useLang();
   const figure = fmt.num(amount);
@@ -31,7 +33,7 @@ export function Money({ amount, size = 'inherit', className }: MoneyProps) {
     </span>
   );
   return (
-    <span className={cx(styles.money, size !== 'inherit' && styles[size], className)}>
+    <span className={cx(styles.money, size !== 'inherit' && styles[size], plain && styles.plain, className)}>
       {before ? <>{currency(before)} </> : null}
       <span className={styles.figure}>{at >= 0 ? figure : whole}</span>
       {after ? <> {currency(after)}</> : null}

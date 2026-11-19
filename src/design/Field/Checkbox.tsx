@@ -43,7 +43,7 @@ export function Checkbox({ label, hint, error, checked, onChange, required = fal
           onChange={(event) => onChange(event.target.checked)}
         />
         <span className={styles.box} aria-hidden="true">
-          <Icon icon={Check} size={16} strokeWidth={3} />
+          <Icon icon={Check} size={16} strokeWidth={3} className={styles.tick} />
         </span>
         <span className={styles.label}>{label}</span>
       </label>

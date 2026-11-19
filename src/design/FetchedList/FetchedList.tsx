@@ -42,7 +42,7 @@ export function FetchedList({ items, caption, variant = 'card', label, className
               <p className={styles.text}>{item.text}</p>
               {item.source ? (
                 <p className={styles.source}>
-                  <span className={styles.name}>{t('source', { name: item.source.name })}</span>
+                  <span className={styles.name}>{t('source', { name: item.source.name })}</span>{' '}
                   {item.source.live ? null : (
                     <span className={styles.planned}>
                       <Icon icon={Link2} size={12} strokeWidth={2} />

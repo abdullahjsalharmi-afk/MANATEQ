@@ -152,7 +152,9 @@ export function cancelRequest(requestId: string): void {
 export function tick(now: number): void {
   changeWorld((world, state) => {
     const seeded = seedIsPartial(world) ? completeSeed(world, now) : world;
-    return state.demo.speed > 0 ? tickWorld(seeded, now, liveEnv(state.demo.speed)) : seeded;
+    // A world still waiting for its history stands still: it is about to be replaced.
+    if (seedIsPartial(seeded) || state.demo.speed <= 0) return seeded;
+    return tickWorld(seeded, now, liveEnv(state.demo.speed));
   });
 }
 

@@ -4,8 +4,10 @@
   min-width: 0;
 }
 
-/* The paper. Its edge is the same inset hairline as a text field. */
+/* The paper. Its edge is the same inset hairline as a text field. `--signature-ink` is the colour the
+   canvas draws with; it follows the theme. */
 .pad {
+  --signature-ink: var(--ink);
   position: relative;
   height: 168px;
   overflow: hidden;
@@ -25,7 +27,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  color: var(--ink);
+  color: var(--signature-ink);
   cursor: crosshair;
   touch-action: none;
   user-select: none;
@@ -143,5 +145,15 @@
   to {
     opacity: 1;
     clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Forced colours remove the shadow edge and choose the text colour: the pad gets a real border and the
+   ink follows the system's text colour. */
+@media (forced-colors: active) {
+  .pad {
+    --signature-ink: CanvasText;
+    border: 1px solid ButtonText;
+    box-shadow: none;
   }
 }

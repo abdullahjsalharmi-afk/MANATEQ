@@ -130,10 +130,14 @@
   margin-block-start: var(--s-2);
 }
 
-/* Text-only actions line up with the text above them. */
+/* Text-only actions sit closer together and line up with the text above them. */
 .actionsFlush {
   margin-block-start: 2px;
-  margin-inline-start: -14px;
+  margin-inline-start: -10px;
+}
+
+.actionsFlush .action {
+  padding-inline: 10px;
 }
 
 /* Small buttons, full-size touch targets. */
@@ -163,5 +167,13 @@
   .spinner {
     animation-duration: 1.6s !important;
     animation-iteration-count: infinite !important;
+  }
+}
+
+/* Forced colours remove the shadow edge: the picker gets a real border there. */
+@media (forced-colors: active) {
+  .pick {
+    border: 1px solid ButtonText;
+    box-shadow: none;
   }
 }

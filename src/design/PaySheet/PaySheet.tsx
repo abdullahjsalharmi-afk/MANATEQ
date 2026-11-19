@@ -4,10 +4,11 @@ import { useLang, useT } from '@/app/i18n';
 import { Banner } from '../Banner/Banner';
 import { Button } from '../Button/Button';
 import { cx } from '../cx';
+import { ReturnFocus } from '../Field/ReturnFocus';
 import { SelectField } from '../Field/SelectField';
 import { Money } from '../Money/Money';
 import { Sheet } from '../Sheet/Sheet';
-import { Lines, SheetSuccess, type SheetLine } from './parts';
+import { Lines, sheetActionClass, SheetSuccess, type SheetLine } from './parts';
 import styles from './PaySheet.module.css';
 import { strings } from './strings';
 
@@ -86,6 +87,7 @@ export function PaySheet({ open, onClose, title, lines, amount, reference, onPai
       closeLabel={t('close')}
       footer={<PayFooter phase={phase} amount={amount} onPay={pay} onDone={finish} doneId={doneId} />}
     >
+      <ReturnFocus />
       <div ref={contentRef}>
         <PayContent phase={phase} lines={lines} amount={amount} reference={reference} method={method} onMethod={setMethod} minHeight={hold} />
       </div>
@@ -163,13 +165,13 @@ export function PayFooter({ phase, amount, onPay, onDone, doneId }: PayFooterPro
   const { fmt } = useLang();
   if (phase === 'success') {
     return (
-      <Button block id={doneId} onClick={onDone}>
+      <Button block id={doneId} className={sheetActionClass} onClick={onDone}>
         {t('done')}
       </Button>
     );
   }
   return (
-    <Button block loading={phase === 'processing'} onClick={onPay}>
+    <Button block className={sheetActionClass} loading={phase === 'processing'} onClick={onPay}>
       {phase === 'processing' ? t('processing') : t('pay', { amount: fmt.money(amount) })}
     </Button>
   );

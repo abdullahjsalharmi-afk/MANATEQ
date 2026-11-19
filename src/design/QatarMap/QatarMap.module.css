@@ -168,3 +168,7 @@
   height: 10px;
   background: var(--ink);
 }
+
+.note {
+  flex: none;
+}

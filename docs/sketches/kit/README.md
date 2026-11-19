@@ -11,7 +11,7 @@ text wraps and aligns properly); `sketch.js` then draws every outline with [roug
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=1000">
   <title>…</title>
   <link rel="stylesheet" href="../kit/sketch.css">
 </head>
@@ -102,6 +102,19 @@ do not cross. `data-bend="-0.2"` changes the curve.
 `dia` is a row of `dia-node` boxes (give them `data-sk="card"`) separated by `dia-arrow` elements
 (`data-sk="arrow-l"` — in Arabic the flow runs right to left). `dia-row` is a row of equal boxes;
 `legend` a row of small labels.
+
+## Things worth knowing
+
+- Boards use `<meta name="viewport" content="width=1000">` so the page keeps its layout when opened on a phone.
+- `data-to` works on any element, not only on a note: put it on an inner `<span>` to start the arrow at the
+  note's title, or on a diagram node to link two nodes.
+- `data-sk="box"` draws a plain rectangle (used for keys and legends).
+- A filled square: `data-sk="plots"` on a 1×1 grid with `data-sel="0,0"`. A faint vertical rule: `data-sk="step"`
+  on an element 2 px wide.
+- A sheet (`w-sheet`, `data-sk="sheet"`) has no paper fill, so filled pieces drawn inside it stay visible.
+- The QR drawing is not legible below about 60 px; use it as a symbol at small sizes.
+- Keep a board's own CSS inside its `<article>` and scope it to the board id, so a board can be lifted
+  out whole.
 
 ## Rendering
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=1000">
-<title>مناطق ون — دفتر التصميم · 04 الرئيسية</title>
+<title>مناطق ون · دفتر التصميم · 04 الرئيسية</title>
 <link rel="stylesheet" href="../kit/sketch.css">
 </head>
 <body>
@@ -23,12 +23,16 @@
     #b04 .stations .cur { color: var(--accent); font-weight: 700; }
     #b04 .bell { position: relative; display: inline-flex; }
     #b04 .bell .w-badge { position: absolute; top: -7px; inset-inline-start: -7px; min-width: 15px; height: 15px; font-size: 9.5px; padding: 0 3px; }
+    #b04 .calm { display: flex; align-items: center; gap: 56px; margin-top: 30px; }
+    #b04 .calm .w-card { flex: 0 0 284px; flex-direction: row; align-items: center; gap: 12px; padding: 14px 14px 15px; font-size: 13px; }
+    #b04 .calm .w-card small { display: block; font-size: 11.5px; color: var(--pencil); }
+    #b04 .calm .note { flex: 1; }
   </style>
   <header class="board-head">
     <span class="board-no" data-sk="circle">04</span>
     <div>
-      <h2>الرئيسية — <span data-sk="hl">خطوتك التالية أولًا</span></h2>
-      <p>الشاشة تجيب عن سؤال واحد: «ما المطلوب مني الآن؟» — وكل ما عداه يأتي بعده.</p>
+      <h2>الرئيسية: <span data-sk="hl">خطوتك التالية أولًا</span></h2>
+      <p>الشاشة تجيب عن سؤال واحد: «ما المطلوب مني الآن؟»، وكل ما عداه يأتي بعده.</p>
     </div>
   </header>
 
@@ -37,35 +41,35 @@
     <div class="phone-wrap">
       <div class="phone tall" data-sk="phone">
         <div class="rowx sp">
-          <div class="colx gap4"><span class="t-s">مساء الخير</span><span class="t-l">شركة الريان للصناعات</span></div>
+          <div class="colx gap4"><span class="t-s">مساء الخير</span><span class="t-l">شركة المثال للصناعات</span></div>
           <div class="rowx gap12">
             <i class="w-icon" data-sk="icon" data-icon="search"></i>
             <span class="bell"><i class="w-icon" data-sk="icon" data-icon="bell"></i><b class="w-badge" data-sk="badge">2</b></span>
           </div>
         </div>
-        <div class="w-card" id="h-next" data-sk="card-fill">
+        <div class="w-card" id="b04-h-next" data-sk="card-fill">
           <span class="t-s t-a">الخطوة التالية</span>
           <span class="t-xl">ادفع فاتورة الربع الرابع</span>
           <span class="t-s">12,500 ر.ق · تستحق خلال 5 أيام</span>
           <div class="w-btn" data-sk="btn">ادفع الآن</div>
         </div>
-        <div class="colx" id="h-journey">
+        <div class="colx" id="b04-h-journey">
           <div class="rowx sp t-s"><span>رحلتك</span><span class="t-a">المحطة 3 من 4</span></div>
           <div class="w-step"><i data-sk="step" class="on"></i><i data-sk="step" class="on"></i><i data-sk="step" class="on"></i><i data-sk="step"></i></div>
           <div class="stations"><span>الانضمام</span><span>العقد</span><span class="cur">البناء</span><span>التشغيل</span></div>
         </div>
-        <div class="colx gap4" id="h-req">
+        <div class="colx gap4" id="b04-h-req">
           <div class="rowx sp"><span class="t-m">طلبات جارية</span><span class="t-s t-a">عرض الكل</span></div>
           <div class="w-row" data-sk="row"><span class="w-ring ring-s" data-sk="ring" data-v="0.4">2/5</span><div class="colx"><span class="t-m">رخصة البناء</span><span class="t-s">عند وزارة البلدية · اليوم 2 من 5</span></div></div>
           <div class="w-row" data-sk="row"><span class="w-ring ring-s" data-sk="ring" data-v="0.75">3/4</span><div class="colx"><span class="t-m">بلاغ إنارة الطريق</span><span class="t-s">عند الفريق الميداني · في الموقع</span></div></div>
         </div>
-        <div class="w-card pad-s" id="h-dues" data-sk="card">
+        <div class="w-card pad-s" id="b04-h-dues" data-sk="card">
           <div class="rowx sp">
             <div class="colx gap4"><span class="t-s">المستحقات · فاتورة واحدة</span><span class="t-m">12,500 ر.ق · 24 نوفمبر</span></div>
             <span class="w-btn sm ghost" data-sk="btn2">ادفع</span>
           </div>
         </div>
-        <div class="w-grid4" id="h-short">
+        <div class="w-grid4" id="b04-h-short">
           <div><span class="w-ico" data-sk="circle"><i class="w-icon sm" data-sk="icon" data-icon="wrench"></i></span>بلاغ صيانة</div>
           <div><span class="w-ico" data-sk="circle"><i class="w-icon sm" data-sk="icon" data-icon="key"></i></span>تصريح دخول</div>
           <div><span class="w-ico" data-sk="circle"><i class="w-icon sm" data-sk="icon" data-icon="doc"></i></span>كشف حساب</div>
@@ -85,31 +89,31 @@
 
     <!-- الملاحظات -->
     <div class="col mid">
-      <p class="note to-a" style="top:98px"><span class="t" data-to="#h-next"><b class="n" data-sk="circle">1</b>بطاقة واحدة = أهم إجراء الآن</span><small>عنوان يبدأ بفعل، ثم سطر فيه المبلغ والموعد، ثم زر واحد.</small></p>
-      <p class="note ink to-b" style="top:186px"><span class="t" data-to="#p-next"><b class="n" data-sk="circle">2</b>الشاشة نفسها، بخطوة أخرى</span><small>من لا يملك قطعة بعدُ يبدأ بفحص الأهلية، ونتيجته فورية.</small></p>
-      <p class="note to-a" style="top:264px"><span class="t" data-to="#h-journey"><b class="n" data-sk="circle">3</b>أين أنت في الرحلة؟</span><small>اللمس يعرض ما بقي في محطتك الحالية.</small></p>
-      <p class="note ink to-b" style="top:319px"><span class="t" data-to="#p-sol"><b class="n" data-sk="circle">4</b>الأسعار المنشورة ظاهرة</span><small>الحلول الخمسة بأسعارها، قبل أي طلب أو تسجيل.</small></p>
-      <p class="note to-a" style="top:402px"><span class="t" data-to="#h-req"><b class="n" data-sk="circle">5</b>كل طلب: عند مَن؟ وكم بقي؟</span><small>اسم الجهة التي بيدها الطلب، وحلقة معيار الخدمة.</small></p>
-      <p class="note to-a" style="top:548px"><span class="t" data-to="#h-short"><b class="n" data-sk="circle">6</b>أربعة اختصارات فقط</span><small>تتبدّل بحسب مرحلتك: بلاغ، تصريح، كشف حساب، موعد.</small></p>
+      <p class="note to-a" style="top:98px"><span class="t" data-to="#b04-h-next"><b class="n" data-sk="circle">1</b>بطاقة واحدة = أهم إجراء الآن</span><small>عنوان يبدأ بفعل، ثم سطر فيه المبلغ والموعد، ثم زر واحد.</small></p>
+      <p class="note ink to-b" style="top:186px"><span class="t ink" data-to="#b04-p-next"><b class="n" data-sk="circle">2</b>الشاشة نفسها، بخطوة أخرى</span><small>من لا يملك قطعة بعدُ يبدأ بفحص الأهلية، ونتيجته فورية.</small></p>
+      <p class="note to-a" style="top:264px"><span class="t" data-to="#b04-h-journey"><b class="n" data-sk="circle">3</b>أين أنت في الرحلة؟</span><small>اللمس يعرض ما بقي في محطتك الحالية.</small></p>
+      <p class="note ink to-b" style="top:319px"><span class="t ink" data-to="#b04-p-sol"><b class="n" data-sk="circle">4</b>الأسعار المنشورة ظاهرة</span><small>الحلول الخمسة بأسعارها، قبل أي طلب أو تسجيل.</small></p>
+      <p class="note to-a" style="top:402px"><span class="t" data-to="#b04-h-req"><b class="n" data-sk="circle">5</b>كل طلب: عند مَن؟ وكم بقي؟</span><small>اسم الجهة التي بيدها الطلب، وحلقة معيار الخدمة.</small></p>
+      <p class="note to-a" style="top:548px"><span class="t" data-to="#b04-h-short"><b class="n" data-sk="circle">6</b>أربعة اختصارات فقط</span><small>تتبدّل بحسب مرحلتك: بلاغ، تصريح، كشف حساب، موعد.</small></p>
     </div>
 
     <!-- المستثمر الجديد -->
     <div class="phone-wrap">
       <div class="phone tall" data-sk="phone">
         <div class="rowx sp">
-          <div class="colx gap4"><span class="t-s">مساء الخير</span><span class="t-l">شركة الواحة للأغذية</span></div>
+          <div class="colx gap4"><span class="t-s">مساء الخير</span><span class="t-l">شركة المثال للأغذية</span></div>
           <div class="rowx gap12">
             <i class="w-icon" data-sk="icon" data-icon="search"></i>
             <i class="w-icon" data-sk="icon" data-icon="bell"></i>
           </div>
         </div>
-        <div class="w-card" id="p-next" data-sk="card-fill">
+        <div class="w-card" id="b04-p-next" data-sk="card-fill">
           <span class="t-s t-a">الخطوة التالية</span>
           <span class="t-xl">افحص أهلية نشاطك</span>
           <span class="t-s">أربعة اختيارات، ثم نتيجة فورية: هل نشاطك مستهدف، وفي أي منطقة؟</span>
           <div class="w-btn" data-sk="btn">افحص الآن</div>
         </div>
-        <div class="colx gap4" id="p-sol">
+        <div class="colx gap4" id="b04-p-sol">
           <div class="rowx sp"><span class="t-m">الحلول الخمسة</span><span class="w-chip" data-sk="chip" style="height:20px;font-size:10px;padding:0 8px">أسعار منشورة</span></div>
           <div class="rowx sol" data-sk="row"><span>الحلول الصناعية</span><span class="price">5 ر.ق / م² / سنة</span></div>
           <div class="rowx sol" data-sk="row"><span>الساحات المفتوحة</span><span class="price">10 ر.ق / م² / سنة</span></div>
@@ -117,7 +121,7 @@
           <div class="rowx sol" data-sk="row"><span>الحلول التجارية</span><span class="price">50 ر.ق / م² / سنة</span></div>
           <div class="rowx sol" data-sk="row"><span>حلول التخزين</span><span class="price">يحدّدها المشغّلون</span></div>
         </div>
-        <div class="w-card pad-s" id="p-map" data-sk="card">
+        <div class="w-card pad-s" id="b04-p-map" data-sk="card">
           <div class="rowx">
             <div class="w-map" data-sk="map" data-pins="13" data-hot="4" style="height:96px;width:80px;flex:none"></div>
             <div class="colx gap4"><span class="t-m">13 منطقة في قطر</span><span class="t-s">8 مناطق صناعية ولوجستية<br>و5 مجمّعات تخزين</span><span class="t-s t-a">استكشف المناطق</span></div>
@@ -136,7 +140,15 @@
     </div>
   </div>
 
-  <p class="board-foot"><b>القاعدة:</b> إذا لم يكن مطلوبًا من المستثمر شيء، تقول له الشاشة بهدوء: «لا شيء مطلوب منك الآن».</p>
+  <div class="calm">
+    <div class="w-card" id="b04-h-calm" data-sk="card-dash">
+      <span class="w-ico" data-sk="circle"><i class="w-icon sm" data-sk="check"></i></span>
+      <div><b class="t-l">لا شيء مطلوب منك الآن</b><small>طلباتك تسير، وسنخبرك حين يحين دورك.</small></div>
+    </div>
+    <p class="note gold"><span class="t gold" data-to="#b04-h-calm">والبطاقة نفسها حين لا يوجد إجراء</span><small>لا نخترع مهمة لنملأ المكان.</small></p>
+  </div>
+
+  <p class="board-foot"><b>القاعدة:</b> إذا لم يكن مطلوبًا من المستثمر شيء، تقول له الشاشة ذلك بهدوء.</p>
 </article>
 <script src="../kit/rough.js"></script>
 <script src="../kit/sketch.js"></script>

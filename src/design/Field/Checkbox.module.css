@@ -45,17 +45,29 @@
   border-radius: 7px;
   background: var(--surface);
   box-shadow: inset 0 0 0 1.5px var(--ink-3);
-  color: transparent;
+  color: var(--on-accent);
   transition:
     background-color var(--d-1) var(--ease),
-    box-shadow var(--d-1) var(--ease),
-    color var(--d-1) var(--ease);
+    box-shadow var(--d-1) var(--ease);
+}
+
+/* The tick is hidden by size and opacity, not by colour, so it stays hidden where colours are forced. */
+.tick {
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity var(--d-1) var(--ease),
+    transform var(--d-2) var(--ease);
 }
 
 .input:checked + .box {
   background: var(--accent);
   box-shadow: none;
-  color: var(--on-accent);
+}
+
+.input:checked + .box .tick {
+  opacity: 1;
+  transform: none;
 }
 
 .input:focus-visible + .box {
@@ -102,4 +114,22 @@
 
 .errorIcon {
   margin-block-start: 0.15em;
+}
+
+@media (forced-colors: active) {
+  .box {
+    border: 2px solid ButtonText;
+    box-shadow: none;
+  }
+
+  .input:checked + .box {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .input:focus-visible + .box {
+    outline: 2px solid Highlight;
+  }
 }

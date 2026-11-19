@@ -93,8 +93,7 @@ export function DocCard(props: DocCardProps) {
         leading={<DocIcon kind={kind} />}
         title={
           <span className={styles.rowTitle}>
-            <span>{title}</span>
-            {mark}
+            <span>{title}</span> {mark}
           </span>
         }
         wrap
@@ -117,10 +116,10 @@ export function DocCard(props: DocCardProps) {
   return (
     <article className={cx(styles.paper, className)} aria-labelledby={titleId}>
       <header className={styles.head}>
-        <p className={styles.issuer}>
-          <span className={styles.issuerName}>{issuer}</span>
-          <span className={styles.kind}>{t(kind)}</span>
-        </p>
+        <div className={styles.issuer}>
+          <p className={styles.issuerName}>{issuer}</p>
+          <p className={styles.kind}>{t(kind)}</p>
+        </div>
         {mark}
       </header>
 

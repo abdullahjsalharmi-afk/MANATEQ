@@ -18,6 +18,10 @@
   color: var(--ink-2);
 }
 
+.plain .currency {
+  color: inherit;
+}
+
 .heading {
   font-size: var(--t-heading);
   font-weight: 600;

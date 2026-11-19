@@ -30,8 +30,13 @@
   }
 }
 
+.tile:active {
+  background: var(--surface-2);
+}
+
 .tileOn,
-.tileOn:hover {
+.tileOn:hover,
+.tileOn:active {
   background: var(--accent-tint);
   box-shadow: inset 0 0 0 2px var(--accent);
 }
@@ -233,4 +238,38 @@
   text-align: center;
   font-size: var(--t-callout);
   color: var(--ink-2);
+}
+
+/* Forced colours remove shadows and repaint backgrounds: the tile's edge and the radio mark are redrawn
+   with borders, and the chosen state uses the system's highlight colour. */
+@media (forced-colors: active) {
+  .tile {
+    outline: 1px solid ButtonText;
+    outline-offset: -1px;
+  }
+
+  .tileOn {
+    outline: 3px solid Highlight;
+    outline-offset: -3px;
+  }
+
+  .tile:has(.radio:focus-visible) {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .mark {
+    border: 2px solid ButtonText;
+    box-shadow: none;
+  }
+
+  .tileOn .mark {
+    border: 7px solid Highlight;
+    box-shadow: none;
+  }
+
+  .optionOn {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
 }

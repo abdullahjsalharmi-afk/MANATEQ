@@ -10,7 +10,7 @@ import { langTools, ltr } from '@/app/i18n';
 import { getService } from '@/data/catalog';
 import type { L10n, ServiceDetail, ServiceId, StepAction } from '@/data/types';
 import { journeyOf } from './journey';
-import type { Invoice, Lease, NextStep, Plot, RequestState, World } from './types';
+import type { Invoice, Lease, NextStep, RequestState, World } from './types';
 import { currentVisit } from './workflow';
 
 const AR = langTools('ar').fmt;
@@ -42,7 +42,7 @@ const join = (parts: (L10n | undefined)[]): L10n => {
   const present = parts.filter((part): part is L10n => part !== undefined);
   return { ar: present.map((part) => part.ar).join(' · '), en: present.map((part) => part.en).join(' · ') };
 };
-const plotName = (plot: Plot | undefined): L10n | undefined => (plot ? { ar: ltr(plot.number), en: plot.number } : undefined);
+const plotName = (number: string | undefined): L10n | undefined => (number ? { ar: ltr(number), en: number } : undefined);
 const money = (amount: number | undefined): L10n | undefined => (amount ? { ar: AR.money(amount), en: EN.money(amount) } : undefined);
 
 /** What the app asks of the investor at the step a request is waiting on. */
@@ -81,7 +81,8 @@ function requestStep(world: World, request: RequestState, lookup: DetailLookup):
     id: `request:${request.id}`,
     kind: request.serviceId === 'B3' ? 'renewal' : 'request_action',
     title,
-    context: join([action ? summary?.label : undefined, plotName(plot), money(request.amount)]),
+    // An application names the plot it picked before the plot is on record.
+    context: join([action ? summary?.label : undefined, plotName(plot?.number ?? request.plotId), money(request.amount)]),
     cta: action?.cta ?? COPY.openRequest,
     route: `/requests/${request.id}`,
     urgency: dueAt !== undefined ? BAND.deadline * BAND_SIZE + dueAt : BAND.waiting * BAND_SIZE + waitingSince,
@@ -124,7 +125,7 @@ function suggestionSteps(world: World): NextStep[] {
         id: `start:${item.serviceId}${plot ? `:${plot.id}` : ''}`,
         kind: 'start_service',
         title: service.label,
-        context: plot ? join([plotName(plot), service.summary]) : service.summary,
+        context: plot ? join([plotName(plot.number), service.summary]) : service.summary,
         cta: COPY.start,
         route: startRoute(item.serviceId, plot?.id),
         urgency: BAND.suggestion * BAND_SIZE + order,

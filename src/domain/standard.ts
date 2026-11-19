@@ -67,6 +67,8 @@ const DAYS_LEFT: CountForms = {
   en: { one: '{n} day left', other: '{n} days left' },
 };
 
+const LAST_DAY = { ar: 'اليوم الأخير ضمن المعيار', en: 'Last day within the standard' } as const;
+
 const DAYS_OVER: CountForms = {
   ar: {
     one: 'متأخر يومًا واحدًا عن المعيار',
@@ -128,15 +130,20 @@ export function dayOf(clock: Pick<StandardClock, 'dayNumber' | 'targetDays'>, la
 }
 
 /**
- * The time left inside the standard, or how far past it the request is: "بقيت 3 أيام" / "3 days left",
- * "متأخر يومين عن المعيار" / "2 days over the standard". Null when there is no day count.
+ * The whole days left after today, or how far past the standard a request is: "بقيت 3 أيام" /
+ * "3 days left", "اليوم الأخير ضمن المعيار" / "Last day within the standard", "متأخر يومين عن المعيار" /
+ * "2 days over the standard". It agrees with `dayOf`: day 2 of 5 has 3 days left. Null when there is
+ * no day count.
  */
 export function timeLeft(clock: Pick<StandardClock, 'usedDays' | 'targetDays'>, lang: Lang): string | null {
   const target = clock.targetDays;
   if (target === null || target < 1) return null;
-  const remaining = target - clock.usedDays;
-  if (remaining >= 0) return count(Math.max(1, Math.ceil(remaining)), DAYS_LEFT, lang);
-  return count(Math.max(1, Math.ceil(-remaining)), DAYS_OVER, lang);
+  const over = clock.usedDays - target;
+  if (over > 0) return count(Math.max(1, Math.ceil(over)), DAYS_OVER, lang);
+  // Counted the way `dayOf` counts: the days of the standard that come after today.
+  const today = Math.max(1, Math.ceil(clock.usedDays));
+  const wholeDays = Math.ceil(target) - today;
+  return wholeDays >= 1 ? count(wholeDays, DAYS_LEFT, lang) : LAST_DAY[lang];
 }
 
 export type ClockTone = 'accent' | 'warn' | 'bad';

@@ -25,7 +25,6 @@ import {
   findPlotRecord,
   findRequest,
   isFinished,
-  isOpen,
   isQueued,
   notify,
   patchInvoice,
@@ -85,8 +84,9 @@ function answeredAtStart(request: RequestState, service: ServiceDetail, step: nu
 
 /* ───────────────────────────── consequences of engine events ───────────────────────────── */
 
+/** The plot a request is about, as printed: the record's number, or the plot picked in an application. */
 function plotNumberOf(world: World, request: RequestState): string | undefined {
-  return findPlotRecord(world, request.plotId)?.number;
+  return findPlotRecord(world, request.plotId)?.number ?? request.plotId;
 }
 
 /** The finished request's documents, its notification, and the services that follow by themselves. */
@@ -110,8 +110,8 @@ function finish(world: World, ctx: EffectContext, env: Env, now: number): World 
   next = notify(next, {
     at: ctx.at,
     kind: 'done',
-    title: end && isTerminal(end) ? end.label : ctx.service.output,
-    body: dots(ctx.service.label, plotNumberOf(next, request)),
+    title: dots(ctx.service.label, plotNumberOf(next, request)),
+    body: end && isTerminal(end) ? end.label : ctx.service.output,
     route: `/requests/${request.id}`,
   });
 
@@ -151,8 +151,8 @@ function settle(world: World, id: string, events: EngineEvent[], env: Env, now: 
       next = notify(next, {
         at: event.at,
         kind: 'update',
-        title: reason?.label ?? service.label,
-        body: dots(service.label, plotNumberOf(next, request)),
+        title: dots(service.label, plotNumberOf(next, request)),
+        body: reason?.label ?? service.output,
         route: `/requests/${id}`,
       });
     }
@@ -413,8 +413,9 @@ function calendar(world: World, now: number, env: Env): World {
  */
 export function tickWorld(world: World, now: number, env: Env): World {
   let next = world;
+  // Requests that wait for the investor do not move by themselves; finished ones never move again.
   for (const request of world.requests) {
-    if (isOpen(request) && (request.status !== 'needs_you' || isQueued(request))) next = run(next, request.id, env, now);
+    if (request.status === 'active') next = run(next, request.id, env, now);
   }
   return calendar(next, now, env);
 }

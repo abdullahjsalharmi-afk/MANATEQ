@@ -99,3 +99,19 @@
 .clear:hover .clearDisc {
   background: var(--ink-2);
 }
+
+/* Forced colours remove the sunken fill and the shadow edge: the field gets a real border there. */
+@media (forced-colors: active) {
+  .search::after {
+    border: 1px solid ButtonText;
+    box-shadow: none;
+  }
+
+  .search:focus-within::after {
+    border: 2px solid Highlight;
+  }
+
+  .clearDisc {
+    border: 1px solid ButtonText;
+  }
+}

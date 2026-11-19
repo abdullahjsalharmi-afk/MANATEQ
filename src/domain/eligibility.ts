@@ -21,7 +21,8 @@
  *  5. Rent is the requested area × the published price of the solution. Warehousing has no published
  *     price: the park operators set it, and Manateq refers the investor to them.
  *
- * Nothing here is persisted or asynchronous: the same question always gets the same answer.
+ * The check is a pure function: the same activity, with the same availability, gets the same answer
+ * in the same zone every time — which is what the Guide promises of the rules.
  */
 import { activities, getActivity, getSolution, getZone } from '@/data/catalog';
 import type { Activity, L10n, Lang, SolutionKey, Zone } from '@/data/types';
@@ -116,36 +117,41 @@ export interface EligibilityOutcome {
  */
 const HEAVY_INDUSTRY_ZONES: ReadonlySet<string> = new Set(['MIZ']);
 
-/** The sentences of an outcome. `{zone}`, `{solution}` and `{area}` are filled in by `say`. */
+/**
+ * The sentences of an outcome. `{zone}`, `{solution}` and `{area}` are filled in by `say`.
+ * A reason stands on its own, so it names the zone; the `why` of an alternative is read beside its zone
+ * and solution, so it says "here".
+ */
 const TEXT = {
   unlisted: {
-    ar: 'هذا النشاط غير مدرج في القائمة بعد، فيراجعه فريق التخطيط بدلًا من القواعد.',
-    en: 'This activity is not on the list yet, so the planning team reviews it instead of the rules.',
+    ar: 'هذا النشاط غير مدرج في القائمة بعد، فيراجعه فريق التخطيط.',
+    en: 'This activity is not on the list yet, so the planning team reviews it.',
   },
   targeted: { ar: 'هذا النشاط من الأنشطة المستهدفة.', en: 'This is a targeted activity.' },
   review: { ar: 'هذا النشاط حالة حدّية، فيراجعه فريق التخطيط.', en: 'This activity is a borderline case, so the planning team reviews it.' },
   not_targeted: { ar: 'هذا النشاط ليس من الأنشطة المستهدفة.', en: 'This is not a targeted activity.' },
   solutionDoesNotCover: { ar: '{solution} لا تشمل هذا النشاط.', en: '{solution} do not cover this activity.' },
-  solutionNotOffered: { ar: 'لا تتوفر {solution} في {zone}.', en: '{solution} are not offered in {zone}.' },
+  solutionNotOffered: { ar: '{solution} غير متاحة في {zone}.', en: '{solution} are not offered in {zone}.' },
   hazardRulesOut: {
     ar: 'فئة خطورة النشاط تستبعد مناطق الصناعات الخفيفة، ومنها {zone}.',
     en: 'The hazard class of the activity rules out the lighter-industry zones, including {zone}.',
   },
-  notTargetedHere: { ar: 'هذا النشاط غير مستهدف في {zone}.', en: 'This activity is not targeted in {zone}.' },
-  noPlotHere: {
-    ar: 'لا تتوفر الآن في {zone} قطعة بمساحة {area} أو أكثر.',
-    en: 'No plot of {area} or more is free in {zone} right now.',
+  notTargetedInZone: { ar: 'هذا النشاط غير مستهدف في {zone}.', en: 'This activity is not targeted in {zone}.' },
+  noPlotInZone: {
+    ar: 'لا توجد الآن في {zone} قطعة متاحة بمساحة {area} أو أكثر.',
+    en: 'No plot of {area} or more is available in {zone} right now.',
   },
   noPlotAnywhere: {
-    ar: 'لا تتوفر الآن قطعة بمساحة {area} أو أكثر في المناطق المستهدفة لهذا النشاط.',
-    en: 'No plot of {area} or more is free right now in the zones that target this activity.',
+    ar: 'لا توجد الآن قطعة متاحة بمساحة {area} أو أكثر في المناطق المستهدفة لهذا النشاط.',
+    en: 'No plot of {area} or more is available right now in the zones that target this activity.',
   },
-  targetedIn: { ar: 'النشاط مستهدف في {zone}.', en: 'The activity is targeted in {zone}.' },
-  coveredBy: { ar: 'تشمل {solution} هذا النشاط في {zone}.', en: '{solution} cover this activity in {zone}.' },
-  plotsIn: { ar: 'تتوفر في {zone} قطع بمساحة {area} أو أكثر.', en: 'Plots of {area} or more are free in {zone}.' },
+  whySameSolution: { ar: 'النشاط مستهدف هنا بالحل نفسه.', en: 'The activity is targeted here with the same solution.' },
+  whySameZone: { ar: 'تشمل {solution} هذا النشاط في المنطقة نفسها.', en: '{solution} cover this activity in the same zone.' },
+  whyOtherSolution: { ar: 'تشمل {solution} هذا النشاط هنا.', en: '{solution} cover this activity here.' },
+  whyPlots: { ar: 'توجد هنا قطع متاحة بهذه المساحة.', en: 'Plots of this size are available here.' },
   referral: {
-    ar: 'المستودعات الجاهزة يؤجّرها مشغّلو المجمّعات وهم من يحدّدون السعر، ونحيلك إلى المشغّل الذي تختاره.',
-    en: 'Ready-built warehouses are leased by the park operators, who set the price; we refer you to the operator you choose.',
+    ar: 'يحدّد المشغّلون السعر والشروط، ونحيلك بموافقتك إلى المشغّل الذي تختاره.',
+    en: 'The operators set the price and terms; with your consent, we refer you to the one you choose.',
   },
 } as const satisfies Record<string, L10n>;
 
@@ -166,10 +172,10 @@ function solutionName(solution: SolutionKey): L10n {
   return getSolution(solution)?.name ?? { ar: solution, en: solution };
 }
 
-/** 20,000 م² · 20,000 m² (Western digits in both languages). */
+/** 20,000 م² · 20,000 m² — Western digits in both languages, and a no-break space so the unit never wraps away from its number. */
 function areaText(areaSqm: number): L10n {
   const n = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(areaSqm);
-  return { ar: `${n} م²`, en: `${n} m²` };
+  return { ar: `${n}\u00A0م²`, en: `${n}\u00A0m²` };
 }
 
 /** The annual rent of an area under a solution, in QAR: area × the published price. Null where no price is published. */
@@ -213,7 +219,7 @@ function whyNot(activity: Activity, solution: SolutionKey, asked: Zone | undefin
   if (!asked || !activity.solutions.includes(solution)) return { obstacle: 'solution', reason: say(TEXT.solutionDoesNotCover, parts) };
   if (!asked.solutions.includes(solution)) return { obstacle: 'solution', reason: say(TEXT.solutionNotOffered, parts) };
   if (!acceptsHazard(asked, activity)) return { obstacle: 'hazard', reason: say(TEXT.hazardRulesOut, parts) };
-  return { obstacle: 'zone', reason: say(TEXT.notTargetedHere, parts) };
+  return { obstacle: 'zone', reason: say(TEXT.notTargetedInZone, parts) };
 }
 
 /**
@@ -227,17 +233,13 @@ export function checkEligibility(input: EligibilityInput, availability?: Availab
 
   const { solution, areaSqm } = input;
   const asked = input.zoneCode ? getZone(input.zoneCode) : undefined;
-  const area = areaText(areaSqm);
   const option = (zone: Zone, key: SolutionKey): EligibilityOption => ({
     zone,
     solution: key,
     annualRent: estimateAnnualRent(key, areaSqm),
     plotHint: freePlots(zone, areaSqm, availability),
   });
-  const offer = (zone: Zone, key: SolutionKey, why: L10n): EligibilityAlternative => ({
-    ...option(zone, key),
-    why: say(why, { zone: zoneName(zone), solution: solutionName(key), area }),
-  });
+  const offer = (zone: Zone, key: SolutionKey, why: L10n): EligibilityAlternative => ({ ...option(zone, key), why: say(why, { solution: solutionName(key) }) });
 
   const fitting = targetedZones(activity, solution);
   const matches = plotsFirst((asked ? fitting.filter((zone) => zone === asked) : fitting).map((zone): EligibilityMatch => ({ ...option(zone, solution), fit: 'targeted' })));
@@ -245,21 +247,22 @@ export function checkEligibility(input: EligibilityInput, availability?: Availab
   if (!matches.length) {
     // Targeted, but not as asked: keep as much of the first choice as possible.
     const others = activity.solutions.filter((key) => key !== solution);
-    const sameZone = asked ? others.filter((key) => fits(activity, asked, key)).map((key) => offer(asked, key, TEXT.coveredBy)) : [];
-    const sameSolution = plotsFirst(fitting.map((zone) => offer(zone, solution, TEXT.targetedIn)));
+    const sameZone = asked ? others.filter((key) => fits(activity, asked, key)).map((key) => offer(asked, key, TEXT.whySameZone)) : [];
+    const sameSolution = plotsFirst(fitting.map((zone) => offer(zone, solution, TEXT.whySameSolution)));
     const alternatives =
       sameZone.length || sameSolution.length
         ? [...sameZone, ...sameSolution]
-        : plotsFirst(others.flatMap((key) => targetedZones(activity, key).map((zone) => offer(zone, key, TEXT.coveredBy))));
+        : plotsFirst(others.flatMap((key) => targetedZones(activity, key).map((zone) => offer(zone, key, TEXT.whyOtherSolution))));
     return { verdict: 'targeted', ...whyNot(activity, solution, asked), eligible: false, matches, alternatives, note: null, next: null };
   }
 
   if (matches.every((match) => match.plotHint === 0)) {
     // Targeted here, but nothing of that size is free: point to the zones that have it, and to the alerts.
-    const elsewhere = asked ? fitting.filter((zone) => zone !== asked).map((zone) => offer(zone, solution, TEXT.plotsIn)) : [];
+    const elsewhere = asked ? fitting.filter((zone) => zone !== asked).map((zone) => offer(zone, solution, TEXT.whyPlots)) : [];
+    const area = areaText(areaSqm);
     return {
       verdict: 'targeted',
-      reason: asked ? say(TEXT.noPlotHere, { zone: zoneName(asked), area }) : say(TEXT.noPlotAnywhere, { area }),
+      reason: asked ? say(TEXT.noPlotInZone, { zone: zoneName(asked), area }) : say(TEXT.noPlotAnywhere, { area }),
       eligible: false,
       obstacle: 'plots',
       matches,
@@ -283,8 +286,19 @@ export function checkEligibility(input: EligibilityInput, availability?: Availab
 }
 
 /**
+ * The other way round: the activities that are targeted in a zone, with any solution the zone offers,
+ * in catalogue order. A zone page built on this gives the same answers as the check.
+ */
+export function targetedActivities(zoneCode: string): Activity[] {
+  const zone = getZone(zoneCode);
+  if (!zone) return [];
+  return activities.filter((activity) => activity.verdict === 'targeted' && zone.solutions.some((solution) => fits(activity, zone, solution)));
+}
+
+/**
  * The compact record of a check, kept on the investor's profile and used to pre-fill the land
- * application (A4). `zoneCodes` are the zones where the request fits as asked.
+ * application (A4). `zoneCodes` are the zones where the request fits as asked — none while the first
+ * choice does not fit, so save the check that the investor confirmed.
  */
 export function toEligibilityResult(input: EligibilityInput, outcome: EligibilityOutcome, at: number): EligibilityResult {
   return {

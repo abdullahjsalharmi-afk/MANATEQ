@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=1000">
-<title>مناطق ون — دفتر التصميم</title>
+<title>مناطق ون · دفتر التصميم</title>
 <link rel="stylesheet" href="../kit/sketch.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
     #b00 .say { position: relative; flex: 1; min-width: 0; height: 452px; }
     #b00 .say .lbl { margin: 0; font-size: 15px; color: var(--pencil); }
     #b00 .say .big { margin: 6px 0 0; font-size: 42px; line-height: 1.38; font-weight: 700; }
-    #b00 .say .sub { position: absolute; inset-inline-start: 0; top: 182px; width: 292px; margin: 0; font-size: 16px; line-height: 1.85; color: var(--pencil); }
+    #b00 .say .sub { position: absolute; inset-inline-start: 0; top: 182px; width: 292px; margin: 0; font-size: 16px; line-height: 1.85; color: var(--pencil); text-wrap: balance; }
     #b00 .say .note { position: absolute; inset-inline-end: 0; width: max-content; max-width: 340px; }
     #b00 .note .t { display: inline-block; }
     #b00 .pencil { position: absolute; inset-inline: 0 60px; bottom: 0; flex-direction: row; align-items: flex-start; gap: 12px; padding: 13px 16px 14px; font-size: 14.5px; line-height: 1.7; color: var(--ink); }
@@ -33,7 +33,6 @@
     #b00 .rule p { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--pencil); min-height: 69px; text-wrap: pretty; }
     #b00 .demo { display: flex; align-items: center; gap: 8px; height: 38px; font-size: 12px; }
     #b00 .demo .w-btn { height: 30px; flex: 1; font-size: 12.5px; }
-    #b00 .demo .w-qr { width: 38px; height: 38px; margin: 0; flex: none; }
     #b00 .demo .ring-xs { width: 30px; height: 30px; }
     #b00 .dot { width: 16px; height: 16px; flex: none; }
     #b00 .dot.on { min-width: 0; padding: 0; }
@@ -46,7 +45,7 @@
   <header class="board-head">
     <span class="board-no" data-sk="circle">00</span>
     <div>
-      <h2>مناطق ون — <span data-sk="hl">دفتر التصميم</span></h2>
+      <h2>مناطق ون: <span data-sk="hl">دفتر التصميم</span></h2>
       <p>خمسون خدمة. رحلة واحدة. هنا نرسم كيف يعمل التطبيق، قبل أن نلوّنه.</p>
     </div>
   </header>
@@ -57,8 +56,9 @@
       <p class="lbl">الفكرة في جملة واحدة</p>
       <p class="big">التطبيق يعرف دائمًا<br><span data-sk="underline">خطوتك التالية</span></p>
       <p class="sub">رفيق لرحلة المستثمر في مناطق: يقول له ما عليه الآن، ويريه أين وصل كل طلب، ويحفظ له كل وثيقة.</p>
-      <p class="note" style="top:176px"><span class="t" data-to="#c-next"><b class="n" data-sk="circle">1</b>بطاقة واحدة في أعلى الرئيسية</span><small>فعل واحد، وسطر واحد، وزر واحد.</small></p>
-      <p class="note ink" style="top:262px"><span class="t" data-to="#c-journey"><b class="n" data-sk="circle">2</b>ورحلة واحدة من أربع محطات</span><small>لا دليل من خمسين نموذجًا.</small></p>
+      <p class="note" style="top:172px"><span class="t" data-to="#b00-c-next"><b class="n" data-sk="circle">1</b>بطاقة واحدة في أعلى الرئيسية</span><small>فعل واحد، وسطر واحد، وزر واحد.</small></p>
+      <p class="note ink" style="top:244px"><span class="t ink" data-to="#b00-c-journey"><b class="n" data-sk="circle">2</b>ورحلة واحدة من أربع محطات</span><small>لا دليل من خمسين نموذجًا.</small></p>
+      <p class="note" style="top:310px"><span class="t" data-to="#b00-c-req"><b class="n" data-sk="circle">3</b>وكل طلب يقول عند مَن هو</span><small>باسم الجهة، وبعدد الأيام.</small></p>
       <div class="w-card pencil" data-sk="card-dash">
         <i class="w-icon" data-sk="icon" data-icon="pen" data-c="p"></i>
         <div>هذه رسوم بقلم الرصاص، لا الشكل النهائي.<small>تشرح الفكرة والترتيب والكلمات. والأسماء والمبالغ فيها أمثلة توضيحية.</small></div>
@@ -67,21 +67,21 @@
 
     <div class="phone" data-sk="phone">
       <div class="rowx sp">
-        <div class="colx gap4"><span class="t-s">مساء الخير</span><span class="t-l">شركة الريان للصناعات</span></div>
+        <div class="colx gap4"><span class="t-s">مساء الخير</span><span class="t-l">شركة المثال للصناعات</span></div>
         <span class="w-chip tiny" data-sk="chip">نسخة تجريبية</span>
       </div>
-      <div class="w-card" id="c-next" data-sk="card-fill">
+      <div class="w-card" id="b00-c-next" data-sk="card-fill">
         <span class="t-s t-a">الخطوة التالية</span>
         <span class="t-xl">ادفع فاتورة الربع الرابع</span>
         <span class="t-s">12,500 ر.ق · تستحق خلال 5 أيام</span>
         <div class="w-btn" data-sk="btn">ادفع الآن</div>
       </div>
-      <div class="colx" id="c-journey">
+      <div class="colx" id="b00-c-journey">
         <div class="rowx sp t-s"><span>رحلتك</span><span class="t-a">المحطة 3 من 4</span></div>
         <div class="w-step"><i data-sk="step" class="on"></i><i data-sk="step" class="on"></i><i data-sk="step" class="on"></i><i data-sk="step"></i></div>
         <div class="stations"><span>الانضمام</span><span>العقد</span><span class="cur">البناء</span><span>التشغيل</span></div>
       </div>
-      <div class="w-row" data-sk="row"><span class="w-ring ring-s" data-sk="ring" data-v="0.4">2/5</span><div class="colx"><span class="t-m">رخصة البناء</span><span class="t-s">عند وزارة البلدية · اليوم 2 من 5</span></div></div>
+      <div class="w-row" id="b00-c-req" data-sk="row"><span class="w-ring ring-s" data-sk="ring" data-v="0.4">2/5</span><div class="colx"><span class="t-m">رخصة البناء</span><span class="t-s">عند وزارة البلدية · اليوم 2 من 5</span></div></div>
       <div class="grow"></div>
       <nav class="w-tabbar" data-sk="tabbar">
         <span class="w-tab on"><i class="w-icon" data-sk="icon" data-icon="home"></i>الرئيسية</span>
@@ -114,7 +114,7 @@
     <div class="w-card rule" data-sk="card">
       <div class="hd"><b class="n" data-sk="circle">4</b>كل وثيقة قابلة للتحقق</div>
       <p>تصدر إلكترونيًا وتُوقَّع إلكترونيًا، وعليها رمز QR، وتُحفظ في محفظة واحدة.</p>
-      <div class="demo"><i class="w-qr" data-sk="qr"></i><span>شهادة عدم الممانعة</span><span class="t-s t-a end">تحقّق</span></div>
+      <div class="demo"><i class="w-icon" data-sk="icon" data-icon="doc"></i><span>شهادة عدم الممانعة</span><span class="w-chip tiny end" data-sk="chip">QR · تحقّق</span></div>
     </div>
     <div class="w-card rule" data-sk="card">
       <div class="hd"><b class="n" data-sk="circle">5</b>هدوء</div>

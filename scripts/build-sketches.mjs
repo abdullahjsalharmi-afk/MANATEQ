@@ -22,6 +22,8 @@ const INK = 1.6;
 const CROSS = 1.8;
 /** The steadiness of the hand: enough wobble to feel drawn, never enough to look careless. */
 const HAND = { roughness: 0.8, bowing: 1, maxRandomnessOffset: 1.5, disableMultiStroke: true };
+/** Strokes shorter than this are drawn with a proportionally steadier hand. */
+const SWAY = 64;
 
 const gen = rough.generator();
 
@@ -58,18 +60,6 @@ function randomFrom(seed) {
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
-}
-
-/** Points along an arc. Angles in degrees, measured clockwise on screen from the positive x axis. */
-function arcPoints([cx, cy], r, from, to, steps) {
-  const [rx, ry] = Array.isArray(r) ? r : [r, r];
-  const n = steps ?? Math.max(2, Math.ceil((Math.abs(to - from) * RAD * Math.max(rx, ry)) / 9));
-  const points = [];
-  for (let i = 0; i <= n; i++) {
-    const a = (from + ((to - from) * i) / n) * RAD;
-    points.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]);
-  }
-  return points;
 }
 
 /** A point on a cubic Bézier. */
@@ -135,23 +125,14 @@ function simplifyRing(ring, tolerance) {
 // The pen
 // ---------------------------------------------------------------------------------------------------
 
-/** rough.js operations → compact path data. `join` keeps the pen down where one segment ends exactly where the next begins. */
-function pathData(drawable, { join = false } = {}) {
+/** rough.js operations → compact path data. */
+function pathData(drawable) {
   let d = '';
-  let at = null;
   for (const set of drawable.sets) {
     for (const { op, data } of set.ops) {
-      if (op === 'move') {
-        if (join && at && Math.hypot(data[0] - at[0], data[1] - at[1]) < 0.05) continue;
-        d += `M${fmt(data[0])} ${fmt(data[1])}`;
-        at = data;
-      } else if (op === 'bcurveTo') {
-        d += `C${data.map(fmt).join(' ')}`;
-        at = data.slice(4);
-      } else {
-        d += `L${fmt(data[0])} ${fmt(data[1])}`;
-        at = data;
-      }
+      if (op === 'move') d += `M${fmt(data[0])} ${fmt(data[1])}`;
+      else if (op === 'bcurveTo') d += `C${data.map(fmt).join(' ')}`;
+      else d += `L${fmt(data[0])} ${fmt(data[1])}`;
     }
   }
   return d;
@@ -178,6 +159,12 @@ function createPen(name) {
     ...(o.bow !== undefined ? { bowing: o.bow } : {}),
     ...extra,
   });
+  /** One straight segment between exact ends. A short stroke is a steadier one: the wobble grows with the length. */
+  const segment = (seed, [x1, y1], [x2, y2], o) => {
+    const steady = clamp(Math.hypot(x2 - x1, y2 - y1) / SWAY, 0.25, 1);
+    const options = hand(seed, o, { preserveVertices: true });
+    return gen.line(x1, y1, x2, y2, { ...options, roughness: options.roughness * steady });
+  };
 
   function emit(d, o) {
     if (bucket) {
@@ -219,7 +206,7 @@ function createPen(name) {
       y1 += -uy * s + ux * ds;
       x2 += ux * e - uy * de;
       y2 += uy * e + ux * de;
-      emit(pathData(gen.line(x1, y1, x2, y2, hand(seed, o, { preserveVertices: true }))), o);
+      emit(pathData(segment(seed, [x1, y1], [x2, y2], o)), o);
     },
 
     /** Separate strokes from point to point, crossing a little at every corner. */
@@ -241,14 +228,66 @@ function createPen(name) {
       );
     },
 
-    /** One continuous stroke through the points: the pen turns at each corner without lifting. */
-    poly(points, o = {}) {
+    /**
+     * One continuous outline: the pen turns at each corner and sweeps round each arc without lifting.
+     * Items are corners [x, y] or arcs { c: [x, y], r, from, to } (degrees, clockwise on screen from the x axis;
+     * `r` may be [rx, ry]; `shrink` draws the arc in towards its end). An arc is joined to what came before
+     * by a straight run. `close` returns to the start.
+     */
+    trace(items, o = {}) {
       const seed = nextSeed(o.salt);
       const random = randomFrom(seed);
       const loose = o.loose ?? 0.5;
-      const placed = points.map(place).map(([x, y]) => [x + (random() - 0.5) * loose, y + (random() - 0.5) * loose]);
-      if (o.close) placed.push(placed[0]);
-      emit(pathData(gen.linearPath(placed, hand(seed, o, { preserveVertices: true })), { join: true }), o);
+      let d = '';
+      let at = null;
+      let first = null;
+      let runs = 0;
+      const runTo = (target) => {
+        if (!at) {
+          d = `M${fmt(target[0])} ${fmt(target[1])}`;
+          first = target;
+        } else if (Math.hypot(target[0] - at[0], target[1] - at[1]) > 0.05) {
+          const piece = pathData(segment(seedOf(`${seed}/${runs++}`), at, target, o));
+          d += piece.slice(piece.indexOf('C'));
+        }
+        at = target;
+      };
+      for (const item of items) {
+        if (Array.isArray(item)) {
+          const [x, y] = place(item);
+          runTo([x + (random() - 0.5) * loose, y + (random() - 0.5) * loose]);
+          continue;
+        }
+        // A true arc, as cubic pieces of 60° at most. Its ends are exact; in between it runs a hair out of round.
+        const { c, from, to, shrink = 1 } = item;
+        const [rx, ry] = Array.isArray(item.r) ? item.r : [item.r, item.r];
+        const pieces = Math.max(1, Math.ceil(Math.abs(to - from) / 60));
+        const step = ((to - from) / pieces) * RAD;
+        const handle = (4 / 3) * Math.tan(step / 4);
+        const drift = () => 1 + (random() - 0.5) * Math.min(0.03, 0.9 / Math.max(rx, ry));
+        const on = (a, k = 1) => [c[0] + rx * k * Math.cos(a), c[1] + ry * k * Math.sin(a)];
+        runTo(place(on(from * RAD)));
+        let k0 = 1;
+        for (let i = 0; i < pieces; i++) {
+          const a0 = from * RAD + i * step;
+          const a1 = a0 + step;
+          const k1 = i === pieces - 1 ? shrink : drift();
+          const h = handle * (1 + (random() - 0.5) * 0.16);
+          const [p0, p3] = [on(a0, k0), on(a1, k1)];
+          const c1 = place([p0[0] - h * rx * Math.sin(a0), p0[1] + h * ry * Math.cos(a0)]);
+          const c2 = place([p3[0] + h * rx * Math.sin(a1), p3[1] - h * ry * Math.cos(a1)]);
+          at = place(p3);
+          d += `C${[...c1, ...c2, ...at].map(fmt).join(' ')}`;
+          k0 = k1;
+        }
+      }
+      if (o.close && first) runTo(first);
+      emit(d, o);
+    },
+
+    /** One continuous stroke from corner to corner. */
+    poly(points, o = {}) {
+      pen.trace(points, o);
     },
 
     /** One smooth stroke through the points. `tight` (0–1) pulls it towards straight lines between them. */
@@ -257,47 +296,23 @@ function createPen(name) {
       emit(pathData(gen.curve(points.map(place), hand(seed, { rough: 0.45, ...o }, { curveTightness: o.tight ?? 0 }))), o);
     },
 
-    /** Part of a circle or an ellipse (`r` or [rx, ry]); angles in degrees, clockwise on screen from the x axis. */
+    /** Part of a circle or an ellipse (`r` or [rx, ry]) as one sweep; angles in degrees, clockwise on screen from the x axis. */
     arc(centre, r, from, to, o = {}) {
-      const [rx, ry] = Array.isArray(r) ? r : [r, r];
-      const big = Math.max(rx, ry);
-      const sweep = Math.abs(to - from);
-      const steps = Math.max(2, Math.ceil(sweep / 40), Math.ceil((sweep * RAD * big) / (o.step ?? 15)));
-      pen.curve(arcPoints(centre, [rx, ry], from, to, steps), { rough: clamp(big / 60, 0.08, 0.35), ...o });
+      pen.trace([{ c: centre, r, from, to }], o);
     },
 
     /**
-     * A full circle in one confident turn: slightly out of round, closed where it began.
+     * A full circle in one confident turn: a hair out of round, closed where it began.
      * `tail` (degrees) lets the pen run on past its start and drift inside, as a quick hand does.
      */
     circle(centre, r, o = {}) {
-      const random = randomFrom(nextSeed(o.salt));
-      const [cx, cy] = centre;
-      const count = clamp(Math.round((2 * Math.PI * r) / 11), 8, 14);
+      const random = randomFrom(seedOf(`${name}/${part}/${count}/circle/${o.salt ?? 0}`));
       const start = (o.start ?? -100) + (random() - 0.5) * 40;
-      const squash = 1 + (random() - 0.5) * 0.06;
-      const wobble = Math.min(0.5, r * 0.035);
-      const ring = [];
-      for (let i = 0; i < count; i++) {
-        const a = (start + (360 * i) / count) * RAD;
-        const radius = r + (random() - 0.5) * 2 * wobble;
-        ring.push(place([cx + radius * squash * Math.cos(a), cy + (radius / squash) * Math.sin(a)]));
-      }
-      // Closed Catmull–Rom spline: every joint, the closing one included, is smooth.
-      const at = (i) => ring[((i % count) + count) % count];
-      const segment = (i, from, to) => {
-        const [p0, p1, p2, p3] = [at(i - 1), from ?? at(i), to ?? at(i + 1), at(i + 2)];
-        return `C${[p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6, p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6, p2[0], p2[1]].map(fmt).join(' ')}`;
-      };
-      let d = `M${fmt(ring[0][0])} ${fmt(ring[0][1])}`;
-      for (let i = 0; i < count; i++) d += segment(i);
-      if (o.tail) {
-        const a = (start + o.tail) * RAD;
-        const inside = r - Math.min(1.6, r * 0.09);
-        const end = place([cx + inside * squash * Math.cos(a), cy + (inside / squash) * Math.sin(a)]);
-        d += segment(0, undefined, end);
-      }
-      emit(d, o);
+      const squash = 1 + (random() - 0.5) * 0.04;
+      const radii = [r * squash, r / squash];
+      const turn = [{ c: centre, r: radii, from: start, to: start + 360 }];
+      if (o.tail) turn.push({ c: centre, r: radii, from: start, to: start + o.tail, shrink: 1 - Math.min(0.07, 0.9 / r) });
+      pen.trace(turn, o);
     },
 
     /** A dashed line: one hand-drawn line, lifted at even intervals. Counts as a single stroke. */
@@ -306,7 +321,7 @@ function createPen(name) {
       const random = randomFrom(seed);
       const p0 = place(a);
       const p3 = place(b);
-      const ops = gen.line(p0[0], p0[1], p3[0], p3[1], hand(seed, o, { preserveVertices: true })).sets[0].ops;
+      const ops = segment(seed, p0, p3, o).sets[0].ops;
       const bezier = [ops[0].data, ops[1].data.slice(0, 2), ops[1].data.slice(2, 4), ops[1].data.slice(4, 6)];
       // Arc-length table, so the dashes are even along the line.
       const SAMPLES = 48;
@@ -367,12 +382,12 @@ function createPen(name) {
 // Motifs shared by several sketches
 // ---------------------------------------------------------------------------------------------------
 
-/** A ground line that trails off, the way a pencil line is left unfinished. */
+/** A ground line from x1 to x2 that then trails off for another 21 units, the way a pencil line is left unfinished. */
 function ground(p, y, x1, x2) {
   p.part('ground');
-  p.line([x1, y], [x2 - 24, y]);
-  p.line([x2 - 18, y], [x2 - 8, y]);
-  p.line([x2 - 3.5, y], [x2, y]);
+  p.line([x1, y], [x2, y]);
+  p.line([x2 + 5.5, y], [x2 + 14.5, y]);
+  p.line([x2 + 18.5, y], [x2 + 21, y]);
 }
 
 /** A surveyed plot seen from above and to one side: a dashed boundary between four corner pegs. */
@@ -389,22 +404,25 @@ function plotOutline(p, [a, b, c, d], { pegs = [13, 11, 0, 11], dash = 8.5, gap 
 /** An open-end spanner along the x axis, ring end at the origin: one continuous outline and the ring's hole. */
 function spanner(p, length, o = {}) {
   const head = [length, 0];
-  const outline = [
-    ...arcPoints(head, 13, -157.4, -22.6, 9), // over the top of the head to the upper jaw
-    [length - 2, -5],
-    ...arcPoints([length - 2, 0], 5, -90, -270, 6).slice(1, -1), // the bottom of the slot
-    [length - 2, 5],
-    ...arcPoints(head, 13, 22.6, 157.4, 9), // under the head, back to the handle
-    ...arcPoints([0, 0], 10, 24.8, 335.2, 16), // round the ring
-  ];
-  p.poly(outline, { ...o, close: true, loose: 0.3, rough: 0.5 });
+  p.trace(
+    [
+      { c: head, r: 13, from: -157.4, to: -22.6 }, // over the head, from the handle to the upper jaw
+      [length - 2, -5],
+      { c: [length - 2, 0], r: 5, from: -90, to: -270 }, // the bottom of the slot
+      { c: head, r: 13, from: 22.6, to: 157.4 }, // under the head, back to the handle
+      { c: [0, 0], r: 10, from: 24.8, to: 335.2 }, // round the ring
+    ],
+    { ...o, close: true, loose: 0.2 },
+  );
   p.circle([0, 0], 4.6, o);
 }
 
-/** A map pin whose tip touches `tip`. */
+/** A map pin whose tip touches the given point: its sides leave the head as tangents. */
 function pin(p, [x, y], r, o = {}) {
-  const centre = [x, y - r * 2.35];
-  p.poly([[x, y], ...arcPoints(centre, r, 128, 412, 12), [x, y]], { ...o, loose: 0.2, rough: 0.4 });
+  const drop = 2.35; // from the tip to the middle of the head, in radii
+  const centre = [x, y - r * drop];
+  const spread = Math.acos(1 / drop) / RAD;
+  p.trace([[x, y], { c: centre, r, from: 90 + spread, to: 450 - spread }, [x, y]], { ...o, loose: 0 });
   p.circle(centre, r * 0.36, o);
 }
 
@@ -566,288 +584,297 @@ sketch('journey', 360, 140, (p) => {
 });
 
 sketch('plot', 240, 160, (p) => {
-  p.part('boundary');
-  plotOutline(p, [
-    [102, 128],
-    [210, 98],
-    [136, 68],
-    [28, 98],
-  ]);
+  p.at({ move: [0, -3] }, () => {
+    p.part('boundary');
+    plotOutline(p, [
+      [102, 128],
+      [210, 98],
+      [136, 68],
+      [28, 98],
+    ]);
 
-  // A dimension line: the plot has been measured.
-  p.part('measure');
-  p.line([106, 140.5], [212, 111]);
-  p.line([104.2, 137.4], [107.6, 143.8]);
-  p.line([210.6, 107.8], [214, 114.2]);
+    // A dimension line: the plot has been measured.
+    p.part('measure');
+    p.line([106, 140.5], [212, 111]);
+    p.line([104.2, 137.4], [107.6, 143.8]);
+    p.line([210.6, 107.8], [214, 114.2]);
 
-  p.part('flag');
-  p.line([136, 70], [136, 24]);
-  p.poly(
-    [
-      [136, 26],
-      [159, 33.5],
-      [136, 41.5],
-    ],
-    { accent: true },
-  );
+    p.part('flag');
+    p.line([136, 70], [136, 24]);
+    p.poly(
+      [
+        [136, 26],
+        [159, 33.5],
+        [136, 41.5],
+      ],
+      { accent: true },
+    );
+  });
 });
 
 sketch('warehouse', 240, 160, (p) => {
   const G = 116;
   const E = 72;
   const R = 56;
-  ground(p, G, 14, 228);
+  ground(p, G - 5, 10, 208);
+  p.at({ move: [-4, -5] }, () => {
+    // Corners cross where two lines meet; where a third arrives, it stops short, so that no corner turns into a knot.
+    p.part('gable');
+    p.line([26, G], [26, E], { over: [0, 0.6] });
+    p.line([52, R], [21.5, E + 2.8], { over: [CROSS, 0] });
+    p.line([52, R], [78, E], { over: [CROSS, 0] });
+    p.line([78, G], [78, E]);
 
-  p.part('gable');
-  p.line([30, G], [30, E], { over: [0, CROSS] });
-  p.line([57, R], [25.5, E + 2.7], { over: [CROSS, 0] });
-  p.line([57, R], [84, E], { over: CROSS });
-  p.line([84, G], [84, E], { over: [0, CROSS] });
+    p.part('side');
+    p.line([52, R], [178, R], { over: [0, CROSS] });
+    p.line([78, E], [204, E], { over: [CROSS, 0] });
+    p.line([178, R], [208.5, E + 2.8], { over: [CROSS, 0] });
+    p.line([204, G], [204, E]);
 
-  p.part('side');
-  p.line([57, R], [185, R], { over: CROSS });
-  p.line([84, E], [216.5, E], { over: [CROSS, 0] });
-  p.line([185, R], [212, E], { over: CROSS });
-  p.line([212, G], [212, E], { over: [0, CROSS] });
+    // The portal frames show through the cladding.
+    p.part('frames');
+    p.poly([
+      [120, G],
+      [120, E],
+      [94, R],
+    ]);
+    p.poly([
+      [162, G],
+      [162, E],
+      [136, R],
+    ]);
 
-  // The portal frames show through the cladding.
-  p.part('frames');
-  p.poly([
-    [126.7, G],
-    [126.7, E],
-    [99.7, R],
-  ]);
-  p.poly([
-    [169.3, G],
-    [169.3, E],
-    [142.3, R],
-  ]);
+    p.part('doors');
+    const door = (x, o) => p.poly([[x, G], [x, 88], [x + 24, 88], [x + 24, G]], o);
+    door(87);
+    door(171);
+    p.poly([
+      [46, G],
+      [46, 95],
+      [58, 95],
+      [58, G],
+    ]);
+    p.circle([52, 74], 3.4);
 
-  p.part('doors');
-  const door = (x, o) => p.poly([[x, G], [x, 88], [x + 24, 88], [x + 24, G]], o);
-  door(93.3);
-  door(178.7);
-  p.poly([
-    [51, G],
-    [51, 95],
-    [63, 95],
-    [63, G],
-  ]);
-  p.circle([57, 74], 3.4);
-
-  p.part('bay');
-  door(136, { accent: true });
-  for (const y of [94.5, 101, 107.5]) p.line([139.5, y], [156.5, y], { accent: true });
+    p.part('bay');
+    door(129, { accent: true });
+    for (const y of [94.5, 101, 107.5]) p.line([132.5, y], [149.5, y], { accent: true });
+  });
 });
 
 sketch('factory', 240, 160, (p) => {
   const G = 130;
-  ground(p, G, 14, 228);
+  ground(p, G + 4, 10, 207);
+  p.at({ move: [-3, 4] }, () => {
+    p.part('hall');
+    p.line([24, G], [24, 71], { over: [0, CROSS] });
+    p.poly([
+      [24, 72],
+      [61.5, 96],
+      [61.5, 72],
+      [99, 96],
+      [99, 72],
+      [136.5, 96],
+      [136.5, 72],
+      [174, 96],
+    ]);
+    p.line([174, G], [174, 96], { over: [0, CROSS] });
 
-  p.part('hall');
-  p.line([28, G], [28, 71], { over: [0, CROSS] });
-  p.poly([
-    [28, 72],
-    [65.5, 96],
-    [65.5, 72],
-    [103, 96],
-    [103, 72],
-    [140.5, 96],
-    [140.5, 72],
-    [178, 96],
-  ]);
-  p.line([178, G], [178, 96], { over: [0, CROSS] });
+    p.part('openings');
+    p.poly([
+      [42, G],
+      [42, 105],
+      [72, 105],
+      [72, G],
+    ]);
+    p.poly(
+      [
+        [92, 107],
+        [158, 107],
+        [158, 117.5],
+        [92, 117.5],
+      ],
+      { close: true },
+    );
+    p.line([114, 108], [114, 116.5]);
+    p.line([136, 108], [136, 116.5]);
 
-  p.part('openings');
-  p.poly([
-    [46, G],
-    [46, 105],
-    [76, 105],
-    [76, G],
-  ]);
-  p.poly(
-    [
-      [96, 107],
-      [162, 107],
-      [162, 117.5],
-      [96, 117.5],
-    ],
-    { close: true },
-  );
-  p.line([118, 108], [118, 116.5]);
-  p.line([140, 108], [140, 116.5]);
+    p.part('chimney');
+    p.line([188, G], [191, 45]);
+    p.line([204, G], [201, 45]);
+    p.poly(
+      [
+        [189, 39.5],
+        [203, 39.5],
+        [203, 45],
+        [189, 45],
+      ],
+      { close: true, loose: 0.3 },
+    );
 
-  p.part('chimney');
-  p.line([192, G], [195, 45]);
-  p.line([208, G], [205, 45]);
-  p.poly(
-    [
-      [193, 39.5],
-      [207, 39.5],
-      [207, 45],
-      [193, 45],
-    ],
-    { close: true, loose: 0.3 },
-  );
-
-  p.part('plume');
-  p.circle([190, 27], 7, { accent: true });
-  p.circle([175, 18.5], 5.3, { accent: true });
-  p.circle([163.5, 13.5], 3.7, { accent: true });
+    p.part('plume');
+    p.circle([186, 27], 7, { accent: true });
+    p.circle([171, 18.5], 5.3, { accent: true });
+    p.circle([159.5, 13.5], 3.7, { accent: true });
+  });
 });
 
 sketch('crane', 240, 160, (p) => {
   const G = 140;
-  ground(p, G, 14, 228);
+  ground(p, G, 10, 207);
+  p.at({ move: [-4, 0] }, () => {
+    p.part('frame');
+    for (const x of [126, 152, 178, 204]) p.line([x, G], [x, 100], { over: [0, CROSS] });
+    p.line([126, 120], [204, 120], { over: CROSS });
+    p.line([126, 100], [178, 100], { over: CROSS });
+    p.line([127.5, 138.5], [150.5, 121.5], { bow: 0.2 });
 
-  p.part('frame');
-  for (const x of [132, 158, 184, 210]) p.line([x, G], [x, 100], { over: [0, CROSS] });
-  p.line([132, 120], [210, 120], { over: CROSS });
-  p.line([132, 100], [184, 100], { over: CROSS });
-  p.line([133.5, 138.5], [156.5, 121.5]);
+    p.part('mast');
+    p.line([69.5, G], [69.5, 49]);
+    p.line([78.5, G], [78.5, 49]);
+    p.poly(
+      [
+        [69.5, 138],
+        [78.5, 125.5],
+        [69.5, 113],
+        [78.5, 100.5],
+        [69.5, 88],
+        [78.5, 75.5],
+        [69.5, 63],
+        [78.5, 50],
+      ],
+      { loose: 0.2 },
+    );
 
-  p.part('mast');
-  p.line([69.5, G], [69.5, 49]);
-  p.line([78.5, G], [78.5, 49]);
-  p.poly(
-    [
-      [69.5, 138],
-      [78.5, 125.5],
-      [69.5, 113],
-      [78.5, 100.5],
-      [69.5, 88],
-      [78.5, 75.5],
-      [69.5, 63],
-      [78.5, 50],
-    ],
-    { loose: 0.2 },
-  );
+    p.part('jib');
+    p.line([34, 43], [210, 43]);
+    p.poly([
+      [66, 43.5],
+      [66, 49],
+      [82, 49],
+      [82, 43.5],
+    ]);
+    p.line([74, 43], [74, 20], { over: [0, 1] });
+    p.poly([
+      [40, 43],
+      [74, 21],
+      [160, 43],
+    ]);
+    p.poly([
+      [38, 43.5],
+      [38, 56],
+      [54, 56],
+      [54, 43.5],
+    ]);
+    p.poly([
+      [79, 51.5],
+      [91, 51.5],
+      [91, 61.5],
+      [79, 61.5],
+    ]);
 
-  p.part('jib');
-  p.line([34, 43], [216, 43]);
-  p.poly([
-    [66, 43.5],
-    [66, 49],
-    [82, 49],
-    [82, 43.5],
-  ]);
-  p.line([74, 43], [74, 20], { over: [0, 1] });
-  p.poly([
-    [40, 43],
-    [74, 21],
-    [164, 43],
-  ]);
-  p.poly([
-    [38, 43.5],
-    [38, 56],
-    [54, 56],
-    [54, 43.5],
-  ]);
-  p.poly([
-    [79, 51.5],
-    [91, 51.5],
-    [91, 61.5],
-    [79, 61.5],
-  ]);
-
-  p.part('load');
-  p.poly([
-    [192, 43.5],
-    [192, 47.5],
-    [202, 47.5],
-    [202, 43.5],
-  ]);
-  p.line([197, 47.5], [197, 68]);
-  p.poly([
-    [185, 82],
-    [197, 68],
-    [209, 82],
-  ]);
-  p.poly(
-    [
-      [182, 82],
-      [212, 82],
-      [212, 86.5],
-      [182, 86.5],
-    ],
-    { accent: true, close: true },
-  );
+    p.part('load');
+    p.poly([
+      [186, 43.5],
+      [186, 47.5],
+      [196, 47.5],
+      [196, 43.5],
+    ]);
+    p.line([191, 47.5], [191, 68]);
+    p.poly([
+      [179, 82],
+      [191, 68],
+      [203, 82],
+    ]);
+    p.poly(
+      [
+        [176, 82],
+        [206, 82],
+        [206, 86.5],
+        [176, 86.5],
+      ],
+      { accent: true, close: true },
+    );
+  });
 });
 
 sketch('gate', 240, 160, (p) => {
   const G = 124;
-  ground(p, G, 14, 228);
-
-  p.part('booth');
-  p.line([32, G], [32, 76], { over: [0, 1] });
-  p.line([68, G], [68, 76], { over: [0, 1] });
-  p.poly(
-    [
-      [25, 70],
-      [77, 70],
-      [77, 76],
-      [25, 76],
-    ],
-    { close: true },
-  );
-  p.poly(
-    [
-      [39.5, 86],
-      [60.5, 86],
-      [60.5, 102],
-      [39.5, 102],
-    ],
-    { close: true },
-  );
-
-  p.part('car');
-  p.curve(
-    [
-      [144, 119],
-      [134, 118],
-      [132, 106],
-      [147, 91],
-      [161, 87.5],
-      [176, 88.5],
-      [190, 101],
-      [208, 104],
-      [215.5, 110],
-      [214.5, 118],
-      [206, 119],
-    ],
-    { rough: 0.3 },
-  );
-  p.poly(
-    [
-      [151, 93],
-      [173.5, 92.5],
-      [184, 101.5],
-      [145, 102.5],
-    ],
-    { close: true },
-  );
-  p.line([161.5, 119], [188.5, 119]);
-  p.circle([152.5, 116], 8);
-  p.circle([197.5, 116], 8);
-
-  p.part('barrier');
-  p.poly([
-    [88, G],
-    [88, 100],
-    [99, 100],
-    [99, G],
-  ]);
-  p.at({ move: [93.5, 104], rotate: -50 }, () => {
+  ground(p, G, 10, 208);
+  p.at({ move: [-4, 0] }, () => {
+    p.part('booth');
+    p.line([32, G], [32, 76], { over: [0, 1] });
+    p.line([68, G], [68, 76], { over: [0, 1] });
     p.poly(
       [
-        [-12, -2.3],
-        [84, -2.3],
-        [84, 2.3],
-        [-12, 2.3],
+        [25, 70],
+        [77, 70],
+        [77, 76],
+        [25, 76],
       ],
-      { accent: true, close: true, loose: 0.2 },
+      { close: true },
     );
-    for (const x of [22, 40, 58]) p.line([x - 1.5, -2.3], [x + 1.5, 2.3], { accent: true });
+    p.poly(
+      [
+        [39.5, 86],
+        [60.5, 86],
+        [60.5, 102],
+        [39.5, 102],
+      ],
+      { close: true },
+    );
+
+    p.part('car');
+    p.at({ move: [-5, 0] }, () => {
+      p.curve(
+        [
+          [144, 119],
+          [134, 118],
+          [132, 106],
+          [147, 91],
+          [161, 87.5],
+          [176, 88.5],
+          [190, 101],
+          [208, 104],
+          [215.5, 110],
+          [214.5, 118],
+          [206, 119],
+        ],
+        { rough: 0.3 },
+      );
+      p.poly(
+        [
+          [151, 93],
+          [173.5, 92.5],
+          [184, 101.5],
+          [145, 102.5],
+        ],
+        { close: true },
+      );
+      p.line([161.5, 119], [188.5, 119]);
+      p.circle([152.5, 116], 8);
+      p.circle([197.5, 116], 8);
+    });
+
+    p.part('barrier');
+    p.poly([
+      [88, G],
+      [88, 100],
+      [99, 100],
+      [99, G],
+    ]);
+    p.at({ move: [93.5, 104], rotate: -50 }, () => {
+      p.poly(
+        [
+          [-12, -2.3],
+          [84, -2.3],
+          [84, 2.3],
+          [-12, 2.3],
+        ],
+        { accent: true, close: true, loose: 0.2 },
+      );
+      for (const x of [22, 40, 58]) p.line([x - 1.5, -2.3], [x + 1.5, 2.3], { accent: true });
+    });
   });
 });
 
@@ -918,7 +945,7 @@ sketch('contract', 240, 160, (p) => {
 });
 
 sketch('wallet', 240, 160, (p) => {
-  p.at({ rotate: -4, about: [118, 84] }, () => {
+  p.at({ move: [2, -3], rotate: -4, about: [118, 84] }, () => {
     const X = 66;
     const Y = 40;
     const W = 84;
@@ -984,7 +1011,7 @@ sketch('wallet', 240, 160, (p) => {
 
 sketch('tools', 240, 160, (p) => {
   const G = 132;
-  ground(p, G, 14, 228);
+  ground(p, G, 12, 206);
 
   // The pole is left open where the spanner lies across it.
   p.part('light');
@@ -1046,74 +1073,78 @@ sketch('tools', 240, 160, (p) => {
 });
 
 sketch('allclear', 240, 160, (p) => {
-  const H = 100;
-  const sun = [120, 106];
-  const R = 42;
-  const dip = Math.asin((sun[1] - H) / R) / RAD; // where the sun meets the horizon
-  p.part('horizon');
-  p.line([14, H], [226, H]);
+  p.at({ move: [0, -8] }, () => {
+    const H = 100;
+    const sun = [120, 106];
+    const R = 42;
+    const dip = Math.asin((sun[1] - H) / R) / RAD; // where the sun meets the horizon
+    p.part('horizon');
+    p.line([14, H], [226, H]);
 
-  p.part('sun');
-  p.arc(sun, R, 180 + dip, 360 - dip);
-  for (const a of [-150, -120, -90, -60, -30]) {
-    const [x, y] = [Math.cos(a * RAD), Math.sin(a * RAD)];
-    p.line([sun[0] + x * (R + 8.5), sun[1] + y * (R + 8.5)], [sun[0] + x * (R + 17), sun[1] + y * (R + 17)]);
-  }
+    p.part('sun');
+    p.arc(sun, R, 180 + dip, 360 - dip);
+    for (const a of [-150, -120, -90, -60, -30]) {
+      const [x, y] = [Math.cos(a * RAD), Math.sin(a * RAD)];
+      p.line([sun[0] + x * (R + 8.5), sun[1] + y * (R + 8.5)], [sun[0] + x * (R + 17), sun[1] + y * (R + 17)]);
+    }
 
-  p.part('haze');
-  p.line([90, 111], [150, 111]);
-  p.line([102, 120], [138, 120]);
-  p.line([112, 128.5], [128, 128.5]);
+    p.part('haze');
+    p.line([90, 111], [150, 111]);
+    p.line([102, 120], [138, 120]);
+    p.line([112, 128.5], [128, 128.5]);
 
-  p.part('tick');
-  p.poly(
-    [
-      [104.5, 80.5],
-      [115.5, 91.5],
-      [135.5, 68.5],
-    ],
-    { accent: true, loose: 0.2 },
-  );
+    p.part('tick');
+    p.poly(
+      [
+        [105.5, 81.5],
+        [115, 91],
+        [132, 72.5],
+      ],
+      { accent: true, loose: 0.2 },
+    );
+  });
 });
 
 sketch('search', 240, 160, (p) => {
-  const plot = (x, y, o) =>
-    p.poly(
-      [
-        [x, y],
-        [x + 40, y],
-        [x + 40, y + 30],
-        [x, y + 30],
-      ],
-      { ...o, close: true },
-    );
-  const tilt = { rotate: -7, about: [104, 74] };
-  p.part('plots');
-  p.at(tilt, () => {
-    plot(32, 36);
-    plot(80, 36);
-    plot(128, 36);
-    plot(32, 74);
-    plot(80, 74);
-  });
+  p.at({ move: [8, 0] }, () => {
+    const plot = (x, y, o) =>
+      p.poly(
+        [
+          [x, y],
+          [x + 40, y],
+          [x + 40, y + 30],
+          [x, y + 30],
+        ],
+        { ...o, close: true },
+      );
+    const tilt = { rotate: -7, about: [104, 74] };
+    p.part('plots');
+    p.at(tilt, () => {
+      plot(32, 36);
+      plot(80, 36);
+      plot(128, 36);
+      plot(32, 74);
+      plot(80, 74);
+    });
 
-  p.part('glass');
-  p.circle([149.5, 83.5], 30);
-  p.at({ move: [149.5, 83.5], rotate: 45 }, () => {
-    p.poly([
-      [30.5, -3.2],
-      [62, -3.6],
-      [62, 3.6],
-      [30.5, 3.2],
-    ]);
-  });
+    p.part('glass');
+    p.circle([148, 82], 33);
+    p.at({ move: [148, 82], rotate: 45 }, () => {
+      p.poly([
+        [33.5, -3.2],
+        [63, -3.6],
+        [63, 3.6],
+        [33.5, 3.2],
+      ]);
+    });
 
-  p.part('found');
-  p.at(tilt, () => plot(128, 74, { accent: true }));
+    p.part('found');
+    p.at(tilt, () => plot(128, 74, { accent: true }));
+  });
 });
 
 sketch('inbox', 240, 160, (p) => {
-  p.at({ move: [0, -14] }, () => {
+  p.at({ move: [0, -17] }, () => {
     p.part('tray');
     p.poly([
       [50, 98],
@@ -1205,65 +1236,67 @@ sketch('invoice', 240, 160, (p) => {
 });
 
 sketch('handover', 240, 160, (p) => {
-  p.part('plot');
-  plotOutline(
-    p,
-    [
-      [108, 144],
-      [196, 120],
-      [134, 98],
-      [46, 122],
-    ],
-    { pegs: [11, 10, 8, 10], dash: 8, gap: 5.5 },
-  );
+  p.at({ move: [0, -4] }, () => {
+    p.part('plot');
+    plotOutline(
+      p,
+      [
+        [108, 144],
+        [196, 120],
+        [134, 98],
+        [46, 122],
+      ],
+      { pegs: [11, 10, 8, 10], dash: 8, gap: 5.5 },
+    );
 
-  // A tag on a string, as keys are handed over.
-  p.part('tag');
-  p.curve(
-    [
-      [66.5, 42.5],
-      [62.5, 50],
-      [61.3, 58.5],
-    ],
-    { rough: 0.15 },
-  );
-  p.poly(
-    [
-      [54.5, 62.5],
-      [58.5, 58],
-      [64.5, 58.7],
-      [67.5, 63.8],
-      [65.5, 83],
-      [52.5, 81.5],
-    ],
-    { close: true, loose: 0.3 },
-  );
-  p.circle([61, 64.5], 1.5);
-
-  p.part('key');
-  p.at({ move: [72, 38], rotate: 15 }, () => {
-    const T = 96;
+    // A tag on a string, as keys are handed over.
+    p.part('tag');
+    p.curve(
+      [
+        [66.5, 42.5],
+        [62.5, 50],
+        [61.3, 58.5],
+      ],
+      { rough: 0.15 },
+    );
     p.poly(
       [
-        [14.7, -3],
-        [T - 5, -3],
-        [T, 0],
-        [T - 5, 3],
-        [T - 9, 3],
-        [T - 9, 9],
-        [T - 14.5, 9],
-        [T - 14.5, 13],
-        [T - 20.5, 13],
-        [T - 20.5, 8],
-        [T - 26, 8],
-        [T - 26, 12],
-        [T - 32, 12],
-        [T - 32, 3],
-        ...arcPoints([0, 0], 15, 11.5, 348.5, 20),
+        [54.5, 62.5],
+        [58.5, 58],
+        [64.5, 58.7],
+        [67.5, 63.8],
+        [65.5, 83],
+        [52.5, 81.5],
       ],
-      { accent: true, close: true, loose: 0.25, rough: 0.5 },
+      { close: true, loose: 0.3 },
     );
-    p.circle([-3.5, 0], 5.6, { accent: true });
+    p.circle([61, 64.5], 1.5);
+
+    p.part('key');
+    p.at({ move: [72, 38], rotate: 15 }, () => {
+      const T = 96;
+      p.trace(
+        [
+          [14.7, -3],
+          [T - 5, -3],
+          [T, 0],
+          [T - 5, 3],
+          [T - 9, 3],
+          [T - 9, 9],
+          [T - 14.5, 9],
+          [T - 14.5, 13],
+          [T - 20.5, 13],
+          [T - 20.5, 8],
+          [T - 26, 8],
+          [T - 26, 12],
+          [T - 32, 12],
+          [T - 32, 3],
+          { c: [0, 0], r: 15, from: 11.5, to: 348.5 },
+        ],
+        { accent: true, close: true, loose: 0.25 },
+      );
+      p.circle([-3.5, 0], 5.6, { accent: true });
+    });
   });
 });
 
@@ -1278,89 +1311,81 @@ sketch('map', 240, 160, (p) => {
   p.curve(coast, { rough: 0.25, tight: 0.4 });
 
   p.part('sea');
-  const wave = (x, y) =>
-    p.curve(
-      [
-        [x, y],
-        [x + 4, y - 2.2],
-        [x + 8, y],
-        [x + 12, y - 2.2],
-        [x + 16, y],
-      ],
-      { rough: 0.15 },
-    );
-  wave(50, 58);
-  wave(38, 104);
-  wave(174, 44);
-  wave(186, 96);
+  const wave = (x, y, humps = 2) => {
+    const points = [];
+    for (let i = 0; i <= humps * 2; i++) points.push([x + i * 3.8, y - (i % 2) * 2]);
+    p.curve(points, { rough: 0.12 });
+  };
+  wave(48, 60);
+  wave(36, 106, 3);
+  wave(172, 46, 3);
+  wave(186, 98);
 
   p.part('pins');
-  pin(p, [128, 78], 4.6);
-  pin(p, [112, 118], 4.6);
+  pin(p, [118, 73], 4.6);
+  pin(p, [108, 126], 4.6);
   p.part('here');
-  pin(p, [141, 104], 6.4, { accent: true });
+  pin(p, [132, 106], 6.4, { accent: true });
 });
 
 sketch('shield', 240, 160, (p) => {
-  const centre = [120, 104];
-  const RX = 56;
-  const RY = 60;
-  /** A point on the shell: `k` of the way from the middle to the edge, at height `y`. */
-  const onShell = (k, y) => [centre[0] + k * RX * Math.sqrt(1 - ((centre[1] - y) / RY) ** 2), y];
+  p.at({ move: [0, -6] }, () => {
+    const centre = [120, 104];
+    const RX = 56;
+    const RY = 60;
+    /** A point on the shell: `k` of the way from the middle to the edge, at height `y`. */
+    const onShell = (k, y) => [centre[0] + k * RX * Math.sqrt(1 - ((centre[1] - y) / RY) ** 2), y];
 
-  // The shell stops either side of the raised rib that runs over the crown.
-  p.part('shell');
-  p.arc(centre, [RX, RY], 180, 260.5, { step: 24 });
-  p.arc(centre, [RX, RY], 279.5, 360, { step: 24 });
-  p.curve(
-    [
-      [109, 103],
-      [109.6, 82],
-      [110.3, 62],
-      [111, 47.5],
-      [113.4, 40.6],
-      [120, 38.8],
-      [126.6, 40.6],
-      [129, 47.5],
-      [129.7, 62],
-      [130.4, 82],
-      [131, 103],
-    ],
-    { rough: 0.15 },
-  );
-  p.curve([onShell(-0.6, 102), onShell(-0.6, 84), onShell(-0.6, 67)], { rough: 0.15 });
-  p.curve([onShell(0.6, 102), onShell(0.6, 84), onShell(0.6, 67)], { rough: 0.15 });
+    // The shell stops either side of the raised rib that runs over the crown.
+    p.part('shell');
+    p.arc(centre, [RX, RY], 180, 260.5);
+    p.arc(centre, [RX, RY], 279.5, 360);
+    p.curve(
+      [
+        [109, 103],
+        [109.6, 82],
+        [110.3, 62],
+        [111, 47.5],
+        [113.4, 40.6],
+        [120, 38.8],
+        [126.6, 40.6],
+        [129, 47.5],
+        [129.7, 62],
+        [130.4, 82],
+        [131, 103],
+      ],
+      { rough: 0.15 },
+    );
+    p.curve([onShell(-0.6, 102), onShell(-0.6, 84), onShell(-0.6, 67)], { rough: 0.15 });
+    p.curve([onShell(0.6, 102), onShell(0.6, 84), onShell(0.6, 67)], { rough: 0.15 });
 
-  p.part('brim');
-  p.poly(
-    [
-      [52, 104],
-      [188, 104],
-      ...arcPoints([188, 110], 6, -90, 90, 5).slice(1),
-      [160, 117],
-      [120, 117.6],
-      [80, 117],
-      [52, 116],
-      ...arcPoints([52, 110], 6, 90, 270, 5).slice(1, -1),
-    ],
-    { close: true, loose: 0.2, rough: 0.5 },
-  );
+    p.part('brim');
+    p.trace(
+      [
+        [52, 104],
+        [188, 104],
+        { c: [188, 110], r: 6, from: -90, to: 90 },
+        { c: [52, 110], r: 6, from: 90, to: 270 },
+      ],
+      { close: true, loose: 0.2 },
+    );
 
-  p.part('ground');
-  p.line([64, 134], [158, 134]);
-  p.line([165, 134], [178, 134]);
+    p.part('ground');
+    p.line([64, 134], [158, 134]);
+    p.line([165, 134], [178, 134]);
 
-  p.part('badge');
-  p.poly(
-    [
-      [114, 68],
-      [126, 68],
-      [126, 75.5],
-      [120, 82],
-      [114, 75.5],
-    ],
-    { accent: true, close: true, loose: 0.2 },
-  );
+    p.part('badge');
+    p.poly(
+      [
+        [114, 68],
+        [126, 68],
+        [126, 75.5],
+        [120, 82],
+        [114, 75.5],
+      ],
+      { accent: true, close: true, loose: 0.2 },
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------------------------------

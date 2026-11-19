@@ -96,3 +96,34 @@
 :global([dir='rtl']) .switch[aria-checked='true'] .thumb {
   transform: translateX(-20px) scale(1.09);
 }
+
+/* Forced colours repaint backgrounds and remove shadows: the track becomes a border and the two states
+   use the system's own pair of colours. */
+@media (forced-colors: active) {
+  .switch {
+    border: 2px solid ButtonText;
+    box-shadow: none;
+    forced-color-adjust: none;
+    background: Canvas;
+  }
+
+  .thumb {
+    inset-block-start: 3px;
+    inset-inline-start: 3px;
+    background: ButtonText;
+  }
+
+  .switch[aria-checked='true'] {
+    border-color: Highlight;
+    background: Highlight;
+    box-shadow: none;
+  }
+
+  .switch[aria-checked='true'] .thumb {
+    background: HighlightText;
+  }
+
+  .switch:focus-visible {
+    outline: 2px solid Highlight;
+  }
+}

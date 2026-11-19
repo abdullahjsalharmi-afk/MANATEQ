@@ -27,6 +27,7 @@ import {
   type TimelineItem,
 } from '@/design/signature';
 import { plotsFor } from '@/domain/plots';
+import { dayOf, timeLeft } from '@/domain/standard';
 
 /** Sample content of this gallery page. Everything here is illustrative. */
 const demo = {
@@ -53,18 +54,15 @@ const demo = {
   station: { ar: 'المحطة: {name}', en: 'Station: {name}' },
 
   // ring
-  dayOf: { ar: 'اليوم {day} من {total}', en: 'Day {day} of {total}' },
   of: { ar: 'من {total}', en: 'of {total}' },
   ringDone: { ar: 'اكتمل الطلب ضمن المعيار', en: 'Finished within the standard' },
   ringIdle: { ar: 'لا يوجد معيار زمني لهذه الخدمة', en: 'This service has no time standard' },
-  ringOver: { ar: 'متأخر يومًا واحدًا عن المعيار', en: '1 day over the standard' },
 
   // holders and rows
   ministry: { ar: 'وزارة البلدية', en: 'Ministry of Municipality' },
   permit: { ar: 'رخصة البناء', en: 'Building permit' },
   maintenance: { ar: 'صيانة إنارة الطريق', en: 'Street light repair' },
   lease: { ar: 'عقد الإيجار', en: 'Lease contract' },
-  left3: { ar: 'بقيت 3 أيام', en: '3 days left' },
   dueToday: { ar: 'يُعالج اليوم', en: 'Due today' },
   waitingYou: { ar: 'ينتظر توقيعك', en: 'Waiting for your signature' },
 
@@ -163,13 +161,20 @@ function CalmSketch() {
 
 export function SignatureGallery() {
   const t = useT(demo);
-  const { pick, fmt } = useLang();
+  const { lang, pick, fmt } = useLang();
   const [station, setStation] = useState('build');
   const [zone, setZone] = useState<string | undefined>('BA');
   const [filter, setFilter] = useState<Filter>('all');
   const [plot, setPlot] = useState<string | undefined>('BA-117');
 
   const stamp = (ms: number) => t('stamp', { day: fmt.dayMonth(ms), time: fmt.time(ms) });
+  // The clock of the building-permit request: day 2 of a 5-day standard; and one that ran over.
+  const onTime = { usedDays: 1.4, targetDays: 5, dayNumber: 2 };
+  const lastDay = { usedDays: 4.5, targetDays: 5, dayNumber: 5 };
+  const late = { usedDays: 5.6, targetDays: 5, dayNumber: 6 };
+  const day2 = dayOf(onTime, lang) ?? '';
+  const day5 = dayOf(lastDay, lang) ?? '';
+  const over = timeLeft(late, lang) ?? '';
   const ministry = t('ministry');
 
   const stations: JourneyStation[] = [
@@ -242,33 +247,50 @@ export function SignatureGallery() {
       <Section title="Ring">
         <Card>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <Ring size="sm" value={0.4} label={t('dayOf', { day: 2, total: 5 })}>
+            <Ring size="sm" value={0.4} label={day2}>
               2/5
             </Ring>
-            <Ring size="md" value={0.4} label={t('dayOf', { day: 2, total: 5 })}>
+            <Ring size="md" value={0.4} label={day2}>
               2/5
             </Ring>
-            <Ring size="md" value={0.9} label={t('dayOf', { day: 5, total: 5 })}>
+            <Ring size="md" value={0.9} label={day5}>
               5/5
             </Ring>
-            <Ring size="md" value={1.2} label={t('ringOver')} />
+            <Ring size="md" value={1.2} label={over} />
             <Ring size="md" value={1} complete label={t('ringDone')} />
             <Ring size="md" value={null} label={t('ringIdle')} />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBlockStart: 20 }}>
-            <Ring size="lg" value={0.4} label={t('dayOf', { day: 2, total: 5 })}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', marginBlockStart: 20 }}>
+            <Ring size="lg" value={0.4} label={day2}>
               <span style={{ display: 'grid', gap: 2 }}>
                 <span>2</span>
                 <span style={{ fontSize: 'var(--t-cap)', fontWeight: 500, color: 'var(--ink-2)' }}>{t('of', { total: 5 })}</span>
               </span>
             </Ring>
-            <Ring size="lg" value={1.2} label={t('ringOver')}>
+            <Ring size="lg" value={1.2} label={over}>
               <span style={{ display: 'grid', gap: 2 }}>
                 <span>6</span>
                 <span style={{ fontSize: 'var(--t-cap)', fontWeight: 500 }}>{t('of', { total: 5 })}</span>
               </span>
             </Ring>
             <Ring size="lg" value={1} complete label={t('ringDone')} />
+          </div>
+        </Card>
+        <Card>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Ring size="lg" value={0.4} label={day2}>
+              <span style={{ display: 'grid', gap: 2 }}>
+                <span>2</span>
+                <span style={{ fontSize: 'var(--t-cap)', fontWeight: 500, color: 'var(--ink-2)' }}>{t('of', { total: 5 })}</span>
+              </span>
+            </Ring>
+            <div style={{ display: 'grid', gap: 6, justifyItems: 'start', minWidth: 0 }}>
+              <h3 style={{ fontSize: 'var(--t-heading)' }}>{t('permit')}</h3>
+              <HolderChip lane="nat" name={ministry} />
+              <p style={{ fontSize: 'var(--t-foot)', color: 'var(--ink-2)' }}>
+                {day2} · {timeLeft(onTime, lang)}
+              </p>
+            </div>
           </div>
         </Card>
       </Section>
@@ -292,7 +314,7 @@ export function SignatureGallery() {
           <Row
             to="/gallery"
             leading={
-              <Ring size="sm" value={0.4} label={t('dayOf', { day: 2, total: 5 })}>
+              <Ring size="sm" value={0.4} label={day2}>
                 2/5
               </Ring>
             }
@@ -300,7 +322,7 @@ export function SignatureGallery() {
             subtitle={
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBlockStart: 4 }}>
                 <HolderChip lane="nat" name={ministry} size="sm" />
-                {t('left3')}
+                {timeLeft(onTime, lang)}
               </span>
             }
           />
@@ -342,6 +364,9 @@ export function SignatureGallery() {
 
       <Section title="Fetched for you">
         <FetchedList items={fetched} label={t('fetched')} />
+        <Card tone="sunken">
+          <FetchedList variant="plain" items={fetched.slice(0, 2)} label={t('fetched')} caption={false} />
+        </Card>
       </Section>
 
       <Section title="Service standard">
@@ -428,7 +453,7 @@ export function SignatureGallery() {
 
       <Section title="Plot grid">
         <Card>
-          <PlotGrid plots={plotsFor('BA')} selected={plot} onSelect={(cell) => setPlot(cell.id)} />
+          <PlotGrid plots={plotsFor('BA')} selected={plot} onSelect={(cell) => setPlot(cell.id)} own={['BA-124']} />
         </Card>
       </Section>
     </>

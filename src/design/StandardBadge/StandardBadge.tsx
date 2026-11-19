@@ -55,7 +55,7 @@ export function StandardBadge({ standard, variant = 'full', showText = true, cla
       <div className={styles.top}>
         <p className={styles.figure}>
           <span className="visually-hidden">{t('label')}: </span>
-          {figure.value !== null ? <span className={cx(styles.value, 'num')}>{figure.value}</span> : null}
+          {figure.value !== null ? <span className={cx(styles.value, 'num')}>{figure.value} </span> : null}
           <span className={figure.value !== null ? styles.unit : styles.words}>{figure.words}</span>
         </p>
         {tag}

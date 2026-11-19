@@ -129,15 +129,23 @@
 }
 
 /* Values that are always written left to right (numbers, codes, e-mail addresses). In Arabic they keep
-   their order but stay on the side where the label starts; an empty field shows its Arabic placeholder. */
-:global([dir='rtl']) .ltr {
+   their order but stay on the side where the label starts; an empty field shows its Arabic placeholder
+   the Arabic way. Inside such an input "start" is the left, so the room for an icon or a unit swaps sides. */
+:global([dir='rtl']) .ltr:not(:placeholder-shown) {
   direction: ltr;
   text-align: end;
 }
 
-:global([dir='rtl']) .ltr:placeholder-shown {
-  direction: rtl;
-  text-align: start;
+:global([dir='rtl']) .ltr.withLead:not(:placeholder-shown) {
+  padding-inline: var(--s-4) var(--s-2);
+}
+
+:global([dir='rtl']) .ltr.withTrail:not(:placeholder-shown) {
+  padding-inline: var(--s-2) var(--s-4);
+}
+
+:global([dir='rtl']) .ltr.withLead.withTrail:not(:placeholder-shown) {
+  padding-inline: var(--s-2);
 }
 
 .lead {
@@ -301,4 +309,21 @@
   line-height: 1.7;
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
+}
+
+/* Forced colours (Windows high contrast) remove shadows, and the box's edge and focus state are shadows:
+   there they become real borders, in the system's own colours. */
+@media (forced-colors: active) {
+  .control::after {
+    border: 1px solid ButtonText;
+    box-shadow: none;
+  }
+
+  .control:focus-within::after {
+    border: 2px solid Highlight;
+  }
+
+  .disabled::after {
+    border-color: GrayText;
+  }
 }

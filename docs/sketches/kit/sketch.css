@@ -154,7 +154,8 @@ svg.sk-over { z-index: 2; }
 .w-ring { width: 54px; height: 54px; flex: none; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
 .w-map { height: 210px; position: relative; }
 .w-qr { width: 108px; height: 108px; margin: 0 auto; }
-.w-sheet { margin: 0 -16px -14px; padding: 16px 16px 16px; display: flex; flex-direction: column; gap: 9px; background: var(--paper); }
+/* No paper fill: a fill would hide the filled pieces drawn inside the sheet (buttons, chips, the grip). */
+.w-sheet { margin: 0 -11px 0; padding: 16px 14px 10px; display: flex; flex-direction: column; gap: 9px; background: none; }
 .w-grip { width: 40px; height: 5px; margin: 0 auto 2px; }
 .w-toggle { width: 36px; height: 20px; flex: none; }
 .w-step { display: flex; gap: 5px; }

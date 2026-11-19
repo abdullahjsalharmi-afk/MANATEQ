@@ -37,6 +37,9 @@ export function SuccessMark() {
   );
 }
 
+/** The class for the single full-width button in a transaction sheet's footer. */
+export const sheetActionClass = styles.sheetAction;
+
 export interface SheetSuccessProps {
   title: string;
   children?: ReactNode;

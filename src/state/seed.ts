@@ -18,7 +18,7 @@ import { addPass, issueRentInvoice, settleInvoice } from './effects';
 import { allocate, invoiceRef } from './refs';
 import { actIn, bookAppointmentIn, dueAtOf, holdIn, startIn, tickWorld, type StartInput } from './sim';
 import { dateText, dots, fill, moneyText, rentTitle, text } from './strings';
-import type { ActPayload, Env } from './types';
+import type { ActPayload, Env, PendingWorld } from './types';
 import { DAY, HOUR, MINUTE, PAYMENT_TERM_MS, addDocs, addYears, annualRentOf, docFacts, findRequest, isFinished, isOpen, notify, periodRentOf, rateOf, startOfDay } from './world';
 
 /** Bump when the saved shape changes; older saves are discarded on load. */
@@ -99,10 +99,10 @@ function story(initial: World, env: Env, now: number) {
 
   /**
    * Lets one request move until it finishes, `stop` accepts the step it is on, or the next move would
-   * be in the future. With `playAt`, the investor's steps are completed on the way: the first at that
-   * time, later ones shortly after they open.
+   * be in the future. The investor's steps are completed on the way: the first at `playAt`, later ones
+   * shortly after they open. Without `playAt` the request stops at the first step that needs the investor.
    */
-  const advance = (id: string, options: { stop?: (step: WorkflowStep) => boolean; playAt?: number; payload?: ActPayload } = {}): void => {
+  const advance = (id: string, options: { stop?: (step: WorkflowStep) => boolean; playAt?: number; payload?: ActPayload }): void => {
     let playAt = options.playAt;
     for (let guard = 0; guard < 300; guard++) {
       const request = read(id);
@@ -149,10 +149,6 @@ function story(initial: World, env: Env, now: number) {
     doneAt(id: string | undefined): number | undefined {
       const request = read(id);
       return request?.status === 'done' ? request.updatedAt : undefined;
-    },
-    /** Runs a request until it finishes or needs the investor. */
-    settle(id: string | undefined): void {
-      if (id !== undefined) advance(id);
     },
     /** Runs a request to its end, playing the investor from `at` on. */
     complete(id: string | undefined, at: number, payload?: ActPayload): void {
@@ -426,11 +422,12 @@ function tenantHistory(base: World, now: number): World {
   );
   tale.park(light, (step) => step.lane === 'field', now + 5 * HOUR);
 
-  // The building permit: lodged with the Ministry this morning, now in the national permit system.
+  // The building permit: lodged with the Ministry yesterday afternoon, now in the national permit system.
   if (tale.doneAt(design) !== undefined) {
-    const permit = tale.start({ serviceId: 'C2', plotId: AW_131, form: {} }, now - 5 * HOUR);
+    const lodged = ago(1, 14, 10);
+    const permit = tale.start({ serviceId: 'C2', plotId: AW_131, form: {} }, lodged);
     const target = nationalStep(peekServiceDetail('C2'), 'I9');
-    tale.park(permit, (step) => step.id === target, now + DAY, now - 4 * HOUR);
+    tale.park(permit, (step) => step.id === target, now + DAY, lodged + HOUR);
   }
 
   // Everything else the calendar brings: the renewal of the yard opened 120 days before its lease ends.
@@ -508,21 +505,27 @@ const historyReady = (): boolean => TENANT_SERVICES.every((id) => peekServiceDet
  *
  * The tenant's history needs the workflows of the services it runs through. They load on demand, so
  * a world seeded before they arrive holds what needs no workflow (company, plots in operation, their
- * accounts) and is completed with `completeSeed` once they are in memory.
+ * accounts), is marked as pending, and is completed with `completeSeed` once they are in memory.
  */
 export function seedWorld(persona: Persona, now: number): World {
   if (persona === 'guest') return emptyWorld('guest');
   if (persona === 'prospect') return prospectWorld(now);
   const base = tenantBase(now);
-  return historyReady() ? tenantHistory(base, now) : base;
+  if (historyReady()) return tenantHistory(base, now);
+  const pending: PendingWorld = { ...base, historyPending: true };
+  return pending;
 }
 
 /** True when a persona's history could not be replayed yet because its workflows were not in memory. */
 export function seedIsPartial(world: World): boolean {
-  return world.persona === 'tenant' && world.requests.length === 0;
+  return (world as PendingWorld).historyPending === true;
 }
 
-/** Replays the history of a world seeded too early. Returns the world unchanged when there is nothing to complete. */
+/**
+ * Replays the history of a world that was seeded too early, from the beginning. Such a world only
+ * exists for the moment the catalogue takes to load, so nothing the investor did is lost in practice.
+ * Returns the world unchanged when there is nothing to complete, or when it still cannot be done.
+ */
 export function completeSeed(world: World, now: number): World {
   return seedIsPartial(world) && historyReady() ? seedWorld(world.persona, now) : world;
 }

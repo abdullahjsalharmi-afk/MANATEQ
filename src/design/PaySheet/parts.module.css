@@ -93,9 +93,14 @@
   }
 }
 
+/* Hidden until it starts: a round line cap would otherwise show as a dot while the tick waits its turn. */
 @keyframes tick-draw {
   from {
+    opacity: 0;
     stroke-dashoffset: 1;
+  }
+  10% {
+    opacity: 1;
   }
 }
 
@@ -104,4 +109,11 @@
   .tick {
     animation-delay: 0s;
   }
+}
+
+/* The one button of a transaction sheet spans the sheet. Screens cap the width of full-width buttons on
+   wide displays, and a sheet opened from a screen is inside that screen in the document: the sheet is
+   already a comfortable width, so its button is exempt. */
+button.sheetAction.sheetAction {
+  max-width: none;
 }

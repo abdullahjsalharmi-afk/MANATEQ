@@ -249,7 +249,8 @@
   margin-block-start: 4px;
 }
 
-.chip {
+/* on the tinted card a quiet holder chip sits on the plain surface colour */
+.card .chip {
   background: var(--surface);
   color: var(--ink);
 }
@@ -295,7 +296,8 @@
   min-width: 0;
 }
 
-.ellipsis {
+/* the rail column of a toggle: a folded stack of done steps, or the dots of steps still to come */
+.lead {
   justify-self: center;
   display: grid;
   place-items: center;
@@ -319,4 +321,13 @@
 .more::before {
   inset-block: 0 calc(50% + 8px + var(--rail-gap));
   background: var(--rail-next);
+}
+
+/* once the steps are unfolded, the buttons that fold them again stand clear of the list */
+.hide {
+  margin-block-end: var(--s-2);
+}
+
+.less {
+  margin-block-start: var(--s-2);
 }

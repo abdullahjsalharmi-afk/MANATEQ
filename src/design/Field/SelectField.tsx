@@ -8,6 +8,7 @@ import { SearchField } from '../SearchField/SearchField';
 import { Sheet } from '../Sheet/Sheet';
 import { Field, type FieldBaseProps, type FieldControl } from './Field';
 import fieldStyles from './Field.module.css';
+import { ReturnFocus } from './ReturnFocus';
 import styles from './SelectField.module.css';
 import { strings } from './strings';
 
@@ -137,6 +138,7 @@ function Picker<V extends string>({ control, label, options, value, onChange, pl
         ) : null}
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title={label} closeLabel={t('close')} className={styles.sheet}>
+        <ReturnFocus />
         <OptionList
           label={label}
           options={options}

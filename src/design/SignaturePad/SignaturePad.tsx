@@ -92,16 +92,22 @@ export function SignaturePad({ label, hint, error, required, labelHidden, signer
     const ratio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
     const width = Math.round(canvas.clientWidth * ratio);
     const height = Math.round(canvas.clientHeight * ratio);
-    if (width > 0 && height > 0 && (canvas.width !== width || canvas.height !== height)) {
+    const resized = width > 0 && height > 0 && (canvas.width !== width || canvas.height !== height);
+    if (resized) {
       canvas.width = width;
       canvas.height = height;
     }
-    const ink = getComputedStyle(canvas).color;
+    // The ink is a custom property rather than `color`: a custom property changes the instant the theme
+    // does, while `color` can still be in a (very short) transition when this runs.
+    const style = getComputedStyle(canvas);
+    const ink = style.getPropertyValue('--signature-ink').trim() || style.color;
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.strokeStyle = ink;
     ctx.fillStyle = ink;
+    // Resizing a canvas wipes it: put back what was already signed.
+    if (resized) for (const stroke of strokes.current) drawStroke(ctx, stroke);
     return ctx;
   }, []);
 
@@ -181,6 +187,7 @@ export function SignaturePad({ label, hint, error, required, labelHidden, signer
   };
 
   const adopt = () => {
+    if (mode === 'typed') return;
     strokes.current = [];
     inkLength.current = 0;
     active.current = null;
@@ -233,6 +240,7 @@ export function SignaturePad({ label, hint, error, required, labelHidden, signer
               onPointerMove={onPointerMove}
               onPointerUp={onPointerEnd}
               onPointerCancel={onPointerEnd}
+              onLostPointerCapture={onPointerEnd}
             />
           </div>
           <div className={styles.actions}>
