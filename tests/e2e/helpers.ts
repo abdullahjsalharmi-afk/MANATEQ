@@ -12,12 +12,14 @@ export interface OpenOptions {
   theme?: 'light' | 'dark';
   /** Simulation speed multiplier (the app reads ?speed=). Tests use a fast clock. */
   speed?: number;
+  /** Text size setting, 0 (small) to 3 (largest). Default: the app's own default. */
+  text?: 0 | 1 | 2 | 3;
 }
 
 /** Opens the app in a known state. Each test starts from a fresh demo world. */
 export async function openApp(page: Page, options: OpenOptions = {}): Promise<void> {
-  const { route = '/', demo = 'tenant', lang = 'ar', theme = 'light', speed = 20 } = options;
-  const query = `?reset=1&demo=${demo}&lang=${lang}&theme=${theme}&speed=${speed}`;
+  const { route = '/', demo = 'tenant', lang = 'ar', theme = 'light', speed = 20, text } = options;
+  const query = `?reset=1&demo=${demo}&lang=${lang}&theme=${theme}&speed=${speed}${text === undefined ? '' : `&text=${text}`}`;
   await page.goto(`file://${APP_FILE}${query}#${route}`);
   await page.evaluate(() => document.fonts.ready);
 }
