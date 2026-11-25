@@ -9,6 +9,7 @@ import { ReturnFocus } from '../Field/ReturnFocus';
 import { Icon } from '../Icon/Icon';
 import { Lines, sheetActionClass, SheetSuccess, type SheetLine } from '../PaySheet/parts';
 import { Sheet } from '../Sheet/Sheet';
+import { useConfirmedTask } from '../Sheet/useConfirmedTask';
 import { SignaturePad } from '../SignaturePad/SignaturePad';
 import styles from './SignSheet.module.css';
 import { strings } from './strings';
@@ -29,16 +30,26 @@ export interface SignSheetProps {
   lines: SheetLine[];
   /** The authorised signatory. */
   signerName: string;
-  /** Called once, when the person leaves the confirmation. */
-  onSigned: () => void;
+  /**
+   * Called once, when the person leaves the confirmation: or, with `away` set, when the sheet went away before
+   * they could (the screen changed, the page was closed). A signature that was given is always reported.
+   */
+  onSigned: (away: boolean) => void;
+  /**
+   * Set when the signature does not finish the task: something still has to be done before the document is
+   * saved (a payment). The confirmation then says so, with `note`, instead of saying the document is saved,
+   * and its button reads `label` ("Continue to payment").
+   */
+  then?: { note: string; label: string };
 }
 
 /**
  * The demo e-signature: see what is being signed, sign on the pad (or adopt the typed signature),
  * tick the consent, sign. It is a simulation and says so. While the signature is "processing" the
- * sheet cannot be dismissed.
+ * sheet cannot be dismissed, and a signature the person gave is reported exactly once even if the sheet
+ * goes away first (see `useConfirmedTask`).
  */
-export function SignSheet({ open, onClose, title, documentName, lines, signerName, onSigned }: SignSheetProps) {
+export function SignSheet({ open, onClose, title, documentName, lines, signerName, onSigned, then }: SignSheetProps) {
   const t = useT(strings);
   const baseId = useId();
   const padId = `${baseId}-pad`;
@@ -50,19 +61,25 @@ export function SignSheet({ open, onClose, title, documentName, lines, signerNam
   const [checked, setChecked] = useState(false);
   const [hold, setHold] = useState<number | undefined>(undefined);
   const contentRef = useRef<HTMLDivElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const settled = useRef(false);
+
+  const task = useConfirmedTask(
+    open,
+    SIGN_MS,
+    () => {
+      setPhase('success');
+      return true;
+    },
+    onSigned,
+  );
 
   // Every opening starts clean: nothing signed, nothing ticked.
   useEffect(() => {
     if (!open) return;
-    settled.current = false;
     setPhase('review');
     setHasSignature(false);
     setConsent(false);
     setChecked(false);
     setHold(undefined);
-    return () => clearTimeout(timer.current);
   }, [open]);
 
   useEffect(() => {
@@ -84,18 +101,14 @@ export function SignSheet({ open, onClose, title, documentName, lines, signerNam
       document.getElementById(hasSignature ? consentId : padId)?.focus();
       return;
     }
-    clearTimeout(timer.current);
     setHold(contentRef.current?.offsetHeight);
     setPhase('processing');
-    timer.current = setTimeout(() => setPhase('success'), SIGN_MS);
+    task.start();
   };
 
   // However the confirmation is left (the button, Escape, a swipe), the document has been signed.
   const finish = () => {
-    if (!settled.current) {
-      settled.current = true;
-      onSigned();
-    }
+    task.settle();
     onClose();
   };
 
@@ -106,7 +119,7 @@ export function SignSheet({ open, onClose, title, documentName, lines, signerNam
       title={title}
       dismissible={phase !== 'processing'}
       closeLabel={t('close')}
-      footer={<SignFooter phase={phase} onSign={sign} onDone={finish} doneId={doneId} />}
+      footer={<SignFooter phase={phase} onSign={sign} onDone={finish} doneId={doneId} doneLabel={then?.label} />}
     >
       <ReturnFocus />
       <div ref={contentRef}>
@@ -123,6 +136,7 @@ export function SignSheet({ open, onClose, title, documentName, lines, signerNam
           padId={padId}
           consentId={consentId}
           minHeight={hold}
+          signedNote={then?.note}
         />
       </div>
       <span className="visually-hidden" role="status">
@@ -147,17 +161,19 @@ export interface SignContentProps {
   padId?: string;
   consentId?: string;
   minHeight?: number;
+  /** What the confirmation says under the document's name, when it is not yet saved (see `SignSheetProps.then`). */
+  signedNote?: string;
 }
 
 /** The inside of the signature sheet in each phase. `SignSheet` adds the sheet and the timing. */
-export function SignContent({ phase, documentName, lines, signerName, consent, onConsent, onSignature, signatureError, consentError, defaultAdopted, padId, consentId, minHeight }: SignContentProps) {
+export function SignContent({ phase, documentName, lines, signerName, consent, onConsent, onSignature, signatureError, consentError, defaultAdopted, padId, consentId, minHeight, signedNote }: SignContentProps) {
   const t = useT(strings);
 
   if (phase === 'success') {
     return (
       <SheetSuccess title={t('signed')} minHeight={minHeight}>
         <p className={styles.signedName}>{documentName}</p>
-        <p className={styles.signedNote}>{t('signedNote')}</p>
+        <p className={styles.signedNote}>{signedNote ?? t('signedNote')}</p>
         <p className={styles.signedDemo}>{t('signedDemo')}</p>
       </SheetSuccess>
     );
@@ -193,15 +209,17 @@ export interface SignFooterProps {
   onDone?: () => void;
   /** The id of the "Done" button, so the sheet can move focus to it. */
   doneId?: string;
+  /** What the confirmation's button reads when something still follows the signature. */
+  doneLabel?: string;
 }
 
 /** The one button of the signature sheet: sign, then done. */
-export function SignFooter({ phase, onSign, onDone, doneId }: SignFooterProps) {
+export function SignFooter({ phase, onSign, onDone, doneId, doneLabel }: SignFooterProps) {
   const t = useT(strings);
   if (phase === 'success') {
     return (
       <Button block id={doneId} className={sheetActionClass} onClick={onDone}>
-        {t('done')}
+        {doneLabel ?? t('done')}
       </Button>
     );
   }

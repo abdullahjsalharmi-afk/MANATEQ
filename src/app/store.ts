@@ -133,27 +133,55 @@ export function localPersistence<T>(key: string, isValid: (value: unknown) => va
   };
 }
 
-/** Saves the store shortly after each change. Returns a function that stops saving. */
+/**
+ * Saves the store shortly after each change. Returns a function that stops saving.
+ *
+ * When the page is going away there is no "shortly after": what is waiting is saved at once, and so is every
+ * change made while it goes (a payment the person had just confirmed is completed by another listener of the
+ * same event, which may run before or after this one). A page that only went to the background is saved too:
+ * on a phone it may never be told it is closed.
+ */
 export function persistStore<T>(store: Store<T>, persistence: Persistence<T>, delayMs = 200): () => void {
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let leaving = false;
   const flush = () => {
     timer = undefined;
     persistence.save(store.getState());
   };
+  const flushPending = () => {
+    if (timer === undefined) return;
+    clearTimeout(timer);
+    flush();
+  };
   const unsubscribe = store.subscribe(() => {
     if (timer !== undefined) clearTimeout(timer);
-    timer = setTimeout(flush, delayMs);
+    if (leaving) flush();
+    else timer = setTimeout(flush, delayMs);
   });
   const onHide = () => {
-    if (timer !== undefined) {
-      clearTimeout(timer);
-      flush();
-    }
+    leaving = true;
+    flushPending();
   };
-  if (typeof window !== 'undefined') window.addEventListener('pagehide', onHide);
+  // The browser kept the page and brought it back: it lives on.
+  const onShow = () => {
+    leaving = false;
+  };
+  const onVisibility = () => {
+    if (document.visibilityState === 'hidden') flushPending();
+  };
+  const live = typeof window !== 'undefined';
+  if (live) {
+    window.addEventListener('pagehide', onHide);
+    window.addEventListener('pageshow', onShow);
+    document.addEventListener('visibilitychange', onVisibility);
+  }
   return () => {
     unsubscribe();
     if (timer !== undefined) clearTimeout(timer);
-    if (typeof window !== 'undefined') window.removeEventListener('pagehide', onHide);
+    if (live) {
+      window.removeEventListener('pagehide', onHide);
+      window.removeEventListener('pageshow', onShow);
+      document.removeEventListener('visibilitychange', onVisibility);
+    }
   };
 }

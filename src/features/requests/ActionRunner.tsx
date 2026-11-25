@@ -180,11 +180,19 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
 
   /* ── the two dedicated sheets ── */
 
+  // A signature that is not the step's last task counts only once what follows it is done (the payment):
+  // the step's tasks are completed together, or not at all.
+  const afterSign = tasks.includes('sign') ? tasks[tasks.indexOf('sign') + 1] : undefined;
+  const signedAlready = tasks.includes('sign') && tasks.indexOf('sign') < index;
+  /** The person signed, then left before the rest was done: nothing was completed, and they are told so. */
+  const sayUnfinished = () => toast(t('unfinishedAfterSigning'), { tone: 'info', duration: 7000 });
+
   const leaveDedicated = () => {
     if (advanced.current) {
       advanced.current = false;
       return;
     }
+    if (signedAlready) sayUnfinished();
     onClose();
   };
 
@@ -365,7 +373,14 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
           ...(plotNumber ? [{ label: t('plot'), value: <span className="ltr">{plotNumber}</span> }] : []),
           { label: t('reference'), value: <span className="ltr">{request.ref}</span> },
         ]}
-        onSigned={() => {
+        {...(afterSign ? { then: afterSign === 'pay' ? { note: t('signedThenPay'), label: t('continueToPay') } : { note: t('signedThenMore'), label: t('continue') } } : {})}
+        onSigned={(away) => {
+          // The screen went away between the signature and what follows it: there is no one to ask for the rest.
+          if (away && afterSign) {
+            sayUnfinished();
+            onClose();
+            return;
+          }
           advanced.current = true;
           advance();
         }}

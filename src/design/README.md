@@ -154,3 +154,10 @@ to one letter, so a layout that squeezes words splits them mid-word. Use these i
   was withdrawn: hollow neutral marker, muted words, "Stopped:" for screen readers, no time shown).
 - `fmt.relative` says tomorrow / yesterday only for days; then always a number: days up to 60, months up to 24,
   then years ("in 15 months", never "next year").
+- A sheet that shows "processing" before its confirmation (`PaySheet`, `SignSheet`, a request's payment) runs
+  what the person confirmed through `useConfirmedTask` (`Sheet/useConfirmedTask.ts`), never through a timer of
+  its own. Pressing "Pay" or "Sign" was the decision: the task is carried out and reported exactly once, also
+  when the sheet goes away first (Back, a link, the page closing), and `onPaid(away)` / `onSigned(away)` then get
+  `away = true` so the caller can tell the person on the screen they went to. A signature that does not finish
+  its task (a payment follows) passes `then` to `SignSheet`: its confirmation says what is left instead of
+  saying the document is saved.

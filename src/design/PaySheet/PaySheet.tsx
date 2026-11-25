@@ -8,6 +8,7 @@ import { ReturnFocus } from '../Field/ReturnFocus';
 import { SelectField } from '../Field/SelectField';
 import { Money } from '../Money/Money';
 import { Sheet } from '../Sheet/Sheet';
+import { useConfirmedTask } from '../Sheet/useConfirmedTask';
 import { Lines, sheetActionClass, SheetSuccess, type SheetLine } from './parts';
 import styles from './PaySheet.module.css';
 import { strings } from './strings';
@@ -37,8 +38,11 @@ export interface PaySheetProps {
   onPay?: () => string | null;
   /** `onPay` could not file the payment. */
   onFailed?: () => void;
-  /** Called once, when the person leaves the confirmation. */
-  onPaid: () => void;
+  /**
+   * Called once, when the person leaves the confirmation: or, with `away` set, when the sheet went away before
+   * they could (the screen changed, the page was closed). A payment that was confirmed is always reported.
+   */
+  onPaid: (away: boolean) => void;
   /**
    * Opens the receipt. When given, the confirmation's one pill is «اعرض الإيصال» and «تم» becomes a quiet link.
    * It is called after `onPaid`, so the receipt is already filed.
@@ -49,7 +53,8 @@ export interface PaySheetProps {
 /**
  * The demo payment: review the amount, choose one of two stand-in methods, pay, see the receipt.
  * It is a simulation and says so: there are no card or account fields and nothing is charged.
- * While the payment is "processing" the sheet cannot be dismissed.
+ * While the payment is "processing" the sheet cannot be dismissed, and a payment the person confirmed is
+ * made exactly once even if the sheet goes away first (see `useConfirmedTask`).
  */
 export function PaySheet({ open, onClose, title, lines, amount, reference, onPay, onFailed, onPaid, onViewReceipt }: PaySheetProps) {
   const t = useT(strings);
@@ -58,21 +63,32 @@ export function PaySheet({ open, onClose, title, lines, amount, reference, onPay
   const [method, setMethod] = useState<PayMethod>('card');
   const [hold, setHold] = useState<number | undefined>(undefined);
   const contentRef = useRef<HTMLDivElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const settled = useRef(false);
   const [filed, setFiled] = useState<string | null>(null);
-  // The latest callbacks, read when the timer fires.
-  const latest = useRef({ onPay, onFailed });
-  latest.current = { onPay, onFailed };
+
+  const task = useConfirmedTask(
+    open,
+    PAY_MS,
+    () => {
+      if (onPay) {
+        const receipt = onPay();
+        if (receipt === null) {
+          onFailed?.();
+          return false;
+        }
+        setFiled(receipt);
+      }
+      setPhase('success');
+      return true;
+    },
+    onPaid,
+  );
 
   // Every opening starts from the review.
   useEffect(() => {
     if (!open) return;
-    settled.current = false;
     setPhase('review');
     setHold(undefined);
     setFiled(null);
-    return () => clearTimeout(timer.current);
   }, [open]);
 
   // The pay button gives way to the confirmation's pill: put the keyboard there.
@@ -81,29 +97,14 @@ export function PaySheet({ open, onClose, title, lines, amount, reference, onPay
   }, [phase, doneId]);
 
   const pay = () => {
-    clearTimeout(timer.current);
     setHold(contentRef.current?.offsetHeight);
     setPhase('processing');
-    timer.current = setTimeout(() => {
-      const file = latest.current.onPay;
-      if (file) {
-        const receipt = file();
-        if (receipt === null) {
-          latest.current.onFailed?.();
-          return;
-        }
-        setFiled(receipt);
-      }
-      setPhase('success');
-    }, PAY_MS);
+    task.start();
   };
 
   // However the confirmation is left (the button, Escape, a swipe), the payment has happened.
   const finish = () => {
-    if (!settled.current) {
-      settled.current = true;
-      onPaid();
-    }
+    task.settle();
     onClose();
   };
 

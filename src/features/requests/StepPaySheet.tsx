@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useT } from '@/app/i18n';
 import { Sheet } from '@/design/core';
 import { ReturnFocus } from '@/design/Field/ReturnFocus';
+import { useConfirmedTask } from '@/design/Sheet/useConfirmedTask';
 import { type SheetLine } from '@/design/forms';
 import { PAY_MS, PayContent, PayFooter, type PayMethod, type PayPhase } from '@/design/PaySheet/PaySheet';
 import { strings as payStrings } from '@/design/PaySheet/strings';
@@ -20,7 +21,7 @@ export interface StepPaySheetProps {
   onPay: () => string | null;
   /** The step could not be completed: the sheet closes without a confirmation. */
   onFailed: () => void;
-  /** Called once, when the person leaves the confirmation. */
+  /** Called once, when the person leaves the confirmation, or when the sheet went away before they could. */
   onDone: () => void;
   closeLabel: string;
 }
@@ -28,7 +29,8 @@ export interface StepPaySheetProps {
 /**
  * The demo payment of a request step. It looks and behaves like `PaySheet`, but the step is completed
  * when the payment goes through, before the confirmation, so the confirmation names the receipt that
- * was really filed instead of a number made up in advance.
+ * was really filed instead of a number made up in advance. A payment the person confirmed completes the
+ * step exactly once, even if the sheet goes away while it is processing (see `useConfirmedTask`).
  */
 export function StepPaySheet({ open, onClose, title, lines, amount, onPay, onFailed, onDone, closeLabel }: StepPaySheetProps) {
   const t = useT(payStrings);
@@ -38,20 +40,29 @@ export function StepPaySheet({ open, onClose, title, lines, amount, onPay, onFai
   const [hold, setHold] = useState<number | undefined>(undefined);
   const [reference, setReference] = useState('');
   const contentRef = useRef<HTMLDivElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const settled = useRef(false);
-  // The latest callbacks, read when the timer fires.
-  const latest = useRef({ onPay, onFailed });
-  latest.current = { onPay, onFailed };
+
+  const task = useConfirmedTask(
+    open,
+    PAY_MS,
+    () => {
+      const receipt = onPay();
+      if (receipt === null) {
+        onFailed();
+        return false;
+      }
+      setReference(receipt);
+      setPhase('success');
+      return true;
+    },
+    onDone,
+  );
 
   // Every opening starts from the review.
   useEffect(() => {
     if (!open) return;
-    settled.current = false;
     setPhase('review');
     setHold(undefined);
     setReference('');
-    return () => clearTimeout(timer.current);
   }, [open]);
 
   // The pay button gives way to "Done": put the keyboard there.
@@ -60,27 +71,13 @@ export function StepPaySheet({ open, onClose, title, lines, amount, onPay, onFai
   }, [phase, doneId]);
 
   const pay = () => {
-    clearTimeout(timer.current);
     setHold(contentRef.current?.offsetHeight);
     setPhase('processing');
-    timer.current = setTimeout(() => {
-      const receipt = latest.current.onPay();
-      if (receipt === null) {
-        latest.current.onFailed();
-        return;
-      }
-      setReference(receipt);
-      setPhase('success');
-    }, PAY_MS);
+    task.start();
   };
 
   // However the confirmation is left (the button, Escape, a swipe), the payment has happened.
-  const finish = () => {
-    if (!settled.current) {
-      settled.current = true;
-      onDone();
-    }
-  };
+  const finish = task.settle;
 
   return (
     <Sheet

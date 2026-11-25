@@ -160,6 +160,13 @@ export const strings = {
   acknowledge: { ar: 'تم الاطلاع', en: 'Noted' },
   submitted: { ar: 'تم. يتابع الطلب طريقه.', en: 'Done. The request moves on.' },
   failed: { ar: 'تعذّر إكمال الإجراء. أعد المحاولة.', en: 'The action could not be completed. Try again.' },
+  signedThenPay: { ar: 'بقيت خطوة واحدة: الدفع. تُحفظ الوثيقة الموقّعة بعد إتمامه.', en: 'One step left: the payment. The signed document is saved once it is made.' },
+  signedThenMore: { ar: 'بقيت خطوة واحدة. تُحفظ الوثيقة الموقّعة بعد إتمامها.', en: 'One step left. The signed document is saved once it is done.' },
+  continueToPay: { ar: 'تابع إلى الدفع', en: 'Continue to payment' },
+  unfinishedAfterSigning: {
+    ar: 'لم تكتمل الخطوة: لم يتم الدفع، فلم يُحفظ توقيعك. افتح الطلب لتعيدها.',
+    en: 'Not completed: the payment was not made, so your signature was not saved. Open the request to do it again.',
+  },
   receiptRef: { ar: 'إيصال {ref}', en: 'Receipt {ref}' },
   paidWithOffer: { ar: 'سدّدت التأمين مع العرض. لا يُطلب منك سداده مرة أخرى.', en: 'You paid the deposit with the offer. You will not be asked to pay it again.' },
   paidWithOfferRef: { ar: 'سدّدت التأمين مع العرض (الإيصال {ref}). لا يُطلب منك سداده مرة أخرى.', en: 'You paid the deposit with the offer (receipt {ref}). You will not be asked to pay it again.' },

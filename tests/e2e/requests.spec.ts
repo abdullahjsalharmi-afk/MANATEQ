@@ -29,7 +29,10 @@ test('the investor accepts, signs and pays the renewal, and the request moves on
   await sign.getByRole('button', { name: 'Adopt my signature' }).click();
   await sign.getByText('I have read the document and agree to sign it electronically.').click();
   await sign.getByRole('button', { name: 'Sign', exact: true }).click();
-  await sign.getByRole('button', { name: 'Done' }).click();
+  // The signature does not finish this step: the confirmation says what is left, and does not claim the document is saved yet.
+  await expect(sign.getByText('One step left: the payment. The signed document is saved once it is made.')).toBeVisible();
+  await expect(sign.getByText('The signed document is saved in Documents and passes.')).toHaveCount(0);
+  await sign.getByRole('button', { name: 'Continue to payment' }).click();
 
   // Payment (a simulation).
   const pay = page.getByRole('dialog');
