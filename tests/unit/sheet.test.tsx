@@ -128,3 +128,93 @@ describe('focus when a sheet closes', () => {
     expect(document.activeElement?.id).toBe('other');
   });
 });
+
+/** What a browser does on a second Escape in a row: it closes the dialog itself, whatever the page answered. */
+const closedByBrowser = () =>
+  act(() => {
+    const dialog = document.querySelector('dialog') as HTMLDialogElement;
+    if (dialog.open) dialog.close();
+    else dialog.removeAttribute('open');
+    dialog.dispatchEvent(new Event('close'));
+  });
+const isShown = () => {
+  const dialog = document.querySelector('dialog') as HTMLDialogElement | null;
+  return dialog !== null && (dialog.open || dialog.hasAttribute('open'));
+};
+
+function Busy({ dismissible }: { dismissible: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [paid, setPaid] = useState(false);
+  return (
+    <>
+      <main tabIndex={-1} id="main">
+        {paid ? <p>Paid</p> : <button id="pay" onClick={() => setOpen(true)}>Pay</button>}
+      </main>
+      <Sheet open={open} onClose={() => setOpen(false)} title="Pay" dismissible={dismissible}>
+        <button
+          id="done"
+          onClick={() => {
+            setPaid(true);
+            setOpen(false);
+          }}
+        >
+          Done
+        </button>
+      </Sheet>
+    </>
+  );
+}
+
+describe('a dialog the browser closed by itself', () => {
+  it('comes straight back while the sheet cannot be dismissed (a payment is being processed)', () => {
+    render(<Busy dismissible={false} />);
+    click('pay');
+    expect(isShown()).toBe(true);
+    closedByBrowser();
+    // Still there for the person to finish, and the page behind is still held.
+    expect(isShown()).toBe(true);
+    expect(overflow()).toBe('hidden');
+    click('done');
+    settle();
+    expect(document.querySelector('dialog')).toBeNull();
+    expect(overflow()).toBe('');
+    expect(document.getElementById('main')?.textContent).toContain('Paid');
+  });
+
+  it('counts as closing a sheet that can be dismissed: nothing is left open in name only', () => {
+    render(<Busy dismissible />);
+    click('pay');
+    closedByBrowser();
+    settle();
+    expect(document.querySelector('dialog')).toBeNull();
+    expect(overflow()).toBe('');
+    // The opener works again.
+    click('pay');
+    expect(isShown()).toBe(true);
+  });
+
+  it('is shown again when the sheet is reopened while it was still closing', () => {
+    render(<Busy dismissible />);
+    click('pay');
+    closedByBrowser();
+    // Reopened before the closing sheet has left the page.
+    click('pay');
+    expect(isShown()).toBe(true);
+    settle();
+    expect(isShown()).toBe(true);
+    expect(overflow()).toBe('hidden');
+  });
+});
+
+describe('focus when the task took its opener away', () => {
+  it('goes to the main content of the screen, not to the top of the page', () => {
+    render(<Busy dismissible />);
+    (document.getElementById('pay') as HTMLElement).focus();
+    click('pay');
+    act(() => (document.getElementById('done') as HTMLElement).focus());
+    click('done');
+    settle();
+    expect(document.getElementById('pay')).toBeNull();
+    expect(document.activeElement?.id).toBe('main');
+  });
+});

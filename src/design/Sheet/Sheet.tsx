@@ -60,12 +60,28 @@ function noteOpener(dialog: HTMLDialogElement): void {
   openers.set(dialog, host instanceof HTMLDialogElement && openers.has(host) ? (openers.get(host) ?? null) : active);
 }
 
-/** Puts focus back on what opened the sheet, when closing it left focus nowhere. Never steals it from a sheet that took over. */
+/**
+ * Puts focus back on what opened the sheet, when closing it left focus nowhere. When the task the sheet
+ * completed took its opener away (a paid invoice has no "Pay" button any more), focus goes to the screen's
+ * main content, as it does on arriving at a screen, so the next Tab continues from there and not from the top
+ * or the foot of the page. It never takes focus from a sheet that took over or from where the person has gone.
+ */
 function returnFocus(dialog: HTMLDialogElement): void {
   const opener = openers.get(dialog);
   const active = document.activeElement;
   const dropped = !active || active === document.body || !active.isConnected || dialog.contains(active);
-  if (dropped && opener?.isConnected) opener.focus({ preventScroll: true });
+  if (!dropped) return;
+  const target = opener?.isConnected ? opener : document.querySelector<HTMLElement>('main[tabindex]');
+  target?.focus({ preventScroll: true });
+}
+
+/** Opens the native dialog as a modal (plainly where `showModal` is not available). */
+function show(dialog: HTMLDialogElement): void {
+  try {
+    dialog.showModal();
+  } catch {
+    dialog.setAttribute('open', '');
+  }
 }
 
 /**
@@ -103,11 +119,7 @@ export function Sheet({ open, onClose, title, description, children, footer, dis
     if (!mounted || !dialog) return;
     if (!dialog.open) {
       noteOpener(dialog);
-      try {
-        dialog.showModal();
-      } catch {
-        dialog.setAttribute('open', '');
-      }
+      show(dialog);
     }
     const release = lockPageScroll();
     return () => {
@@ -118,10 +130,30 @@ export function Sheet({ open, onClose, title, description, children, footer, dis
     };
   }, [mounted]);
 
+  // Asked to open again while it was still closing, or closed behind our back (see `onNativeClose`): the
+  // element is still here but the browser no longer shows it. Show it again.
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (open && mounted && dialog && !dialog.open) show(dialog);
+  }, [open, mounted]);
+
   if (!mounted) return null;
 
   const requestClose = () => {
     if (dismissible) onClose();
+  };
+
+  /**
+   * The browser closed the dialog itself. It does so on a second Escape in a row with no click or tap between
+   * them, whatever the page answers to the first (a guard against pages that trap people). The sheet must not
+   * be left open in name only, invisible, holding the page still: a sheet that can be dismissed is dismissed;
+   * one that cannot (a payment or a signature is being processed) comes straight back.
+   */
+  const onNativeClose = () => {
+    const dialog = dialogRef.current;
+    if (!open || !dialog || dialog.open) return;
+    if (dismissible) onClose();
+    else show(dialog);
   };
 
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -161,6 +193,7 @@ export function Sheet({ open, onClose, title, description, children, footer, dis
         event.preventDefault();
         requestClose();
       }}
+      onClose={onNativeClose}
       onClick={(event) => {
         if (event.target === dialogRef.current) requestClose();
       }}
