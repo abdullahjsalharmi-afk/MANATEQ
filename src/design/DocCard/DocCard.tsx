@@ -3,8 +3,10 @@ import { useId, type ReactNode } from 'react';
 import { useT } from '@/app/i18n';
 import type { DocKind } from '@/domain/types';
 import { cx } from '../cx';
+import { Card } from '../Card/Card';
 import { Icon } from '../Icon/Icon';
 import { Row } from '../List/List';
+import { keepWhole } from '../List/keepWhole';
 import styles from './DocCard.module.css';
 import { strings } from './strings';
 
@@ -40,6 +42,18 @@ export interface DocRowProps extends DocCardBase {
   onClick?: () => void;
 }
 
+export interface DocTileProps extends DocCardBase {
+  /**
+   * The document as a compact card for the wallet's card grid (put it in `<Grid as="ul">`): the kind glyph, the
+   * title in 17/600 on up to two lines, reference · date in 14 px, the gold check-seal when signed.
+   */
+  variant: 'card';
+  /** The route of the document viewer. */
+  to: string;
+  /** Render as a list item (inside `<Grid as="ul">`). Default true. */
+  asItem?: boolean;
+}
+
 export interface DocLineItem {
   label: string;
   value: string;
@@ -60,7 +74,7 @@ export interface DocPaperProps extends DocCardBase {
   level?: 2 | 3;
 }
 
-export type DocCardProps = DocRowProps | DocPaperProps;
+export type DocCardProps = DocRowProps | DocTileProps | DocPaperProps;
 
 /** The leading glyph of a document kind: a plain line icon, never inside a tinted shape. */
 export function DocIcon({ kind, className }: { kind: DocKind; className?: string }) {
@@ -72,7 +86,8 @@ export function DocIcon({ kind, className }: { kind: DocKind; className?: string
 }
 
 /**
- * A document from the wallet. `row` is its line in a list; `paper` is the document itself on a white
+ * A document from the wallet. `row` is its line in a list; `card` its compact card in the wallet's grid;
+ * `paper` is the document itself on a white
  * sheet: issuer, title, facts, the verification code with its QR at the inline end, the check-seal when
  * signed, and a clear prototype line.
  */
@@ -86,6 +101,24 @@ export function DocCard(props: DocCardProps) {
     </span>
   ) : null;
 
+  if (props.variant === 'card') {
+    const { kind, title, reference, date, to, asItem = true, className } = props;
+    return (
+      <Card as={asItem ? 'li' : 'div'} to={to} pad="sm" className={cx(styles.card, className)}>
+        <span className={styles.cardHead}>
+          <DocIcon kind={kind} />
+          {mark}
+        </span>
+        <span className={styles.cardTitle}>{keepWhole(title)}</span>
+        <span className={styles.cardMeta}>
+          <span className={cx('ltr num', styles.whole)}>{reference}</span>
+          <span aria-hidden="true"> · </span>
+          <span className={cx('num', styles.whole)}>{date}</span>
+        </span>
+      </Card>
+    );
+  }
+
   if (props.variant !== 'paper') {
     const { kind, title, reference, date, to, onClick, className } = props;
     return (
@@ -94,15 +127,15 @@ export function DocCard(props: DocCardProps) {
         leading={<DocIcon kind={kind} />}
         title={
           <span className={styles.rowTitle}>
-            <span>{title}</span> {mark}
+            <span>{keepWhole(title)}</span> {mark}
           </span>
         }
         wrap
         subtitle={
           <>
-            <span className="ltr num">{reference}</span>
+            <span className={cx('ltr num', styles.whole)}>{reference}</span>
             <span aria-hidden="true"> · </span>
-            <span className="num">{date}</span>
+            <span className={cx('num', styles.whole)}>{date}</span>
           </>
         }
         to={to}
@@ -125,7 +158,7 @@ export function DocCard(props: DocCardProps) {
       </header>
 
       <Heading id={titleId} className={styles.title}>
-        {title}
+        {keepWhole(title)}
       </Heading>
 
       <dl className={styles.facts}>
@@ -135,7 +168,7 @@ export function DocCard(props: DocCardProps) {
         </div>
         <div className={styles.fact}>
           <dt>{t('issued')}</dt>
-          <dd className="num">{date}</dd>
+          <dd className={cx('num', styles.whole)}>{date}</dd>
         </div>
       </dl>
 
@@ -144,7 +177,7 @@ export function DocCard(props: DocCardProps) {
           {lines.map((line, index) => (
             <div key={index} className={styles.line}>
               <dt>{line.label}</dt>
-              <dd>{line.value}</dd>
+              <dd>{keepWhole(line.value)}</dd>
             </div>
           ))}
         </dl>

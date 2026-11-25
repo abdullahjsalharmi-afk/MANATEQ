@@ -10,8 +10,12 @@ test('the catalogue groups by journey, filters as you type and opens a service',
   // The tenant's current station comes first.
   await expect(page.getByText('You are here · Stage 3 of 4')).toBeVisible();
 
+  // The other stations are one quiet row each, closed until opened.
+  const support = page.locator('details').filter({ hasText: 'Support' });
+  await expect(support).not.toHaveAttribute('open', '');
   await page.getByRole('searchbox').fill('gate pass');
-  await expect(page.getByRole('link', { name: 'Request a gate pass', exact: true })).toBeVisible();
+  // A search opens every group that has a match.
+  await expect(page.getByRole('link', { name: /^Request a gate pass/ })).toBeVisible();
 
   await page.getByRole('radio', { name: 'All' }).click();
   await page.getByRole('searchbox').fill('');
@@ -23,6 +27,11 @@ test('the catalogue groups by journey, filters as you type and opens a service',
   await expect(page.getByRole('heading', { name: 'Your rent invoices and payments', level: 2 })).toBeVisible();
   await expect(page.getByText('How this service starts')).toBeVisible();
   await expect(page.getByRole('link', { name: 'See your invoices' })).toBeVisible();
+
+  // Back: the view and the filter are as they were left.
+  await page.goBack();
+  await expect(page).toHaveURL(/view=all&filter=automatic/);
+  await expect(page.getByText('24 services')).toBeVisible();
   expect(errors).toEqual([]);
 });
 

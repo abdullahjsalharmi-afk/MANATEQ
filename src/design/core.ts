@@ -6,9 +6,10 @@
 export { cx } from './cx';
 export { Icon, type IconProps } from './Icon/Icon';
 export { Button, IconButton, type ButtonProps, type IconButtonProps, type ButtonVariant, type ButtonSize } from './Button/Button';
-export { Card, type CardProps } from './Card/Card';
+export { Card, CardChoiceGroup, type CardProps, type CardChoiceGroupProps } from './Card/Card';
 export { Section, type SectionProps } from './Section/Section';
 export { List, Row, type ListProps, type RowProps } from './List/List';
+export { keepWhole, Whole } from './List/keepWhole';
 export { Pill, type PillProps, type Tone } from './Pill/Pill';
 export { Segmented, Chip, ChipRow, type SegmentedProps, type SegmentedOption, type ChipProps, type ChipRowProps } from './Segmented/Segmented';
 export { Screen, type ScreenProps } from './Screen/Screen';

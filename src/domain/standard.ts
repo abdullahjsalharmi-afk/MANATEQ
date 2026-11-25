@@ -62,6 +62,23 @@ const UNITS: Record<TimedUnit, CountForms> = {
   },
 };
 
+/**
+ * After a preposition («من», «في», «خلال») the Arabic dual takes the genitive: «من يومَي عمل», not
+ * «من يوما عمل». Only the dual changes; every other form reads the same.
+ */
+const DUAL_AFTER_PREPOSITION: Record<TimedUnit, string> = {
+  minute: 'دقيقتين',
+  hour: 'ساعتين',
+  working_day: 'يومَي عمل',
+  day: 'يومين',
+  month: 'شهرين',
+};
+
+/** How the words are used: on their own (a headline), or after a preposition («اليوم 1 من يومَي عمل»). */
+export interface DurationOptions {
+  afterPreposition?: boolean;
+}
+
 const DAYS_LEFT: CountForms = {
   ar: { one: 'بقي يوم واحد', two: 'بقي يومان', few: 'بقيت {n} أيام', many: 'بقي {n} يومًا', other: 'بقي {n} يوم' },
   en: { one: '{n} day left', other: '{n} days left' },
@@ -85,8 +102,9 @@ export function isInstant(standard: Pick<Standard, 'value' | 'unit'>): boolean {
   return standard.unit === 'instant' || (standard.unit !== null && standard.value !== null && standard.value <= 0);
 }
 
-/** A duration in words: "5 أيام عمل" · "2 hours". */
-export function durationText(value: number, unit: TimedUnit, lang: Lang): string {
+/** A duration in words: "5 أيام عمل" · "2 hours"; after a preposition, «من يومَي عمل». */
+export function durationText(value: number, unit: TimedUnit, lang: Lang, options: DurationOptions = {}): string {
+  if (lang === 'ar' && options.afterPreposition && arabicCount(value) === 'two') return DUAL_AFTER_PREPOSITION[unit];
   return count(value, UNITS[unit], lang);
 }
 
@@ -95,10 +113,10 @@ export function durationText(value: number, unit: TimedUnit, lang: Lang): string
  * "Instant" · "1 working day" · "5 working days" · "2 hours". Null when the standard has no headline
  * duration (it is then described by its full text only).
  */
-export function standardHeadline(standard: Pick<Standard, 'value' | 'unit'>, lang: Lang): string | null {
+export function standardHeadline(standard: Pick<Standard, 'value' | 'unit'>, lang: Lang, options: DurationOptions = {}): string | null {
   if (isInstant(standard)) return INSTANT[lang];
   if (standard.value === null || standard.unit === null || standard.unit === 'instant') return null;
-  return durationText(standard.value, standard.unit, lang);
+  return durationText(standard.value, standard.unit, lang, options);
 }
 
 export interface StandardFigure {

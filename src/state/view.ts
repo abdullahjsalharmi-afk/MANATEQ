@@ -54,6 +54,13 @@ export interface RequestView {
   expectedAt?: number;
   /** When the request ended. */
   finishedAt?: number;
+  /**
+   * The step to describe in the request's headline: the open step, or, while the open step is a decision
+   * or runs by itself in a moment, the next step that a person or an entity holds on the usual path.
+   * Null when nothing human is left before the end (say "received, nearly done" rather than a decision's
+   * question). `expectedAt` is set when the focus is the open step and its end is known.
+   */
+  focus: { step: WorkflowStep; holder: Holder; expectedAt?: number } | null;
 }
 
 /** Who holds a step, in words. A national step is named after the first platform or entity it uses. */
@@ -67,8 +74,38 @@ export function holderNameOf(step: Pick<WorkflowStep, 'lane' | 'enablers'>): L10
   return reference.lanes[step.lane].short;
 }
 
+/** The government body or utility behind the first national platform a step uses, when there is one. */
+function entityOf(step: Pick<WorkflowStep, 'lane' | 'enablers'>): Holder['entity'] {
+  if (step.lane !== 'nat') return undefined;
+  for (const id of step.enablers) {
+    const entity = id.startsWith('I') ? getIntegration(id)?.entity : undefined;
+    if (entity) return entity;
+  }
+  return undefined;
+}
+
 export function holderOf(step: Pick<WorkflowStep, 'lane' | 'enablers'>): Holder {
-  return { lane: step.lane, name: holderNameOf(step) };
+  const entity = entityOf(step);
+  return { lane: step.lane, name: holderNameOf(step), ...(entity ? { entity } : {}) };
+}
+
+/** A decision, or a step that runs by itself: not something to put in a headline. */
+const passesByItself = (step: WorkflowStep): boolean => step.kind === 'gate' || step.kind === 'auto';
+
+/** The step a request's headline describes (see `RequestView.focus`). */
+function focusOf(request: RequestState, service: Pick<ServiceDetail, 'workflow'>, open: WorkflowStep | null, expectedAt: number | undefined): RequestView['focus'] {
+  if (!open || request.status === 'done' || request.status === 'stopped') return null;
+  if (!passesByItself(open) || waitsForInvestor(open)) return { step: open, holder: holderOf(open), ...(expectedAt !== undefined ? { expectedAt } : {}) };
+  const seen = new Set<number>([open.id]);
+  let nextId = successor(service.workflow, open, 'yes');
+  while (nextId !== null && !seen.has(nextId)) {
+    seen.add(nextId);
+    const step = findStep(service.workflow, nextId);
+    if (!step || isTerminal(step)) return null;
+    if (!passesByItself(step)) return { step, holder: holderOf(step) };
+    nextId = successor(service.workflow, step, 'yes');
+  }
+  return null;
 }
 
 const countsOnClock = (step: WorkflowStep): boolean => !waitsForInvestor(step) && !isTerminal(step) && step.kind !== 'gate' && !(step.kind === 'start' && step.lane === 'inv');
@@ -164,6 +201,7 @@ export function requestView(request: RequestState, service: ServiceDetail, now: 
     ...(open ? { heldSince: open.enteredAt } : {}),
     ...(expectedAt !== undefined ? { expectedAt } : {}),
     ...(finished && last ? { finishedAt: last.doneAt ?? request.updatedAt } : {}),
+    focus: focusOf(request, service, step, expectedAt),
   };
 }
 

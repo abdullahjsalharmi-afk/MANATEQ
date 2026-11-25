@@ -3,7 +3,7 @@
  * which plots are free, how the activity list is grouped, which render stands for a solution, and
  * what the result says in three short facts. No React here, so every rule is unit-tested.
  */
-import { getZone, solutions, zones } from '@/data/catalog';
+import { getActivity, getZone, solutions, zones } from '@/data/catalog';
 import type { Activity, L10n, Lang, SolutionKey, Zone } from '@/data/types';
 import type { Availability, EligibilityOutcome } from '@/domain/eligibility';
 import { plotsFor, type PlotCell } from '@/domain/plots';
@@ -18,6 +18,30 @@ export const DEFAULT_AREA = 5000;
 /** The smallest and largest area the check accepts, in m². */
 export const AREA_MIN = 100;
 export const AREA_MAX = 1_000_000;
+
+/**
+ * The few activities shown before any search (SPEC 4.0, the configurator: a search pill and a handful of
+ * chips): one per main sector of the zones. The whole register is a search or one tap away.
+ */
+export const POPULAR_ACTIVITIES = ['ACT-101', 'ACT-301', 'ACT-501', 'ACT-502', 'ACT-601', 'ACT-702'] as const;
+
+/**
+ * The chips to show before a search: the activity already chosen (when it is not the licensed one),
+ * then the popular ones, without repeats, at most `max`.
+ */
+export function quickActivities(chosen: string | null, licensed: string | undefined, max = 7): string[] {
+  const list: string[] = [];
+  for (const code of [chosen, ...POPULAR_ACTIVITIES]) {
+    if (!code || code === licensed || list.includes(code) || !getActivity(code)) continue;
+    list.push(code);
+  }
+  return list.slice(0, max);
+}
+
+/** True when an activity's verdict does not depend on the solution or the area (not targeted anywhere). */
+export function decidedByActivity(code: string | null): boolean {
+  return code !== null && getActivity(code)?.verdict === 'not_targeted';
+}
 
 /** The solutions in their published order: the land solutions first, ready-built warehousing last. */
 export const SOLUTION_ORDER: SolutionKey[] = solutions.map((solution) => solution.key);

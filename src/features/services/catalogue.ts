@@ -134,15 +134,20 @@ export function matchesReference(ref: string, query: string): boolean {
 
 /**
  * Where "start" leads: a service with its own screen opens it (the eligibility check is open to guests);
- * a guest is asked to sign in first; everyone else starts the generic or bespoke flow.
+ * a guest is asked to sign in first and comes back here after; everyone else starts the generic or bespoke flow.
  */
 export function startTarget(id: ServiceId, persona: Persona): string {
   const redirect = startRedirects[id];
   if (redirect) {
     if (persona !== 'guest' || resolveRoute(redirect)?.route.open) return redirect;
-    return '/welcome';
+    return signInThen(redirect);
   }
-  return persona === 'guest' ? '/welcome' : `/start/${id}`;
+  return persona === 'guest' ? signInThen(`/start/${id}`) : `/start/${id}`;
+}
+
+/** The welcome screen, asked to bring the guest back to `next` once signed in: "/welcome?next=%2Fstart%2FD1". */
+export function signInThen(next: string): string {
+  return `/welcome?next=${encodeURIComponent(next)}`;
 }
 
 /** Where an automatic service is followed, for the quiet link under its explanation. */

@@ -28,11 +28,6 @@
   color: var(--ink-2);
 }
 
-.accent {
-  background: var(--accent-tint);
-  color: var(--accent-ink);
-}
-
 /* The state colours take a touch of ink, so 12 px text on its tint clears 4.5 : 1 on paper as well as on white. */
 .gold {
   background: var(--gold-tint);
@@ -64,8 +59,8 @@
   color: color-mix(in srgb, var(--bad) 88%, var(--ink));
 }
 
-.solid.accent {
-  background: var(--accent);
+.solid.warn {
+  background: var(--warn);
   color: var(--on-accent);
 }
 

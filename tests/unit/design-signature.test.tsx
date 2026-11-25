@@ -472,7 +472,7 @@ describe('signature components', () => {
     // one plot is in the tab order: the chosen one
     expect(cells.filter((cell) => !cell.disabled && cell.tabIndex === 0).map((cell) => cell.dataset.plot)).toEqual(['BA-117']);
     expect(box.textContent).toContain('BA-117');
-    expect(box.textContent).toContain('5,000 م²');
+    expect(box.textContent?.replace(/\s/g, ' ')).toContain('5,000 م²');
     expect(box.textContent).toContain('مخطط توضيحي');
     click(box.querySelector('[data-plot="BA-102"]'));
     expect(chosen).toEqual(['BA-102']);
@@ -489,6 +489,28 @@ describe('signature components', () => {
     expect(box.querySelectorAll('[aria-pressed="true"]')).toHaveLength(0);
     expect(box.textContent).toContain('اختر قطعة متاحة');
     expect(box.querySelector('ul')?.textContent).toContain('قطعتك');
+  });
+
+  it('dims the available plots this request cannot use, and keeps the legend honest', () => {
+    const plots = plotsFor('BA');
+    const free = plots.filter((plot) => plot.status === 'available');
+    const big = Math.max(...free.map((plot) => plot.areaSqm));
+    const box = mount(<PlotGrid plots={plots} onSelect={() => undefined} isSelectable={(plot) => plot.areaSqm >= big} unfitLabel="أصغر من المساحة المطلوبة" />);
+    const unfit = free.filter((plot) => plot.areaSqm < big);
+    expect(unfit.length).toBeGreaterThan(0);
+    for (const plot of unfit) {
+      const cell = box.querySelector<HTMLButtonElement>(`[data-plot="${plot.id}"]`);
+      expect(cell?.disabled, plot.id).toBe(true);
+      expect(cell?.getAttribute('aria-label')).toContain('أصغر من المساحة المطلوبة');
+      expect(cell?.getAttribute('title')).toBe('أصغر من المساحة المطلوبة');
+    }
+    const tabbable = [...box.querySelectorAll<HTMLButtonElement>('button[data-plot]')].filter((cell) => !cell.disabled && cell.tabIndex === 0);
+    expect(tabbable).toHaveLength(1);
+    expect(plots.find((plot) => plot.id === tabbable[0]?.dataset.plot)?.areaSqm).toBe(big);
+    expect(box.querySelector('ul')?.textContent).toContain('أصغر من المساحة المطلوبة');
+    // Without the rule nothing is dimmed and the legend has no such key.
+    const plain = mount(<PlotGrid plots={plots} onSelect={() => undefined} />);
+    expect(plain.querySelector('ul')?.textContent).not.toContain('لا تناسب طلبك');
   });
 
   it('puts every zone on the map as a button and reports the chosen one', () => {

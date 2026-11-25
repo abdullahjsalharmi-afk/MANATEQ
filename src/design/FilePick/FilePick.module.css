@@ -12,6 +12,16 @@
   transition: border-color var(--d-1) var(--ease);
 }
 
+/* The group takes the keyboard while its document is checked (its buttons are hidden then). */
+.pick:focus {
+  outline: none;
+}
+
+.pick:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .pick:not([data-state='empty']) {
   border-style: solid;
   border-color: var(--line);

@@ -76,7 +76,8 @@ function must<T>(value: T | null | undefined, what: string): T {
 
 const query = <E extends Element = HTMLElement>(selector: string): E => must(document.body.querySelector<E>(selector), selector);
 const queryAll = <E extends Element = HTMLElement>(selector: string): E[] => Array.from(document.body.querySelectorAll<E>(selector));
-const byText = (selector: string, text: string): HTMLElement => must(queryAll(selector).find((el) => el.textContent?.trim() === text), `${selector} with text "${text}"`);
+// Spaces are compared loosely: formatted amounts and codes may use no-break spaces.
+const byText = (selector: string, text: string): HTMLElement => must(queryAll(selector).find((el) => el.textContent?.replace(/\s+/g, ' ').trim() === text), `${selector} with text "${text}"`);
 const textOf = (id: string): string => must(document.getElementById(id), `#${id}`).textContent ?? '';
 
 function click(element: Element): void {
@@ -335,6 +336,9 @@ describe('FilePick', () => {
     expect(state()).toBe('checking');
     expect(status()).toBe('Checking the document…');
     expect(seen).toEqual([]);
+    // Nothing to do while the check runs: Replace and Remove appear once it is done, and the keyboard stays on the document.
+    expect(query('[role="group"]').querySelectorAll('button')).toHaveLength(0);
+    expect(document.activeElement).toBe(query('[role="group"]'));
 
     advance(FILE_CHECK_MS - 100);
     expect(state()).toBe('checking');
@@ -478,7 +482,7 @@ describe('transaction sheets', () => {
     expect(onSigned).not.toHaveBeenCalled();
     advance(SIGN_MS + 50);
     expect(document.body.textContent).toContain('Signed');
-    expect(document.body.textContent).toContain('saved in your wallet');
+    expect(document.body.textContent).toContain('saved in Documents and passes');
 
     click(byText('button', 'Done'));
     expect(onSigned).toHaveBeenCalledTimes(1);

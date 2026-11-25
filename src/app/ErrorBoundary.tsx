@@ -1,8 +1,8 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 interface Props {
-  /** Shown instead of the broken screen. `retry` re-renders the children. */
-  fallback: (retry: () => void) => ReactNode;
+  /** Shown instead of the broken screen. `retry` re-renders the children; `error` is what was thrown. */
+  fallback: (retry: () => void, error: unknown) => ReactNode;
   /** Changing this value clears the error (e.g. the current route). */
   resetKey?: string;
   children: ReactNode;
@@ -10,19 +10,20 @@ interface Props {
 
 interface State {
   failed: boolean;
+  error: unknown;
   key: string | undefined;
 }
 
 /** Keeps one broken screen from taking the whole app down. */
 export class ErrorBoundary extends Component<Props, State> {
-  override state: State = { failed: false, key: this.props.resetKey };
+  override state: State = { failed: false, error: undefined, key: this.props.resetKey };
 
-  static getDerivedStateFromError(): Partial<State> {
-    return { failed: true };
+  static getDerivedStateFromError(error: unknown): Partial<State> {
+    return { failed: true, error };
   }
 
   static getDerivedStateFromProps(props: Props, state: State): Partial<State> | null {
-    if (props.resetKey !== state.key) return { failed: false, key: props.resetKey };
+    if (props.resetKey !== state.key) return { failed: false, error: undefined, key: props.resetKey };
     return null;
   }
 
@@ -31,7 +32,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override render(): ReactNode {
-    if (this.state.failed) return this.props.fallback(() => this.setState({ failed: false }));
+    if (this.state.failed) return this.props.fallback(() => this.setState({ failed: false, error: undefined }), this.state.error);
     return this.props.children;
   }
 }

@@ -31,6 +31,11 @@ export interface PaySheetProps {
   reference: string;
   /** Called once, when the person leaves the confirmation. */
   onPaid: () => void;
+  /**
+   * Opens the receipt. When given, the confirmation's one pill is «اعرض الإيصال» and «تم» becomes a quiet link.
+   * It is called after `onPaid`, so the receipt is already filed.
+   */
+  onViewReceipt?: () => void;
 }
 
 /**
@@ -38,7 +43,7 @@ export interface PaySheetProps {
  * It is a simulation and says so: there are no card or account fields and nothing is charged.
  * While the payment is "processing" the sheet cannot be dismissed.
  */
-export function PaySheet({ open, onClose, title, lines, amount, reference, onPaid }: PaySheetProps) {
+export function PaySheet({ open, onClose, title, lines, amount, reference, onPaid, onViewReceipt }: PaySheetProps) {
   const t = useT(strings);
   const doneId = useId();
   const [phase, setPhase] = useState<PayPhase>('review');
@@ -57,7 +62,7 @@ export function PaySheet({ open, onClose, title, lines, amount, reference, onPai
     return () => clearTimeout(timer.current);
   }, [open]);
 
-  // The pay button gives way to "Done": put the keyboard there.
+  // The pay button gives way to the confirmation's pill: put the keyboard there.
   useEffect(() => {
     if (phase === 'success') document.getElementById(doneId)?.focus();
   }, [phase, doneId]);
@@ -78,14 +83,21 @@ export function PaySheet({ open, onClose, title, lines, amount, reference, onPai
     onClose();
   };
 
+  const viewReceipt = onViewReceipt
+    ? () => {
+        finish();
+        onViewReceipt();
+      }
+    : undefined;
+
   return (
     <Sheet
       open={open}
       onClose={phase === 'success' ? finish : onClose}
-      title={title}
+      title={phase === 'success' ? t('paidTitle') : title}
       dismissible={phase !== 'processing'}
       closeLabel={t('close')}
-      footer={<PayFooter phase={phase} amount={amount} onPay={pay} onDone={finish} doneId={doneId} />}
+      footer={<PayFooter phase={phase} amount={amount} onPay={pay} onDone={finish} onViewReceipt={viewReceipt} doneId={doneId} />}
     >
       <ReturnFocus />
       <div ref={contentRef}>
@@ -155,14 +167,28 @@ export interface PayFooterProps {
   amount: number;
   onPay?: () => void;
   onDone?: () => void;
-  /** The id of the "Done" button, so the sheet can move focus to it. */
+  /** When given, the confirmation leads to the receipt and «تم» becomes a quiet link. */
+  onViewReceipt?: () => void;
+  /** The id of the confirmation's pill, so the sheet can move focus to it. */
   doneId?: string;
 }
 
 /** The one button of the payment sheet: pay, then done. */
-export function PayFooter({ phase, amount, onPay, onDone, doneId }: PayFooterProps) {
+export function PayFooter({ phase, amount, onPay, onDone, onViewReceipt, doneId }: PayFooterProps) {
   const t = useT(strings);
   const { fmt } = useLang();
+  if (phase === 'success' && onViewReceipt) {
+    return (
+      <div className={styles.successActions}>
+        <Button block id={doneId} className={sheetActionClass} onClick={onViewReceipt}>
+          {t('viewReceipt')}
+        </Button>
+        <Button variant="quiet" onClick={onDone}>
+          {t('done')}
+        </Button>
+      </div>
+    );
+  }
   if (phase === 'success') {
     return (
       <Button block id={doneId} className={sheetActionClass} onClick={onDone}>

@@ -17,6 +17,7 @@ import { selectPlots, selectRequest, startRequest, useApp } from '@/state';
 import { ConfirmationTile, FlowFailed, FlowLoading, leaveFlow, OptionCard, Question } from '../maintenance/parts/Parts';
 import { initialPlotId, plotOptions } from '../maintenance/parts/plots';
 import { partsStrings } from '../maintenance/parts/strings';
+import { useChoiceGroup } from '../shared/Choice';
 import { alertedParties, incidentIcon, type AlertedParty } from './alerted';
 import styles from './IncidentFlow.module.css';
 import { strings } from './strings';
@@ -74,6 +75,8 @@ function IncidentSteps({ service, onSubmitted }: { service: ServiceDetail; onSub
     setType(value);
     setStep(2);
   };
+  // One tap chooses and moves on; the arrow keys only move between the types.
+  const typeChoice = useChoiceGroup({ keys: types.map((option) => option.value), value: type, onPick: choose, onMove: setType, label: t('types') });
 
   const send = () => {
     if (!type) return;
@@ -96,9 +99,9 @@ function IncidentSteps({ service, onSubmitted }: { service: ServiceDetail; onSub
         </Card>
         <div className={styles.types}>
           <Question hint={t('whatHint')}>{t('whatQ')}</Question>
-          <Grid as="ul" compact columns={4} aria-label={t('types')}>
+          <Grid compact columns={4} {...typeChoice.group}>
             {types.map((option) => (
-              <OptionCard key={option.value} size="lg" icon={incidentIcon(option.value)} label={pick(option)} selected={type === option.value} onSelect={() => choose(option.value)} />
+              <OptionCard key={option.value} size="lg" icon={incidentIcon(option.value)} label={pick(option)} item={typeChoice.item(option.value)} />
             ))}
           </Grid>
         </div>

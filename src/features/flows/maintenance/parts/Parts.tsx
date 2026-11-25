@@ -6,8 +6,9 @@ import { CircleAlert, CircleCheck, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useT } from '@/app/i18n';
 import { back } from '@/app/router';
-import { Button, Card, Icon, Screen, Tile, cx } from '@/design/core';
+import { Button, Icon, Screen, Tile, cx } from '@/design/core';
 import { EmptyState, Skeleton } from '@/design/forms';
+import { ChoiceCard, type ChoiceCardProps } from '../../shared/Choice';
 import styles from './Parts.module.css';
 import { partsStrings } from './strings';
 
@@ -16,16 +17,20 @@ export interface OptionCardProps {
   label: string;
   /** One short line under the label. */
   detail?: string;
-  selected: boolean;
-  onSelect: () => void;
+  /** The radio of the card, from `useChoiceGroup().item(key)`: one choice of the group. */
+  item: ChoiceCardProps['item'];
   /** Taller card with a larger glyph (the emergency types). */
   size?: 'md' | 'lg';
 }
 
-/** A large option card: a glyph and a word. Selected is the 2 px accent border of `Card`. Use inside `<Grid as="ul">`. */
-export function OptionCard({ icon, label, detail, selected, onSelect, size = 'md' }: OptionCardProps) {
+/**
+ * A large option card: a glyph and a word, one radio of a `useChoiceGroup` group (put the group's
+ * props on the `Grid` around the cards). Chosen is the 2 px accent border.
+ */
+export function OptionCard({ icon, label, detail, item, size = 'md' }: OptionCardProps) {
+  const selected = item['aria-checked'];
   return (
-    <Card as="li" pad="sm" onClick={onSelect} selected={selected} className={cx(styles.option, size === 'lg' && styles.optionLarge)}>
+    <ChoiceCard item={item} pad="sm" className={cx(styles.option, size === 'lg' && styles.optionLarge)}>
       <span className={cx(styles.optionIcon, selected && styles.optionIconOn)} aria-hidden="true">
         <Icon icon={icon} size={size === 'lg' ? 32 : 26} />
       </span>
@@ -33,14 +38,18 @@ export function OptionCard({ icon, label, detail, selected, onSelect, size = 'md
         <span className={styles.optionLabel}>{label}</span>
         {detail ? <span className={styles.optionDetail}>{detail}</span> : null}
       </span>
-    </Card>
+    </ChoiceCard>
   );
 }
 
-/** The question of a flow step: one line in `--t-title`, with an optional quiet line under it. */
-export function Question({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
+/**
+ * The question of a flow step: the quiet step caption ("الخطوة 2 من 3") when there is one, the question
+ * in `--t-title`, and an optional quiet line under it. The same head as the start flow's pages.
+ */
+export function Question({ children, hint, where }: { children: ReactNode; hint?: ReactNode; where?: string }) {
   return (
     <div className={styles.question}>
+      {where ? <p className={styles.where}>{where}</p> : null}
       <h2 className={cx('type-title', styles.questionText)}>{children}</h2>
       {hint ? <p className={styles.questionHint}>{hint}</p> : null}
     </div>

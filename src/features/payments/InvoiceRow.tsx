@@ -2,6 +2,8 @@ import { CircleAlert, CircleCheck, Clock, type LucideIcon } from 'lucide-react';
 import { useLang, useT } from '@/app/i18n';
 import { cx, Icon, Money, Row } from '@/design/core';
 import type { Invoice } from '@/domain/types';
+import { unbroken } from '@/features/wallet/logic';
+import { CodedText } from '@/features/wallet/Unbroken';
 import { dueLine, type DueLine } from './logic';
 import styles from './Payments.module.css';
 import { plurals, strings } from './strings';
@@ -13,14 +15,14 @@ export interface InvoiceRowProps {
 
 const DUE_ICON: Record<DueLine['kind'], LucideIcon> = { paid: CircleCheck, overdue: CircleAlert, today: Clock, soon: Clock, later: Clock };
 
-/** The due line as text: "يستحق خلال 5 أيام", "متأخر منذ يومين", "دُفع في 3 مارس 2026". */
+/** The due line as text: "تستحق خلال 5 أيام", "متأخرة منذ يومين", "دُفعت في 3 مارس 2026". */
 export function useDueText(): (line: DueLine) => string {
   const t = useT(strings);
   const { fmt } = useLang();
   return (line) => {
     switch (line.kind) {
       case 'paid':
-        return t('paidOn', { date: fmt.date(line.at) });
+        return t('paidOn', { date: unbroken(fmt.date(line.at)) });
       case 'overdue':
         return fmt.plural(line.days, plurals.overdue);
       case 'today':
@@ -28,7 +30,7 @@ export function useDueText(): (line: DueLine) => string {
       case 'soon':
         return fmt.plural(line.days, plurals.dueIn);
       case 'later':
-        return t('dueOn', { date: fmt.date(line.at) });
+        return t('dueOn', { date: unbroken(fmt.date(line.at)) });
     }
   };
 }
@@ -51,7 +53,7 @@ export function InvoiceRow({ invoice, now }: InvoiceRowProps) {
   return (
     <Row
       to={`/account/payments/${invoice.id}`}
-      title={pick(invoice.title)}
+      title={<CodedText text={pick(invoice.title)} />}
       subtitle={<DueText invoice={invoice} now={now} />}
       trailing={<Money amount={invoice.amount} />}
       wrap

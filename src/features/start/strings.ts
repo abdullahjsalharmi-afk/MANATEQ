@@ -48,9 +48,9 @@ export const strings = {
   // Submitted.
   submittedName: { ar: 'تم الاستلام', en: 'Received' },
   submittedHeadline: { ar: 'تم استلام طلبك', en: 'Request received' },
-  reference: { ar: 'رقم الطلب', en: 'Request number' },
-  copyReference: { ar: 'انسخ رقم الطلب {ref}', en: 'Copy request number {ref}' },
-  copied: { ar: 'نُسخ رقم الطلب', en: 'Request number copied' },
+  reference: { ar: 'الرقم المرجعي', en: 'Reference' },
+  copyReference: { ar: 'انسخ الرقم المرجعي {ref}', en: 'Copy reference {ref}' },
+  copied: { ar: 'نُسخ الرقم المرجعي', en: 'Reference copied' },
   whatNext: { ar: 'ماذا يحدث الآن', en: 'What happens now' },
   whatNextHint: { ar: 'أول خطوات طلبك ومن يتولاها.', en: 'The first steps of your request and who holds them.' },
   nextLabel: { ar: 'الخطوات التالية', en: 'Next steps' },
@@ -62,7 +62,7 @@ export const strings = {
   leaveTitle: { ar: 'هل تحتفظ بما أدخلته؟', en: 'Keep what you entered?' },
   leaveBody: { ar: 'نحفظ مسودتك لتكمل لاحقًا من حيث توقفت.', en: 'We keep your draft so you can continue later where you left off.' },
   later: { ar: 'متابعة لاحقًا', en: 'Continue later' },
-  discard: { ar: 'تجاهل', en: 'Discard' },
+  discard: { ar: 'احذف المسودة', en: 'Delete draft' },
 
   // States.
   notFoundName: { ar: 'خدمة غير موجودة', en: 'Service not found' },

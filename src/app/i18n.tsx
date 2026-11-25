@@ -20,12 +20,30 @@ export interface PluralForms {
 
 const LOCALE: Record<Lang, string> = { ar: 'ar-QA-u-nu-latn-ca-gregory', en: 'en-GB' };
 
-const LRI = '⁦';
-const PDI = '⁩';
+const LRI = '\u2066';
+const PDI = '\u2069';
+/** WORD JOINER: invisible, forbids a line break where it stands. */
+const WJ = '\u2060';
+/** NO-BREAK SPACE. */
+const NBSP = '\u00A0';
 
-/** Wraps a left-to-right fragment (a reference number, a percentage, Latin text) so it keeps its order inside Arabic. */
+/**
+ * Keeps a code whole on one line: no break after the hyphens of «AW-116», «RCP-2026-0049», «TSD-58SD-7KX8».
+ * The hyphen itself is unchanged (a word joiner follows it), so the code reads, copies and pastes as before
+ * once the joiner is ignored. Use it for codes in text that is not passed through `ltr()`.
+ */
+export function keep(text: string | number): string {
+  return String(text).replace(/(\S)-(?=\S)/g, `$1-${WJ}`);
+}
+
+/** Wraps a left-to-right fragment (a reference number, a percentage, Latin text) so it keeps its order inside Arabic, and keeps a code whole. */
 export function ltr(text: string | number): string {
-  return `${LRI}${text}${PDI}`;
+  return `${LRI}${keep(text)}${PDI}`;
+}
+
+/** Joins the words of a short value (a date, an amount) with no-break spaces, so it never splits across lines. */
+function whole(text: string): string {
+  return text.replace(/ /g, NBSP);
 }
 
 export function interpolate(template: string, vars?: Vars): string {
@@ -36,7 +54,7 @@ export function interpolate(template: string, vars?: Vars): string {
 export interface Formatters {
   /** 18,750 */
   num(n: number, maxFractionDigits?: number): string;
-  /** 18,750 ر.ق · QAR 18,750 */
+  /** 18,750 ر.ق · QAR 18,750 (one unbreakable unit) */
   money(n: number): string;
   /** 5,000 م² · 5,000 m² */
   area(n: number): string;
@@ -44,7 +62,7 @@ export interface Formatters {
   areaShort(n: number): string;
   /** 94% (always left-to-right) */
   pct(n: number): string;
-  /** 19 نوفمبر 2026 · 19 Nov 2026 */
+  /** 19 نوفمبر 2026 · 19 Nov 2026 (one unbreakable unit) */
   date(ms: number): string;
   /** 19 نوفمبر · 19 Nov */
   dayMonth(ms: number): string;
@@ -54,8 +72,10 @@ export interface Formatters {
   relative(ms: number, now: number): string;
   /** Chooses the plural form for `n` and fills `{n}`. */
   plural(n: number, forms: PluralForms): string;
-  /** A left-to-right fragment, e.g. a reference number. */
+  /** A left-to-right fragment, e.g. a reference number, kept on one line. */
   ltr(text: string | number): string;
+  /** A code kept on one line, without the direction isolates (English text). */
+  keep(text: string | number): string;
 }
 
 export function makeFormatters(lang: Lang): Formatters {
@@ -72,18 +92,18 @@ export function makeFormatters(lang: Lang): Formatters {
 
   return {
     num,
-    money: (n) => (lang === 'ar' ? `${num(n)} ر.ق` : `QAR ${num(n)}`),
-    area: (n) => (lang === 'ar' ? `${num(n)} م²` : `${num(n)} m²`),
+    money: (n) => whole(lang === 'ar' ? `${num(n)} ر.ق` : `QAR ${num(n)}`),
+    area: (n) => whole(lang === 'ar' ? `${num(n)} م²` : `${num(n)} m²`),
     areaShort: (n) => {
       if (n >= 1_000_000) {
         const m = num(n / 1_000_000, 1);
-        return lang === 'ar' ? `${m} مليون م²` : `${m}M m²`;
+        return whole(lang === 'ar' ? `${m} مليون م²` : `${m}M m²`);
       }
-      return lang === 'ar' ? `${num(n)} م²` : `${num(n)} m²`;
+      return whole(lang === 'ar' ? `${num(n)} م²` : `${num(n)} m²`);
     },
     pct: (n) => ltr(`${num(n)}%`),
-    date: (ms) => dateFmt.format(ms),
-    dayMonth: (ms) => dayMonthFmt.format(ms),
+    date: (ms) => whole(dateFmt.format(ms)),
+    dayMonth: (ms) => whole(dayMonthFmt.format(ms)),
     time: (ms) => timeFmt.format(ms),
     relative: (ms, now) => {
       const diff = ms - now;
@@ -111,6 +131,7 @@ export function makeFormatters(lang: Lang): Formatters {
       return interpolate(template, { n: num(n) });
     },
     ltr,
+    keep,
   };
 }
 

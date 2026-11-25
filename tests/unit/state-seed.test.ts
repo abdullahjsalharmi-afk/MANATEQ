@@ -11,6 +11,9 @@ import { STATE_VERSION, calendarTiming, emptyWorld, initialSettings, initialStat
 import { actIn, cancelIn, fastForwardIn, payInvoiceIn, startIn, tickWorld } from '@/state/sim';
 import { holdOf, type Env } from '@/state/types';
 
+/** Display text keeps codes and amounts whole with invisible joiners and no-break spaces; compare it as plain text. */
+const plain = (text: string | undefined): string | undefined => text?.replace(/\u2060/g, '').replace(/\u00A0/g, ' ');
+
 const DAY = 86_400_000;
 const HOUR = 3_600_000;
 /** A Thursday morning, a Sunday night and the turn of a year: seeds must hold at any moment. */
@@ -335,7 +338,7 @@ describe('the tenant', () => {
     expect(invoices.map((invoice) => invoice.status)).toEqual(['paid', 'paid', 'due']);
     const due = invoices[2];
     expect(due?.dueAt).toBe(NOW + 5 * DAY);
-    expect(due?.title.en).toBe('Rent, Q4 2026 · BA-121');
+    expect(plain(due?.title.en)).toBe('Rent, Q4 2026 · BA-121');
     expect(due?.title.ar).toContain('إيجار الربع الرابع 2026');
   });
 

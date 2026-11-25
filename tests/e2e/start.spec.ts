@@ -38,7 +38,7 @@ test('the tenant sends a complaint (E6) and lands on the request', async ({ page
 
   // 5. Received: reference, next steps, track.
   await expect(page.getByRole('heading', { name: 'Request received' })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Copy request number MQ-/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Copy reference MQ-/ })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'What happens now' })).toBeVisible();
   await page.getByRole('button', { name: 'Track request' }).click();
   await expect(page).toHaveURL(/#\/requests\/r\d+/);
@@ -53,6 +53,23 @@ test('closing with answers offers to keep the draft', async ({ page }) => {
   await expect(page.getByRole('dialog', { name: 'هل تحتفظ بما أدخلته؟' })).toBeVisible();
   await page.getByRole('button', { name: 'متابعة لاحقًا' }).click();
   await expect(page).not.toHaveURL(/#\/start\//);
+  // The service page says the draft is there and continues it.
+  await page.goto(page.url().replace(/#.*$/, '#/services/B8'));
+  await expect(page.getByRole('link', { name: 'أكمل طلبك' })).toBeVisible();
+  await expect(page.getByText('مسودة محفوظة · الخطوة 2 من 3')).toBeVisible();
+});
+
+test('the appointment day is asked only when an appointment is wanted (E1)', async ({ page }) => {
+  await openApp(page, { route: '/start/E1', lang: 'en' });
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText('Preferred appointment day')).toHaveCount(0);
+  await page.getByText('I want to book an appointment').click();
+  await expect(page.getByText('Preferred appointment day').first()).toBeVisible();
+  await page.getByText('I want to book an appointment').click();
+  await page.getByRole('textbox', { name: /How can we help/ }).fill('A meeting about my lease');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByRole('heading', { name: 'Check and send' })).toBeVisible();
+  await expect(page.getByText('Preferred appointment day')).toHaveCount(0);
 });
 
 test('a guest is asked to sign in, and an automatic service explains itself', async ({ page }) => {

@@ -27,9 +27,14 @@ test('the investor accepts, signs and pays the renewal, and the request moves on
   // Payment (a simulation).
   const pay = page.getByRole('dialog');
   await pay.getByRole('button', { name: /^Pay QAR/ }).click();
+  // The confirmation names the receipt that was really filed (the invoice's number), not the request's.
+  const receipt = pay.getByText(/^RCP-\d{4}-\d{4}$/);
+  await expect(receipt).toBeVisible();
+  const ref = (await receipt.textContent())?.trim() ?? '';
   await pay.getByRole('button', { name: 'Done' }).click();
 
-  await expect(page.getByText('Done. The request moves on.')).toBeVisible();
+  await expect(page.getByText(`Paid. Receipt ${ref} is in your wallet.`)).toBeVisible();
+  await expect(page.getByRole('main').getByText(ref).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Waiting for you' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Accept and renew' })).toHaveCount(0);
   expect(errors).toEqual([]);
@@ -49,11 +54,11 @@ test('a running request moves on when time is moved forward', async ({ page }) =
   const errors = watchErrors(page);
   await openApp(page, { route: '/requests', lang: 'en', speed: 1 });
   await page.getByRole('link', { name: /Your building permit status/ }).first().click();
-  await expect(page.getByRole('heading', { name: 'Ministry of Municipality permits' })).toBeVisible();
-  const tagline = await page.locator('main').getByText('NOC and conditions exchanged electronically').first().isVisible();
-  expect(tagline).toBe(true);
+  // The holder is the entity, named the same way in both languages; the building permit has no day clock.
+  await expect(page.getByRole('heading', { name: 'Ministry of Municipality' })).toBeVisible();
+  await expect(page.getByText(/Day 1 of 1/)).toHaveCount(0);
   await page.getByRole('button', { name: 'Move time forward (demo)' }).click();
-  await expect(page.getByRole('heading', { name: 'Ministry of Municipality permits' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Ministry of Municipality' })).toHaveCount(0);
   await expect(page.getByRole('status').filter({ hasText: /The request (moved on|is complete)/ })).toHaveCount(1);
   expect(errors).toEqual([]);
 });
@@ -61,5 +66,5 @@ test('a running request moves on when time is moved forward', async ({ page }) =
 test('the list switches to completed requests and groups a thread', async ({ page }) => {
   await openApp(page, { route: '/requests', lang: 'ar' });
   await page.getByRole('radio', { name: /مكتملة/ }).or(page.getByRole('tab', { name: /مكتملة/ })).or(page.getByRole('button', { name: /مكتملة/ })).first().click();
-  await expect(page.getByText(/جزء من: قدّم طلب أرض/)).toBeVisible();
+  await expect(page.getByText(/جزء من: طلب أرض/)).toBeVisible();
 });

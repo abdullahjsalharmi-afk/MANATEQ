@@ -27,6 +27,8 @@
 }
 
 .title {
+  /* The heading takes the focus only when the section's action removes itself: no ring, like the screen's main. */
+  outline: none;
   font-size: var(--t-heading);
   font-weight: var(--w-strong);
   line-height: var(--lh-heading);

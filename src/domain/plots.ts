@@ -3,6 +3,7 @@
  * grid of plots that is invented but stable: the same zone always shows the same plots, statuses and
  * areas, on every device and in every session. It is always shown with an "illustrative" label.
  */
+import type { Lease, World } from './types';
 
 export type PlotCellStatus = 'available' | 'allocated' | 'reserved';
 
@@ -86,4 +87,14 @@ export function plotsFor(zoneCode: string): PlotCell[] {
 /** One plot of a zone by its id ("BA-117"), or undefined when the zone has no such plot. */
 export function findPlot(zoneCode: string, id: string): PlotCell | undefined {
   return plotsFor(zoneCode).find((cell) => cell.id === id);
+}
+
+/**
+ * The lease of one of the investor's plots: the one the plot record points at (`plot.leaseId`), which is
+ * its current lease. A plot leased again later keeps pointing at the newer one. Undefined before signing.
+ */
+export function leaseOfPlot(world: Pick<World, 'plots' | 'leases'>, plotId: string | undefined): Lease | undefined {
+  if (plotId === undefined) return undefined;
+  const leaseId = world.plots.find((plot) => plot.id === plotId)?.leaseId;
+  return leaseId === undefined ? undefined : world.leases.find((lease) => lease.id === leaseId);
 }

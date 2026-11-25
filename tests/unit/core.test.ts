@@ -24,18 +24,29 @@ describe('formatting', () => {
   });
 
   it('formats money and areas', () => {
-    expect(ar.fmt.money(18750)).toBe('18,750 ر.ق');
-    expect(en.fmt.money(18750)).toBe('QAR 18,750');
-    expect(ar.fmt.area(5000)).toBe('5,000 م²');
-    expect(en.fmt.areaShort(48_627_455)).toBe('48.6M m²');
-    expect(ar.fmt.areaShort(48_627_455)).toBe('48.6 مليون م²');
+    // Amounts and areas are one unit: no-break spaces keep the number and its unit on one line.
+    expect(ar.fmt.money(18750)).toBe('18,750\u00A0ر.ق');
+    expect(en.fmt.money(18750)).toBe('QAR\u00A018,750');
+    expect(ar.fmt.area(5000)).toBe('5,000\u00A0م²');
+    expect(en.fmt.areaShort(48_627_455)).toBe('48.6M\u00A0m²');
+    expect(ar.fmt.areaShort(48_627_455)).toBe('48.6\u00A0مليون\u00A0م²');
+  });
+
+  it('keeps codes and dates whole on one line', () => {
+    const WJ = '\u2060';
+    expect(ar.fmt.ltr('AW-116')).toBe(`\u2066AW-${WJ}116\u2069`);
+    expect(en.fmt.keep('RCP-2026-0049')).toBe(`RCP-${WJ}2026-${WJ}0049`);
+    // A lone or leading hyphen is left alone.
+    expect(en.fmt.keep('-5 – 3')).toBe('-5 – 3');
+    expect(en.fmt.date(Date.UTC(2026, 9, 13, 9))).toBe('13\u00A0Oct\u00A02026');
+    expect(ar.fmt.date(Date.UTC(2026, 7, 27, 9))).not.toContain(' ');
   });
 
   it('formats dates in the Gregorian calendar', () => {
     const day = Date.UTC(2026, 10, 19, 9, 0, 0);
     expect(ar.fmt.date(day)).toContain('2026');
     expect(ar.fmt.date(day)).toContain('نوفمبر');
-    expect(en.fmt.date(day)).toBe('19 Nov 2026');
+    expect(en.fmt.date(day)).toBe('19\u00A0Nov\u00A02026');
   });
 
   it('picks Arabic plural forms', () => {

@@ -64,3 +64,19 @@ export function StepError({ id, children }: { id?: string; children: ReactNode }
     </p>
   );
 }
+
+/**
+ * After a Continue that found something missing: brings the first marked field (or the first message)
+ * into the middle of the view and moves the keyboard to it, so the investor sees why nothing happened.
+ * Runs once React has drawn the messages.
+ */
+export function revealFirstError(): void {
+  window.setTimeout(() => {
+    const target = document.querySelector<HTMLElement>('main [aria-invalid="true"], main [role="alert"]');
+    if (!target) return;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    target.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+    if (!target.matches('input, select, textarea, button, [tabindex]')) target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
+  }, 0);
+}

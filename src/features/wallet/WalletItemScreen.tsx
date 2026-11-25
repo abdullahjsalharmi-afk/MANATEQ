@@ -8,9 +8,11 @@ import { DocCard, PassCard } from '@/design/signature';
 import { getZone } from '@/data/catalog';
 import type { Doc, Pass } from '@/domain/types';
 import { useNow } from '@/features/shared/useNow';
-import { plotIdOfDoc, revokePass, selectDoc, selectPass, selectPlots, useApp, useCatalogueReady } from '@/state';
-import { holderName, passValidity, verifyUrl } from './logic';
+import { plotIdOfDoc, revokePass, selectDoc, selectPass, selectPlot, selectPlots, selectRequest, useApp, useCatalogueReady } from '@/state';
+import { canPrint, canShare } from './device';
+import { holderName, passMoment, passValidity, verifyUrl } from './logic';
 import { strings } from './strings';
+import { Atom } from './Unbroken';
 import { VerifySheet } from './VerifySheet';
 import styles from './Wallet.module.css';
 
@@ -48,12 +50,14 @@ async function copyText(text: string): Promise<boolean> {
 function DocView({ doc }: { doc: Doc }) {
   const t = useT(strings);
   const { pick, fmt } = useLang();
-  const world = useApp((state) => state.world);
+  // Only what this page shows: the request and the plot of the document, not the whole world.
+  const request = useApp(selectRequest(doc.requestId));
+  const plotId = useApp((state) => plotIdOfDoc(state.world, doc));
+  const plot = useApp(selectPlot(plotId));
   const [checking, setChecking] = useState(false);
+  const [printable] = useState(canPrint);
+  const [shareable] = useState(canShare);
   const title = pick(doc.title);
-  const request = doc.requestId === undefined ? undefined : world.requests.find((candidate) => candidate.id === doc.requestId);
-  const plotId = plotIdOfDoc(world, doc);
-  const plot = plotId === undefined ? undefined : world.plots.find((candidate) => candidate.id === plotId);
 
   const copy = async () => {
     const ok = await copyText(doc.verifyCode);
@@ -62,16 +66,13 @@ function DocView({ doc }: { doc: Doc }) {
 
   const share = async () => {
     const text = t('shareText', { title, code: doc.verifyCode });
-    if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share({ title, text, url: verifyUrl(doc.verifyCode) });
-        return;
-      } catch (error) {
-        // The person closed the share sheet: nothing more to do.
-        if (error instanceof DOMException && error.name === 'AbortError') return;
-      }
+    try {
+      await navigator.share({ title, text, url: verifyUrl(doc.verifyCode) });
+    } catch (error) {
+      // The person closed the share sheet: nothing more to do. Any other failure: the code is copied instead.
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      await copy();
     }
-    await copy();
   };
 
   return (
@@ -98,24 +99,30 @@ function DocView({ doc }: { doc: Doc }) {
             <Button block icon={ShieldCheck} onClick={() => setChecking(true)}>
               {t('verify')}
             </Button>
-            <div className={styles.secondary}>
-              <Button variant="secondary" icon={Share2} onClick={share}>
-                {t('share')}
-              </Button>
-              <Button variant="secondary" icon={Printer} onClick={() => window.print()}>
-                {t('savePdf')}
-              </Button>
-            </div>
+            {shareable || printable ? (
+              <div className={styles.secondary}>
+                {shareable ? (
+                  <Button variant="quiet" size="sm" icon={Share2} onClick={share}>
+                    {t('share')}
+                  </Button>
+                ) : null}
+                {printable ? (
+                  <Button variant="quiet" size="sm" icon={Printer} onClick={() => window.print()}>
+                    {t('savePdf')}
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           <List className={styles.asideList}>
-            <Row title={<span className="ltr num">{doc.verifyCode}</span>} subtitle={t('copyCode')} trailing={<Icon icon={Copy} size={20} />} onClick={copy} chevron={false} />
+            <Row title={<Atom code>{doc.verifyCode}</Atom>} subtitle={t('copyCode')} trailing={<Icon icon={Copy} size={20} />} onClick={copy} chevron={false} />
             <Row title={pick(doc.issuer)} subtitle={t('issuer')} />
             <Row title={t(doc.signed ? 'signedYes' : 'signedNo')} subtitle={t('status')} />
-            {request ? <Row title={<span className="ltr num">{request.ref}</span>} subtitle={t('fromRequest')} to={`/requests/${request.id}`} /> : null}
-            {plot ? <Row title={<span className="ltr num">{plot.number}</span>} subtitle={t('plot')} to={`/account/plots/${plot.id}`} /> : null}
+            {request ? <Row title={<Atom code>{request.ref}</Atom>} subtitle={t('fromRequest')} to={`/requests/${request.id}`} /> : null}
+            {plot ? <Row title={<Atom code>{plot.number}</Atom>} subtitle={t('plot')} to={`/account/plots/${plot.id}`} /> : null}
           </List>
-          <p className={styles.fine}>{t('printNote')}</p>
+          {printable ? <p className={styles.fine}>{t('printNote')}</p> : null}
         </aside>
       </div>
 
@@ -136,7 +143,6 @@ function PassView({ pass }: { pass: Pass }) {
   const validity = passValidity(pass, now);
   const live = validity.state === 'valid' || validity.state === 'upcoming';
   const holder = holderName(pass.holder, lang);
-  const when = (ms: number) => `${fmt.date(ms)}${lang === 'ar' ? '، ' : ', '}${fmt.time(ms)}`;
 
   const revoke = () => {
     revokePass(pass.id);
@@ -154,8 +160,8 @@ function PassView({ pass }: { pass: Pass }) {
           company={pass.company === undefined ? undefined : holderName(pass.company, lang)}
           zone={pick(zone?.name) || zoneCode || ''}
           plot={plot?.number ?? pass.plotId}
-          validFrom={when(pass.from)}
-          validTo={when(pass.to)}
+          validFrom={passMoment(pass.from, fmt, lang)}
+          validTo={passMoment(pass.to, fmt, lang)}
           status={live ? 'active' : pass.status === 'revoked' ? 'revoked' : 'expired'}
           code={pass.code}
           qr={<QR value={pass.code} size={200} label={t('qrPass', { holder })} />}

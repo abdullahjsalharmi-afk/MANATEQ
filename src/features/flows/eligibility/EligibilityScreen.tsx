@@ -12,12 +12,13 @@ import { useLang, useT } from '@/app/i18n';
 import { getActivity, getSolution, getZone, solutions } from '@/data/catalog';
 import type { SolutionKey } from '@/data/types';
 import { checkEligibility, estimateAnnualRent, searchActivities, toEligibilityResult, UNLISTED_ACTIVITY, type EligibilityInput } from '@/domain/eligibility';
-import { Button, Card, Chip, ChipRow, Grid, Icon, Render, Screen, cx, toast } from '@/design/core';
+import { Button, Chip, ChipRow, Icon, Render, Screen, Sheet, cx, toast } from '@/design/core';
 import { EmptyState, NumberField, SearchField, Skeleton, Stepper } from '@/design/forms';
 import { saveEligibility, selectCompany, selectPersona, startRequest, useApp } from '@/state';
-import { AREA_PICKS, DEFAULT_AREA, groupBySector, isValidArea, layoutAvailability, SOLUTION_ORDER, SOLUTION_RENDER, zonesOffering } from './model';
+import { AREA_PICKS, DEFAULT_AREA, decidedByActivity, groupBySector, isValidArea, layoutAvailability, quickActivities, SOLUTION_ORDER, SOLUTION_RENDER, zonesOffering } from './model';
 import { EligibilityResultView, primaryOf, type Primary } from './Result';
-import { FinePrint, StepError, StepHead, useStepFocus } from './parts';
+import { FinePrint, revealFirstError, StepError, StepHead, useStepFocus } from './parts';
+import { ChoiceCard, useChoiceGroup } from '../shared/Choice';
 import { useTakenPlots } from './useTakenPlots';
 import { strings } from './strings';
 import styles from './Flow.module.css';
@@ -40,11 +41,12 @@ export function EligibilityScreen() {
   const saved = useApp((state) => state.world.eligibility);
   const taken = useTakenPlots();
 
-  // Answers: from the link first, then the last saved check, then nothing.
+  // Answers: from the link first, then the last saved check, then the activity of the commercial registration.
   const [activityCode, setActivityCode] = useState<string | null>(() => {
     const asked = query.activity;
     if (asked && (getActivity(asked) || asked === UNLISTED_ACTIVITY)) return asked;
-    return saved?.activityCode ?? null;
+    if (saved?.activityCode) return saved.activityCode;
+    return company && getActivity(company.activityCode) ? company.activityCode : null;
   });
   const [solution, setSolution] = useState<SolutionKey | null>(() => (saved && isSolution(saved.solution) ? saved.solution : null));
   const [area, setArea] = useState<number | null>(() => saved?.areaSqm ?? DEFAULT_AREA);
@@ -93,15 +95,23 @@ export function EligibilityScreen() {
   };
 
   const next = () => {
-    setTried(true);
     if (phase === 1 && activityCode) {
-      if (!solution && activity?.solutions[0]) setSolution(activity.solutions[0]);
+      // A non-targeted activity is decided by the activity alone: no solution or area to ask for.
+      if (decidedByActivity(activityCode)) {
+        runCheck({ solution: solution ?? SOLUTION_ORDER[0] });
+        return;
+      }
+      // Never carry forward a solution the activity does not list.
+      if (activity && (!solution || !activity.solutions.includes(solution))) setSolution(activity.solutions[0] ?? null);
       goTo(2);
     } else if (phase === 2 && solution) {
       if (zoneCode && !getZone(zoneCode)?.solutions.includes(solution)) setZoneCode(null);
       goTo(3);
     } else if (phase === 3 && isValidArea(area)) {
       runCheck();
+    } else {
+      setTried(true);
+      revealFirstError();
     }
   };
 
@@ -191,7 +201,7 @@ export function EligibilityScreen() {
 
   // ── the three questions ─────────────────────────────────────────
   const step = typeof phase === 'number' ? phase : 3;
-  const stepName = t(step === 1 ? 's1Name' : step === 2 ? 's2Name' : 's3Name');
+  const where = t('step', { n: step, m: STEPS });
   const price = solution ? getSolution(solution)?.price.qarPerSqmYear ?? null : null;
   const yearly = (sqm: number) => {
     const rent = solution ? estimateAnnualRent(solution, sqm) : null;
@@ -217,7 +227,7 @@ export function EligibilityScreen() {
       navLabel={t('close')}
       onNav={close}
       width="form"
-      header={<Stepper current={step} total={STEPS} label={t('stepOf', { n: step, m: STEPS, name: stepName })} />}
+      header={<Stepper current={step} total={STEPS} label={where} />}
       actions={
         step > 1 ? (
           <Button variant="quiet" size="sm" onClick={previous}>
@@ -228,13 +238,13 @@ export function EligibilityScreen() {
       footerContext={context}
       footer={
         <Button block onClick={next}>
-          {step === 3 ? t('runCheck') : t('continue')}
+          {step === 3 || (step === 1 && decidedByActivity(activityCode)) ? t('runCheck') : t('continue')}
         </Button>
       }
     >
       {step === 1 ? (
         <>
-          <StepHead ref={headRef} where={t('stepOf', { n: 1, m: STEPS, name: stepName })} question={t('s1Question')} hint={t('s1Hint')} />
+          <StepHead ref={headRef} where={where} question={t('s1Question')} hint={t('s1Hint')} />
           {licensed && !search.trim() ? (
             <section className={styles.block} aria-labelledby="elig-register">
               <h3 id="elig-register" className={cx('type-callout', styles.groupHead)}>
@@ -257,30 +267,13 @@ export function EligibilityScreen() {
         </>
       ) : step === 2 ? (
         <>
-          <StepHead ref={headRef} where={t('stepOf', { n: 2, m: STEPS, name: stepName })} question={t('s2Question')} hint={t('s2Hint')} />
-          <Grid as="ul" compact columns={3} aria-label={t('s2Name')}>
-            {solutions.map((option) => {
-              const covers = activity?.solutions.includes(option.key) ?? false;
-              return (
-                <Card as="li" key={option.key} selected={solution === option.key} onClick={() => setSolution(option.key)} media={<Render name={SOLUTION_RENDER[option.key]} decorative />}>
-                  <h3 className={cx('type-body', styles.optionName)}>
-                    <strong>{pick(option.name)}</strong>
-                  </h3>
-                  <p className={cx('type-callout num', styles.optionPrice)}>{option.price.qarPerSqmYear === null ? t('byOperator') : pick(option.price.text)}</p>
-                  {covers ? (
-                    <p className={cx('type-callout', styles.covers)}>
-                      <Icon icon={Check} size={16} />
-                      {t('coversActivity')}
-                    </p>
-                  ) : null}
-                </Card>
-              );
-            })}
-          </Grid>
+          <StepHead ref={headRef} where={where} question={t('s2Question')} hint={t('s2Hint')} />
+          <SolutionPicker value={solution} onChange={setSolution} covered={activity?.solutions ?? []} />
+          {tried && !solution ? <StepError>{t('needSolution')}</StepError> : null}
         </>
       ) : (
         <>
-          <StepHead ref={headRef} where={t('stepOf', { n: 3, m: STEPS, name: stepName })} question={t('s3Question')} hint={t('s3Hint')} />
+          <StepHead ref={headRef} where={where} question={t('s3Question')} hint={t('s3Hint')} />
           <div className={styles.block}>
             <NumberField
               label={t('area')}
@@ -336,34 +329,56 @@ interface ActivityPickerProps {
   lang: 'ar' | 'en';
 }
 
-/** The search pill over the illustrative activity list, grouped by sector, and the "not listed" way out. */
+/**
+ * The search pill, then a handful of common activities (the whole register is a search away, or in a
+ * sheet grouped by sector), and the "not listed" way out. A search shows every match.
+ */
 function ActivityPicker({ value, onChange, search, onSearch, skip, lang }: ActivityPickerProps) {
   const t = useT(strings);
   const { pick } = useLang();
-  const found = useMemo(() => searchActivities(search, lang).filter((activity) => activity.code !== skip), [search, lang, skip]);
-  const groups = useMemo(() => (search.trim() ? [{ sector: null, activities: found }] : groupBySector(found, lang)), [found, search, lang]);
+  const [browsing, setBrowsing] = useState(false);
+  const searching = search.trim() !== '';
+  const found = useMemo(() => (searching ? searchActivities(search, lang).filter((activity) => activity.code !== skip) : []), [search, searching, lang, skip]);
+  const quick = useMemo(() => quickActivities(value === UNLISTED_ACTIVITY ? null : value, skip).flatMap((code) => getActivity(code) ?? []), [value, skip]);
+  const groups = useMemo(() => groupBySector(searchActivities('', lang), lang), [lang]);
+  const chip = (code: string, name: string, after?: () => void) => (
+    <Chip
+      key={code}
+      selected={value === code}
+      onClick={() => {
+        onChange(code);
+        after?.();
+      }}
+    >
+      {name}
+    </Chip>
+  );
   return (
     <>
       <SearchField value={search} onChange={onSearch} label={t('search')} className={styles.search} />
       <div className={styles.groups} aria-live="polite">
-        {found.length ? (
-          groups.map((group) => {
-            const name = group.sector ? pick(group.sector) : t('activities');
-            return (
-              <section key={name} aria-label={name}>
-                {group.sector ? <h3 className={cx('type-callout', styles.groupHead)}>{name}</h3> : null}
-                <ChipRow label={name} wrap>
-                  {group.activities.map((activity) => (
-                    <Chip key={activity.code} selected={value === activity.code} onClick={() => onChange(activity.code)}>
-                      {pick(activity.name)}
-                    </Chip>
-                  ))}
-                </ChipRow>
-              </section>
-            );
-          })
+        {searching ? (
+          found.length ? (
+            <section aria-label={t('results')}>
+              <ChipRow label={t('results')} wrap>
+                {found.map((activity) => chip(activity.code, pick(activity.name)))}
+              </ChipRow>
+            </section>
+          ) : (
+            <EmptyState compact level={3} icon={SearchX} title={t('noMatch')} body={t('noMatchBody')} />
+          )
         ) : (
-          <EmptyState compact level={3} icon={SearchX} title={t('noMatch')} body={t('noMatchBody')} />
+          <section aria-labelledby="elig-popular">
+            <h3 id="elig-popular" className={cx('type-callout', styles.groupHead)}>
+              {t('popular')}
+            </h3>
+            <ChipRow label={t('popular')} wrap>
+              {quick.map((activity) => chip(activity.code, pick(activity.name)))}
+            </ChipRow>
+            <Button variant="quiet" size="sm" chevron onClick={() => setBrowsing(true)} className={styles.all}>
+              {t('allActivities')}
+            </Button>
+          </section>
         )}
         <section aria-label={t('notListed')}>
           <ChipRow label={t('notListed')} wrap>
@@ -374,6 +389,52 @@ function ActivityPicker({ value, onChange, search, onSearch, skip, lang }: Activ
         </section>
       </div>
       <FinePrint demo="illustrative">{t('listNote')}</FinePrint>
+
+      <Sheet open={browsing} onClose={() => setBrowsing(false)} title={t('allActivities')} description={t('allActivitiesHint')}>
+        <div className={styles.groups}>
+          {groups.map((group) => {
+            const name = pick(group.sector);
+            return (
+              <section key={name} aria-label={name}>
+                <h3 className={cx('type-callout', styles.groupHead)}>{name}</h3>
+                <ChipRow label={name} wrap>
+                  {group.activities.map((activity) => chip(activity.code, pick(activity.name), () => setBrowsing(false)))}
+                </ChipRow>
+              </section>
+            );
+          })}
+        </div>
+      </Sheet>
     </>
+  );
+}
+
+/** The five solutions as large option cards, one radio group: the render at the inline start, then the name, the price and whether it covers the activity. */
+function SolutionPicker({ value, onChange, covered }: { value: SolutionKey | null; onChange: (key: SolutionKey) => void; covered: readonly SolutionKey[] }) {
+  const t = useT(strings);
+  const { pick } = useLang();
+  const choice = useChoiceGroup({ keys: SOLUTION_ORDER, value, onPick: onChange, label: t('s2Name') });
+  return (
+    <div className={styles.options} {...choice.group}>
+      {solutions.map((option) => (
+        <ChoiceCard key={option.key} item={choice.item(option.key)} layout="row" className={styles.option}>
+          <span className={styles.optionMedia}>
+            <Render name={SOLUTION_RENDER[option.key]} decorative />
+          </span>
+          <span className={styles.optionBody}>
+            <span className={cx('type-body', styles.optionName)}>
+              <strong>{pick(option.name)}</strong>
+            </span>
+            <span className={cx('type-callout num', styles.optionPrice)}>{option.price.qarPerSqmYear === null ? t('byOperator') : pick(option.price.text)}</span>
+            {covered.includes(option.key) ? (
+              <span className={cx('type-callout', styles.covers)}>
+                <Icon icon={Check} size={16} />
+                {t('coversActivity')}
+              </span>
+            ) : null}
+          </span>
+        </ChoiceCard>
+      ))}
+    </div>
   );
 }

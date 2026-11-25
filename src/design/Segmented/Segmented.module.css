@@ -1,6 +1,9 @@
-/* Segmented control: a sunken pill track, a pill thumb, 14 px labels. No shadow on the thumb. */
+/* Segmented control: a sunken pill track, a pill thumb, 14 px labels. No shadow on the thumb.
+   One width rule everywhere: the full column on phones, at most 420 px and start-aligned on wider screens
+   (the same cap as a block pill). `inline` is for a control that sits inside a row or a bar. */
 .segmented {
   position: relative;
+  max-inline-size: 420px;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
@@ -10,6 +13,7 @@
 }
 
 .inline {
+  max-inline-size: none;
   display: inline-grid;
   grid-auto-columns: 1fr;
 }
@@ -181,4 +185,20 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-2);
+  min-width: 0;
+}
+
+/* In a wrapping group a chip never outgrows the column: a long label wraps inside the chip
+   (WCAG 1.4.10 at 320 px and the largest text size). Only the scrolling row keeps one line. */
+.chipWrap > .chip {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+
+.chipWrap > .twoLine {
+  flex: 1 1 100%;
 }

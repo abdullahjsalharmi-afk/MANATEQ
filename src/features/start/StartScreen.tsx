@@ -7,6 +7,7 @@ import { Button, Card, EmptyState, Screen, type RenderName } from '@/design/core
 import { Skeleton } from '@/design/forms';
 import type { DomainCode } from '@/data/types';
 import { bespokeFlows, startRedirects } from '@/features/flows/registry';
+import { signInThen } from '@/features/services/catalogue';
 import { useService } from '@/features/shared/useService';
 import { selectCompany, selectPersona, useApp } from '@/state';
 import { GenericFlow } from './GenericFlow';
@@ -31,7 +32,9 @@ export function StartScreen() {
 
   useEffect(() => {
     if (guest) {
-      navigate('/welcome', { replace: true });
+      // Back to this very flow (with its plot, zone or activity) once signed in.
+      const params = new URLSearchParams(query).toString();
+      navigate(signInThen(params ? `/start/${id}?${params}` : `/start/${id}`), { replace: true });
       return;
     }
     if (redirect) {

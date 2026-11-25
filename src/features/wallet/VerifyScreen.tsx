@@ -31,6 +31,17 @@ export function VerifyScreen() {
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
+  // The verdict lands under the tile: bring it into view and give it the focus, so nobody has to look for it.
+  const result = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (phase.state !== 'done') return;
+    const verdict = result.current?.querySelector<HTMLElement>('[data-verdict]');
+    if (!verdict) return;
+    verdict.focus({ preventScroll: true });
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    result.current?.scrollIntoView({ block: 'center', behavior: still ? 'auto' : 'smooth' });
+  }, [phase]);
+
   const check = (raw: string) => {
     const typed = raw.trim();
     if (!typed) return setError(t('vEmpty'));
@@ -97,7 +108,7 @@ export function VerifyScreen() {
 
       <Container width="form">
         <div className={styles.verifyColumn}>
-          <div aria-live="polite">
+          <div aria-live="polite" ref={result}>
             {phase.state === 'done' ? (
               <Card className={styles.result}>
                 <VerifyResult doc={phase.doc} code={phase.code} link="open" />

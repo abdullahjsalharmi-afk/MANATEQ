@@ -132,6 +132,32 @@ export function actOnRequest(requestId: string, payload: ActPayload = {}): boole
   return acted;
 }
 
+/** What completing a step produced. */
+export interface StepResult {
+  /** False when there was nothing to do. */
+  ok: boolean;
+  /** The receipts the step's payment filed in the wallet (several when a balance settles several invoices), oldest first. */
+  receiptDocIds: string[];
+}
+
+/**
+ * `actOnRequest`, telling what the step produced: run it when the payment sheet confirms, then show
+ * the receipt that was really filed (`selectDoc(receiptDocIds.at(-1))?.ref`, "RCP-2026-0101").
+ */
+export function completeStep(requestId: string, payload: ActPayload = {}): StepResult {
+  const now = Date.now();
+  let result: StepResult = { ok: false, receiptDocIds: [] };
+  changeWorld((world, state) => {
+    const next = actIn(world, requestId, payload, now, liveEnv(state.demo.speed));
+    if (next === world) return world;
+    const before = new Set(world.docs.map((doc) => doc.id));
+    const receiptDocIds = next.docs.filter((doc) => doc.kind === 'receipt' && !before.has(doc.id) && doc.requestId === requestId).map((doc) => doc.id);
+    result = { ok: true, receiptDocIds };
+    return next;
+  });
+  return result;
+}
+
 /** Demo control: the step that is open with Manateq or another entity finishes now. */
 export function fastForwardRequest(requestId: string): void {
   const now = Date.now();

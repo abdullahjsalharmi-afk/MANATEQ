@@ -4,7 +4,6 @@ export const strings = {
   close: { ar: 'أغلق الفحص', en: 'Close the check' },
   previous: { ar: 'السابق', en: 'Back' },
   step: { ar: 'الخطوة {n} من {m}', en: 'Step {n} of {m}' },
-  stepOf: { ar: 'الخطوة {n} من {m} · {name}', en: 'Step {n} of {m} · {name}' },
   continue: { ar: 'متابعة', en: 'Continue' },
   runCheck: { ar: 'افحص الأهلية', en: 'Check eligibility' },
 
@@ -26,11 +25,16 @@ export const strings = {
   needActivity: { ar: 'اختر نشاطًا للمتابعة.', en: 'Choose an activity to continue.' },
   activityChosen: { ar: 'النشاط: {name}', en: 'Activity: {name}' },
   activities: { ar: 'الأنشطة', en: 'Activities' },
+  popular: { ar: 'أنشطة شائعة', en: 'Common activities' },
+  allActivities: { ar: 'كل الأنشطة', en: 'All activities' },
+  allActivitiesHint: { ar: 'مرتّبة حسب القطاع.', en: 'Grouped by sector.' },
+  results: { ar: 'نتائج البحث', en: 'Search results' },
 
   // Step 2: the solution
   s2Name: { ar: 'نوع الحل', en: 'Solution' },
   s2Question: { ar: 'أي حل يناسب مشروعك؟', en: 'Which solution fits your project?' },
   s2Hint: { ar: 'الأسعار المنشورة لكل متر مربع في السنة.', en: 'Published prices, per square metre a year.' },
+  needSolution: { ar: 'اختر نوع الحل للمتابعة.', en: 'Choose a solution to continue.' },
   coversActivity: { ar: 'يشمل نشاطك', en: 'Covers your activity' },
   byOperator: { ar: 'حسب المشغّل', en: 'Set by the operator' },
 
@@ -49,13 +53,13 @@ export const strings = {
   perYear: { ar: '{amount} / سنة', en: '{amount} a year' },
 
   // The check
-  checking: { ar: 'القواعد تفحص…', en: 'The rules are checking…' },
+  checking: { ar: 'نفحص نشاطك…', en: 'Checking your activity…' },
   checkingBody: { ar: 'نطابق النشاط مع قواعد المناطق وفئة الخطورة والقطع المتاحة.', en: 'Matching the activity against the zone rules, the hazard class and the free plots.' },
 
   // The result
   result: { ar: 'النتيجة', en: 'Result' },
   eligibleHead: { ar: 'نشاطك مؤهَّل.', en: 'Your activity fits.' },
-  elsewhereHead: { ar: 'مستهدف، بخيار آخر.', en: 'Targeted, another way.' },
+  elsewhereHead: { ar: 'مؤهَّل بخيار آخر.', en: 'Eligible with another option.' },
   noPlotsHead: { ar: 'لا قطعة بهذه المساحة الآن.', en: 'No plot of that size yet.' },
   reviewHead: { ar: 'يحتاج مراجعة.', en: 'It needs a review.' },
   notTargetedHead: { ar: 'غير مستهدف.', en: 'Not targeted.' },
@@ -96,7 +100,7 @@ export const strings = {
   changeWhat: { ar: 'غيّر {what}', en: 'Change {what}' },
   saved: { ar: 'حفظنا النتيجة في ملفك، فتجدها معبّأة في الطلب.', en: 'We saved the result on your profile; the application opens with it.' },
   savedGuest: { ar: 'ادخل عبر توثيق لتحفظ النتيجة وتقدّم على أرض.', en: 'Sign in with Tawtheeq to keep the result and apply for land.' },
-  sectorRules: { ar: 'القواعد توضيحية في هذا النموذج.', en: 'The rules are illustrative in this prototype.' },
+  sectorRules: { ar: 'القواعد توضيحية في هذه النسخة التجريبية.', en: 'The rules are illustrative in this prototype.' },
   zoneAndRent: { ar: '{zone} · {amount} / سنة', en: '{zone} · {amount} a year' },
   zoneOnly: { ar: '{zone}', en: '{zone}' },
 
@@ -110,3 +114,15 @@ export const strings = {
   recheck: { ar: 'أعد الفحص بهذا البديل', en: 'Check again with this one' },
   sentForReview: { ar: 'أرسلنا نشاطك للمراجعة', en: 'Your activity was sent for review' },
 } as const;
+
+/** "3 قطع متاحة بهذه المساحة" · "3 plots of this size free". */
+export const plotsFree = {
+  ar: { one: 'قطعة واحدة متاحة بهذه المساحة', two: 'قطعتان متاحتان بهذه المساحة', few: '{n} قطع متاحة بهذه المساحة', many: '{n} قطعة متاحة بهذه المساحة', other: '{n} قطعة متاحة بهذه المساحة' },
+  en: { one: 'One plot of this size free', other: '{n} plots of this size free' },
+};
+
+/** "تناسبك منطقتان." · "2 zones fit.", the tagline of an eligible result. */
+export const zonesFit = {
+  ar: { one: 'تناسبك منطقة واحدة.', two: 'تناسبك منطقتان.', few: '{n} مناطق تناسبك.', many: '{n} منطقة تناسبك.', other: '{n} منطقة تناسبك.' },
+  en: { one: 'One zone fits.', other: '{n} zones fit.' },
+};

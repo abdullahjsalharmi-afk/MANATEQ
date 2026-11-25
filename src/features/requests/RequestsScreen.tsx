@@ -10,6 +10,7 @@ import { groupRequests, type RequestGroup } from './logic';
 import { RequestRow } from './RequestRow';
 import styles from './RequestsScreen.module.css';
 import { strings } from './strings';
+import { useRequestName } from './useRequestFacts';
 
 type Segment = 'active' | 'done';
 
@@ -32,7 +33,6 @@ export function RequestsScreen() {
     <Screen title={t('title')} large width="content">
       <Segmented<Segment>
         className={styles.filter}
-        inline
         label={t('filter')}
         value={segment}
         onChange={choose}
@@ -74,7 +74,8 @@ export function RequestsScreen() {
 /** One thread: its latest stage on top, the other stages of the same segment under it, and where it sits in its chain. */
 function GroupCard({ group, now }: { group: RequestGroup; now: number }) {
   const t = useT(strings);
-  const { pick, fmt } = useLang();
+  const { fmt } = useLang();
+  const name = useRequestName();
   const root = group.place ? getService(group.place.rootServiceId) : undefined;
   return (
     <Card as="li" pad="none" className={styles.card}>
@@ -86,7 +87,7 @@ function GroupCard({ group, now }: { group: RequestGroup; now: number }) {
       </List>
       {group.place && root ? (
         <p className={`type-callout ${styles.partOf}`}>
-          {t('partOf', { name: pick(root.label), n: fmt.num(group.place.position), m: fmt.num(group.place.total) })}
+          {t('partOf', { name: name(root.id, root.label), n: fmt.num(group.place.position), m: fmt.num(group.place.total) })}
         </p>
       ) : null}
     </Card>

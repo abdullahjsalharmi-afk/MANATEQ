@@ -11,6 +11,18 @@
   padding-block-end: var(--s-8);
 }
 
+.lead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-6);
+}
+
+/* Focus lands here after "move time forward": no ring for a focus the person did not move. */
+.headline:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .meta {
   display: flex;
   flex-wrap: wrap;
@@ -121,33 +133,14 @@
 
 /* ── the clock card ── */
 
-.clock {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--s-5);
-}
-
-.clockText {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--s-2);
-  min-inline-size: 0;
-}
-
 .figure {
   margin: 0;
-  font-size: var(--t-heading);
-  line-height: var(--lh-heading);
-  letter-spacing: var(--ls-heading);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  font-weight: var(--w-strong);
   color: var(--ink);
   font-variant-numeric: tabular-nums;
-}
-
-.unit {
-  font-size: var(--t-callout);
-  font-weight: var(--w-regular);
-  color: var(--ink-3);
 }
 
 .standard {

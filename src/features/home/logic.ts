@@ -1,6 +1,7 @@
 /** Pure helpers of Home: the greeting, which render goes with what, and where a journey item leads. */
 import type { RenderName } from '@/design/core';
 import type { SolutionKey } from '@/data/types';
+import type { NextStep } from '@/domain/types';
 import type { JourneyItem, StationKey } from '@/state';
 
 export type Greeting = 'morning' | 'afternoon' | 'evening';
@@ -36,7 +37,13 @@ export function itemRoute(item: JourneyItem): string {
   return `/services/${item.serviceId}`;
 }
 
-/** The receipt reference a paid invoice will carry (the state names it the same way). */
-export function receiptRefOf(invoiceRef: string): string {
-  return invoiceRef.replace(/^INV-/, 'RCP-');
+/** The invoice a next step pays, when it is an invoice step (its id is `invoice:<invoice id>`). */
+export function invoiceOfStep(step: Pick<NextStep, 'id' | 'kind'>): string | null {
+  return step.kind === 'invoice' && step.id.startsWith('invoice:') ? step.id.slice('invoice:'.length) : null;
+}
+
+/** The service a journey suggestion starts (its id is `start:<service>` or `start:<service>:<plot>`); null for anything else. */
+export function suggestedService(step: Pick<NextStep, 'id' | 'kind'>): string | null {
+  if (step.kind !== 'start_service' || !step.id.startsWith('start:')) return null;
+  return step.id.split(':')[1] ?? null;
 }

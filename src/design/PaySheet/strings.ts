@@ -12,6 +12,8 @@ export const strings = {
   paid: { ar: 'تم الدفع', en: 'Payment complete' },
   receipt: { ar: 'رقم الإيصال', en: 'Receipt number' },
   paidNote: { ar: 'هذه محاكاة: لم يُخصم أي مبلغ.', en: 'This is a simulation: nothing was charged.' },
+  paidTitle: { ar: 'إيصال الدفع', en: 'Payment receipt' },
+  viewReceipt: { ar: 'اعرض الإيصال', en: 'View receipt' },
   done: { ar: 'تم', en: 'Done' },
   close: { ar: 'إغلاق', en: 'Close' },
 } as const;

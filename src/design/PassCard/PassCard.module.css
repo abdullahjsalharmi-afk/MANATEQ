@@ -151,3 +151,8 @@
 .spent .qr {
   opacity: 0.28;
 }
+
+/* A plot number, an ID or the pass code reads as one unit: it never breaks at a hyphen. */
+.whole {
+  white-space: nowrap;
+}

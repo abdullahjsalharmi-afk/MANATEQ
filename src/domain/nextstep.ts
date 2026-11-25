@@ -10,7 +10,10 @@ import { langTools, ltr } from '@/app/i18n';
 import { getService } from '@/data/catalog';
 import type { L10n, ServiceDetail, ServiceId, StepAction } from '@/data/types';
 import { journeyOf } from './journey';
-import type { Invoice, Lease, NextStep, RequestState, World } from './types';
+import { leaseOfPlot } from './plots';
+import { nextStepText as COPY } from './strings';
+import { DOT, keepWhole } from './text';
+import type { Invoice, NextStep, RequestState, World } from './types';
 import { currentVisit } from './workflow';
 
 const AR = langTools('ar').fmt;
@@ -23,37 +26,21 @@ export const OFFER_VALIDITY_MS = 14 * DAY;
 
 export type DetailLookup = (id: ServiceId) => ServiceDetail | undefined;
 
-const COPY = {
-  payInvoice: { ar: 'ادفع فاتورة الإيجار', en: 'Pay your rent invoice' },
-  payOverdue: { ar: 'ادفع الفاتورة المتأخرة', en: 'Pay the overdue invoice' },
-  payNow: { ar: 'ادفع الآن', en: 'Pay now' },
-  openRequest: { ar: 'افتح الطلب', en: 'Open request' },
-  start: { ar: 'ابدأ', en: 'Start' },
-  continueDraft: { ar: 'أكمل طلبك', en: 'Continue your request' },
-  continue: { ar: 'تابع', en: 'Continue' },
-  draftSaved: { ar: 'حفظنا ما أدخلته', en: 'We saved what you entered' },
-} as const;
-
 /** Urgency bands: a lower number sorts first. Within a band, the timestamp decides. */
 const BAND = { overdue: 0, deadline: 1, waiting: 2, suggestion: 3, draft: 4 } as const;
 const BAND_SIZE = 1e14;
 
 const join = (parts: (L10n | undefined)[]): L10n => {
   const present = parts.filter((part): part is L10n => part !== undefined);
-  return { ar: present.map((part) => part.ar).join(' · '), en: present.map((part) => part.en).join(' · ') };
+  return { ar: present.map((part) => part.ar).join(DOT), en: present.map((part) => part.en).join(DOT) };
 };
-const plotName = (number: string | undefined): L10n | undefined => (number ? { ar: ltr(number), en: number } : undefined);
-const money = (amount: number | undefined): L10n | undefined => (amount ? { ar: AR.money(amount), en: EN.money(amount) } : undefined);
+const plotName = (number: string | undefined): L10n | undefined => (number ? { ar: ltr(number), en: keepWhole(number) } : undefined);
+const money = (amount: number | undefined): L10n | undefined => (amount ? { ar: keepWhole(AR.money(amount)), en: keepWhole(EN.money(amount)) } : undefined);
 
 /** What the app asks of the investor at the step a request is waiting on. */
 export function pendingAction(request: RequestState, service: Pick<ServiceDetail, 'actions'> | undefined): StepAction | undefined {
   if (request.status !== 'needs_you' || request.current === null || !service) return undefined;
   return service.actions.find((action) => action.step === request.current);
-}
-
-function leaseOfPlot(world: World, plotId: string | undefined): Lease | undefined {
-  if (plotId === undefined) return undefined;
-  return world.leases.find((lease) => lease.plotId === plotId);
 }
 
 /**
@@ -97,8 +84,9 @@ function invoiceStep(invoice: Invoice): NextStep {
     kind: 'invoice',
     title: overdue ? COPY.payOverdue : COPY.payInvoice,
     context: join([invoice.title, money(invoice.amount)]),
-    cta: COPY.payNow,
+    cta: COPY.pay,
     route: `/account/payments/${invoice.id}`,
+    invoiceId: invoice.id,
     urgency: (overdue ? BAND.overdue : BAND.deadline) * BAND_SIZE + invoice.dueAt,
     dueAt: invoice.dueAt,
   };
@@ -125,7 +113,8 @@ function suggestionSteps(world: World): NextStep[] {
         id: `start:${item.serviceId}${plot ? `:${plot.id}` : ''}`,
         kind: 'start_service',
         title: service.label,
-        context: plot ? join([plotName(plot.number), service.summary]) : service.summary,
+        // One short line: the service's own hint, never its catalogue summary.
+        context: join([plot ? plotName(plot.number) : undefined, service.hint]),
         cta: COPY.start,
         route: startRoute(item.serviceId, plot?.id),
         urgency: BAND.suggestion * BAND_SIZE + order,
@@ -164,8 +153,4 @@ export function collectNextSteps(world: World, lookup: DetailLookup): NextStep[]
     ...draftSteps(world),
   ];
   return steps.sort((a, b) => a.urgency - b.urgency);
-}
-
-export function nextStepOf(world: World, lookup: DetailLookup): NextStep | null {
-  return collectNextSteps(world, lookup)[0] ?? null;
 }

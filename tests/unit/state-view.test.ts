@@ -170,6 +170,32 @@ describe('the view of a request', () => {
     expect(view.timeline.map((item) => item.step)).toEqual(mainPath(service.workflow));
   });
 
+  it('names the Ministry behind the permit platform, and has no day count for a per-event standard', () => {
+    const tenant = seedWorld('tenant', NOW);
+    const permit = tenant.requests.find((request) => request.serviceId === 'C2') as RequestState;
+    const view = requestView(permit, detail('C2'), NOW, 1);
+    expect(view.holder?.entity?.name).toEqual({ ar: 'وزارة البلدية', en: 'Ministry of Municipality' });
+    expect(view.holder?.entity?.inText.en).toBe('the Ministry of Municipality');
+    // "Status updated within one working day of each Ministry event" is a promise per event, not a deadline.
+    expect(view.clock.targetDays).toBeNull();
+    expect(view.clock.ratio).toBeNull();
+    expect(view.focus?.step.id).toBe(permit.current);
+    expect(view.focus?.expectedAt).toBe(view.expectedAt);
+  });
+
+  it('never puts a decision or a step that runs by itself in the headline', () => {
+    for (const service of all) {
+      for (const step of service.workflow.steps.filter((candidate) => candidate.kind === 'gate' || candidate.kind === 'auto')) {
+        const request: RequestState = {
+          id: 'r1', ref: 'MQ-2611-0001', serviceId: service.id, threadId: 'r1', createdAt: NOW - DAY_MS, updatedAt: NOW, form: {},
+          visits: [{ step: step.id, enteredAt: NOW - 1000 }], current: step.id, status: 'active', investorMs: 0, docIds: [],
+        };
+        const focus = requestView(request, service, NOW, 1).focus;
+        if (focus) expect(['gate', 'auto', 'end', 'stop'], `${service.id} step ${step.id}`).not.toContain(focus.step.kind);
+      }
+    }
+  });
+
   it('hands the investor the action when the request waits for them', () => {
     const tenant = seedWorld('tenant', NOW);
     const renewal = tenant.requests.find((request) => request.serviceId === 'B3') as RequestState;

@@ -31,6 +31,14 @@ test('browsing without signing in opens Home as a guest', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test('a deep link carried to the welcome opens after entering', async ({ page }) => {
+  const errors = watchErrors(page);
+  await page.goto(`file://${APP_FILE}?reset=1&lang=en&theme=light#/welcome?next=${encodeURIComponent('/services/A4')}`);
+  await page.getByRole('button', { name: 'Browse without signing in' }).click();
+  await expect(page).toHaveURL(/#\/services\/A4$/);
+  expect(errors).toEqual([]);
+});
+
 test('settings flip the language and the text size at once', async ({ page }) => {
   const errors = watchErrors(page);
   await openApp(page, { route: '/account/settings', lang: 'ar' });

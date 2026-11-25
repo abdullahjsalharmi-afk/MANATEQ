@@ -74,8 +74,3 @@ export function groupByMonth(invoices: readonly Invoice[]): MonthGroup[] {
 export function outstanding(invoices: readonly Invoice[]): Invoice[] {
   return invoices.filter((invoice) => invoice.status !== 'paid').sort((a, b) => a.dueAt - b.dueAt);
 }
-
-/** The receipt number of an invoice: it carries the invoice's own number. */
-export function receiptRef(invoice: Invoice): string {
-  return invoice.ref.replace(/^INV-/, 'RCP-');
-}

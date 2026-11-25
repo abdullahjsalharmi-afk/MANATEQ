@@ -14,7 +14,7 @@ import { Button, Card, Chip, Container, Grid, Icon, List, Pill, Row, Section, Ti
 import { DemoPill } from '@/design/forms';
 import { QatarMap } from '@/design/signature';
 import { factsOf, firstZoneWithPlots, resultKind, type Fact, type ResultKind } from './model';
-import { strings } from './strings';
+import { plotsFree, strings, zonesFit } from './strings';
 import styles from './Flow.module.css';
 
 type Key = keyof typeof strings;
@@ -96,20 +96,14 @@ const FACT_TEXT: Record<Fact['key'], { yes: Key; no: Key }> = {
 /** "3 قطع متاحة بهذه المساحة" · "3 plots of this size free". */
 export function plotsText(n: number, fmt: LangValue['fmt'], none: string): string {
   if (n <= 0) return none;
-  return fmt.plural(n, {
-    ar: { one: 'قطعة واحدة متاحة بهذه المساحة', two: 'قطعتان متاحتان بهذه المساحة', few: '{n} قطع متاحة بهذه المساحة', many: '{n} قطعة متاحة بهذه المساحة', other: '{n} قطعة متاحة بهذه المساحة' },
-    en: { one: 'One plot of this size free', other: '{n} plots of this size free' },
-  });
+  return fmt.plural(n, plotsFree);
 }
 
 /** One line under the verdict: how many zones fit, or what to do next. */
 function taglineOf(kind: ResultKind, choices: number, fmt: LangValue['fmt'], t: (key: Key) => string): string {
   switch (kind) {
     case 'eligible':
-      return fmt.plural(choices, {
-        ar: { one: 'تناسبك منطقة واحدة.', two: 'تناسبك منطقتان.', few: '{n} مناطق تناسبك.', many: '{n} منطقة تناسبك.', other: '{n} منطقة تناسبك.' },
-        en: { one: 'One zone fits.', other: '{n} zones fit.' },
-      });
+      return fmt.plural(choices, zonesFit);
     case 'elsewhere':
       return choices ? t('tagElsewhere') : t('tagNotTargeted');
     case 'noPlots':
@@ -208,23 +202,28 @@ export function EligibilityResultView({ input, outcome, persona, chosen, onChoos
           </Section>
         ) : null}
 
-        <Section title={t('answers')} hint={t('answersHint')}>
+        {/* A non-targeted activity is answered by the activity alone: the solution and the area were never asked. */}
+        <Section title={t('answers')} hint={kind === 'notTargeted' ? undefined : t('answersHint')}>
           <List aria-label={t('answers')}>
             <Row eyebrow={t('s1Name')} title={activityName} trailing={<span className={styles.change}>{t('change')}</span>} onClick={() => onChange(1)} aria-label={t('changeWhat', { what: t('s1Name') })} />
-            <Row
-              eyebrow={t('s2Name')}
-              title={pick(getSolution(input.solution)?.name)}
-              trailing={<span className={styles.change}>{t('change')}</span>}
-              onClick={() => onChange(2)}
-              aria-label={t('changeWhat', { what: t('s2Name') })}
-            />
-            <Row
-              eyebrow={t('s3Name')}
-              title={<span className="num">{`${fmt.area(input.areaSqm)} · ${zone ? pick(zone.name) : t('anyZone')}`}</span>}
-              trailing={<span className={styles.change}>{t('change')}</span>}
-              onClick={() => onChange(3)}
-              aria-label={t('changeWhat', { what: t('s3Name') })}
-            />
+            {kind === 'notTargeted' ? null : (
+              <>
+                <Row
+                  eyebrow={t('s2Name')}
+                  title={pick(getSolution(input.solution)?.name)}
+                  trailing={<span className={styles.change}>{t('change')}</span>}
+                  onClick={() => onChange(2)}
+                  aria-label={t('changeWhat', { what: t('s2Name') })}
+                />
+                <Row
+                  eyebrow={t('s3Name')}
+                  title={<span className="num">{`${fmt.area(input.areaSqm)} · ${zone ? pick(zone.name) : t('anyZone')}`}</span>}
+                  trailing={<span className={styles.change}>{t('change')}</span>}
+                  onClick={() => onChange(3)}
+                  aria-label={t('changeWhat', { what: t('s3Name') })}
+                />
+              </>
+            )}
           </List>
         </Section>
       </Container>

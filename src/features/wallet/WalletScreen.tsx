@@ -3,18 +3,18 @@ import { useMemo, useState } from 'react';
 import { useT } from '@/app/i18n';
 import { navigate } from '@/app/router';
 import { useQuery } from '@/app/routes';
-import { Button, Chip, ChipRow, EmptyState, List, Screen, Section, Segmented } from '@/design/core';
+import { Button, Chip, ChipRow, EmptyState, Grid, Screen, Section, Segmented } from '@/design/core';
 import { Skeleton } from '@/design/forms';
 import { useNow } from '@/features/shared/useNow';
 import { selectDocs, selectPasses, useApp, useCatalogueReady } from '@/state';
-import { DocRow, PassRow } from './DocRow';
-import { countByFilter, DOC_FILTERS, filterDocs, passValidity, type DocFilter } from './logic';
+import { DocTile, PassTile } from './DocRow';
+import { byYear, countByFilter, DOC_FILTERS, filterDocs, passValidity, type DocFilter } from './logic';
 import { strings } from './strings';
 import styles from './Wallet.module.css';
 
 type Tab = 'docs' | 'passes';
 
-/** The wallet: every document the investor holds, and the gate passes. */
+/** The wallet: every document the investor holds as a grid of cards by year, and the gate passes. */
 export function WalletScreen() {
   const t = useT(strings);
   const query = useQuery();
@@ -33,6 +33,7 @@ export function WalletScreen() {
 
   const counts = useMemo(() => countByFilter(docs), [docs]);
   const shown = useMemo(() => filterDocs(docs, filter), [docs, filter]);
+  const years = useMemo(() => byYear(shown), [shown]);
   const [current, past] = useMemo(() => {
     const live = passes.filter((pass) => {
       const state = passValidity(pass, now).state;
@@ -42,7 +43,7 @@ export function WalletScreen() {
   }, [passes, now]);
 
   return (
-    <Screen title={t('title')} large subtitle={t('subtitle')} nav="back" backTo="/account">
+    <Screen title={t('title')} nav="back" backTo="/account">
       <div className={styles.controls}>
         <Segmented<Tab>
           label={t('view')}
@@ -76,11 +77,18 @@ export function WalletScreen() {
                 {shown.length === 0 ? (
                   <EmptyState compact icon={FileText} title={t('noDocsInFilter')} body={t('noDocsInFilterBody')} action={<Button variant="quiet" onClick={() => setFilter('all')}>{t('showAll')}</Button>} />
                 ) : (
-                  <List>
-                    {shown.map((doc) => (
-                      <DocRow key={doc.id} doc={doc} />
-                    ))}
-                  </List>
+                  years.map((group) => (
+                    <section key={group.year} className={styles.year} aria-labelledby={`docs-${group.year}`}>
+                      <h2 id={`docs-${group.year}`} className={styles.yearHead}>
+                        <span className="num">{group.year}</span>
+                      </h2>
+                      <Grid as="ul">
+                        {group.docs.map((doc) => (
+                          <DocTile key={doc.id} doc={doc} />
+                        ))}
+                      </Grid>
+                    </section>
+                  ))
                 )}
               </Section>
               <p className={styles.more}>
@@ -97,20 +105,20 @@ export function WalletScreen() {
         <>
           {current.length > 0 ? (
             <Section title={t('activePasses')}>
-              <List>
+              <Grid as="ul">
                 {current.map((pass) => (
-                  <PassRow key={pass.id} pass={pass} now={now} />
+                  <PassTile key={pass.id} pass={pass} now={now} />
                 ))}
-              </List>
+              </Grid>
             </Section>
           ) : null}
           {past.length > 0 ? (
             <Section title={t('pastPasses')}>
-              <List>
+              <Grid as="ul">
                 {past.map((pass) => (
-                  <PassRow key={pass.id} pass={pass} now={now} />
+                  <PassTile key={pass.id} pass={pass} now={now} />
                 ))}
-              </List>
+              </Grid>
             </Section>
           ) : null}
           <p className={styles.cta}>

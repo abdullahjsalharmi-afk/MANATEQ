@@ -168,6 +168,13 @@ button.hit:focus-visible {
   color: var(--ink-3);
 }
 
+/* The station being viewed in the journey sheet (it may not be the current one): 600 and a 2 px underline. */
+.viewed .label {
+  font-weight: 600;
+  text-decoration: underline 2px var(--focus);
+  text-underline-offset: 5px;
+}
+
 .caption {
   margin-block-start: var(--s-3);
   padding-inline: 2px;

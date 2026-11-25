@@ -1,20 +1,22 @@
 import { useMemo, useState } from 'react';
 import { SearchX } from 'lucide-react';
-import { Button, Chip, ChipRow, Container, List, Screen, Section, Tile } from '@/design/core';
+import { Button, Chip, ChipRow, Container, List, Row, Screen, Section, Tile } from '@/design/core';
 import { EmptyState, SearchField } from '@/design/forms';
 import { useLang, useT } from '@/app/i18n';
 import { useQuery } from '@/app/routes';
-import { getService, zones } from '@/data/catalog';
+import { getService, getZone, zones } from '@/data/catalog';
 import type { ServiceSummary, Zone } from '@/data/types';
-import type { AppState } from '@/domain/types';
+import type { AppState, Doc, Invoice, Pass, Plot } from '@/domain/types';
 import { buildIndex } from '@/domain/search';
 import { useNow } from '@/features/shared/useNow';
+import { InvoiceRow } from '@/features/payments';
 import { RequestRow } from '@/features/requests';
 import { ServiceRow } from '@/features/services';
 import { matchesReference, readRecent, serviceSearch, startTarget } from '@/features/services/catalogue';
+import { DocRow, PassRow } from '@/features/wallet';
 import { ZoneRow } from '@/features/zones';
-import { selectPersona, useApp } from '@/state';
-import { resultsCount, strings } from './strings';
+import { selectDocs, selectInvoices, selectPasses, selectPersona, selectPlots, useApp } from '@/state';
+import { keywords, resultsCount, strings } from './strings';
 import styles from './SearchScreen.module.css';
 
 /** The six things investors most often come to do. */
@@ -26,13 +28,48 @@ const zoneIndex = buildIndex<Zone>(zones.map((zone) => ({ item: zone, fields: [z
 
 const selectRequests = (state: AppState) => state.world.requests;
 
-/** Global search: services, zones and, for a signed-in investor, their own requests. */
+const OWN_LIMIT = 4;
+
+/** The investor's own records, searchable by their number, their title and the everyday word for them. */
+function plotIndex(plots: Plot[]) {
+  return buildIndex<Plot>(plots.map((plot) => ({ item: plot, fields: [plot.number, getZone(plot.zoneCode)?.name, keywords.plot], keys: [plot.number.toLowerCase(), plot.id.toLowerCase()] })));
+}
+
+function invoiceIndex(invoices: Invoice[]) {
+  return buildIndex<Invoice>(
+    invoices.map((invoice) => ({
+      item: invoice,
+      fields: [invoice.title, invoice.ref, keywords.invoice, invoice.status === 'paid' ? undefined : keywords.invoiceDue],
+      keys: [invoice.ref.toLowerCase()],
+    })),
+  );
+}
+
+function docIndex(docs: Doc[]) {
+  return buildIndex<Doc>(docs.map((doc) => ({ item: doc, fields: [doc.title, doc.ref, keywords.document], keys: [doc.ref.toLowerCase()] })));
+}
+
+function passIndex(passes: Pass[]) {
+  return buildIndex<Pass>(passes.map((pass) => ({ item: pass, fields: [pass.holder, keywords[pass.kind], keywords.pass, pass.code], keys: [pass.code.toLowerCase()] })));
+}
+
+/** Keeps the order of `list` (the selectors put the due invoice and the active pass first). */
+function inOrder<T>(list: T[], found: T[]): T[] {
+  const hit = new Set(found);
+  return list.filter((item) => hit.has(item)).slice(0, OWN_LIMIT);
+}
+
+/** Global search: services, zones and, for a signed-in investor, their own invoices, plots, requests, documents and passes. */
 export function SearchScreen() {
   const t = useT(strings);
-  const { fmt } = useLang();
+  const { pick, fmt } = useLang();
   const params = useQuery();
   const persona = useApp(selectPersona);
   const requests = useApp(selectRequests);
+  const plots = useApp(selectPlots);
+  const invoices = useApp(selectInvoices);
+  const docs = useApp(selectDocs);
+  const passes = useApp(selectPasses);
   const now = useNow();
   const [query, setQuery] = useState(params.q ?? '');
   const [recent] = useState(() => readRecent().map(getService).filter((s): s is ServiceSummary => s !== undefined));
@@ -49,8 +86,18 @@ export function SearchScreen() {
       .slice(0, 6);
   }, [trimmed, persona, requests, foundServices]);
 
+  const own = persona !== 'guest' && trimmed !== '';
+  const plotsIdx = useMemo(() => plotIndex(plots), [plots]);
+  const invoicesIdx = useMemo(() => invoiceIndex(invoices), [invoices]);
+  const docsIdx = useMemo(() => docIndex(docs), [docs]);
+  const passesIdx = useMemo(() => passIndex(passes), [passes]);
+  const foundPlots = useMemo(() => (own ? inOrder(plots, plotsIdx.search(trimmed, plots.length)) : []), [own, plots, plotsIdx, trimmed]);
+  const foundInvoices = useMemo(() => (own ? inOrder(invoices, invoicesIdx.search(trimmed, invoices.length)) : []), [own, invoices, invoicesIdx, trimmed]);
+  const foundDocs = useMemo(() => (own ? inOrder(docs, docsIdx.search(trimmed, docs.length)) : []), [own, docs, docsIdx, trimmed]);
+  const foundPasses = useMemo(() => (own ? inOrder(passes, passesIdx.search(trimmed, passes.length)) : []), [own, passes, passesIdx, trimmed]);
+
   const shownServices = foundServices.slice(0, SERVICE_LIMIT);
-  const total = foundRequests.length + shownServices.length + foundZones.length;
+  const total = foundInvoices.length + foundPlots.length + foundRequests.length + foundDocs.length + foundPasses.length + shownServices.length + foundZones.length;
 
   return (
     <Screen title={t('title')} nav="back" backTo="/services" navLabel={t('back')} bleed>
@@ -93,11 +140,49 @@ export function SearchScreen() {
           <EmptyState icon={SearchX} title={t('noResults', { q: trimmed })} body={t('noResultsBody')} action={<Button to={startTarget('E1', persona)}>{t('getHelp')}</Button>} />
         ) : (
           <>
+            {foundInvoices.length ? (
+              <Section title={t('payments')}>
+                <List aria-label={t('payments')}>
+                  {foundInvoices.map((invoice) => (
+                    <InvoiceRow key={invoice.id} invoice={invoice} now={now} />
+                  ))}
+                </List>
+              </Section>
+            ) : null}
+            {foundPlots.length ? (
+              <Section title={t('plots')}>
+                <List aria-label={t('plots')}>
+                  {foundPlots.map((plot) => {
+                    const zone = getZone(plot.zoneCode);
+                    return (
+                      <Row
+                        key={plot.id}
+                        to={`/account/plots/${plot.id}`}
+                        title={<span className="ltr">{fmt.ltr(plot.number)}</span>}
+                        subtitle={zone ? t('plotLine', { zone: pick(zone.name), area: fmt.area(plot.areaSqm) }) : fmt.area(plot.areaSqm)}
+                      />
+                    );
+                  })}
+                </List>
+              </Section>
+            ) : null}
             {foundRequests.length ? (
               <Section title={t('requests')}>
                 <List aria-label={t('requests')}>
                   {foundRequests.map((request) => (
                     <RequestRow key={request.id} request={request} now={now} />
+                  ))}
+                </List>
+              </Section>
+            ) : null}
+            {foundDocs.length || foundPasses.length ? (
+              <Section title={t('documents')}>
+                <List aria-label={t('documents')}>
+                  {foundDocs.map((doc) => (
+                    <DocRow key={doc.id} doc={doc} />
+                  ))}
+                  {foundPasses.map((pass) => (
+                    <PassRow key={pass.id} pass={pass} now={now} />
                   ))}
                 </List>
               </Section>

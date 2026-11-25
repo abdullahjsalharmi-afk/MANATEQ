@@ -136,10 +136,15 @@ const CHOICES: Partial<Record<ServiceId, Record<number, Record<string, ChoiceEff
 
 const choiceEffect = (serviceId: ServiceId, step: number, choice: string | undefined): ChoiceEffect | undefined => (choice === undefined ? undefined : CHOICES[serviceId]?.[step]?.[choice]);
 
-/** The tasks of a step that apply once the investor has picked `choice` (all of them when nothing was picked). */
-export function stepTasks(serviceId: ServiceId, action: Pick<StepAction, 'step' | 'flow'>, choice?: string): ActionAtom[] {
+/**
+ * The tasks of a step that apply once the investor has picked `choice` (all of them when nothing was
+ * picked). Given the request, a payment it already made earlier in its thread (`prepaidDocId`: the
+ * deposit paid with the offer) is left out, so the step asks for no payment.
+ */
+export function stepTasks(serviceId: ServiceId, action: Pick<StepAction, 'step' | 'flow'>, choice?: string, request?: Pick<RequestState, 'prepaidDocId'>): ActionAtom[] {
   const only = choiceEffect(serviceId, action.step, choice)?.tasks;
-  return only ? action.flow.filter((task) => only.includes(task)) : action.flow;
+  const tasks = only ? action.flow.filter((task) => only.includes(task)) : action.flow;
+  return request?.prepaidDocId !== undefined ? tasks.filter((task) => task !== 'pay') : tasks;
 }
 
 /* ───────────────────────────── consequences of engine events ───────────────────────────── */
@@ -331,6 +336,16 @@ function placeOf(world: World, input: StartInput, form: Record<string, FormValue
 }
 
 /**
+ * Decisions a request's own answers take at a gate, where the gate asks what the answers already say.
+ * The eligibility check (A2) sends an activity the rules could not settle ("needs review") to the
+ * planning review instead of the clear result.
+ */
+const ANSWERED_GATES: Partial<Record<ServiceId, (form: Record<string, FormValue>) => Record<number, 'yes' | 'no'>>> = {
+  // Step 5: «نتيجة واضحة من القواعد؟» / "Clear result from the rules?"
+  A2: (form): Record<number, 'yes' | 'no'> => (form.verdict === 'review' ? { 5: 'no' } : {}),
+};
+
+/**
  * Creates a request at `at` and moves it up to `now`. When the service's workflow is not in memory
  * yet the request is queued and starts at the next tick.
  */
@@ -338,6 +353,7 @@ export function startIn(world: World, input: StartInput, at: number, env: Env, n
   const slot = allocate(world, 'r');
   const form = { ...(input.form ?? {}) };
   const { plotId, zoneCode } = placeOf(world, input, form);
+  const decisions = { ...(ANSWERED_GATES[input.serviceId]?.(form) ?? {}), ...(input.decisions ?? {}) };
   const queued: RequestState = {
     id: slot.id,
     ref: requestRef(slot.seq, at),
@@ -352,7 +368,7 @@ export function startIn(world: World, input: StartInput, at: number, env: Env, n
     visits: [],
     current: null,
     status: 'active',
-    ...(input.decisions ? { decisions: input.decisions } : {}),
+    ...(Object.keys(decisions).length ? { decisions } : {}),
     investorMs: 0,
     docIds: [],
   };
@@ -375,7 +391,7 @@ export function actIn(world: World, id: string, payload: ActPayload, now: number
 
   let next = recordPayload(world, id, stepId, payload);
   if (action) {
-    for (const atom of stepTasks(service.id, action, payload.choice)) next = atomEffects[atom]?.(next, { id, service, at: now, action, payload }) ?? next;
+    for (const atom of stepTasks(service.id, action, payload.choice, request)) next = atomEffects[atom]?.(next, { id, service, at: now, action, payload }) ?? next;
   }
   const ready = findRequest(next, id);
   if (!ready) return next;

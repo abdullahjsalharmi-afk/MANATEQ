@@ -5,6 +5,7 @@
  *   <FormFields fields values onChange errors? context? />
  *   validateFields(fields, values, lang) → { [key]: message }   (empty object = valid)
  *   describeValue(field, value, lang)    → string               (for "check your answers")
+ *   shownFields(fields, values)          → the fields asked now (a field with `showIf` waits for its answer)
  *
  * Values by field type: text, textarea → string · number, area, amount → number · select, zone, activity,
  * plot → the option value, zone code, activity code (or free text) and plot id · date → "YYYY-MM-DD" ·
@@ -46,6 +47,24 @@ export interface FormFieldsProps {
   context?: { zoneCode?: string; plotId?: string };
   /** Give every control this id prefix (avoids clashes when two forms are on screen). */
   idPrefix?: string;
+}
+
+/**
+ * True when the field is asked, given the answers so far: a field with `showIf` («اليوم المفضل للموعد») waits for
+ * its answer («أريد حجز موعد» on). An untouched toggle counts as off. A hidden field is not shown, checked,
+ * reviewed or sent.
+ */
+export function isFieldShown(field: FieldDef, values: FormValues): boolean {
+  const rule = field.showIf;
+  if (!rule) return true;
+  const value = values[rule.key];
+  if (rule.equals === false) return value !== true;
+  return value === rule.equals;
+}
+
+/** The fields asked, given the answers so far. */
+export function shownFields<F extends FieldDef>(fields: F[], values: FormValues): F[] {
+  return fields.filter((field) => isFieldShown(field, values));
 }
 
 /** A named person: the value of a `person` field. */
@@ -163,6 +182,7 @@ export function validateFields(fields: FieldDef[], values: FormValues, lang: Lan
   const now = context.now ?? Date.now();
 
   for (const field of fields) {
+    if (!isFieldShown(field, values)) continue;
     const value = values[field.key];
     if (!hasValue(field, value)) {
       const waived = field.type === 'plot' && plots.length === 0;
@@ -207,7 +227,8 @@ export function validateFields(fields: FieldDef[], values: FormValues, lang: Lan
 export function describeValue(field: FieldDef, value: FormValue | undefined, lang: Lang): string {
   const { pick, fmt } = langTools(lang);
   const say = (s: L10n) => s[lang];
-  if (field.type === 'toggle') return value === true ? say(formStrings.yes) : value === false ? say(formStrings.no) : '';
+  // A switch left untouched is off: the answer is "No", not "Not added".
+  if (field.type === 'toggle') return value === true ? say(formStrings.yes) : say(formStrings.no);
   if (!hasValue(field, value)) return '';
 
   switch (field.type) {
@@ -308,7 +329,7 @@ export function FormFields({ fields, values, onChange, errors = {}, context, idP
 
   return (
     <FieldStack>
-      {fields.map((field) => (
+      {shownFields(fields, values).map((field) => (
         <FieldControl key={field.key} field={field} value={values[field.key]} error={errors[field.key]} onChange={(v) => onChange(field.key, v)} id={`${idPrefix}-${field.key}`} plots={plots} />
       ))}
     </FieldStack>

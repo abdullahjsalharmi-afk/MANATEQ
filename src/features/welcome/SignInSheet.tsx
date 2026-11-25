@@ -1,7 +1,7 @@
 /**
  * «دخول تجريبي»: the simulated national sign-in. One sentence on what the real service would do, the
  * two demo profiles as large option cards, one consent line and one pill. «دخول» plays a short hand-off
- * (identity ✓, commercial registration ✓), then seeds the chosen profile and opens Home.
+ * (identity ✓, commercial registration ✓), then seeds the chosen profile and opens Home (or the screen a deep link asked for).
  */
 import { Check } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -18,9 +18,11 @@ import styles from './SignInSheet.module.css';
 export interface SignInSheetProps {
   open: boolean;
   onClose: () => void;
+  /** Where to go once signed in: the screen a deep link asked for, or Home. Default Home. */
+  next?: string;
 }
 
-export function SignInSheet({ open, onClose }: SignInSheetProps) {
+export function SignInSheet({ open, onClose, next = '/' }: SignInSheetProps) {
   const t = useT(strings);
   const persona = useApp((s) => s.world.persona);
   const onboarded = useApp((s) => s.settings.onboarded);
@@ -49,7 +51,7 @@ export function SignInSheet({ open, onClose }: SignInSheetProps) {
     timers.current.push(
       window.setTimeout(() => {
         enterAs(profile);
-        navigate('/', { replace: true });
+        navigate(next, { replace: true });
       }, HANDOFF.done),
     );
   };

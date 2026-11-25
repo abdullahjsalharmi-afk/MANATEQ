@@ -46,12 +46,12 @@ function MemberCard({ member }: { member: TeamMember }) {
       <div className={styles.who}>
         <Avatar name={name} size="lg" />
         <div className={styles.words}>
-          <h2 className="type-body">
-            <strong>{name}</strong>
-          </h2>
+          <h2 className={styles.name}>{name}</h2>
           <p className={`type-callout ${styles.quiet}`}>{pick(member.role)}</p>
+          <p className={styles.scope}>
+            <Pill tone="neutral">{t(`scope.${member.scope}`)}</Pill>
+          </p>
         </div>
-        <Pill tone="neutral">{t(`scope.${member.scope}`)}</Pill>
       </div>
       <div className={styles.mandate}>
         {owner ? (

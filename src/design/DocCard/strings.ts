@@ -9,7 +9,8 @@ export const strings = {
   contract: { ar: 'عقد', en: 'Contract' },
   offer: { ar: 'عرض', en: 'Offer' },
   noc: { ar: 'شهادة عدم ممانعة', en: 'No-objection certificate' },
-  permit: { ar: 'تصريح', en: 'Permit' },
+  // A works permit (site mobilisation, works approval): never the gate pass («تصريح دخول») or the building permit («رخصة البناء»).
+  permit: { ar: 'تصريح أعمال', en: 'Works permit' },
   certificate: { ar: 'شهادة', en: 'Certificate' },
   receipt: { ar: 'إيصال', en: 'Receipt' },
   statement: { ar: 'كشف حساب', en: 'Statement' },

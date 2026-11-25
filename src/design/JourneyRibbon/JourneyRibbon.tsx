@@ -23,6 +23,11 @@ export interface JourneyRibbonProps {
   caption?: string;
   /** Makes the stations buttons. Called with the station's key. */
   onSelect?: (key: string) => void;
+  /**
+   * The key of the station being viewed (in the journey sheet): its label is drawn in 600 and underlined with a
+   * 2 px focus-colour line, and its button reports `aria-pressed`. It can differ from the current station.
+   */
+  selected?: string;
   /** `compact` for Home, `expanded` (numbered, larger) for the journey sheet. */
   size?: 'compact' | 'expanded';
   className?: string;
@@ -33,7 +38,7 @@ export interface JourneyRibbonProps {
  * Four equal segments on a thin rail. Passed stations are solid ink dots, the current one carries the
  * accent, the rest are hollow and wait quietly.
  */
-export function JourneyRibbon({ stations, label, caption, onSelect, size = 'compact', className }: JourneyRibbonProps) {
+export function JourneyRibbon({ stations, label, caption, onSelect, selected, size = 'compact', className }: JourneyRibbonProps) {
   const t = useT(strings);
   const expanded = size === 'expanded';
   return (
@@ -50,9 +55,14 @@ export function JourneyRibbon({ stations, label, caption, onSelect, size = 'comp
             </>
           );
           return (
-            <li key={station.key} className={cx(styles.station, styles[station.state])} aria-current={station.state === 'current' ? 'step' : undefined} data-state={station.state}>
+            <li
+              key={station.key}
+              className={cx(styles.station, styles[station.state], selected === station.key && styles.viewed)}
+              aria-current={station.state === 'current' ? 'step' : undefined}
+              data-state={station.state}
+            >
               {onSelect ? (
-                <button type="button" className={styles.hit} onClick={() => onSelect(station.key)}>
+                <button type="button" className={styles.hit} aria-pressed={selected === undefined ? undefined : selected === station.key} onClick={() => onSelect(station.key)}>
                   {content}
                 </button>
               ) : (

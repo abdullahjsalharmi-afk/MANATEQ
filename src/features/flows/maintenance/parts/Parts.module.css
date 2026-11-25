@@ -45,7 +45,15 @@
 }
 
 .question {
-  margin-block: var(--s-2) var(--s-6);
+  margin-block: var(--s-6) var(--s-8);
+}
+
+.where {
+  margin-block: 0 var(--s-2);
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .questionText {

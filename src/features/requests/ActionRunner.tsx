@@ -3,12 +3,13 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import type { ServiceDetail, StepAction } from '@/data/types';
 import { Button, Chip, ChipRow, Icon, Sheet, toast } from '@/design/core';
-import { Checkbox, FilePick, Lines, PaySheet, SignSheet, TextArea, TextField, type PickedFile, type SheetLine } from '@/design/forms';
+import { Checkbox, FilePick, Lines, SignSheet, TextArea, TextField, type PickedFile, type SheetLine } from '@/design/forms';
 import type { FormValue, RequestState } from '@/domain/types';
 import { FormFields, validateFields, type FormErrors, type FormValues } from '@/features/shared/FormFields';
-import { actOnRequest, selectCompany, selectLeases, selectPlots, stepTasks, useApp, type ActPayload } from '@/state';
+import { actOnRequest, getState, selectCompany, selectDocs, selectPlots, selectThread, stepTasks, useApp, type ActPayload } from '@/state';
 import styles from './ActionRunner.module.css';
-import { illustrativeAmount, offeredSlots, receiptRef, runnerTasks } from './logic';
+import { depositPaidWithOffer, newReceipts, offeredSlots, runnerTasks } from './logic';
+import { StepPaySheet } from './StepPaySheet';
 import { strings } from './strings';
 
 export interface ActionRunnerProps {
@@ -37,7 +38,8 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
   const baseId = useId();
   const company = useApp(selectCompany);
   const plots = useApp(selectPlots);
-  const leases = useApp(selectLeases);
+  const thread = useApp(selectThread(request.id));
+  const allDocs = useApp(selectDocs);
 
   const [choice, setChoice] = useState<string | undefined>(undefined);
   const [index, setIndex] = useState(0);
@@ -52,6 +54,7 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
   const [declined, setDeclined] = useState(false);
   const [slots, setSlots] = useState<number[]>([]);
   const advanced = useRef(false);
+  const paidReceipt = useRef('');
 
   // Every opening starts afresh.
   useEffect(() => {
@@ -69,30 +72,41 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
     setDeclined(false);
     setSlots(offeredSlots(Date.now()));
     advanced.current = false;
+    paidReceipt.current = '';
   }, [open]);
 
-  const tasks = useMemo(() => runnerTasks(action, choice, (picked) => stepTasks(service.id, action, picked)), [action, choice, service.id]);
+  // A deposit already paid with the offer is not asked for again: the step completes without a payment.
+  const prepaid = useMemo(() => depositPaidWithOffer(request, action, thread, allDocs), [request, action, thread, allDocs]);
+  const tasksOf = (picked: string | undefined) => {
+    const list = runnerTasks(action, picked, (option) => stepTasks(service.id, action, option));
+    return prepaid ? list.filter((task) => task !== 'pay') : list;
+  };
+  const tasks = useMemo(() => {
+    const list = runnerTasks(action, choice, (picked) => stepTasks(service.id, action, picked));
+    return prepaid ? list.filter((task) => task !== 'pay') : list;
+  }, [action, choice, service.id, prepaid]);
+  const choiceWasPaid = prepaid !== null && choice !== undefined && stepTasks(service.id, action, choice).includes('pay');
   const current = tasks[Math.min(index, tasks.length - 1)];
   const last = index >= tasks.length - 1;
 
   const plot = plots.find((candidate) => candidate.id === request.plotId);
-  const lease = plot?.leaseId ? leases.find((candidate) => candidate.id === plot.leaseId) : undefined;
   const plotNumber = plot?.number ?? request.plotId;
-  const amount = request.amount ?? illustrativeAmount(action.amount?.basis, lease?.annualRent);
-  const amountIsIllustrative = request.amount === undefined;
+  // The amount the state fixed when the step opened: the amount shown is the amount charged.
+  const amount = request.amount;
   const docs = action.docs?.length ? action.docs.map((doc) => pick(doc)) : [t('uploadDefault')];
 
   const summary: SheetLine[] = [
     { label: t('service'), value: pick(service.label) },
     { label: t('reference'), value: <span className="ltr">{request.ref}</span> },
     ...(plotNumber ? [{ label: t('plot'), value: <span className="ltr">{plotNumber}</span> }] : []),
-    ...(tasks.includes('pay') ? [{ label: pick(action.amount?.label) || t('amount'), value: fmt.money(amount) }] : []),
+    ...(tasks.includes('pay') && amount !== undefined ? [{ label: pick(action.amount?.label) || t('amount'), value: fmt.money(amount) }] : []),
     ...(tasks.includes('sign') && action.document ? [{ label: t('document'), value: pick(action.document) }] : []),
   ];
 
   /* ── finishing ── */
 
-  const submit = () => {
+  /** Completes the step with what was collected. */
+  const act = (): boolean => {
     const payload: ActPayload = {};
     if (choice !== undefined) payload.choice = choice;
     const answers: Record<string, FormValue> = { ...form };
@@ -104,7 +118,11 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
       payload.files = docs.map((_, i) => files[i]).filter((file): file is PickedFile => Boolean(file)).map((file) => ({ name: file.name, ...(file.size !== undefined ? { size: file.size } : {}) }));
     }
     if (tasks.includes('rate')) payload.rating = comment.trim() ? { stars, comment: comment.trim() } : stars;
-    const ok = actOnRequest(request.id, payload);
+    return actOnRequest(request.id, payload);
+  };
+
+  const submit = () => {
+    const ok = act();
     onClose();
     if (ok) {
       toast(t('submitted'), { tone: 'ok' });
@@ -117,7 +135,7 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
   const advance = () => {
     setErrors({});
     // A choice may change the tasks that follow: read them afresh.
-    const now = runnerTasks(action, choice, (picked) => stepTasks(service.id, action, picked));
+    const now = tasksOf(choice);
     if (index + 1 < now.length) setIndex(index + 1);
     else submit();
   };
@@ -237,6 +255,11 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
                     ))}
                   </ChipRow>
                   {errors.choice ? <p className={styles.error} role="alert">{errors.choice}</p> : null}
+                  {choiceWasPaid && prepaid ? (
+                    <p className={styles.note} role="status">
+                      {prepaid.receipt ? t('paidWithOfferRef', { ref: prepaid.receipt.ref }) : t('paidWithOffer')}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
 
@@ -294,21 +317,41 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
         </div>
       </Sheet>
 
-      <PaySheet
+      <StepPaySheet
         open={open && current === 'pay'}
         onClose={leaveDedicated}
         title={pick(action.amount?.label) || pick(action.title)}
-        amount={amount}
-        reference={receiptRef(request.ref)}
+        amount={amount ?? 0}
+        closeLabel={t('close')}
         lines={[
           { label: t('service'), value: pick(service.label) },
           { label: t('reference'), value: <span className="ltr">{request.ref}</span> },
           ...(plotNumber ? [{ label: t('plot'), value: <span className="ltr">{plotNumber}</span> }] : []),
-          ...(amountIsIllustrative ? [{ label: t('amount'), value: t('illustrativeAmount') }] : []),
         ]}
-        onPaid={() => {
-          advanced.current = true;
-          advance();
+        onPay={() => {
+          // The payment is the last task of every step that asks for one: completing the step files the receipt.
+          if (!last) return '';
+          const before = getState().world.requests.find((candidate) => candidate.id === request.id)?.docIds ?? [];
+          if (!act()) return null;
+          const world = getState().world;
+          const after = world.requests.find((candidate) => candidate.id === request.id)?.docIds ?? [];
+          const receipts = newReceipts(before, after, world.docs);
+          paidReceipt.current = receipts.map((doc) => doc.ref).join(' · ');
+          return paidReceipt.current;
+        }}
+        onFailed={() => {
+          onClose();
+          toast(t('failed'), { tone: 'bad' });
+        }}
+        onDone={() => {
+          if (!last) {
+            advanced.current = true;
+            advance();
+            return;
+          }
+          onClose();
+          toast(paidReceipt.current ? t('receiptFiled', { ref: paidReceipt.current }) : t('submitted'), { tone: 'ok' });
+          onDone?.();
         }}
       />
 

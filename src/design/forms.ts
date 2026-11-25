@@ -13,6 +13,7 @@ export { FilePick, FILE_CHECK_MS, type FilePickProps, type PickedFile } from './
 export { PhotoPick, SAMPLE_PHOTO_ID, type PhotoPickProps, type PickedPhoto } from './PhotoPick/PhotoPick';
 export { SearchField, type SearchFieldProps } from './SearchField/SearchField';
 export { Stepper, type StepperProps } from './Stepper/Stepper';
+export { StepHead, useStepLabel, type StepHeadProps } from './Stepper/StepHead';
 export { SignaturePad, type SignaturePadProps } from './SignaturePad/SignaturePad';
 export { QR, type QRProps } from './QR/QR';
 export { PaySheet, PAY_MS, type PaySheetProps } from './PaySheet/PaySheet';

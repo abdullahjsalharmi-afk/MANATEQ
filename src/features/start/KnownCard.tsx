@@ -14,7 +14,7 @@ export interface KnownCardProps {
   plot?: Plot;
 }
 
-/** The investor's verified company, as the flow already knows it: name, CR, signatory, activity. */
+/** The investor's verified company, as the flow already knows it: name, CR, signatory, activity, as facts (the value carries the weight). */
 export function KnownCard({ company, plot }: KnownCardProps) {
   const t = useT(strings);
   const { pick, fmt } = useLang();
@@ -30,10 +30,10 @@ export function KnownCard({ company, plot }: KnownCardProps) {
           </p>
         </div>
         <List variant="plain">
-          <Row title={t('cr')} trailing={<span className="ltr">{company.cr}</span>} />
-          <Row title={t('signatory')} trailing={pick(company.signatory.name)} />
-          <Row title={t('activity')} trailing={pick(company.activity)} />
-          {plot ? <Row title={t('plot')} subtitle={zone ? pick(zone.name) : undefined} trailing={<span className="ltr">{fmt.ltr(plot.number)}</span>} /> : null}
+          <Row fact title={t('cr')} trailing={<span className="ltr">{company.cr}</span>} />
+          <Row fact title={t('signatory')} trailing={pick(company.signatory.name)} />
+          <Row fact title={t('activity')} trailing={pick(company.activity)} />
+          {plot ? <Row fact title={t('plot')} subtitle={zone ? pick(zone.name) : undefined} trailing={<span className="ltr">{fmt.ltr(plot.number)}</span>} /> : null}
         </List>
       </Card>
     </section>

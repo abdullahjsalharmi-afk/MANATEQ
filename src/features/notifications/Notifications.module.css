@@ -6,7 +6,7 @@
   color: var(--accent-ink);
 }
 
-/* Unread: the title in 600 and a dot, so it never rests on colour alone. */
+/* Unread: the title in 600 and an ink dot (the accent is for what can be pressed), so it never rests on colour alone. */
 .unreadTitle {
   font-weight: var(--w-strong);
 }
@@ -16,6 +16,6 @@
   inline-size: 8px;
   block-size: 8px;
   border-radius: var(--r-pill);
-  background: var(--accent);
+  background: var(--ink);
   flex: none;
 }

@@ -145,19 +145,32 @@
   margin-block-end: var(--s-1);
 }
 
-/* ── Statement ── */
+/* ── Statement: one grouped list, a head per month ── */
+
+.statementCard {
+  overflow: hidden;
+}
+
+.month {
+  padding-inline: 19px;
+}
 
 .month + .month {
-  margin-block-start: var(--s-6);
+  border-block-start: 1px solid var(--line-soft);
 }
 
 .monthHead {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--s-3);
-  margin-block-end: var(--s-3);
-  padding-inline: var(--s-1);
+  gap: 0 var(--s-3);
+  padding-block: var(--s-4) var(--s-1);
+}
+
+/* The paid date and the receipt number, each on its own line: neither is squeezed beside the amount. */
+.metaLine {
+  display: block;
 }
 
 .monthTitle {
@@ -205,6 +218,7 @@
 
 .fact {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
   gap: var(--s-4);
   padding-block: var(--s-3);
@@ -223,12 +237,15 @@
   line-height: var(--lh-body);
 }
 
+/* The value is the information: 17 px ink with tabular figures; the label is the quiet part. */
 .fact dd {
   min-inline-size: 0;
   margin: 0;
   text-align: end;
-  font-size: var(--t-callout);
+  color: var(--ink);
+  font-size: var(--t-body);
   line-height: var(--lh-body);
+  font-variant-numeric: tabular-nums;
 }
 
 .center {

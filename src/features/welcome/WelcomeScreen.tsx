@@ -6,9 +6,11 @@
 import { useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { navigate } from '@/app/router';
+import { useQuery } from '@/app/routes';
 import { Button, Mark, Render, Screen, Segmented, Tile } from '@/design/core';
 import { enterAs, setLang } from '@/state/actions';
 import { useApp } from '@/state/store';
+import { nextTarget } from './next';
 import { SignInSheet } from './SignInSheet';
 import { strings } from './strings';
 import styles from './WelcomeScreen.module.css';
@@ -17,16 +19,18 @@ export function WelcomeScreen() {
   const t = useT(strings);
   const onboarded = useApp((s) => s.settings.onboarded);
   const [signingIn, setSigningIn] = useState(false);
+  // A deep link that brought the visitor here (`?next=`) is where they go once they have entered.
+  const next = nextTarget(useQuery().next);
 
   const browse = () => {
     enterAs('guest');
-    navigate('/', { replace: true });
+    navigate(next, { replace: true });
   };
 
-  // The verifier is open to everyone; a first-time visitor enters as a guest on the way there.
+  // The verifier is open to everyone; a first-time visitor enters as a guest on the way there, keeping a shared code.
   const verify = () => {
     if (!onboarded) enterAs('guest');
-    navigate('/verify');
+    navigate(next.startsWith('/verify') ? next : '/verify');
   };
 
   // The sheet sits outside the maroon screen, so it reads in the page's own tokens, not the brand tile's.
@@ -71,7 +75,7 @@ export function WelcomeScreen() {
           </div>
         </Tile>
       </Screen>
-      <SignInSheet open={signingIn} onClose={() => setSigningIn(false)} />
+      <SignInSheet open={signingIn} onClose={() => setSigningIn(false)} next={next} />
     </>
   );
 }

@@ -14,6 +14,14 @@ export interface PlotGridProps {
   onSelect: (plot: PlotCell) => void;
   /** Ids of plots the investor already holds: shown as "your plot", whatever the layout says. */
   own?: string[];
+  /**
+   * Whether an available plot can be chosen for this request (for example, it is large enough for the area
+   * asked for). A plot that fails is drawn as available but dimmed, is not focusable and says why
+   * (`unfitLabel`); the legend gains a key for it. Default: every available plot can be chosen.
+   */
+  isSelectable?: (plot: PlotCell) => boolean;
+  /** Why a dimmed plot cannot be chosen, e.g. «أصغر من المساحة المطلوبة». Default «لا تناسب طلبك». */
+  unfitLabel?: string;
   /** Names the layout for screen readers. Default "مخطط القطع". */
   label?: string;
   className?: string;
@@ -21,8 +29,8 @@ export interface PlotGridProps {
 
 const LEGEND: PlotCellStatus[] = ['available', 'allocated', 'reserved'];
 
-/** What a cell shows: its status in the layout, or "own" for a plot the investor holds. */
-type CellLook = PlotCellStatus | 'own';
+/** What a cell shows: its status in the layout, "own" for a plot the investor holds, "unfit" for an available plot this request cannot use. */
+type CellLook = PlotCellStatus | 'own' | 'unfit';
 
 const STEP: Record<string, [number, number]> = { ArrowRight: [0, 1], ArrowLeft: [0, -1], ArrowDown: [1, 0], ArrowUp: [-1, 0] };
 
@@ -31,16 +39,24 @@ const STEP: Record<string, [number, number]> = { ArrowRight: [0, 1], ArrowLeft: 
  * wells and reserved plots hatched wells, both disabled, so the difference never depends on colour alone. The layout is a plan, so it
  * keeps the same orientation in Arabic and English. Arrow keys move between available plots.
  */
-export function PlotGrid({ plots, selected, onSelect, own, label, className }: PlotGridProps) {
+export function PlotGrid({ plots, selected, onSelect, own, isSelectable, unfitLabel, label, className }: PlotGridProps) {
   const t = useT(strings);
   const { fmt } = useLang();
   const gridRef = useRef<HTMLDivElement>(null);
-  const lookOf = (plot: PlotCell): CellLook => (own?.includes(plot.id) ? 'own' : plot.status);
+  const lookOf = (plot: PlotCell): CellLook => {
+    if (own?.includes(plot.id)) return 'own';
+    if (plot.status === 'available' && isSelectable && !isSelectable(plot)) return 'unfit';
+    return plot.status;
+  };
+  const unfitText = unfitLabel ?? t('unfit');
+  const statusText = (look: CellLook) => (look === 'unfit' ? unfitText : t(look));
   const isFree = (plot: PlotCell) => lookOf(plot) === 'available';
   const chosen = plots.find((plot) => plot.id === selected && isFree(plot));
   // One plot is in the tab order: the chosen one, or the first available.
   const tabStop = chosen ?? plots.find(isFree);
   const hasOwn = plots.some((plot) => lookOf(plot) === 'own');
+  const hasUnfit = plots.some((plot) => lookOf(plot) === 'unfit');
+  const keys: CellLook[] = [...LEGEND, ...(hasUnfit ? (['unfit'] as const) : []), ...(hasOwn ? (['own'] as const) : [])];
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const id = (event.target as HTMLElement).dataset.plot;
@@ -84,7 +100,8 @@ export function PlotGrid({ plots, selected, onSelect, own, label, className }: P
               className={cx(styles.cell, styles[look], on && styles.on)}
               disabled={!free}
               aria-pressed={free ? on : undefined}
-              aria-label={t('cell', { id: plot.id, area: fmt.area(plot.areaSqm), status: t(look) })}
+              aria-label={t('cell', { id: plot.id, area: fmt.area(plot.areaSqm), status: statusText(look) })}
+              title={look === 'unfit' ? unfitText : undefined}
               tabIndex={free ? (tabStop?.id === plot.id ? 0 : -1) : undefined}
               onClick={() => onSelect(plot)}
             >
@@ -98,10 +115,10 @@ export function PlotGrid({ plots, selected, onSelect, own, label, className }: P
 
       <div className={styles.foot}>
         <ul className={styles.legend}>
-          {(hasOwn ? [...LEGEND, 'own' as const] : LEGEND).map((look) => (
+          {keys.map((look) => (
             <li key={look} className={styles.key}>
               <span className={cx(styles.swatch, styles[look])} aria-hidden="true" />
-              {t(look)}
+              {statusText(look)}
             </li>
           ))}
         </ul>

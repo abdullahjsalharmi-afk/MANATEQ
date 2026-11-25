@@ -6,10 +6,12 @@
  * worked out once per world and remembered.
  */
 import { peekServiceDetail } from '@/data/catalog';
+import type { StepAction } from '@/data/types';
 import { journeyOf, stationOf, type Journey, type StationKey } from '@/domain/journey';
 import { collectNextSteps, deadlineOf } from '@/domain/nextstep';
 import type { AppNotification, AppState, Appointment, Company, Doc, Draft, Invoice, Lease, NextStep, Pass, Persona, Plot, RequestState, TeamMember, World } from '@/domain/types';
 import { isCatalogueReady } from './catalogue';
+import { amountFor } from './effects';
 import { findLease, isFinished, threadOf } from './world';
 
 export { requestView, standardClockOf, holderOf, holderNameOf, timelineRows, type RequestView, type TimelineEntry, type TimelineRow, type TimelineState } from './view';
@@ -33,6 +35,16 @@ function perWorld<T>(derive: (world: World) => T): (world: World) => T {
 /** Shared empty lists, so "nothing" is always the same nothing. */
 const NO_REQUESTS: RequestState[] = [];
 const NO_DOCS: Doc[] = [];
+const NO_PASSES: Pass[] = [];
+
+const passesOfRequest = perWorld((world) => {
+  const byRequest = new Map<string, Pass[]>();
+  for (const pass of world.passes.slice().sort((a, b) => b.from - a.from)) {
+    if (pass.requestId === undefined) continue;
+    byRequest.set(pass.requestId, [...(byRequest.get(pass.requestId) ?? []), pass]);
+  }
+  return byRequest;
+});
 
 /* ───────────────────────────── session ───────────────────────────── */
 
@@ -104,6 +116,25 @@ export const selectDocsOfRequest =
     return request.docIds.map((id) => state.world.docs.find((doc) => doc.id === id)).filter((doc): doc is Doc => doc !== undefined);
   };
 
+/**
+ * The amount the open step of a request charges, as the state will charge it: the amount fixed when the
+ * step opened, else what its `pay` task asks for. Undefined when the step asks for no payment, because
+ * it was already made earlier in the thread (`request.prepaidDocId`, the deposit paid with the offer).
+ */
+export const selectStepAmount =
+  (requestId: string | undefined, action: Pick<StepAction, 'amount'> | null | undefined): Selector<number | undefined> =>
+  (state) => {
+    const request = requestId === undefined ? undefined : state.world.requests.find((candidate) => candidate.id === requestId);
+    if (!request || !action || request.prepaidDocId !== undefined) return undefined;
+    return request.amount ?? amountFor(state.world, request, action);
+  };
+
+/** The gate passes a request issued (a gate pass request, D2), the latest first. */
+export const selectPassesOfRequest =
+  (requestId: string | undefined): Selector<Pass[]> =>
+  (state) =>
+    requestId === undefined ? NO_PASSES : passesOfRequest(state.world).get(requestId) ?? NO_PASSES;
+
 /* ───────────────────────────── money ───────────────────────────── */
 
 export interface Dues {
@@ -163,11 +194,20 @@ export const selectStation: Selector<StationKey> = (state) => stationOf(state.wo
 /** The four stations with their checklists, for the journey that still has the furthest to go. */
 export const selectJourney: Selector<Journey> = (state) => journeyOfWorld(state.world);
 
-/** The journey of one plot. Not remembered: use it inside `useMemo` or for a single screen. */
+const journeysOfPlots = perWorld(() => new Map<string, Journey>());
+
+/** The journey of one plot, remembered per world: the same object until the world changes. */
 export const selectJourneyOfPlot =
   (plotId: string): Selector<Journey> =>
-  (state) =>
-    journeyOf(state.world, plotId);
+  (state) => {
+    const remembered = journeysOfPlots(state.world);
+    let journey = remembered.get(plotId);
+    if (!journey) {
+      journey = journeyOf(state.world, plotId);
+      remembered.set(plotId, journey);
+    }
+    return journey;
+  };
 
 /* ───────────────────────────── plots and leases ───────────────────────────── */
 

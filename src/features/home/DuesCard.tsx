@@ -8,11 +8,11 @@ import { strings } from './strings';
 export interface DuesCardProps {
   dues: Dues;
   now: number;
-  /** Opens the payment sheet for the invoice due first. */
-  onPay: () => void;
+  /** Opens the payment sheet for the invoice due first. Left out when the hero above already pays it: one pill per task. */
+  onPay?: () => void;
 }
 
-/** What is due next: the amount as the figure, the due date, and a small pill that pays it here. */
+/** What is due next: the amount as the figure, the due date, and (unless the hero pays it) a small pill that pays it here. */
 export function DuesCard({ dues, now, onPay }: DuesCardProps) {
   const t = useT(strings);
   const { pick, fmt } = useLang();
@@ -32,11 +32,13 @@ export function DuesCard({ dues, now, onPay }: DuesCardProps) {
           {fmt.relative(invoice.dueAt, now)}
         </p>
         {rest > 0 ? <p className={styles.duesRest}>{t('duesMore', { amount: fmt.money(rest) })}</p> : null}
-        <div className={styles.duesAction}>
-          <Button variant="secondary" size="sm" onClick={onPay}>
-            {t('pay')}
-          </Button>
-        </div>
+        {onPay ? (
+          <div className={styles.duesAction}>
+            <Button variant="secondary" size="sm" onClick={onPay}>
+              {t('pay')}
+            </Button>
+          </div>
+        ) : null}
       </Card>
     </Section>
   );

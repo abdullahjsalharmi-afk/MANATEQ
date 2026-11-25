@@ -26,6 +26,7 @@
  *         plot steps are then taken as answered: the request is submitted, not asked again.
  *       · any service about one of the investor's plots: `plotId`, or a `plot` field in the form.
  *       · the handover (A8) after the contract: `{ plotId, threadId, parentId }` of the contract request.
+ *   completeStep(id, payload) → { ok, receiptDocIds }: the same, telling which receipts the payment filed
  *   actOnRequest(id, { rating?, choice?, form?, files? }) → completes the step in `view.pendingAction`
  *       (with a choice, only the tasks `stepTasks(serviceId, action, choice)` lists apply): `pay` files a paid invoice and its receipt, `sign`/`accept` are recorded, `rate` saves the rating.
  *   fastForwardRequest(id) · cancelRequest(id) · payInvoice(id) → receipt doc id
@@ -45,6 +46,7 @@ export { appStore, getState, useApp, resetEverything, STORAGE_KEY } from './stor
 export { applyBootParams, loadCatalogue } from './boot';
 export { isCatalogueReady, useCatalogueReady } from './catalogue';
 export { receiptRefFor } from './refs';
+export { amountFor } from './effects';
 export { stepTasks } from './sim';
 export { STATE_VERSION, seedWorld } from './seed';
 export { holdOf, type ActPayload, type AppointmentInput, type FileValue, type PassInput, type StartOptions } from './types';

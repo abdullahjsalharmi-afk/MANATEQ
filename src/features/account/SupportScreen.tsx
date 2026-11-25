@@ -4,7 +4,7 @@
  * complaint or a suggestion, and five honest answers to common questions.
  */
 import { CalendarDays, ChevronDown, MessageCircle, MessageSquareWarning, Mail, Phone, Video, Building2 } from 'lucide-react';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { Link } from '@/app/router';
 import { zonesData } from '@/data/catalog';
@@ -52,17 +52,13 @@ export function SupportScreen() {
             </Way>
             {whatsapp ? (
               <Way icon={MessageCircle} title={t('whatsappTitle')} line={t('whatsappLine')}>
-                <span className={styles.contact} dir="ltr">
-                  {whatsapp}
-                </span>
+                <Contact value={whatsapp} kind="whatsapp" />
                 <ExternalLink href={whatsappHref(whatsapp)}>{t('whatsappOpen')}</ExternalLink>
               </Way>
             ) : null}
             {email ? (
               <Way icon={Mail} title={t('emailTitle')} line={t('emailLine')}>
-                <span className={styles.contact} dir="ltr">
-                  {email}
-                </span>
+                <Contact value={email} kind="email" />
                 <ExternalLink href={`mailto:${email}`}>{t('emailOpen')}</ExternalLink>
               </Way>
             ) : null}
@@ -94,6 +90,45 @@ function Way({ icon, title, line, children }: { icon: typeof Mail; title: string
       <p className={styles.wayLine}>{line}</p>
       <div className={styles.wayAction}>{children}</div>
     </Card>
+  );
+}
+
+/**
+ * A published number or address as selectable text, with a quiet copy action beside it. Inside a frame or on a
+ * computer without a mail or chat app the link may do nothing; the copy always leaves the investor with the contact.
+ */
+function Contact({ value, kind }: { value: string; kind: 'whatsapp' | 'email' }) {
+  const t = useT(strings);
+  const text = useRef<HTMLSpanElement>(null);
+  const copy = () => {
+    const selectIt = () => {
+      const node = text.current;
+      const selection = window.getSelection();
+      if (!node || !selection) return;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      toast(t('copySelected'));
+    };
+    if (!navigator.clipboard?.writeText) {
+      selectIt();
+      return;
+    }
+    navigator.clipboard.writeText(value).then(
+      () => toast(t(kind === 'email' ? 'copiedEmail' : 'copiedNumber'), { tone: 'ok' }),
+      selectIt,
+    );
+  };
+  return (
+    <span className={styles.contactLine}>
+      <span ref={text} className={styles.contact} dir="ltr">
+        {value}
+      </span>
+      <Button variant="quiet" size="sm" onClick={copy} aria-label={t(kind === 'email' ? 'copyEmail' : 'copyNumber')}>
+        {t('copy')}
+      </Button>
+    </span>
   );
 }
 

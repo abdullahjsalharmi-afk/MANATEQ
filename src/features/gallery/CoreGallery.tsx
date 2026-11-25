@@ -3,7 +3,7 @@
  * shell (global bar, frosted bar, tab bar, action bar, footer) and the layout primitives.
  * Open the sheet on load with `#/gallery?sheet=core`.
  */
-import { BadgeCheck, Bell, Building2, CircleCheck, Clock, CreditCard, Download, FileText, House, LayoutGrid, ListChecks, MapPinned, CircleUserRound, Search, Share, TriangleAlert, Wrench } from 'lucide-react';
+import { BadgeCheck, Bell, CircleAlert, Building2, CircleCheck, Clock, CreditCard, Download, FileText, House, LayoutGrid, ListChecks, MapPinned, CircleUserRound, Search, Share, TriangleAlert, Wrench } from 'lucide-react';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { useQuery } from '@/app/routes';
@@ -487,7 +487,9 @@ export function CoreGallery() {
           </div>
           <div style={{ ...cluster, justifyContent: 'center' }}>
             <Pill>{t('neutral')}</Pill>
-            <Pill tone="accent">{t('withYou')}</Pill>
+            <Pill tone="warn" icon={CircleAlert}>
+              {t('withYou')}
+            </Pill>
             <Pill tone="gold" icon={BadgeCheck}>
               {t('verified')}
             </Pill>
@@ -584,7 +586,7 @@ export function CoreGallery() {
       <Container>
         <Section title={t('listsHead')} hint={t('listsHint')} action={{ label: t('seeAll'), to: '/gallery' }}>
           <List>
-            <Row to="/gallery" leading={<Icon icon={Building2} />} title={t('buildPermit')} subtitle={t('buildPermitSub')} trailing={<Pill tone="accent">{t('inProgress')}</Pill>} />
+            <Row to="/gallery" leading={<Icon icon={Building2} />} title={t('buildPermit')} subtitle={t('buildPermitSub')} trailing={<Pill tone="info">{t('inProgress')}</Pill>} />
             <Row to="/gallery" leading={<Icon icon={Wrench} />} title={t('maintenance')} subtitle={t('maintenanceSub')} />
             <Row leading={<Icon icon={FileText} />} eyebrow={fmt.ltr('MQ-2611-0042')} title={t('leaseCertificate')} subtitle={t('issuedToday')} trailing="PDF" />
           </List>
@@ -600,7 +602,9 @@ export function CoreGallery() {
             <div style={cluster}>
               <Pill>{t('neutral')}</Pill>
               <Pill>{t('automatic')}</Pill>
-              <Pill tone="accent">{t('withYou')}</Pill>
+              <Pill tone="warn" icon={CircleAlert}>
+              {t('withYou')}
+            </Pill>
               <Pill tone="gold" icon={BadgeCheck}>
                 {t('verified')}
               </Pill>
@@ -614,9 +618,6 @@ export function CoreGallery() {
               </Pill>
               <Pill tone="bad" icon={TriangleAlert}>
                 {t('overdue')}
-              </Pill>
-              <Pill tone="accent" solid>
-                {t('fresh')}
               </Pill>
               <Pill solid>{t('demo')}</Pill>
             </div>

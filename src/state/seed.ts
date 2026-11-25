@@ -24,7 +24,7 @@ import type { ActPayload, Env, PendingWorld } from './types';
 import { DAY, HOUR, MINUTE, PAYMENT_TERM_MS, addDocs, addYears, annualRentOf, docFacts, findRequest, isFinished, isOpen, notify, periodRentOf, rateOf, startOfDay } from './world';
 
 /** Bump when the saved shape changes; older saves are discarded on load. */
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;
 
 export function initialSettings(): Settings {
   return { lang: 'ar', theme: 'auto', textSize: 1, onboarded: false, notifications: true };

@@ -51,10 +51,11 @@
 
 @media (min-width: 1069px) {
   .tile {
-    padding-block: var(--s-12) var(--s-10);
+    padding-block: var(--s-12) var(--s-8);
   }
 
+  /* Bounded by the height too, so the render, the link and the fine print all fit in the first view. */
   .render {
-    width: min(100%, 55vw);
+    width: min(100%, 55vw, max(260px, calc((100svh - 600px) * 1.34)));
   }
 }

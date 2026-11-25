@@ -3,41 +3,37 @@ export const strings = {
   title: { ar: 'قدّم طلب أرض', en: 'Apply for land' },
   close: { ar: 'أغلق الطلب', en: 'Close the application' },
   previous: { ar: 'السابق', en: 'Back' },
-  stepOf: { ar: 'الخطوة {n} من {m} · {name}', en: 'Step {n} of {m} · {name}' },
+  stepOf: { ar: 'الخطوة {n} من {m}', en: 'Step {n} of {m}' },
   continue: { ar: 'متابعة', en: 'Continue' },
   submit: { ar: 'قدّم الطلب', en: 'Submit application' },
   restored: { ar: 'أكملنا من حيث توقفت', en: 'Picked up where you left off' },
 
   // 1 · We know you already
-  p1: { ar: 'نعرفك مسبقًا', en: 'We know you already' },
-  p1Question: { ar: 'تأكّد من بياناتك.', en: 'Check your details.' },
-  p1Hint: { ar: 'جلبناها من ملفك الموثّق، فلا تكتبها مرة أخرى.', en: 'We fetched them from your verified profile, so you never type them again.' },
-  verified: { ar: 'ملف موثّق', en: 'Verified profile' },
-  cr: { ar: 'السجل التجاري {cr}', en: 'Commercial registration {cr}' },
-  fetched: { ar: 'جلبناها عنك', en: 'Fetched for you' },
+  // The same head and wording as the first page of every other flow (features/start).
+  p1Question: { ar: 'نعرفك مسبقًا', en: 'We already know you' },
+  p1Hint: { ar: 'لن نطلب منك هذه البيانات. نجلبها من مصادرها الموثّقة.', en: 'We will not ask you for this information. We fetch it from its verified sources.' },
+  fetched: { ar: 'نجلبها عنك', en: 'We fetch for you' },
   fIdentity: { ar: 'هويتك: {name}', en: 'Your identity: {name}' },
   fCompany: { ar: '{company} · السجل التجاري {cr}', en: '{company} · CR {cr}' },
-  fActivity: { ar: 'النشاط المرخّص: {activity}', en: 'Licensed activity: {activity}' },
-  fSignatory: { ar: 'المفوّض بالتوقيع: {name}، {role}', en: 'Authorised signatory: {name}, {role}' },
   fEligibility: { ar: 'نتيجة الأهلية: {verdict} · {solution} · {area}', en: 'Eligibility result: {verdict} · {solution} · {area}' },
-  srcNas: { ar: 'نظام التوثيق الوطني', en: 'National Authentication System' },
+  fEligibilityShort: { ar: 'نتيجة الأهلية: {verdict}', en: 'Eligibility result: {verdict}' },
+  srcNas: { ar: 'نظام التوثيق الوطني «توثيق»', en: 'National Authentication System (Tawtheeq)' },
   srcGdx: { ar: 'منصة تبادل البيانات الحكومية', en: 'Government Data Exchange' },
   srcCheck: { ar: 'فحص الأهلية', en: 'Eligibility check' },
   vTargeted: { ar: 'مؤهَّل', en: 'Eligible' },
   vReview: { ar: 'قيد المراجعة', en: 'Under review' },
   vNot: { ar: 'غير مستهدف', en: 'Not targeted' },
-  noCheckTitle: { ar: 'لم تفحص أهلية نشاطك بعد', en: 'You have not checked your activity yet' },
+  noCheckTitle: { ar: 'لم تفحص أهلية نشاطك بعد', en: 'You have not checked your eligibility yet' },
   noCheckBody: { ar: 'يستغرق الفحص دقيقتين ويعبّئ هذا الطلب. يمكنك المتابعة دونه.', en: 'It takes two minutes and fills in this application. You can go on without it.' },
   runCheck: { ar: 'افحص الأهلية', en: 'Check eligibility' },
   confirm: { ar: 'بيانات الشركة والنشاط والمنطقة صحيحة', en: 'Company, activity and zone are correct' },
   confirmHint: { ar: 'إن تغيّر شيء، حدّثه في ملف الشركة أولًا.', en: 'If something has changed, update the company profile first.' },
   errConfirm: { ar: 'أكّد أن البيانات صحيحة للمتابعة.', en: 'Confirm the details are correct to go on.' },
   guestTitle: { ar: 'ادخل لتقدّم على أرض', en: 'Sign in to apply for land' },
-  guestBody: { ar: 'نعبّئ الطلب من ملفك الموثّق بعد الدخول عبر توثيق.', en: 'We fill in the application from your verified profile once you sign in with Tawtheeq.' },
+  guestBody: { ar: 'نعبّئ الطلب من ملفك الموثّق بعد الدخول عبر «توثيق».', en: 'We fill in the application from your verified profile once you sign in with Tawtheeq.' },
   signIn: { ar: 'الدخول عبر توثيق', en: 'Sign in with Tawtheeq' },
 
   // 2 · The plot
-  p2: { ar: 'القطعة', en: 'Plot' },
   p2Question: { ar: 'اختر قطعتك.', en: 'Choose your plot.' },
   p2Hint: { ar: 'نعرض القطع المتاحة بالمساحة التي تحتاجها أو أكبر.', en: 'We show the free plots of the area you need or larger.' },
   solution: { ar: 'نوع الحل', en: 'Solution' },
@@ -58,9 +54,9 @@ export const strings = {
   errZone: { ar: 'اختر منطقة.', en: 'Choose a zone.' },
   errPlot: { ar: 'اختر قطعة متاحة من المخطط.', en: 'Choose a free plot on the layout.' },
   plotContext: { ar: 'القطعة {id} · {area}', en: 'Plot {id} · {area}' },
+  pickPlot: { ar: 'اختر قطعة للمتابعة', en: 'Choose a plot to continue' },
 
   // 3 · The project
-  p3: { ar: 'المشروع', en: 'Project' },
   p3Question: { ar: 'ماذا ستقيم عليها؟', en: 'What will you run there?' },
   p3Hint: { ar: 'النشاط من نتيجة فحص الأهلية، ويمكنك تغييره.', en: 'The activity comes from your eligibility check; you can change it.' },
   activity: { ar: 'النشاط', en: 'Activity' },
@@ -75,7 +71,6 @@ export const strings = {
   rank: { ar: 'البديل {n}', en: 'Alternative {n}' },
 
   // 4 · Documents
-  p4: { ar: 'الوثائق', en: 'Documents' },
   p4Question: { ar: 'أرفق وثائقك.', en: 'Attach your documents.' },
   p4Hint: { ar: 'نتحقق من كل وثيقة لحظة رفعها، ونبيّن أي نقص قبل التقديم.', en: 'Each document is checked the moment it lands, and any gap is shown before you submit.' },
   businessPlan: { ar: 'خطة العمل', en: 'Business plan' },
@@ -85,11 +80,10 @@ export const strings = {
   solutionDocsHint: { ar: 'اختياري · مثل مخطط مبدئي للموقع', en: 'Optional · for example, an outline site plan' },
   errBusinessPlan: { ar: 'أرفق خطة العمل.', en: 'Attach the business plan.' },
   errFinancials: { ar: 'أرفق القوائم المالية.', en: 'Attach the financial statements.' },
-  docsContext: { ar: '{n} من {m} وثائق مطلوبة', en: '{n} of {m} required documents' },
+  docsContext: { ar: '{n} من {m} من الوثائق المطلوبة', en: '{n} of {m} required documents' },
   checkSimulated: { ar: 'التحقق محاكاة: لا يُقرأ الملف ولا يُرسل.', en: 'The check is simulated: the file is not read or sent.' },
 
   // 5 · Review and submit
-  p5: { ar: 'راجِع وأرسِل', en: 'Review and submit' },
   p5Question: { ar: 'راجِع طلبك.', en: 'Review your application.' },
   p5Hint: { ar: 'غيّر أي إجابة قبل التقديم.', en: 'Change any answer before you submit.' },
   answers: { ar: 'إجاباتك', en: 'Your answers' },
@@ -97,16 +91,15 @@ export const strings = {
   preferredPlot: { ar: 'القطعة المفضّلة', en: 'Preferred plot' },
   none: { ar: 'لا شيء', en: 'None' },
   documents: { ar: 'الوثائق', en: 'Documents' },
-  docsCount: { ar: '{n} وثائق متحقَّق منها', en: '{n} documents checked' },
-  edit: { ar: 'تعديل', en: 'Edit' },
-  editWhat: { ar: 'عدّل {what}', en: 'Edit {what}' },
+  edit: { ar: 'تعديل', en: 'Change' },
+  editWhat: { ar: 'تعديل {what}', en: 'Change {what}' },
   terms: { ar: 'الشروط المنشورة', en: 'Published terms' },
   price: { ar: 'السعر', en: 'Price' },
   term: { ar: 'المدة', en: 'Term' },
   notes: { ar: 'ملاحظات', en: 'Notes' },
   rentEstimate: { ar: 'الإيجار السنوي التقديري', en: 'Estimated annual rent' },
   consent: { ar: 'أقرّ بصحة البيانات، وأوافق على الشروط المنشورة.', en: 'I confirm the details are correct and agree to the published terms.' },
-  consentHint: { ar: 'التقديم في هذا النموذج محاكاة.', en: 'Submitting is simulated in this prototype.' },
+  consentHint: { ar: 'التقديم في هذه النسخة التجريبية محاكاة.', en: 'Submitting is simulated in this prototype.' },
   errConsent: { ar: 'وافق على الشروط لتقديم الطلب.', en: 'Agree to the terms to submit.' },
   fixFirst: { ar: 'أكمل ما ينقص في الخطوة {n} أولًا.', en: 'Complete step {n} first.' },
   submitContext: { ar: '{amount} / سنة · تقدير', en: '{amount} a year · estimate' },
@@ -127,7 +120,7 @@ export const strings = {
   nHandover: { ar: 'تسليم القطعة', en: 'Plot handover' },
   nHandoverStd: { ar: '5 أيام عمل من التوقيع', en: '5 working days from signing' },
   track: { ar: 'تتبّع الطلب', en: 'Track the request' },
-  home: { ar: 'العودة إلى الرئيسية', en: 'Back to home' },
+  home: { ar: 'العودة إلى الرئيسية', en: 'Back to Home' },
 
   // Closing
   leaveTitle: { ar: 'أغلق الطلب؟', en: 'Close the application?' },
@@ -136,3 +129,9 @@ export const strings = {
   discard: { ar: 'احذف المسودة', en: 'Delete the draft' },
   stay: { ar: 'تابِع الطلب', en: 'Keep going' },
 } as const;
+
+/** "وثيقتان متحقَّق منهما" · "2 documents checked", for the review. */
+export const docsCount = {
+  ar: { one: 'وثيقة واحدة متحقَّق منها', two: 'وثيقتان متحقَّق منهما', few: '{n} وثائق متحقَّق منها', many: '{n} وثيقة متحقَّق منها', other: '{n} وثيقة متحقَّق منها' },
+  en: { one: 'One document checked', other: '{n} documents checked' },
+};

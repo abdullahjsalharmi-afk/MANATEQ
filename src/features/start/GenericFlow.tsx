@@ -8,7 +8,7 @@ import type { Company, FormValue } from '@/domain/types';
 import { Button, Card, Icon, List, Pill, Row, Section } from '@/design/core';
 import { Checkbox } from '@/design/forms';
 import { FetchedList } from '@/design/signature';
-import { FormFields, describeValue, hasValue, prefillValues, validateFields, type FormErrors, type FormValues } from '@/features/shared/FormFields';
+import { FormFields, describeValue, hasValue, prefillValues, shownFields, validateFields, type FormErrors, type FormValues } from '@/features/shared/FormFields';
 import { clearDraft, getState, saveDraft, selectDraft, selectPlots, startRequest, useApp } from '@/state';
 import { FlowPage } from './FlowPage';
 import { KnownCard, useFetchedItems } from './KnownCard';
@@ -156,7 +156,8 @@ export function GenericFlow({ service, company }: GenericFlowProps) {
     }
     sending.current = true;
     const form: FormValues = {};
-    for (const field of fields) if (hasValue(field, values[field.key])) form[field.key] = values[field.key] ?? null;
+    // Only what was asked is sent: an answer to a field that is hidden now stays behind.
+    for (const field of shownFields(fields, values)) if (hasValue(field, values[field.key])) form[field.key] = values[field.key] ?? null;
     const plotField = fields.find((field) => field.type === 'plot');
     const zoneField = fields.find((field) => field.type === 'zone');
     const plotId = (plotField && typeof form[plotField.key] === 'string' ? (form[plotField.key] as string) : undefined) ?? (contextPlot ? contextPlot.id : undefined);
@@ -212,7 +213,7 @@ export function GenericFlow({ service, company }: GenericFlowProps) {
   }
 
   if (page.kind === 'review') {
-    const items: ReviewItem[] = fields.map((field: FieldDef) => ({
+    const items: ReviewItem[] = shownFields(fields, values).map((field: FieldDef) => ({
       key: field.key,
       label: pick(field.label),
       value: describeValue(field, values[field.key], lang),

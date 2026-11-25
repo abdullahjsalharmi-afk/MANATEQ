@@ -57,6 +57,9 @@ import {
 import { appStore, getState, resetEverything } from '@/state/store';
 import { holdOf } from '@/state/types';
 
+/** Display text keeps codes and amounts whole with invisible joiners and no-break spaces; compare it as plain text. */
+const plain = (text: string | undefined): string | undefined => text?.replace(/\u2060/g, '').replace(/\u00A0/g, ' ');
+
 const DAY = 86_400_000;
 const START = new Date(2026, 10, 19, 9, 30).getTime();
 
@@ -394,7 +397,7 @@ describe('the tenant’s renewal', () => {
     const docs = selectDocsOfRequest(renewal.id)(getState());
     expect(docs.map((doc) => doc.kind).sort()).toEqual(['contract', 'receipt']);
     expect(docs.find((doc) => doc.kind === 'contract')).toMatchObject({ signed: true, serviceId: 'B3' });
-    expect(docs.find((doc) => doc.kind === 'contract')?.title.en).toBe('Lease renewal addendum · AK-113');
+    expect(plain(docs.find((doc) => doc.kind === 'contract')?.title.en)).toBe('Lease renewal addendum · AK-113');
     expect(selectNextSteps(getState()).some((step) => step.kind === 'renewal')).toBe(false);
 
     // The renewal does not open again while the new term is far from its end.

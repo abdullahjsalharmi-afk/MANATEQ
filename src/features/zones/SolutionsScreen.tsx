@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { Link } from '@/app/router';
 import { useQuery } from '@/app/routes';
@@ -23,6 +23,14 @@ export function SolutionsScreen() {
   const query = useQuery();
   const [key, setKey] = useState<SolutionKey>(isSolutionKey(query.solution) ? query.solution : 'logistics');
   const [area, setArea] = useState<number | null>(DEFAULT_AREA);
+  const linked = isSolutionKey(query.solution) ? query.solution : undefined;
+
+  // Arriving from a solution card (?solution=industrial): open on that solution's card, once the screen has settled.
+  useEffect(() => {
+    if (!linked) return;
+    const frame = requestAnimationFrame(() => document.getElementById(`solution-${linked}`)?.scrollIntoView({ block: 'start' }));
+    return () => cancelAnimationFrame(frame);
+  }, [linked]);
 
   const estimate = annualEstimate(area, key);
   const operatorPriced = solutions.find((solution) => solution.key === key)?.price.qarPerSqmYear === null;

@@ -17,8 +17,9 @@ export const strings = {
 
   /* ── row ── */
   needsYou: { ar: 'يحتاج إجراءك', en: 'Needs your action' },
+  expectedShort: { ar: 'متوقع {when}', en: 'expected {when}' },
   withYouAgo: { ar: 'عندك · {ago}', en: 'With you · {ago}' },
-  withOne: { ar: 'عند مناطق ون', en: 'With Manateq One' },
+  withOne: { ar: 'عند «مناطق ون»', en: 'With Manateq One' },
   withEngine: { ar: 'قيد المعالجة الآلية', en: 'Being processed automatically' },
   withStaff: { ar: 'عند موظفي مناطق', en: 'With Manateq staff' },
   withField: { ar: 'عند الفريق الميداني', en: 'With the field team' },
@@ -29,6 +30,8 @@ export const strings = {
   closedOn: { ar: 'أُغلق في {date}', en: 'Closed on {date}' },
   ringDone: { ar: 'مكتمل', en: 'Completed' },
   ringNone: { ar: 'لا يُقاس هذا المعيار بالأيام', en: 'This standard is not counted in days' },
+  ringWithYou: { ar: 'بانتظار إجرائك', en: 'Waiting for you' },
+  ringClosed: { ar: 'مغلق', en: 'Closed' },
   ringDay: { ar: 'اليوم {n} من {m}', en: 'Day {n} of {m}' },
 
   /* ── request page ── */
@@ -59,6 +62,17 @@ export const strings = {
   finished: { ar: 'اكتمل الطلب', en: 'Request complete' },
   stopped: { ar: 'أُغلق الطلب', en: 'Request closed' },
   finishedOn: { ar: 'في {date}', en: 'On {date}' },
+  doneBody: { ar: 'اكتملت كل خطوات طلبك.', en: 'Every step of your request is complete.' },
+  stoppedBody: { ar: 'لن يتقدّم هذا الطلب. يمكنك تقديم طلب جديد متى شئت.', en: 'This request will not move on. You can submit a new one at any time.' },
+  viewDoc: { ar: 'اعرض الوثيقة', en: 'View the document' },
+  viewPass: { ar: 'اعرض التصريح', en: 'View the pass' },
+  bodyOne: { ar: 'يتابع «مناطق ون» هذه الخطوة، ونُعلمك حين يتحرك طلبك.', en: 'Manateq One handles this step and tells you when your request moves.' },
+  bodyEngine: { ar: 'تجري هذه الخطوة آليًا، ولا تحتاج إلى أي إجراء منك.', en: 'This step runs automatically. Nothing is needed from you.' },
+  bodyReceived: { ar: 'استلمنا ما أرسلته، وتبدأ الخطوة التالية تلقائيًا.', en: 'We received what you sent. The next step starts by itself.' },
+  bodyStaff: { ar: 'يراجع فريق مناطق طلبك، ونُعلمك حين يتحرك.', en: 'The Manateq team is reviewing your request. We will tell you when it moves.' },
+  bodyField: { ar: 'يعمل الفريق الميداني على طلبك في الموقع.', en: 'The field team is working on your request on site.' },
+  bodyNat: { ar: 'نتابع طلبك معها عبر {platform}، ونُعلمك بكل تحديث.', en: 'We follow it with them through the {platform} platform and tell you about every update.' },
+  bodyNatPlain: { ar: 'نُعلمك بكل تحديث يصل من الجهة.', en: 'We will tell you about every update from them.' },
   expected: { ar: 'متوقع {when}', en: 'Expected {when}' },
   stepStandard: { ar: 'معيار هذه الخطوة: {std}', en: 'Standard for this step: {std}' },
   waitingSince: { ar: 'بانتظارك منذ {date}', en: 'Waiting for you since {date}' },
@@ -68,8 +82,10 @@ export const strings = {
 
   clockTitle: { ar: 'معيار الخدمة', en: 'Service standard' },
   clockDay: { ar: 'اليوم {n}', en: 'Day {n}' },
-  clockOf: { ar: 'من {m}', en: 'of {m}' },
+  clockOf: { ar: 'المعيار {m}', en: 'standard {m}' },
   clockDone: { ar: 'اكتمل في {n}', en: 'Completed in {n}' },
+  clockWithin: { ar: 'ضمن المعيار', en: 'within the standard' },
+  clockBeyond: { ar: 'بعد تجاوز المعيار ({m})', en: 'beyond the standard ({m})' },
   clockPause: { ar: 'يتوقف العدّ حين ينتظر الطلب إجراءك، ويُستأنف حين تُكمله.', en: 'The clock stops while the request waits for you and starts again when you act.' },
   indicative: { ar: 'استرشادي', en: 'Indicative' },
 
@@ -80,6 +96,7 @@ export const strings = {
   related: { ar: 'الطلبات المرتبطة', en: 'Related requests' },
   demo: { ar: 'عرض تجريبي', en: 'Demo' },
   demoNote: { ar: 'الطلبات هنا محاكاة. يمكنك تقديم الزمن لترى الخطوة التالية.', en: 'Requests here are simulated. Move time forward to see the next step.' },
+  demoNoteDone: { ar: 'بيانات توضيحية.', en: 'Illustrative data.' },
   fastForward: { ar: 'تقديم الزمن (عرض تجريبي)', en: 'Move time forward (demo)' },
   fastForwarded: { ar: 'قُدّم الزمن. انتهت الخطوة الحالية.', en: 'Time moved forward. The current step is finished.' },
   cancel: { ar: 'إلغاء الطلب', en: 'Cancel the request' },
@@ -109,7 +126,6 @@ export const strings = {
   document: { ar: 'الوثيقة', en: 'Document' },
   parties: { ar: 'الطرفان', en: 'Parties' },
   partiesValue: { ar: 'مناطق و{company}', en: 'Manateq and {company}' },
-  illustrativeAmount: { ar: 'تقدير توضيحي', en: 'Illustrative estimate' },
   uploadIntro: { ar: 'أرفق الوثائق التالية. نتحقق من كل وثيقة فور إرفاقها.', en: 'Attach the documents below. Each one is checked as soon as it is attached.' },
   uploadHint: { ar: 'PDF أو صورة · حتى 10 ميغابايت', en: 'PDF or image · up to 10 MB' },
   uploadDefault: { ar: 'الوثيقة المطلوبة', en: 'The requested document' },
@@ -135,10 +151,63 @@ export const strings = {
   submitted: { ar: 'تم. يتابع الطلب طريقه.', en: 'Done. The request moves on.' },
   failed: { ar: 'تعذّر إكمال الإجراء. أعد المحاولة.', en: 'The action could not be completed. Try again.' },
   receiptRef: { ar: 'إيصال {ref}', en: 'Receipt {ref}' },
+  paidWithOffer: { ar: 'سدّدت التأمين مع العرض. لا يُطلب منك سداده مرة أخرى.', en: 'You paid the deposit with the offer. You will not be asked to pay it again.' },
+  paidWithOfferRef: { ar: 'سدّدت التأمين مع العرض (الإيصال {ref}). لا يُطلب منك سداده مرة أخرى.', en: 'You paid the deposit with the offer (receipt {ref}). You will not be asked to pay it again.' },
+  receiptFiled: { ar: 'تم السداد. الإيصال {ref} في محفظتك.', en: 'Paid. Receipt {ref} is in your wallet.' },
 } as const;
 
-/** "5 أيام عمل" · "5 working days", for the service-standard clock. */
+/** "5 أيام عمل" · "5 working days", for the service-standard clock (nominative: «المعيار يوما عمل»). */
 export const workingDays: PluralForms = {
   ar: { one: 'يوم عمل واحد', two: 'يوما عمل', few: '{n} أيام عمل', many: '{n} يوم عمل', other: '{n} يوم عمل' },
   en: { one: '{n} working day', other: '{n} working days' },
+};
+
+/** The same after a preposition («اكتمل في يومَي عمل»): the Arabic dual takes the genitive. */
+export const workingDaysAfter: PluralForms = {
+  ar: { one: 'يوم عمل واحد', two: 'يومَي عمل', few: '{n} أيام عمل', many: '{n} يوم عمل', other: '{n} يوم عمل' },
+  en: { one: '{n} working day', other: '{n} working days' },
+};
+
+/**
+ * What a request is called once it exists: a noun, never the service's call to action («قدّم طلب أرض» is
+ * the button that starts one; the request it starts is «طلب أرض»). Services named as nouns already keep
+ * their label.
+ */
+export const requestNames: Partial<Record<string, { ar: string; en: string }>> = {
+  A1: { ar: 'استفسار عن أرض أو مستودع', en: 'Land or warehouse enquiry' },
+  A2: { ar: 'فحص أهلية النشاط', en: 'Activity eligibility check' },
+  A3: { ar: 'ملف الشركة الموثّق', en: 'Verified company profile' },
+  A4: { ar: 'طلب أرض', en: 'Land application' },
+  A8: { ar: 'موعد تسليم القطعة', en: 'Plot handover appointment' },
+  B4: { ar: 'تغيير مساحة القطعة', en: 'Plot area change' },
+  B5: { ar: 'تغيير النشاط أو إضافته', en: 'Activity change' },
+  B6: { ar: 'تنازل أو تأجير من الباطن', en: 'Lease transfer or sublease' },
+  B7: { ar: 'إنهاء العقد وإعادة القطعة', en: 'Lease end and plot return' },
+  B8: { ar: 'كشف أو شهادة', en: 'Statement or certificate' },
+  C1: { ar: 'مراجعة التصميم', en: 'Design review' },
+  C5: { ar: 'طلب ألياف أو تغطية خلوية', en: 'Fibre or mobile coverage order' },
+  C6: { ar: 'تصريح تحضير الموقع', en: 'Mobilisation permit' },
+  C9: { ar: 'موافقة تجهيز أو توسعة', en: 'Fit-out or extension approval' },
+  D1: { ar: 'بلاغ عطل في المنطقة', en: 'Maintenance report' },
+  D2: { ar: 'تصريح دخول', en: 'Gate pass' },
+  D3: { ar: 'بلاغ طارئ', en: 'Emergency report' },
+  D5: { ar: 'إقرار بيئي', en: 'Environmental declaration' },
+  D7: { ar: 'تسجيل سكن العمال', en: 'Worker accommodation registration' },
+  E1: { ar: 'طلب مساعدة أو موعد', en: 'Help or appointment request' },
+  E2: { ar: 'خطاب أو شهادة عدم ممانعة', en: 'Letter or NOC' },
+  E3: { ar: 'إحالة إلى التمويل أو الحوافز', en: 'Financing or incentive referral' },
+  E4: { ar: 'بحث عن الأراضي والفرص', en: 'Plot and opportunity search' },
+  E6: { ar: 'شكوى أو ملاحظة', en: 'Complaint or feedback' },
+  F1: { ar: 'بحث عن مساحة تخزين', en: 'Warehouse space search' },
+  G1: { ar: 'تسجيل مورّد', en: 'Vendor registration' },
+};
+
+/**
+ * English names of the entity behind a national platform, keyed by the Arabic entity in brackets
+ * («نظام رخص البناء الإلكتروني (وزارة البلدية)»): the English platform names carry no brackets, so both
+ * languages name the same entity.
+ */
+export const entityNamesEn: Partial<Record<string, { headline: string; phrase: string }>> = {
+  'وزارة البلدية': { headline: 'Ministry of Municipality', phrase: 'the Ministry of Municipality' },
+  'وزارة التجارة والصناعة': { headline: 'Ministry of Commerce and Industry', phrase: 'the Ministry of Commerce and Industry' },
 };

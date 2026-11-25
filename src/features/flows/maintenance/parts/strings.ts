@@ -4,7 +4,7 @@ export const partsStrings = {
   stepOf: { ar: 'الخطوة {n} من {m}', en: 'Step {n} of {m}' },
   back: { ar: 'الخطوة السابقة', en: 'Previous step' },
   close: { ar: 'إغلاق', en: 'Close' },
-  edit: { ar: 'تعديل', en: 'Edit' },
+  edit: { ar: 'تعديل', en: 'Change' },
   loading: { ar: 'جارٍ التحميل', en: 'Loading' },
   failedTitle: { ar: 'تعذّر فتح الخدمة', en: 'The service could not be opened' },
   failedBody: { ar: 'تحقّق من الاتصال وحاول مرة أخرى.', en: 'Check the connection and try again.' },

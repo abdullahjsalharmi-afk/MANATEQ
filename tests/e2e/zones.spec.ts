@@ -11,12 +11,12 @@ test.describe('zones explorer', () => {
     // Filter by logistics, then choose Birkat Al Awamer on the map.
     await page.getByRole('button', { name: 'Logistics', exact: true }).click();
     await page.locator('[data-zone="BA"]').click();
-    await expect(page.getByRole('heading', { name: 'Birkat Al Awamer Logistics Park' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'Birkat Al Awamer Logistics Park' })).toBeVisible();
     await expect(page.getByText('From QAR 15 / m² / year').first()).toBeVisible();
     await page.getByRole('link', { name: 'View zone' }).click();
 
     await expect(page).toHaveURL(/#\/zones\/BA/);
-    await expect(page.getByRole('link', { name: 'Check your activity' })).toHaveAttribute('href', /eligibility\?zone=BA/);
+    await expect(page.getByRole('link', { name: 'Check your eligibility' })).toHaveAttribute('href', /eligibility\?zone=BA/);
     await expect(page.getByText('Illustrative data').first()).toBeVisible();
 
     // Follow the zone for availability alerts.
@@ -39,6 +39,14 @@ test.describe('zones explorer', () => {
     await expect(page.getByRole('heading', { name: 'المناطق الاقتصادية' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'مجمّعات التخزين' })).toBeVisible();
     await expect(page.locator('a[href="#/zones/WK"]')).toBeVisible();
+    await expect(page.locator('a[href="#/zones/WK"]')).toContainText('حسب المشغّل');
+  });
+
+  test('tapping a marker brings the zone card into view on a phone', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openApp(page, { route: '/zones', lang: 'ar' });
+    await page.locator('[data-zone="BA"]').click();
+    await expect(page.getByRole('link', { name: 'عرض المنطقة' })).toBeInViewport();
   });
 
   test('a park offers an operator referral', async ({ page }) => {
@@ -51,7 +59,7 @@ test.describe('zones explorer', () => {
     await openApp(page, { route: '/solutions', lang: 'en' });
     await page.getByRole('button', { name: 'Commercial solutions' }).click();
     await page.getByLabel('Area').fill('2000');
-    await expect(page.getByText('QAR 100,000 / year')).toBeVisible();
+    await expect(page.getByText('QAR 100,000 a year')).toBeVisible();
     await page.getByRole('button', { name: 'Warehousing solutions' }).click();
     await expect(page.getByText('The operator sets the warehousing price')).toBeVisible();
   });

@@ -21,7 +21,7 @@
 
 .who {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--s-3);
 }
 
@@ -33,6 +33,19 @@
 .words h2,
 .words p {
   margin: 0;
+}
+
+.name {
+  font-size: var(--t-body);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  text-wrap: balance;
+}
+
+.words .scope {
+  display: flex;
+  margin-block-start: var(--s-2);
 }
 
 .mandate {

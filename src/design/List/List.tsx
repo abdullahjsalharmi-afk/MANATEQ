@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Link } from '@/app/router';
 import { cx } from '../cx';
 import { Icon } from '../Icon/Icon';
+import { keepWhole } from './keepWhole';
 import styles from './List.module.css';
 
 export interface ListProps {
@@ -38,12 +39,18 @@ export interface RowProps {
   chevron?: boolean;
   /** Allow the subtitle to wrap to two lines instead of truncating. */
   wrap?: boolean;
+  /**
+   * A fact of a fact sheet («رقم العقد: LC-2021-0318»): the title is the label (14 px, --ink-3) and the trailing
+   * value carries the information (17 px, --ink, tabular numbers, codes kept whole). Same design as the
+   * document sheet and the invoice.
+   */
+  fact?: boolean;
   className?: string;
   'aria-label'?: string;
 }
 
 /** One row of a list: leading · title and subtitle · trailing value · chevron. The divider starts where the text starts. */
-export function Row({ title, subtitle, leading, trailing, eyebrow, to, onClick, chevron, wrap = false, className, ...rest }: RowProps) {
+export function Row({ title, subtitle, leading, trailing, eyebrow, to, onClick, chevron, wrap = false, fact = false, className, ...rest }: RowProps) {
   const showChevron = chevron ?? to !== undefined;
   const body = (
     <>
@@ -51,17 +58,17 @@ export function Row({ title, subtitle, leading, trailing, eyebrow, to, onClick, 
       <span className={styles.body}>
         <span className={styles.text}>
           {eyebrow ? <span className={styles.eyebrow}>{eyebrow}</span> : null}
-          <span className={styles.title}>{title}</span>
-          {subtitle ? <span className={cx(styles.subtitle, wrap && styles.wrap)}>{subtitle}</span> : null}
+          <span className={styles.title}>{keepWhole(title)}</span>
+          {subtitle ? <span className={cx(styles.subtitle, wrap && styles.wrap)}>{keepWhole(subtitle)}</span> : null}
         </span>
-        {trailing ? <span className={styles.trailing}>{trailing}</span> : null}
+        {trailing ? <span className={styles.trailing}>{keepWhole(trailing)}</span> : null}
         {/* The chevron points forward: to the left in Arabic, to the right in English. */}
         {showChevron ? <Icon icon={ChevronRight} size={16} strokeWidth={2} flip className={styles.chevron} /> : null}
       </span>
     </>
   );
   return (
-    <li className={cx(styles.item, className)}>
+    <li className={cx(styles.item, fact && styles.fact, className)}>
       {to !== undefined ? (
         <Link to={to} className={cx(styles.row, styles.interactive)} {...rest}>
           {body}

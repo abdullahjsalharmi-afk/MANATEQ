@@ -5,6 +5,7 @@ export const strings = {
   allocated: { ar: 'مؤجّرة', en: 'Leased' },
   reserved: { ar: 'محجوزة', en: 'Reserved' },
   own: { ar: 'قطعتك', en: 'Your plot' },
+  unfit: { ar: 'لا تناسب طلبك', en: 'Does not fit your request' },
   cell: { ar: 'القطعة {id}، {area}، {status}', en: 'Plot {id}, {area}, {status}' },
   chosen: { ar: 'القطعة', en: 'Plot' },
   pick: { ar: 'اختر قطعة متاحة من المخطط.', en: 'Choose an available plot from the layout.' },

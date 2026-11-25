@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { LangProvider } from '@/app/i18n';
 import type { FieldDef, FieldType } from '@/data/types';
 import type { FormValue, Plot } from '@/domain/types';
-import { FormFields, describeValue, hasValue, prefillValues, validateFields, type FormValues } from '@/features/shared/FormFields';
+import { FormFields, describeValue, hasValue, isFieldShown, prefillValues, shownFields, validateFields, type FormValues } from '@/features/shared/FormFields';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -106,27 +106,48 @@ describe('validateFields: sanity', () => {
   });
 });
 
+/** Units, dates and codes may be held together with no-break spaces, word joiners and direction marks; compare the words. */
+const plain = (text: string) => text.replace(/[\u00a0\u202f]/g, ' ').replace(/[\u2060\u2066-\u2069\u200e\u200f]/g, '');
+
+describe('fields that wait for another answer (showIf)', () => {
+  const book = field('toggle', 'bookAppointment', 'I want to book an appointment', 'أريد حجز موعد', { required: false });
+  const day = field('date', 'preferredDate', 'Preferred appointment day', 'اليوم المفضل للموعد', { required: true, showIf: { key: 'bookAppointment', equals: true } });
+  it('hides the field until the answer it waits for is given', () => {
+    expect(isFieldShown(day, {})).toBe(false);
+    expect(isFieldShown(day, { bookAppointment: false })).toBe(false);
+    expect(isFieldShown(day, { bookAppointment: true })).toBe(true);
+    expect(shownFields([book, day], {}).map((f) => f.key)).toEqual(['bookAppointment']);
+  });
+  it('does not check a hidden field', () => {
+    expect(validateFields([book, day], {}, 'en', { plots, now: NOW })).toEqual({});
+    expect(Object.keys(validateFields([book, day], { bookAppointment: true }, 'en', { plots, now: NOW }))).toEqual(['preferredDate']);
+  });
+});
+
 describe('describeValue', () => {
   it('reads every type as the investor would say it', () => {
     expect(describeValue(FIELDS.text, 'Bank', 'en')).toBe('Bank');
     expect(describeValue(FIELDS.number, 1200, 'en')).toBe('1,200');
-    expect(describeValue(FIELDS.area, 5000, 'en')).toBe('5,000 m²');
-    expect(describeValue(FIELDS.area, 5000, 'ar')).toBe('5,000 م²');
-    expect(describeValue(FIELDS.amount, 18750, 'en')).toBe('QAR 18,750');
-    expect(describeValue(FIELDS.amount, 18750, 'ar')).toBe('18,750 ر.ق');
+    expect(plain(describeValue(FIELDS.area, 5000, 'en'))).toBe('5,000 m²');
+    expect(plain(describeValue(FIELDS.area, 5000, 'ar'))).toBe('5,000 م²');
+    expect(plain(describeValue(FIELDS.amount, 18750, 'en'))).toBe('QAR 18,750');
+    expect(plain(describeValue(FIELDS.amount, 18750, 'ar'))).toBe('18,750 ر.ق');
     expect(describeValue(FIELDS.select, 'statement', 'ar')).toBe('كشف حساب');
     expect(describeValue(FIELDS.select, 'unknown', 'en')).toBe('unknown');
-    expect(describeValue(FIELDS.date, '2026-11-19', 'en')).toBe('19 Nov 2026');
+    expect(plain(describeValue(FIELDS.date, '2026-11-19', 'en'))).toBe('19 Nov 2026');
     expect(describeValue(FIELDS.file, { name: 'drawings.pdf' }, 'en')).toBe('drawings.pdf');
     expect(describeValue(FIELDS.photo, { name: '', id: 'sample' }, 'en')).toBe('');
     expect(describeValue(FIELDS.photo, { name: 'site.jpg' }, 'en')).toBe('site.jpg');
     expect(describeValue(FIELDS.toggle, true, 'ar')).toBe('نعم');
     expect(describeValue(FIELDS.toggle, false, 'en')).toBe('No');
+    // A switch left untouched is off.
+    expect(describeValue(FIELDS.toggle, undefined, 'en')).toBe('No');
+    expect(describeValue(FIELDS.toggle, undefined, 'ar')).toBe('لا');
     expect(describeValue(FIELDS.zone, 'BA', 'en')).toBe('Birkat Al Awamer Logistics Park');
     expect(describeValue(FIELDS.activity, 'ACT-101', 'en')).toBe('Food products manufacturing');
     expect(describeValue(FIELDS.activity, 'Metal works', 'en')).toBe('Metal works');
-    expect(describeValue(FIELDS.plot, 'XX-1', 'en')).toContain('XX-1');
-    expect(describeValue(FIELDS.person, { name: 'Sara Ali', id: '28763400123', phone: '55123456' }, 'en')).toMatch(/^Sara Ali · .*28763400123.* · .*55123456/);
+    expect(plain(describeValue(FIELDS.plot, 'XX-1', 'en'))).toContain('XX-1');
+    expect(plain(describeValue(FIELDS.person, { name: 'Sara Ali', id: '28763400123', phone: '55123456' }, 'en'))).toMatch(/^Sara Ali · .*28763400123.* · .*55123456/);
   });
   it('gives an empty string when nothing was answered', () => {
     for (const f of Object.values(FIELDS)) if (f.type !== 'toggle') expect(describeValue(f, undefined, 'en')).toBe('');

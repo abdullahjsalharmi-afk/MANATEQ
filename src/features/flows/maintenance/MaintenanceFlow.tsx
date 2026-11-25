@@ -18,6 +18,7 @@ import { useService } from '@/features/shared/useService';
 import { selectPlots, selectRequest, startRequest, useApp } from '@/state';
 import styles from './MaintenanceFlow.module.css';
 import { ConfirmationTile, FlowFailed, FlowLoading, leaveFlow, OptionCard, Question } from './parts/Parts';
+import { useChoiceGroup } from '../shared/Choice';
 import { initialPlotId, plotOptions } from './parts/plots';
 import { partsStrings } from './parts/strings';
 import { strings } from './strings';
@@ -64,6 +65,9 @@ function MaintenanceSteps({ service, onSubmitted }: { service: ServiceDetail; on
 
   const chosen = categories.find((option) => option.value === category);
   const plot = plots.find((option) => option.id === place);
+  const categoryChoice = useChoiceGroup({ keys: categories.map((option) => option.value), value: category, onPick: setCategory, label: t('categories') });
+  const placeChoice = useChoiceGroup({ keys: [...plots.map((option) => option.id), PUBLIC], value: place, onPick: setPlace, label: t('places') });
+  const where = tp('stepOf', { n: step, m: STEPS });
   const placeError = place === null ? t('placeMissing') : place === PUBLIC && !note.trim() ? t('noteMissing') : undefined;
 
   const locationText = (): string => {
@@ -112,16 +116,16 @@ function MaintenanceSteps({ service, onSubmitted }: { service: ServiceDetail; on
       navLabel={step === 1 ? tp('close') : tp('back')}
       onNav={step === 1 ? leaveFlow : () => setStep(step - 1)}
       width="form"
-      header={<Stepper current={step} total={STEPS} label={tp('stepOf', { n: step, m: STEPS })} />}
-      footerContext={chosen ? <span className={styles.context}>{pick(chosen)}</span> : <span className={styles.context}>{tp('stepOf', { n: step, m: STEPS })}</span>}
+      header={<Stepper current={step} total={STEPS} label={where} />}
+      footerContext={chosen ? <span className={styles.context}>{pick(chosen)}</span> : undefined}
       footer={footer}
     >
       {step === 1 ? (
         <>
-          <Question hint={t('whatHint')}>{t('whatQ')}</Question>
-          <Grid as="ul" compact columns={3} aria-label={t('categories')} className={styles.options}>
+          <Question where={where} hint={t('whatHint')}>{t('whatQ')}</Question>
+          <Grid compact columns={3} className={styles.options} {...categoryChoice.group}>
             {categories.map((option) => (
-              <OptionCard key={option.value} icon={categoryIcon(option.value)} label={pick(option)} selected={category === option.value} onSelect={() => setCategory(option.value)} />
+              <OptionCard key={option.value} icon={categoryIcon(option.value)} label={pick(option)} item={categoryChoice.item(option.value)} />
             ))}
           </Grid>
           <p className={styles.danger}>
@@ -135,12 +139,12 @@ function MaintenanceSteps({ service, onSubmitted }: { service: ServiceDetail; on
 
       {step === 2 ? (
         <>
-          <Question hint={t('whereHint')}>{t('whereQ')}</Question>
-          <Grid as="ul" compact columns={plots.length + 1 >= 3 ? 3 : 2} aria-label={t('places')} className={styles.options}>
+          <Question where={where} hint={t('whereHint')}>{t('whereQ')}</Question>
+          <Grid compact columns={plots.length + 1 >= 3 ? 3 : 2} className={styles.options} {...placeChoice.group}>
             {plots.map((option) => (
-              <OptionCard key={option.id} icon={MapPin} label={option.number} detail={pick(option.zoneName) || t('plotDetail')} selected={place === option.id} onSelect={() => setPlace(option.id)} />
+              <OptionCard key={option.id} icon={MapPin} label={option.number} detail={pick(option.zoneName) || t('plotDetail')} item={placeChoice.item(option.id)} />
             ))}
-            <OptionCard icon={MapGlyph} label={t('publicArea')} detail={t('publicAreaDetail')} selected={place === PUBLIC} onSelect={() => setPlace(PUBLIC)} />
+            <OptionCard icon={MapGlyph} label={t('publicArea')} detail={t('publicAreaDetail')} item={placeChoice.item(PUBLIC)} />
           </Grid>
           {showErrors && place === null ? (
             <p className={styles.error} role="alert">
@@ -160,7 +164,7 @@ function MaintenanceSteps({ service, onSubmitted }: { service: ServiceDetail; on
 
       {step === 3 ? (
         <>
-          <Question hint={t('describeHint')}>{t('describeQ')}</Question>
+          <Question where={where} hint={t('describeHint')}>{t('describeQ')}</Question>
           <TextArea label={t('details')} value={details} onChange={setDetails} maxLength={280} placeholder={t('detailsPlaceholder')} />
           <Section title={t('summary')} level={3}>
             <List>

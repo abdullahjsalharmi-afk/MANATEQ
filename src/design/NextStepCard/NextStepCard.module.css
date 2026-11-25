@@ -57,6 +57,13 @@
   letter-spacing: var(--ls-heading);
   color: var(--ink-2);
   text-wrap: balance;
+  /* The context is one line of copy; the clamp is a guard so a long string never turns the brand tile into a
+     paragraph (the copy itself must stay short: see nextstep.ts). */
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .heroActions {

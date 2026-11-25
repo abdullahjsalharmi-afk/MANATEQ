@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { greetingOf, itemRoute, receiptRefOf, SOLUTION_RENDER, STATION_RENDER } from '@/features/home/logic';
+import { greetingOf, invoiceOfStep, itemRoute, SOLUTION_RENDER, STATION_RENDER, suggestedService } from '@/features/home/logic';
 import { strings as homeStrings } from '@/features/home/strings';
 import { groupByDay, startOfDay } from '@/features/notifications/group';
 import { strings as noteStrings } from '@/features/notifications/strings';
@@ -26,8 +26,12 @@ describe('home logic', () => {
     expect(itemRoute({ serviceId: 'C8', state: 'upcoming', canStart: false })).toBe('/services/C8');
   });
 
-  it('names the receipt after the invoice', () => {
-    expect(receiptRefOf('INV-2026-0051')).toBe('RCP-2026-0051');
+  it('reads the invoice and the suggested service out of a next step', () => {
+    expect(invoiceOfStep({ id: 'invoice:inv51', kind: 'invoice' })).toBe('inv51');
+    expect(invoiceOfStep({ id: 'request:r85', kind: 'renewal' })).toBeNull();
+    expect(suggestedService({ id: 'start:A4', kind: 'start_service' })).toBe('A4');
+    expect(suggestedService({ id: 'start:C2:p1', kind: 'start_service' })).toBe('C2');
+    expect(suggestedService({ id: 'draft:A4', kind: 'start_service' })).toBeNull();
   });
 });
 

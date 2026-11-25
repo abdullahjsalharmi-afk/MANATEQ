@@ -3,7 +3,7 @@ import { useLang, useT } from '@/app/i18n';
 import { cx, type RenderName } from '@/design/core';
 import type { ReactNode } from 'react';
 import type { Solution, SolutionKey, Zone } from '@/data/types';
-import { zonePrice } from './model';
+import { allocatedPct, zonePrice } from './model';
 import styles from './parts.module.css';
 import { strings } from './strings';
 
@@ -43,8 +43,24 @@ export function usePrices() {
 export function useAreaParts() {
   const t = useT(strings);
   const { fmt } = useLang();
-  return (sqm: number): { value: string; unit: string } =>
-    sqm >= 1_000_000 ? { value: fmt.num(sqm / 1_000_000, 1), unit: t('millionSqm') } : { value: fmt.num(sqm), unit: t('sqm') };
+  return (sqm: number): { value: string; unit: string } => (sqm >= 1_000_000 ? { value: fmt.num(sqm / 1_000_000, 1), unit: t('millionSqm') } : { value: fmt.num(sqm), unit: t('sqm') });
+}
+
+/** A zone's facts on one line: type · total area · allocated share (land) or operator · occupancy (parks). */
+export function useZoneFacts() {
+  const t = useT(strings);
+  const { pick, fmt } = useLang();
+  return (zone: Zone): string => {
+    const facts = [pick(zone.typeLabel), fmt.areaShort(zone.totalSqm)];
+    if (zone.kind === 'land') {
+      const pct = allocatedPct(zone);
+      if (pct !== null) facts.push(t('allocatedShort', { pct: fmt.pct(pct) }));
+    } else {
+      if (zone.operator) facts.push(pick(zone.operator));
+      if (zone.occupancyPct !== undefined) facts.push(t('occupancyShort', { pct: fmt.pct(zone.occupancyPct) }));
+    }
+    return facts.join(' · ');
+  };
 }
 
 /** A slim bar under a percentage. The figure beside it carries the meaning; the bar only shows it. */

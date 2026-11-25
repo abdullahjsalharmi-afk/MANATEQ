@@ -37,7 +37,7 @@ export function CompanyScreen() {
     <Screen title={t('companyTitle')} nav="back" backTo="/account" bleed>
       <Tile
         tone="light"
-        lead={<Avatar name={name} size="xl" tone="accent" />}
+        lead={<Avatar name={name} size="xl" />}
         headline={name}
         tagline={
           <>

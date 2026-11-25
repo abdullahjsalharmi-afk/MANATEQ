@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import {
   Bell,
   CalendarCheck,
@@ -7,7 +7,6 @@ import {
   CircleDot,
   FileText,
   Info,
-  ListChecks,
   Receipt,
   SearchX,
   Ticket,
@@ -21,9 +20,11 @@ import { useLang, useT } from '@/app/i18n';
 import { useParams } from '@/app/routes';
 import { getIntegration, getService, getSystem, reference } from '@/data/catalog';
 import type { ReceiveKind, ServiceDetail, ServiceSummary } from '@/data/types';
-import { standardHeadline } from '@/domain/standard';
+import { standardFigure, standardHeadline } from '@/domain/standard';
 import { useService } from '@/features/shared/useService';
-import { selectPersona, useApp } from '@/state';
+import { bespokeFlows, startRedirects } from '@/features/flows/registry';
+import { buildPages } from '@/features/start/paginate';
+import { selectDraft, selectPersona, useApp } from '@/state';
 import type { AppState } from '@/domain/types';
 import { FOLLOW_ROUTE, followOf, rememberService, renderOfDomain, startTarget } from './catalogue';
 import { ServiceRow } from './ServiceRow';
@@ -61,7 +62,7 @@ export function ServiceScreen() {
   }
 
   return (
-<ServicePage summary={summary} detail={detail} loading={loading} failed={failed} />
+    <ServicePage summary={summary} detail={detail} loading={loading} failed={failed} />
   );
 }
 
@@ -74,9 +75,10 @@ interface ServicePageProps {
 
 function ServicePage({ summary, detail, loading, failed }: ServicePageProps) {
   const t = useT(strings);
-  const { lang, pick, fmt } = useLang();
+  const { lang, pick } = useLang();
   const persona = useApp(selectPersona);
   const requests = useApp(selectRequests);
+  const draft = useApp(useMemo(() => selectDraft(summary.id), [summary.id]));
   const headline = standardHeadline(summary.standard, lang);
 
   // The investor's latest request of this service, for "track your request".
@@ -84,26 +86,43 @@ function ServicePage({ summary, detail, loading, failed }: ServicePageProps) {
   const follow = followOf(summary.id);
   const followLink = persona === 'guest' ? undefined : own ? { to: `/requests/${own.id}`, label: t('followRequest') } : follow ? { to: FOLLOW_ROUTE[follow], label: t(`follow_${follow}`) } : undefined;
 
+  // A draft kept with «متابعة لاحقًا» turns «ابدأ» into «أكمل طلبك» and says where the investor stopped.
+  const resumable = summary.startable && persona !== 'guest' && draft !== undefined;
   const footer = summary.startable ? (
     <Button block to={startTarget(summary.id, persona)}>
-      {t('start')}
+      {resumable ? t('continueDraft') : t('start')}
     </Button>
   ) : followLink ? (
     <Button block variant="secondary" to={followLink.to}>
       {followLink.label}
     </Button>
   ) : undefined;
-  const footerContext = summary.startable ? (headline ? t('standardContext', { value: headline }) : undefined) : t('automaticContext');
+  const draftStep = resumable && draft ? draftStepOf(summary.id, detail, draft.page) : null;
+  const footerContext = resumable
+    ? draftStep
+      ? t('draftContextStep', { n: draftStep.n, m: draftStep.m })
+      : t('draftContext')
+    : summary.startable
+      ? headline
+        ? t('standardContext', { value: headline })
+        : undefined
+      : t('automaticContext');
 
   return (
     <Screen title={pick(summary.label)} nav="back" backTo="/services" navLabel={t('back')} bleed footer={footer} footerContext={footer ? footerContext : undefined}>
       <Tile
         tone="light"
-        eyebrow={t('officialName', { name: pick(summary.name), code: fmt.ltr(summary.id) })}
         headline={pick(summary.label)}
-        tagline={<span className={styles.promise}>{t('quote', { text: pick(summary.promise) })}</span>}
+        tagline={
+          <>
+            <span className={styles.official}>
+              {pick(summary.name)} · <span className="ltr">{summary.id}</span>
+            </span>
+            <span className={styles.promise}>{pick(summary.promise)}</span>
+          </>
+        }
+        actions={<HeroStandard summary={summary} />}
         media={<Render name={renderOfDomain(summary.domain)} eager decorative />}
-        mediaWidth="small"
       />
 
       <Container>
@@ -144,6 +163,48 @@ function ServicePage({ summary, detail, loading, failed }: ServicePageProps) {
   );
 }
 
+/** Where a saved draft of the generic flow stopped: step n of m. Null for the purpose-built flows, whose steps differ. */
+function draftStepOf(id: string, detail: ServiceDetail | undefined, page: number): { n: number; m: number } | null {
+  if (!detail || bespokeFlows[id] || startRedirects[id]) return null;
+  const pages = buildPages(detail.fields);
+  return { n: Math.min(Math.max(page, 0), pages.length - 1) + 1, m: pages.length };
+}
+
+/**
+ * The standard as the hero's figure: one large line ("3 أيام عمل", "فوري") with «استرشادي» in fine print. A standard
+ * without a headline duration shows its first clause in its own words; the full sentence is in the card below.
+ */
+function HeroStandard({ summary }: { summary: ServiceSummary }) {
+  const t = useT(strings);
+  const { lang, pick } = useLang();
+  const figure = standardFigure(summary.standard, lang);
+  const clause = figure ? null : firstClause(pick(summary.standard));
+  if (!figure && !clause) return null;
+  return (
+    <div className={styles.heroStandard}>
+      <p className={figure ? styles.heroFigure : styles.heroClause}>
+        <span className="visually-hidden">{t('standard')}: </span>
+        {figure ? (
+          <>
+            {figure.value !== null ? <span className="num">{figure.value} </span> : null}
+            {figure.words}
+          </>
+        ) : (
+          clause
+        )}
+      </p>
+      <p className={styles.heroFine}>
+        {t('standard')} · {t('indicative')}
+      </p>
+    </div>
+  );
+}
+
+/** "تأكيد الاكتمال عند التقديم؛ إشعار …" → "تأكيد الاكتمال عند التقديم". */
+function firstClause(text: string): string {
+  return (text.split(/[؛;]/)[0] ?? '').trim().replace(/[.،,]$/, '');
+}
+
 function Details({ detail }: { detail: ServiceDetail }) {
   const t = useT(strings);
   const { pick } = useLang();
@@ -169,7 +230,6 @@ function Details({ detail }: { detail: ServiceDetail }) {
                 <ul className={styles.items}>
                   {detail.provides.map((item, index) => (
                     <li key={index} className={styles.item}>
-                      <Icon icon={ListChecks} size={20} className={styles.itemIcon} />
                       <span>{pick(item)}</span>
                     </li>
                   ))}

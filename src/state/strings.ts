@@ -4,25 +4,31 @@
  */
 import { langTools, ltr } from '@/app/i18n';
 import type { L10n } from '@/data/types';
+import { DOT, keepWhole } from '@/domain/text';
 
 const AR = langTools('ar').fmt;
 const EN = langTools('en').fmt;
 
-/** "A · B · C" in both languages; empty parts are left out. */
+/**
+ * "A · B · C" in both languages; empty parts are left out. A plain string is a code (a plot number, a
+ * reference): it reads left to right inside Arabic and never breaks across lines. The dot stays with
+ * the item that follows it.
+ */
 export function dots(...parts: (L10n | string | undefined)[]): L10n {
   const present = parts.filter((part): part is L10n | string => part !== undefined && part !== '');
   return {
-    ar: present.map((part) => (typeof part === 'string' ? ltr(part) : part.ar)).join(' · '),
-    en: present.map((part) => (typeof part === 'string' ? part : part.en)).join(' · '),
+    ar: present.map((part) => (typeof part === 'string' ? ltr(part) : part.ar)).join(DOT),
+    en: present.map((part) => (typeof part === 'string' ? keepWhole(part) : part.en)).join(DOT),
   };
 }
 
-export const moneyText = (amount: number): L10n => ({ ar: AR.money(amount), en: EN.money(amount) });
-export const dateText = (at: number): L10n => ({ ar: AR.date(at), en: EN.date(at) });
+/** An amount and a date, each kept on one line. */
+export const moneyText = (amount: number): L10n => ({ ar: keepWhole(AR.money(amount)), en: keepWhole(EN.money(amount)) });
+export const dateText = (at: number): L10n => ({ ar: keepWhole(AR.date(at)), en: keepWhole(EN.date(at)) });
 
 const QUARTER_AR = ['الأول', 'الثاني', 'الثالث', 'الرابع'] as const;
 
-/** "إيجار الربع الرابع 2026 · BA-121" / "Rent, Q4 2026 · BA-121" — or the annual rent of a one-year lease. */
+/** "إيجار الربع الرابع 2026 · BA-121" / "Rent, Q4 2026 · BA-121", or the annual rent of a one-year lease. */
 export function rentTitle(period: 'quarter' | 'year', at: number, plotNumber: string): L10n {
   const date = new Date(at);
   const year = date.getFullYear();

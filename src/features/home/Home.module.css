@@ -1,10 +1,32 @@
 /* Home: layout only. Every surface comes from the design system; these rules place and size text. */
 
-/* Open requests beside what is due, from wide screens up. */
+/* Open requests beside what is due, from wide screens up. Each column is wrapped, so both sections start
+   on the same line; the pair keeps the section rhythm (40 px) from what comes before it. */
 .pair {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  column-gap: var(--s-8);
+  gap: var(--s-8);
+}
+
+.pair:not(:first-child) {
+  margin-block-start: var(--s-8);
+}
+
+/* From 834 px the global bar carries search. */
+@media (min-width: 834px) {
+  .phoneOnly {
+    display: none;
+  }
+}
+
+/* The same step as the sections from 735 px. */
+@media (min-width: 735px) {
+  .pair {
+    row-gap: var(--s-12);
+  }
+  .pair:not(:first-child) {
+    margin-block-start: var(--s-12);
+  }
 }
 
 @media (min-width: 1069px) {
@@ -94,7 +116,7 @@
   color: var(--ink-3);
 }
 
-/* How the journey goes: four captions under the wide render. */
+/* How the journey goes: four stations, each render resting above its caption. */
 .how {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -116,6 +138,11 @@
   flex-direction: column;
   align-items: center;
   gap: var(--s-1);
+}
+
+.howRender {
+  inline-size: min(100%, 220px);
+  margin-block-end: var(--s-3);
 }
 
 .howNum {

@@ -3,7 +3,6 @@ import type { PluralForms } from '@/app/i18n';
 export const strings = {
   // The wallet
   title: { ar: 'وثائقي وتصاريحي', en: 'Documents and passes' },
-  subtitle: { ar: 'كل وثيقة هنا قابلة للتحقق برمزها.', en: 'Every document here can be verified by its code.' },
   view: { ar: 'العرض', en: 'View' },
   documents: { ar: 'الوثائق', en: 'Documents' },
   passes: { ar: 'التصاريح', en: 'Passes' },
@@ -35,7 +34,7 @@ export const strings = {
   startsOn: { ar: 'يبدأ في {date}', en: 'Starts on {date}' },
   ended: { ar: 'انتهى في {date}', en: 'Ended on {date}' },
   revokedOn: { ar: 'أُلغي', en: 'Cancelled' },
-  stValid: { ar: 'ساري', en: 'Active' },
+  stValid: { ar: 'سارٍ', en: 'Active' },
   stUpcoming: { ar: 'قادم', en: 'Upcoming' },
   stExpired: { ar: 'انتهى', en: 'Expired' },
   stRevoked: { ar: 'ملغى', en: 'Cancelled' },
@@ -65,20 +64,21 @@ export const strings = {
   k_contract: { ar: 'عقد', en: 'Contract' },
   k_offer: { ar: 'عرض', en: 'Offer' },
   k_noc: { ar: 'شهادة عدم ممانعة', en: 'No-objection certificate' },
-  k_permit: { ar: 'تصريح', en: 'Permit' },
+  k_permit: { ar: 'رخصة', en: 'Permit' },
   k_certificate: { ar: 'شهادة', en: 'Certificate' },
   k_receipt: { ar: 'إيصال', en: 'Receipt' },
   k_statement: { ar: 'كشف حساب', en: 'Statement' },
   k_letter: { ar: 'خطاب', en: 'Letter' },
   k_report: { ar: 'تقرير', en: 'Report' },
   plot: { ar: 'القطعة', en: 'Plot' },
+  verified: { ar: 'موثّق', en: 'Verified' },
 
   // The verification sheet
   checking: { ar: 'نتحقّق من الوثيقة عبر «تصديق»…', en: 'Checking the document with Tasdeeq…' },
   validDoc: { ar: 'وثيقة صحيحة صادرة عن مناطق', en: 'A valid document issued by Manateq' },
   invalidDoc: { ar: 'لم نجد وثيقة بهذا الرمز', en: 'No document has this code' },
   issuedOn: { ar: 'تاريخ الإصدار', en: 'Issued' },
-  reference: { ar: 'المرجع', en: 'Reference' },
+  reference: { ar: 'الرقم المرجعي', en: 'Reference' },
   title_: { ar: 'الوثيقة', en: 'Document' },
   simulation: { ar: 'محاكاة: الخدمة الفعلية تتحقق عبر «تصديق». لا تُرسل هنا أي بيانات.', en: 'Simulation: the real service verifies through Tasdeeq. No data is sent from here.' },
   done: { ar: 'تم', en: 'Done' },
@@ -98,7 +98,7 @@ export const strings = {
 
   // Not found
   notFound: { ar: 'لم نجد هذه الوثيقة', en: 'We could not find this document' },
-  notFoundBody: { ar: 'ربما حُذفت من النموذج أو أن الرابط غير مكتمل.', en: 'It may have been removed from the prototype, or the link is incomplete.' },
+  notFoundBody: { ar: 'ربما حُذفت من النسخة التجريبية أو أن الرابط غير مكتمل.', en: 'It may have been removed from the prototype, or the link is incomplete.' },
   toWallet: { ar: 'افتح وثائقي', en: 'Open my documents' },
 
   // The public verification page
@@ -116,7 +116,7 @@ export const strings = {
   vSignature: { ar: 'التوقيع', en: 'Signature' },
   vIssuer: { ar: 'جهة الإصدار', en: 'Issued by' },
   vNotFoundBody: { ar: 'تأكّد من الأحرف والأرقام كما طُبعت على الوثيقة، فالحرف O والرقم 0 مثلًا لا يتشابهان في الرمز. إن بقي الرمز غير معروف، فاطلب من الجهة التي سلّمتك الوثيقة نسخة محدّثة.', en: 'Check the letters and digits exactly as printed on the document; the letter O and the digit 0, for example, are different. If the code is still not known, ask whoever gave you the document for an up-to-date copy.' },
-  vNote: { ar: 'الخدمة الفعلية تتحقق عبر «تصديق». هذه محاكاة تبحث في وثائق النموذج التوضيحية فقط.', en: 'The real service verifies through Tasdeeq. This is a simulation that looks only among the prototype’s illustrative documents.' },
+  vNote: { ar: 'الخدمة الفعلية تتحقق عبر «تصديق». هذه محاكاة تبحث في الوثائق التوضيحية للنسخة التجريبية فقط.', en: 'The real service verifies through Tasdeeq. This is a simulation that looks only among the prototype’s illustrative documents.' },
   vAgain: { ar: 'تحقّق من رمز آخر', en: 'Check another code' },
   vOpen: { ar: 'افتح الوثيقة', en: 'Open the document' },
 } as const;

@@ -27,6 +27,12 @@
   padding-inline: var(--gutter);
 }
 
+/* On a screen laid out on the wide grid (Home, Zones), the edges follow the screen's column so the brand
+   and the page title, the language switch and the screen's actions, line up. Screen sets data-width. */
+:global(html[data-width='grid']) .inner {
+  max-width: calc(var(--grid-max) + 2 * var(--gutter));
+}
+
 .start {
   display: flex;
   align-items: center;

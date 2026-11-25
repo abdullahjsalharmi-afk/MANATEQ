@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { nextTarget } from '@/features/welcome/next';
 import { demoCompanyName, handoffStage, HANDOFF, initialProfile } from '@/features/welcome/profiles';
 import { SPEEDS, speedKey } from '@/features/account/SettingsScreen';
 import { upcoming, whatsappHref } from '@/features/account/SupportScreen';
@@ -57,5 +58,16 @@ describe('support', () => {
       { id: 'd', at: 200, topic, channel: 'in_person', status: 'cancelled' },
     ];
     expect(upcoming(list, 80).map((a) => a.id)).toEqual(['b', 'a']);
+  });
+});
+
+describe('welcome: where a deep link leads after entering', () => {
+  it('keeps an in-app route and refuses anything else', () => {
+    expect(nextTarget('/verify?code=NOC-2611-0088')).toBe('/verify?code=NOC-2611-0088');
+    expect(nextTarget('/services/A4')).toBe('/services/A4');
+    expect(nextTarget(undefined)).toBe('/');
+    expect(nextTarget('https://example.com')).toBe('/');
+    expect(nextTarget('//example.com')).toBe('/');
+    expect(nextTarget('/welcome?next=/x')).toBe('/');
   });
 });

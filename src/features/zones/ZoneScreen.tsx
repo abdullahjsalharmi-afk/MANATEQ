@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Bell, BellRing, Check } from 'lucide-react';
 import { useLang, useT } from '@/app/i18n';
 import { useParams } from '@/app/routes';
@@ -42,13 +42,7 @@ function ZoneNotFound() {
   const t = useT(strings);
   return (
     <Screen title={t('zone')} nav="back" backTo="/zones">
-      <EmptyState
-        level={2}
-        title={t('notFoundTitle')}
-        body={t('notFoundBody')}
-        render="zone"
-        action={<Button to="/zones">{t('backToZones')}</Button>}
-      />
+      <EmptyState level={2} title={t('notFoundTitle')} body={t('notFoundBody')} render="zone" action={<Button to="/zones">{t('backToZones')}</Button>} />
     </Screen>
   );
 }
@@ -152,8 +146,12 @@ function ZonePage({ zone }: { zone: Zone }) {
             </Card>
           ) : null}
           {!land && zone.operator ? (
-            <Card>
-              <Stat value={pick(zone.operator)} label={t('operator')} hint={t('operatorHint')} />
+            <Card className={styles.operator}>
+              <p className={cx('type-callout', styles.muted)}>{t('operator')}</p>
+              <p className="type-heading">
+                <strong>{pick(zone.operator)}</strong>
+              </p>
+              <p className={cx('type-foot', styles.muted)}>{t('operatorHint')}</p>
             </Card>
           ) : null}
         </Grid>
@@ -236,7 +234,15 @@ function PlotsSection({ zone, guest }: { zone: Zone; guest: boolean }) {
   const cells = useMemo(() => plotsFor(zone.code), [zone.code]);
   const own = useMemo(() => plots.filter((plot) => plot.zoneCode === zone.code).map((plot) => plot.id), [plots, zone.code]);
   const [chosen, setChosen] = useState<PlotCell | undefined>(undefined);
+  const cardRef = useRef<HTMLDivElement>(null);
   const solution = zone.solutions[0] ? getSolution(zone.solutions[0]) : undefined;
+
+  // On a phone the chosen-plot card sits under the grid: bring it into view so the tap visibly answers.
+  useEffect(() => {
+    if (!chosen) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    cardRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });
+  }, [chosen]);
 
   return (
     <div id="plots" className={styles.plotsSection}>
@@ -245,26 +251,26 @@ function PlotsSection({ zone, guest }: { zone: Zone; guest: boolean }) {
           <Card>
             <PlotGrid plots={cells} selected={chosen?.id} onSelect={setChosen} own={own} label={t('plotsLabel', { zone: pick(zone.name) })} />
           </Card>
-          <Card tone={chosen ? 'plain' : 'parchment'} className={cx(styles.plotCard, !chosen && own.length === 0 && styles.wideOnly)}>
-            {chosen ? (
-              <>
-                <p className={cx('type-callout', styles.muted)}>{t('plotChosen')}</p>
-                <p className="type-title">
-                  <strong className="ltr num">{chosen.id}</strong>
-                </p>
-                <p className={cx('type-callout', styles.muted)}>
-                  {t('plotFacts', { area: fmt.area(chosen.areaSqm), solution: solution ? pick(solution.name) : pick(zone.typeLabel) })}
-                </p>
-                <Button variant="secondary" to={applyTarget(zone.code, chosen.id, guest)} className={styles.apply}>
-                  {t('apply')}
-                </Button>
-                {guest ? <p className={cx('type-foot', styles.muted)}>{t('applyGuest')}</p> : null}
-              </>
-            ) : (
-              <p className={cx('type-body', styles.wideOnly)}>{t('plotPick')}</p>
-            )}
-            {own.length > 0 ? <p className={cx('type-callout', styles.muted)}>{t('ownPlots', { plots: own.map((id) => fmt.ltr(id)).join(lang === 'ar' ? '، ' : ', ') })}</p> : null}
-          </Card>
+          <div ref={cardRef} className={cx(styles.plotCardWrap, !chosen && own.length === 0 && styles.wideOnly)}>
+            <Card tone={chosen ? 'plain' : 'parchment'} className={styles.plotCard}>
+              {chosen ? (
+                <>
+                  <p className={cx('type-callout', styles.muted)}>{t('plotChosen')}</p>
+                  <p className="type-title">
+                    <strong className="ltr num">{chosen.id}</strong>
+                  </p>
+                  <p className={cx('type-callout', styles.muted)}>{t('plotFacts', { area: fmt.area(chosen.areaSqm), solution: solution ? pick(solution.name) : pick(zone.typeLabel) })}</p>
+                  <Button variant="secondary" to={applyTarget(zone.code, chosen.id, guest)} className={styles.apply}>
+                    {t('apply')}
+                  </Button>
+                  {guest ? <p className={cx('type-foot', styles.muted)}>{t('applyGuest')}</p> : null}
+                </>
+              ) : (
+                <p className={cx('type-body', styles.wideOnly)}>{t('plotPick')}</p>
+              )}
+              {own.length > 0 ? <p className={cx('type-callout', styles.muted)}>{t('ownPlots', { plots: own.map((id) => fmt.ltr(id)).join(lang === 'ar' ? '، ' : ', ') })}</p> : null}
+            </Card>
+          </div>
         </div>
       </Section>
     </div>

@@ -6,11 +6,16 @@ import { getService, peekServiceDetail } from '@/data/catalog';
 import { Button, Card, Container, Icon, Screen, Section, Tile, toast } from '@/design/core';
 import { Skeleton } from '@/design/forms';
 import { Timeline } from '@/design/signature';
-import { requestView, selectRequest, selectSpeed, timelineRows, useApp } from '@/state';
+import { requestView, selectRequest, selectSpeed, timelineRows, useApp, type TimelineEntry } from '@/state';
 import { useCatalogueReady } from '@/state/catalogue';
 import { useNow } from '@/features/shared/useNow';
 import styles from './Start.module.css';
 import { strings } from './strings';
+
+/** A step worth telling the investor about right after sending: not a decision gateway, a stop branch or the engine's own bookkeeping. */
+function isInvestorStep(entry: TimelineEntry): boolean {
+  return entry.kind !== 'gate' && entry.kind !== 'stop' && entry.lane !== 'eng';
+}
 
 export interface SubmittedStateProps {
   /** The request just started (`startRequest` → id). */
@@ -41,12 +46,23 @@ export function SubmittedState({ requestId, steps = 3 }: SubmittedStateProps) {
   const next = useMemo(() => {
     if (!request || !detail) return null;
     const view = requestView(request, detail, now, speed);
+    // Only the steps the investor would recognise: no decision gateways, no stop branches, no engine housekeeping.
+    // The full workflow, word for word, stays on the request page.
+    const meaningful = view.timeline.filter(isInvestorStep);
+    const shown = meaningful.length ? meaningful : view.timeline;
     if (anchor.current === null) {
-      const open = view.timeline.findIndex((entry) => entry.state !== 'done');
-      anchor.current = open >= 0 ? open : Math.min(1, view.timeline.length - 1);
+      const open = shown.findIndex((entry) => entry.state !== 'done');
+      anchor.current = open >= 0 ? open : Math.min(1, shown.length - 1);
     }
     const start = Math.max(0, anchor.current);
-    return timelineRows(view.timeline.slice(start, start + steps), lang, now);
+    // Each step says who holds it and its own expected time ("فوري", "يوما عمل"), not a wall-clock time, and
+    // keeps to its title: the long workflow sentence belongs to the request page.
+    return timelineRows(shown.slice(start, start + steps), lang, now).map((row) => {
+      const brief = { ...row };
+      delete brief.text;
+      delete brief.time;
+      return brief;
+    });
   }, [request, detail, now, speed, steps, lang, ready]);
 
   const track = () => navigate(`/requests/${requestId}`, { replace: true });

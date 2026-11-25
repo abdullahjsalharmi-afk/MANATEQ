@@ -4,6 +4,24 @@
   margin-block-start: var(--s-2);
 }
 
+/* Phones: the figures pair up two to a row (doubled class: it must outrank the grid's one column); an odd last card takes the row. */
+@media (max-width: 734.98px) {
+  .facts.facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .facts > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* The operator is a name, not a figure: set as a heading, not a big number. */
+.operator {
+  display: grid;
+  align-content: start;
+  gap: var(--s-1);
+}
+
 .muted {
   color: var(--ink-3);
 }
@@ -57,6 +75,13 @@
 .plots {
   display: grid;
   gap: var(--s-3);
+}
+
+.plotCardWrap {
+  display: grid;
+  min-width: 0;
+  /* Clear the sticky action bar when the card is scrolled into view. */
+  scroll-margin-block-end: calc(var(--s-16) * 2);
 }
 
 .plotCard {

@@ -4,6 +4,7 @@ import { useT } from '@/app/i18n';
 import type { Pass, PassKind } from '@/domain/types';
 import { cx } from '../cx';
 import { Icon } from '../Icon/Icon';
+import { keepWhole } from '../List/keepWhole';
 import { Pill, type Tone } from '../Pill/Pill';
 import styles from './PassCard.module.css';
 import { strings } from './strings';
@@ -78,21 +79,21 @@ export function PassCard({ kind, holder, idOrPlate, company, zone, plot, validFr
             </div>
             <div className={cx(styles.fact, !idOrPlate && styles.wide)}>
               <dt>{t('plot')}</dt>
-              <dd className="ltr num">{plot}</dd>
+              <dd className={cx('ltr num', styles.whole)}>{plot}</dd>
             </div>
             {idOrPlate ? (
               <div className={styles.fact}>
                 <dt>{t(kind === 'vehicle' ? 'plate' : 'id')}</dt>
-                <dd className="ltr num">{idOrPlate}</dd>
+                <dd className={cx('ltr num', styles.whole)}>{idOrPlate}</dd>
               </div>
             ) : null}
             <div className={styles.fact}>
               <dt>{t('validFrom')}</dt>
-              <dd className="num">{validFrom}</dd>
+              <dd className="num">{keepWhole(validFrom)}</dd>
             </div>
             <div className={styles.fact}>
               <dt>{t('validTo')}</dt>
-              <dd className="num">{validTo}</dd>
+              <dd className="num">{keepWhole(validTo)}</dd>
             </div>
           </dl>
         </div>
@@ -101,7 +102,7 @@ export function PassCard({ kind, holder, idOrPlate, company, zone, plot, validFr
       <div className={styles.stub}>
         <div className={styles.stubInner}>
           {qr ? <div className={styles.qr}>{qr}</div> : null}
-          {code ? <p className={cx(styles.code, 'ltr')}>{code}</p> : null}
+          {code ? <p className={cx(styles.code, styles.whole, 'ltr')}>{code}</p> : null}
           <p className={styles.hint}>{t(valid ? 'showAtGate' : 'notValid')}</p>
         </div>
       </div>

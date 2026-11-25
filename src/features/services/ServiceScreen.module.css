@@ -1,10 +1,59 @@
-/* The promise, set as a pull-quote under the headline. */
+/* Under the headline: the official name and code in fine print, then the promise as one quiet paragraph. */
+.official {
+  display: block;
+  max-width: 34em;
+  margin-inline: auto;
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+  text-wrap: balance;
+}
+
 .promise {
   display: block;
   max-width: 30em;
+  margin-block-start: var(--s-3);
   margin-inline: auto;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
   color: var(--ink-2);
   text-wrap: balance;
+}
+
+/* The standard as the hero's one large figure, «استرشادي» in fine print under it. */
+.heroStandard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.heroFigure {
+  font-size: var(--t-display);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.heroClause {
+  max-width: 22em;
+  font-size: var(--t-heading);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.heroFine {
+  font-size: var(--t-foot);
+  line-height: var(--lh-foot);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 /* "How this service starts": a glyph and three short paragraphs. */
@@ -105,6 +154,7 @@
   margin-block-start: 3px;
   color: var(--ink-3);
 }
+
 
 .stepNumber {
   flex: none;

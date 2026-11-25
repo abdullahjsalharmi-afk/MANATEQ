@@ -35,8 +35,18 @@
   padding-block-start: var(--s-4);
 }
 
-/* A published number or address: left to right, and aligned to the reading start of the card. */
+/* The contact and its copy action on one line; the copy drops under the contact when the card is narrow. */
+.contactLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--s-3);
+}
+
+/* A published number or address: left to right, aligned to the reading start of the card, and selectable. */
 .contact {
+  user-select: text;
+  -webkit-user-select: text;
   font-size: var(--t-body);
   font-weight: var(--w-strong);
   line-height: var(--lh-body);

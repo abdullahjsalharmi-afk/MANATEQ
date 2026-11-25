@@ -155,3 +155,21 @@
     padding-inline-end: 0;
   }
 }
+
+/* A code, date or time that must not break across lines (see keepWhole). */
+.whole {
+  white-space: nowrap;
+}
+
+/* A fact row: the label recedes, the value is the information. */
+.fact .title {
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+}
+
+.fact .trailing {
+  color: var(--ink);
+  text-align: end;
+}

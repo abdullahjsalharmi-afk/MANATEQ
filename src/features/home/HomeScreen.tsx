@@ -9,9 +9,11 @@ import { RequestRow } from '@/features/requests';
 import { useNow } from '@/features/shared/useNow';
 import {
   payInvoice,
+  receiptRefFor,
   selectActiveRequests,
   selectCompany,
   selectDues,
+  selectInvoices,
   selectJourney,
   selectNextSteps,
   selectPersona,
@@ -25,7 +27,7 @@ import { HowTile, SolutionsSection, ZonesTile } from './Discover';
 import { DuesCard } from './DuesCard';
 import { HomeHero } from './HomeHero';
 import { JourneyCard } from './JourneyCard';
-import { greetingOf, receiptRefOf } from './logic';
+import { greetingOf, invoiceOfStep } from './logic';
 import { Shortcuts } from './Shortcuts';
 import styles from './Home.module.css';
 import { strings } from './strings';
@@ -48,6 +50,8 @@ export function HomeScreen() {
   const active = useApp(selectActiveRequests);
   const dues = useApp(selectDues);
   const unread = useApp(selectUnreadCount);
+  const invoices = useApp(selectInvoices);
+  const checked = useApp((state) => state.world.eligibility !== null);
 
   // The invoice being paid stays on screen until the sheet closes, even once it is settled.
   const [paying, setPaying] = useState<Invoice | null>(null);
@@ -59,7 +63,8 @@ export function HomeScreen() {
 
   const actions = (
     <>
-      <IconButton icon={Search} label={t('search')} to="/search" />
+      {/* From 834 px the global bar carries search; the bar here keeps only the bell. */}
+      <IconButton icon={Search} label={t('search')} to="/search" className={styles.phoneOnly} />
       {guest ? null : <IconButton icon={Bell} label={unread > 0 ? t('notificationsUnread', { n: fmt.num(unread) }) : t('notifications')} badge={unread > 0 ? unread : undefined} to="/notifications" />}
     </>
   );
@@ -78,7 +83,15 @@ export function HomeScreen() {
     toast(t('paid'), { tone: 'ok', action: receipt ? { label: t('viewReceipt'), onClick: () => navigate(`/account/wallet/${receipt}`) } : undefined });
   };
 
+  const pay = (invoice: Invoice | null | undefined) => {
+    if (!invoice) return;
+    setPaying(invoice);
+    setPayOpen(true);
+  };
+
   const requests = active.slice(0, REQUESTS_ON_HOME);
+  // When the hero already pays the invoice due first, the dues card shows it without a second pill.
+  const heroInvoice = steps[0] && !guest ? invoiceOfStep(steps[0]) : null;
 
   return (
     <Screen title={greeting} subtitle={company ? pick(company.name) : undefined} large bleed width="grid" actions={actions}>
@@ -87,7 +100,7 @@ export function HomeScreen() {
           <Skeleton variant="block" height={420} label={t('loading')} />
         </Container>
       ) : (
-        <HomeHero persona={persona} steps={steps} station={station} now={now} />
+        <HomeHero persona={persona} steps={steps} station={station} now={now} checked={checked} onPay={(id) => pay(invoices.find((invoice) => invoice.id === id))} />
       )}
 
       {tenant || requests.length > 0 ? (
@@ -96,18 +109,21 @@ export function HomeScreen() {
           {requests.length > 0 || dues.next ? (
             <div className={styles.pair}>
               {requests.length > 0 ? (
-                <Section title={t('requestsTitle')} action={{ label: active.length > REQUESTS_ON_HOME ? t('seeAllCount', { n: fmt.num(active.length) }) : t('seeAll'), to: '/requests' }}>
-                  <List>
-                    {requests.map((request) => (
-                      <RequestRow key={request.id} request={request} now={now} />
-                    ))}
-                  </List>
-                </Section>
+                <div>
+                  <Section title={t('requestsTitle')} action={{ label: active.length > REQUESTS_ON_HOME ? t('seeAllCount', { n: fmt.num(active.length) }) : t('seeAll'), to: '/requests' }}>
+                    <List>
+                      {requests.map((request) => (
+                        <RequestRow key={request.id} request={request} now={now} />
+                      ))}
+                    </List>
+                  </Section>
+                </div>
               ) : null}
-              {dues.next ? <DuesCard dues={dues} now={now} onPay={() => {
-                    setPaying(dues.next);
-                    setPayOpen(true);
-                  }} /> : null}
+              {dues.next ? (
+                <div>
+                  <DuesCard dues={dues} now={now} onPay={dues.next.id === heroInvoice ? undefined : () => pay(dues.next)} />
+                </div>
+              ) : null}
             </div>
           ) : null}
           {tenant ? <Shortcuts /> : null}
@@ -123,7 +139,7 @@ export function HomeScreen() {
       )}
 
       {paying ? (
-        <PaySheet open={payOpen} onClose={() => setPayOpen(false)} title={t('payTitle')} lines={payLines} amount={paying.amount} reference={receiptRefOf(paying.ref)} onPaid={onPaid} />
+        <PaySheet open={payOpen} onClose={() => setPayOpen(false)} title={t('payTitle')} lines={payLines} amount={paying.amount} reference={receiptRefFor(paying.ref)} onPaid={onPaid} />
       ) : null}
     </Screen>
   );

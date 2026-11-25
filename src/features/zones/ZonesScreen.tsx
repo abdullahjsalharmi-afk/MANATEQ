@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { useQuery } from '@/app/routes';
-import { Button, Card, Chip, ChipRow, Container, EmptyState, List, QatarMap, Screen, Section, Segmented, Stat, Tile, cx } from '@/design/core';
+import { Button, Card, Chip, ChipRow, Container, EmptyState, Grid, QatarMap, Screen, Section, Segmented, Stat, Tile, cx } from '@/design/core';
 import { getZone, zonesData } from '@/data/catalog';
 import type { Zone } from '@/data/types';
 import { FILTERS, isZoneFilter, takenPct, zonesFor, type ZoneFilter } from './model';
-import { FinePrint, ShareBar, useAreaParts, usePrices } from './parts';
+import { FinePrint, ShareBar, usePrices, useZoneFacts } from './parts';
 import { strings } from './strings';
-import { ZoneRow } from './ZoneRow';
+import { ZoneTile } from './ZoneTile';
 import styles from './Zones.module.css';
 
 type View = 'map' | 'list';
@@ -30,6 +30,9 @@ export function ZonesScreen() {
   const [filter, setFilter] = useState<ZoneFilter>(isZoneFilter(query.solution) ? query.solution : 'all');
   const [selected, setSelected] = useState<string | undefined>(query.zone && getZone(query.zone) ? query.zone : undefined);
   const { totals } = zonesData;
+  const sideRef = useRef<HTMLDivElement>(null);
+  // Set when the investor taps a marker, so the card it opens is brought into view (it sits under the map on phones).
+  const revealRef = useRef(false);
 
   const shown = zonesFor(filter);
   const chosen = selected ? shown.find((zone) => zone.code === selected) : undefined;
@@ -40,6 +43,18 @@ export function ZonesScreen() {
     if (selected && !zonesFor(next).some((zone) => zone.code === selected)) setSelected(undefined);
   };
 
+  const choose = (code: string) => {
+    revealRef.current = true;
+    setSelected(code);
+  };
+
+  useEffect(() => {
+    if (!revealRef.current || !chosen) return;
+    revealRef.current = false;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    sideRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });
+  }, [chosen]);
+
   const land = shown.filter((zone) => zone.kind === 'land');
   const parks = shown.filter((zone) => zone.kind === 'warehousing');
 
@@ -49,7 +64,7 @@ export function ZonesScreen() {
         <Card className={styles.facts}>
           <div className={styles.stats}>
             <Stat value={fmt.num(totals.zones)} label={t('statZones')} />
-            <Stat value={fmt.num(totals.totalSqm / 1_000_000, 1)} unit={t('millionSqm')} label={t('statArea')} />
+            <Stat value={fmt.num(totals.totalSqm / 1_000_000, 1)} label={t('statArea')} />
             <Stat value={fmt.pct(totals.operationalRatePct)} label={t('statRate')} />
           </div>
         </Card>
@@ -63,9 +78,8 @@ export function ZonesScreen() {
               { value: 'map', label: t('viewMap') },
               { value: 'list', label: t('viewList') },
             ]}
-            className={styles.segmented}
           />
-          <Button variant="quiet" to="/solutions">
+          <Button variant="quiet" to="/solutions" className={styles.pricesLink}>
             {t('pricesLink')}
           </Button>
         </div>
@@ -82,15 +96,8 @@ export function ZonesScreen() {
       {view === 'map' ? (
         <Tile tone="light" className={styles.mapTile}>
           <div className={styles.mapLayout}>
-            <QatarMap
-              label={t('mapLabel')}
-              selected={chosen?.code}
-              onSelect={setSelected}
-              highlight={filter === 'all' ? undefined : shown.map((zone) => zone.code)}
-              height={480}
-              className={styles.map}
-            />
-            <div className={styles.side} aria-live="polite">
+            <QatarMap label={t('mapLabel')} selected={chosen?.code} onSelect={choose} highlight={filter === 'all' ? undefined : shown.map((zone) => zone.code)} height={480} className={styles.map} />
+            <div ref={sideRef} className={styles.side} aria-live="polite">
               {chosen ? (
                 <ZoneCard zone={chosen} />
               ) : (
@@ -102,40 +109,40 @@ export function ZonesScreen() {
             </div>
           </div>
         </Tile>
-      ) : (
-        <Container width="content">
-          {shown.length === 0 ? (
-            <EmptyState
-              title={t('noneTitle')}
-              body={t('noneBody')}
-              render="zone"
-              action={
-                <Button variant="secondary" onClick={() => chooseFilter('all')}>
-                  {t('showAll')}
-                </Button>
-              }
-            />
-          ) : null}
-          {land.length > 0 ? (
-            <Section title={t('landZones')} hint={fmt.num(land.length)}>
-              <List>
-                {land.map((zone) => (
-                  <ZoneRow key={zone.code} zone={zone} />
-                ))}
-              </List>
-            </Section>
-          ) : null}
-          {parks.length > 0 ? (
-            <Section title={t('parks')} hint={fmt.num(parks.length)}>
-              <List>
-                {parks.map((zone) => (
-                  <ZoneRow key={zone.code} zone={zone} />
-                ))}
-              </List>
-            </Section>
-          ) : null}
-        </Container>
-      )}
+      ) : null}
+
+      <Container width="grid">
+        {shown.length === 0 ? (
+          <EmptyState
+            title={t('noneTitle')}
+            body={t('noneBody')}
+            render="zone"
+            action={
+              <Button variant="secondary" onClick={() => chooseFilter('all')}>
+                {t('showAll')}
+              </Button>
+            }
+          />
+        ) : null}
+        {land.length > 0 ? (
+          <Section title={t('sectionCount', { title: t('landZones'), n: fmt.num(land.length) })}>
+            <Grid as="ul">
+              {land.map((zone) => (
+                <ZoneTile key={zone.code} zone={zone} />
+              ))}
+            </Grid>
+          </Section>
+        ) : null}
+        {parks.length > 0 ? (
+          <Section title={t('sectionCount', { title: t('parks'), n: fmt.num(parks.length) })}>
+            <Grid as="ul">
+              {parks.map((zone) => (
+                <ZoneTile key={zone.code} zone={zone} />
+              ))}
+            </Grid>
+          </Section>
+        ) : null}
+      </Container>
 
       <Container width="grid" className={styles.notes}>
         <FinePrint>
@@ -146,33 +153,24 @@ export function ZonesScreen() {
   );
 }
 
-/** The card under the map for the chosen zone: name, type, two facts, the published price and the way in. */
+/** The card the map opens for the chosen zone: name, its facts (type, area, share taken), the published price and the way in. Compact, so it fits under the map on a phone. */
 function ZoneCard({ zone }: { zone: Zone }) {
   const t = useT(strings);
-  const { pick, fmt } = useLang();
+  const { pick } = useLang();
   const prices = usePrices();
-  const areaParts = useAreaParts();
-  const area = areaParts(zone.totalSqm);
+  const facts = useZoneFacts();
   const pct = takenPct(zone);
 
   return (
     <Card className={styles.zoneCard}>
-      <p className={cx('type-callout', styles.muted)}>{pick(zone.typeLabel)}</p>
       <h2 className={cx('type-heading', styles.zoneName)}>{pick(zone.name)}</h2>
-      <div className={styles.pair}>
-        <Stat value={area.value} unit={area.unit} label={t('area')} />
-        {pct !== null ? (
-          <div>
-            <Stat value={fmt.pct(pct)} label={zone.kind === 'land' ? t('allocated') : t('occupancy')} />
-            <ShareBar pct={pct} />
-          </div>
-        ) : null}
-      </div>
+      <p className={cx('type-callout num', styles.muted)}>{facts(zone)}</p>
+      {pct !== null ? <ShareBar pct={pct} /> : null}
       <div className={styles.priceLine}>
         <span className={cx('type-callout', styles.muted)}>{t('price')}</span>
         <strong className="type-body num">{prices.zone(zone)}</strong>
       </div>
-      <Button to={`/zones/${zone.code}`} className={styles.open}>
+      <Button to={`/zones/${zone.code}`} size="sm" className={styles.open}>
         {t('openZone')}
       </Button>
     </Card>

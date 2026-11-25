@@ -48,3 +48,12 @@
   letter-spacing: var(--ls-caption);
   color: var(--ink-3);
 }
+
+/* After the payment: the pill to the receipt, «تم» as a quiet link under it. */
+.successActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  inline-size: 100%;
+}

@@ -10,6 +10,7 @@
 import { langTools, ltr } from '@/app/i18n';
 import type { L10n, Receives, ServiceDetail, ServiceId } from '@/data/types';
 import type { Company, Doc, DocKind, DocLine, Invoice, Lease, Plot, RequestState } from './types';
+import { DOT, keepWhole } from './text';
 
 const AR = langTools('ar').fmt;
 const EN = langTools('en').fmt;
@@ -211,10 +212,11 @@ const VALUE = {
 } as const;
 
 const same = (text: string): L10n => ({ ar: text, en: text });
-const code = (text: string): L10n => ({ ar: ltr(text), en: text });
+/** A code or reference: left to right inside Arabic, and never broken across lines. */
+const code = (text: string): L10n => ({ ar: ltr(text), en: keepWhole(text) });
 const money = (amount: number): L10n => ({ ar: AR.money(amount), en: EN.money(amount) });
 const area = (sqm: number): L10n => ({ ar: AR.area(sqm), en: EN.area(sqm) });
-const date = (ms: number): L10n => ({ ar: AR.date(ms), en: EN.date(ms) });
+const date = (ms: number): L10n => ({ ar: keepWhole(AR.date(ms)), en: keepWhole(EN.date(ms)) });
 const line = (label: L10n, value: L10n): DocLine => ({ label, value });
 
 function partyLines(facts: DocFacts): DocLine[] {
@@ -224,8 +226,9 @@ function partyLines(facts: DocFacts): DocLine[] {
 
 /** "AW-116 · مجمّع الوكرة اللوجستي" */
 export function plotLabel(plot: Plot, zoneName?: L10n): L10n {
-  if (!zoneName) return code(plot.number);
-  return { ar: `${ltr(plot.number)} · ${zoneName.ar}`, en: `${plot.number} · ${zoneName.en}` };
+  const number = code(plot.number);
+  if (!zoneName) return number;
+  return { ar: `${number.ar}${DOT}${zoneName.ar}`, en: `${number.en}${DOT}${zoneName.en}` };
 }
 
 function plotLines(facts: DocFacts): DocLine[] {
@@ -246,7 +249,8 @@ const signatureLine = (): DocLine => line(LABEL.signature, VALUE.demoSignature);
 /** "عقد الإيجار · AW-116" */
 function titled(title: L10n, plot?: Plot): L10n {
   if (!plot) return title;
-  return { ar: `${title.ar} · ${ltr(plot.number)}`, en: `${title.en} · ${plot.number}` };
+  const number = code(plot.number);
+  return { ar: `${title.ar}${DOT}${number.ar}`, en: `${title.en}${DOT}${number.en}` };
 }
 
 /* ───────────────────────────── builders ───────────────────────────── */
@@ -273,7 +277,7 @@ export function receiptDoc(seed: DocSeed, invoice: Invoice, facts: DocFacts, at:
     id: seed.id,
     ref: seed.ref,
     kind: 'receipt',
-    title: { ar: `إيصال سداد · ${invoice.title.ar}`, en: `Payment receipt · ${invoice.title.en}` },
+    title: { ar: `إيصال سداد${DOT}${invoice.title.ar}`, en: `Payment receipt${DOT}${invoice.title.en}` },
     issuedAt: at,
     issuer: MANATEQ,
     ...(source ?? {}),

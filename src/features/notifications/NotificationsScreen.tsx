@@ -1,4 +1,5 @@
 import { BellOff, BellRing, CircleCheck, Info, RefreshCw, type LucideIcon } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { navigate } from '@/app/router';
 import { Icon, List, Row, Screen, Section, toast } from '@/design/core';
@@ -24,8 +25,31 @@ export function NotificationsScreen() {
   const notifications = useApp(selectNotifications);
   const unread = useApp(selectUnreadCount);
   const groups = groupByDay(notifications, now);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // The live line speaks only when the count changes on its own (a request moved); the investor's own
+  // "mark all" is confirmed by the toast alone, so it is never announced twice.
+  const [announce, setAnnounce] = useState('');
+  const lastUnread = useRef(unread);
+  const ownChange = useRef(false);
+  useEffect(() => {
+    if (unread === lastUnread.current) return;
+    lastUnread.current = unread;
+    if (ownChange.current) {
+      ownChange.current = false;
+      // The button went away with the last unread item: keep the keyboard on the list's first heading.
+      const heading = listRef.current?.querySelector<HTMLElement>('h2');
+      if (heading) {
+        heading.tabIndex = -1;
+        heading.focus();
+      }
+      return;
+    }
+    setAnnounce(unread > 0 ? t('unreadCount', { n: unread }) : t('allRead'));
+  }, [unread, t]);
 
   const readAll = () => {
+    ownChange.current = true;
     markAllRead();
     toast(t('markedAll'), { tone: 'ok' });
   };
@@ -36,15 +60,15 @@ export function NotificationsScreen() {
   return (
     <Screen title={t('title')} nav="back" backTo="/">
       <p className="visually-hidden" aria-live="polite">
-        {unread > 0 ? t('unreadCount', { n: unread }) : t('allRead')}
+        {announce}
       </p>
       {notifications.length === 0 ? (
         <EmptyState icon={BellOff} title={t('emptyTitle')} body={t('emptyBody')} />
       ) : (
-        <>
+        <div ref={listRef}>
           {groups.today.length > 0 ? <Group title={t('today')} items={groups.today} now={now} action={markAction} /> : null}
           {groups.earlier.length > 0 ? <Group title={t('earlier')} items={groups.earlier} now={now} action={groups.today.length > 0 ? undefined : markAction} /> : null}
-        </>
+        </div>
       )}
     </Screen>
   );

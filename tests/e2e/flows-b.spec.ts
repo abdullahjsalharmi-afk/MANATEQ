@@ -9,17 +9,17 @@ test('the tenant reports a street-light fault with a photo and reaches its reque
   await openApp(page, { route: '/start/D1' });
   const main = page.locator('main');
 
-  await expect(page.getByRole('heading', { name: 'ما المشكلة؟' })).toBeVisible();
-  await main.getByRole('button', { name: 'الإنارة' }).click();
-  await expect(main.getByRole('button', { name: 'الإنارة' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('heading', { name: 'ما العطل؟' })).toBeVisible();
+  await main.getByRole('radio', { name: 'الإنارة' }).click();
+  await expect(main.getByRole('radio', { name: 'الإنارة' })).toHaveAttribute('aria-checked', 'true');
   await page.getByRole('button', { name: 'متابعة' }).click();
 
   await expect(page.getByRole('heading', { name: 'أين؟' })).toBeVisible();
-  await main.getByRole('button', { name: /BA-121/ }).click();
+  await main.getByRole('radio', { name: /BA-121/ }).click();
   await page.getByRole('button', { name: 'استخدم صورة تجريبية' }).click();
   await page.getByRole('button', { name: 'متابعة' }).click();
 
-  await expect(page.getByRole('heading', { name: 'صِف المشكلة' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'صِف العطل' })).toBeVisible();
   await page.getByLabel('وصف قصير (اختياري)').fill('عمود الإنارة مطفأ');
   await expect(main.getByText('مرفقة')).toBeVisible();
   await page.getByRole('button', { name: 'أرسِل البلاغ' }).click();
@@ -37,7 +37,7 @@ test('the tenant issues a visitor pass for today and finds its QR in the wallet'
   await openApp(page, { route: '/start/D2?plot=BA-121' });
   const main = page.locator('main');
 
-  await main.getByRole('button', { name: /زائر/ }).click();
+  await main.getByRole('radio', { name: /زائر/ }).click();
   await page.getByRole('button', { name: 'متابعة' }).click();
   await page.getByLabel('اسم الزائر').fill('سارة الكعبي');
   await expect(main.getByRole('button', { name: 'اليوم' })).toHaveAttribute('aria-pressed', 'true');
@@ -52,7 +52,7 @@ test('the tenant issues a visitor pass for today and finds its QR in the wallet'
   const code = ((await qr.getAttribute('aria-label')) ?? '').replace('رمز تصريح الدخول', '').trim();
   expect(code).not.toEqual('');
 
-  await page.getByRole('link', { name: 'عرض في المحفظة' }).click();
+  await page.getByRole('link', { name: 'اعرضه في وثائقي' }).click();
   await expect(page).toHaveURL(/#\/account\/wallet\/[^/]+$/);
   await expect(page.getByText(code).first()).toBeVisible();
   await expect(page.locator('main svg[role="img"]').first()).toBeVisible();
@@ -62,7 +62,7 @@ test('the tenant issues a visitor pass for today and finds its QR in the wallet'
 test('an emergency: one tap on the type, then send', async ({ page }) => {
   await openApp(page, { route: '/start/D3', lang: 'en' });
   await expect(page.getByRole('link', { name: 'Call emergency 999' })).toHaveAttribute('href', 'tel:999');
-  await page.locator('main').getByRole('button', { name: 'Fire' }).click();
+  await page.locator('main').getByRole('radio', { name: 'Fire' }).click();
   await page.getByRole('button', { name: 'Send the report' }).click();
   await expect(page.getByRole('heading', { name: 'Your report is in.' })).toBeVisible();
   await expect(page.getByText('Civil Defence')).toBeVisible();

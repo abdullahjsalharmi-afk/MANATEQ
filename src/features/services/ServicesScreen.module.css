@@ -49,3 +49,74 @@
 .all {
   padding-block-end: var(--s-12);
 }
+
+/* The other stations: one quiet row each in a single card, opening in place to the list of their services. */
+.groups {
+  overflow: hidden;
+}
+
+.group + .group {
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.groupHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: 52px;
+  padding: var(--s-3) var(--s-5);
+  cursor: pointer;
+  list-style: none;
+}
+
+.groupHead::-webkit-details-marker {
+  display: none;
+}
+
+.groupHead:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+  border-radius: var(--r-card);
+}
+
+.groupText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.groupName {
+  font-size: var(--t-body);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--ink);
+}
+
+.groupHint {
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+}
+
+.groupChevron {
+  flex: none;
+  color: var(--ink-3);
+  transition: transform var(--d-2) var(--ease);
+}
+
+.group[open] .groupChevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .groupChevron {
+    transition: none;
+  }
+}
+
+.groupList {
+  border-block-start: 1px solid var(--line-soft);
+}

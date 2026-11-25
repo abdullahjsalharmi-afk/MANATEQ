@@ -62,6 +62,16 @@ const GROUP_AR = {
   'Regulators, utilities & agencies': 'الجهات التنظيمية وجهات المرافق والهيئات',
   'Partners & field': 'الشركاء والميدان',
 };
+// The body behind a platform, for "who has your request now" (headline form, then the form used in a sentence).
+const ENTITY = {
+  I8: [['وزارة التجارة والصناعة', 'Ministry of Commerce and Industry'], ['وزارة التجارة والصناعة', 'the Ministry of Commerce and Industry']],
+  I9: [['وزارة البلدية', 'Ministry of Municipality'], ['وزارة البلدية', 'the Ministry of Municipality']],
+  I10: [['الدفاع المدني', 'Civil Defence'], ['الدفاع المدني', 'Civil Defence']],
+  I11: [['كهرماء', 'Kahramaa'], ['كهرماء', 'Kahramaa']],
+  I13: [['الهيئة العامة للجمارك', 'General Authority of Customs'], ['الهيئة العامة للجمارك', 'the General Authority of Customs']],
+  I14: [['وزارة العمل', 'Ministry of Labour'], ['وزارة العمل', 'the Ministry of Labour']],
+  I15: [['وزارة البيئة والتغير المناخي', 'Ministry of Environment and Climate Change'], ['وزارة البيئة والتغير المناخي', 'the Ministry of Environment and Climate Change']],
+};
 const statusOverride = readOptional('knowledge/integration-status.json', null);
 const statusList = Array.isArray(statusOverride) ? statusOverride : Array.isArray(statusOverride?.integrations) ? statusOverride.integrations : [];
 const statusById = new Map(statusList.map((s) => [s.id, s]));
@@ -78,6 +88,7 @@ const integrations = reference.integrations.map((i) => {
     status: extra && isBi(extra.status) ? extra.status : bi(i.statusAr ?? statusEn, statusEn),
     phase: i.phase,
     live: extra && typeof extra.liveNationally === 'boolean' ? extra.liveNationally : /available nationally/i.test(statusEn),
+    ...(ENTITY[i.id] ? { entity: { name: bi(...ENTITY[i.id][0]), inText: bi(...ENTITY[i.id][1]) } } : {}),
   };
 });
 const integrationIds = new Set(integrations.map((i) => i.id));
@@ -141,12 +152,21 @@ for (const s of guide.services) {
   if (m.startable && workflow.steps[0].lane !== 'inv') warn.push(`${s.id}: marked startable but its workflow starts in lane "${workflow.steps[0].lane}"`);
   if (!m.startable && workflow.steps[0].lane === 'inv') warn.push(`${s.id}: workflow starts with the investor but it is not marked startable`);
 
+  for (const key of ['requestLabel', 'hint']) if (m[key] !== undefined && !isBi(m[key])) errors.push(`${s.id}: ${key} must be bilingual`);
+  for (const f of m.fields ?? []) {
+    if (!f.showIf) continue;
+    const on = (m.fields ?? []).find((other) => other.key === f.showIf.key);
+    if (!on || on === f) errors.push(`${s.id} field ${f.key}: showIf names an unknown field ${f.showIf.key}`);
+  }
+
   const summary = {
     id: s.id,
     domain: s.domain,
     name: bi(s.nameAr, s.name),
     label: m.label,
+    ...(m.requestLabel ? { requestLabel: m.requestLabel } : {}),
     summary: m.summary,
+    ...(m.hint ? { hint: m.hint } : {}),
     promise: bi(s.promiseAr, s.promise),
     initiator: m.initiator,
     startable: m.startable,
@@ -311,6 +331,46 @@ const knowledge = {
 const activities = readOptional('activities.json', []);
 const zoneCodes = new Set(zones.map((z) => z.code));
 for (const a of activities) for (const code of a.zones ?? []) if (!zoneCodes.has(code)) errors.push(`activity ${a.code}: unknown zone ${code}`);
+
+// ----------------------------------------------------------------------------- house style
+// SPEC 3.7: no em dashes in user-facing text, and «طلب» / "request", never "case" or "ticket", in the
+// investor-facing metadata. (The workflows and the guide text are transcribed from the owner's books
+// word for word and are not checked here.)
+function walkStrings(value, where, visit) {
+  if (typeof value === 'string') visit(where, value);
+  else if (Array.isArray(value)) value.forEach((item, i) => walkStrings(item, `${where}[${i}]`, visit));
+  else if (value && typeof value === 'object') for (const [key, item] of Object.entries(value)) walkStrings(item, `${where}.${key}`, visit);
+}
+const BANNED = [
+  [/\u2014/, 'an em dash'],
+  [/\b(case|cases|ticket|tickets)\b/i, '"case" or "ticket" (write "request")'],
+  [/رقم الحالة|رقم التذكرة|التذكرة/, '«رقم الحالة» or «التذكرة» (write «الطلب»)'],
+];
+for (const code of DOMAIN_CODES) {
+  // The investor actions are transcribed with the workflows; the rest of the metadata is the app's own copy.
+  const { services: metaServices, ...intro } = meta[code];
+  walkStrings(intro, `meta/${code}`, check);
+  for (const m of metaServices) {
+    const { actions: _actions, ...rest } = m;
+    walkStrings(rest, `meta/${code} ${m.id}`, check);
+  }
+}
+function check(where, text) {
+  for (const [pattern, what] of BANNED) if (pattern.test(text)) errors.push(`${where}: ${what} in "${text.slice(0, 80)}"`);
+}
+const STRINGS_DIR = path.join(ROOT, 'src');
+(function lintStrings(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) lintStrings(full);
+    else if (entry.name === 'strings.ts') {
+      fs.readFileSync(full, 'utf8').split('\n').forEach((line, i) => {
+        const code = line.replace(/^\s*(\/\/|\/?\*).*$/, '');
+        if (code.includes('\u2014')) errors.push(`${path.relative(ROOT, full)}:${i + 1}: an em dash in user-facing text`);
+      });
+    }
+  }
+})(STRINGS_DIR);
 
 // ----------------------------------------------------------------------------- write
 if (errors.length) {

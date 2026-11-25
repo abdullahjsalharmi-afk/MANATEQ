@@ -45,7 +45,7 @@ describe('services catalogue', () => {
 
   it('sends start to the right place', () => {
     expect(startTarget('D1', 'tenant')).toBe('/start/D1');
-    expect(startTarget('D1', 'guest')).toBe('/welcome');
+    expect(startTarget('D1', 'guest')).toBe('/welcome?next=%2Fstart%2FD1');
     expect(startTarget('A2', 'guest')).toBe('/eligibility');
     expect(startTarget('A2', 'tenant')).toBe('/eligibility');
   });

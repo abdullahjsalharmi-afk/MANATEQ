@@ -19,17 +19,17 @@ test('pay the due invoice from payments and find its receipt in the wallet', asy
   // The calm state replaces the total, and the payment is in the statement.
   await expect(page.getByText('Nothing due')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Due', exact: true })).toHaveCount(0);
-  await expect(page.getByRole('link', { name: /Rent, Q4 2026 · BA-121.*RCP-2026-0051/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Rent, Q4 2026 ·\sBA.121.*RCP-2026-0051/ })).toBeVisible();
 
   // The receipt is in the wallet, under receipts, and opens with its verification code.
   await page.evaluate(() => {
     window.location.hash = '#/account/wallet';
   });
   await page.getByRole('button', { name: 'Receipts' }).click();
-  const receipt = page.getByRole('link', { name: /Rent, Q4 2026 · BA-121/ });
+  const receipt = page.getByRole('link', { name: /Rent, Q4 2026 ·\sBA.121/ });
   await expect(receipt).toBeVisible();
   await receipt.click();
-  await expect(page.getByRole('heading', { name: /Rent, Q4 2026 · BA-121/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Rent, Q4 2026 ·\sBA.121/ })).toBeVisible();
   await expect(page.getByText(/^TSD-[A-Z0-9]{4}-[A-Z0-9]{4}$/).first()).toBeVisible();
 
   // The simulated check confirms it.

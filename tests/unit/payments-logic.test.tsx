@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Invoice } from '@/domain/types';
-import { calendarDays, dueLine, groupByMonth, outstanding, receiptRef } from '@/features/payments/logic';
+import { calendarDays, dueLine, groupByMonth, outstanding } from '@/features/payments/logic';
+import { receiptRefFor } from '@/state/refs';
 
 const DAY = 86_400_000;
 const NOW = new Date(2026, 10, 25, 10, 0).getTime();
@@ -54,7 +55,7 @@ describe('statement', () => {
     const list = outstanding([invoice({ id: 'late', dueAt: NOW + 9 * DAY }), invoice({ id: 'soon', dueAt: NOW + DAY }), paid('p', NOW)]);
     expect(list.map((i) => i.id)).toEqual(['soon', 'late']);
   });
-  it('names the receipt after the invoice', () => {
-    expect(receiptRef(invoice({}))).toBe('RCP-2026-0051');
+  it('names the receipt after the invoice, with the one rule the state files it under', () => {
+    expect(receiptRefFor(invoice({}).ref)).toBe('RCP-2026-0051');
   });
 });

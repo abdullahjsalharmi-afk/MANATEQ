@@ -26,7 +26,8 @@ export const isQueued = (request: RequestState): boolean => request.visits.lengt
 export const findRequest = (world: World, id: string): RequestState | undefined => world.requests.find((request) => request.id === id);
 export const findPlotRecord = (world: World, id: string | undefined): Plot | undefined => (id === undefined ? undefined : world.plots.find((plot) => plot.id === id));
 export const findLease = (world: World, id: string | undefined): Lease | undefined => (id === undefined ? undefined : world.leases.find((lease) => lease.id === id));
-export const leaseOfPlot = (world: World, plotId: string | undefined): Lease | undefined => findLease(world, findPlotRecord(world, plotId)?.leaseId);
+/** The current lease of one of the investor's plots (shared with the domain, so both read it the same way). */
+export { leaseOfPlot } from '@/domain/plots';
 
 /** Replaces the request with the same id, or adds it at the end. */
 export function putRequest(world: World, request: RequestState): World {

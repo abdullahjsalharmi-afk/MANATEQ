@@ -98,11 +98,3 @@ export interface StandardClock {
   dayNumber: number;
 }
 
-/** Converts the service clock of a request (ms of real time) into the story's working days. */
-export function standardClock(serviceClockMs: number, standard: Standard, speed = 1): StandardClock {
-  const pace = speed > 0 ? speed : 1;
-  const usedDays = (serviceClockMs * pace) / DAY_MS;
-  const targetDays = standardDays(standard);
-  const ratio = targetDays === null ? null : targetDays <= 0 ? 1 : usedDays / targetDays;
-  return { usedDays, targetDays, ratio, dayNumber: Math.max(1, Math.ceil(usedDays)) };
-}

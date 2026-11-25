@@ -69,7 +69,7 @@ function CompanyCard() {
   return (
     <Card to="/account/company" className={styles.company} aria-label={`${t('companyCardLabel')}: ${name}`}>
       <div className={styles.companyHead}>
-        <Avatar name={name} size="xl" tone="accent" />
+        <Avatar name={name} size="xl" />
         <Pill tone="gold" icon={BadgeCheck}>
           {t('verified')}
         </Pill>

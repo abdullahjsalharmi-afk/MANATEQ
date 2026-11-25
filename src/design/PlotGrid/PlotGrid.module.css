@@ -73,6 +73,14 @@ button.available:active {
   background: var(--sunken);
 }
 
+/* available, but not for this request (too small for the area asked for): the available look, dimmed */
+.unfit {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink-3);
+  opacity: 0.55;
+}
+
 /* a plot the investor already holds: solid ink, so it reads as taken, by you */
 .own {
   background: var(--ink);

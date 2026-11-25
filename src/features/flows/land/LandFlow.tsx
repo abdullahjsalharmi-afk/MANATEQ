@@ -5,18 +5,18 @@
  * `activity`. The answers are kept as a draft on every change and restored on return.
  */
 import { useEffect, useMemo, useRef, useState, type Ref } from 'react';
-import { BadgeCheck } from 'lucide-react';
 import { back, navigate } from '@/app/router';
 import { useQuery } from '@/app/routes';
 import { useLang, useT } from '@/app/i18n';
 import { activities, getActivity, getSolution, getZone } from '@/data/catalog';
 import type { SolutionKey } from '@/data/types';
-import { Button, Card, Chip, ChipRow, Icon, List, Row, Screen, Section, Sheet, cx, toast } from '@/design/core';
+import { Button, Card, Chip, ChipRow, List, Row, Screen, Section, Sheet, cx, toast } from '@/design/core';
 import { Banner, Checkbox, EmptyState, FilePick, NumberField, SelectField, Stepper } from '@/design/forms';
 import { FetchedList, PlotGrid, type FetchedItem } from '@/design/signature';
 import { clearDraft, saveDraft, selectCompany, selectDraft, selectPersona, startRequest, useApp } from '@/state';
 import { freePlots, isValidArea, LAND_SOLUTIONS, layoutForArea, zonesOffering } from '../eligibility/model';
-import { FinePrint, StepError, StepHead, useStepFocus } from '../eligibility/parts';
+import { KnownCard } from '@/features/start/KnownCard';
+import { FinePrint, revealFirstError, StepError, StepHead, useStepFocus } from '../eligibility/parts';
 import { useOwnPlots, useTakenPlots } from '../eligibility/useTakenPlots';
 import {
   chosenPlot,
@@ -36,13 +36,11 @@ import {
   type LandForm,
 } from './model';
 import { Submitted } from './Submitted';
-import { strings } from './strings';
+import { docsCount, strings } from './strings';
 import flow from '../eligibility/Flow.module.css';
 import styles from './Land.module.css';
 
 type Key = keyof typeof strings;
-
-const PAGE_NAME: Record<number, Key> = { 1: 'p1', 2: 'p2', 3: 'p3', 4: 'p4', 5: 'p5' };
 
 const ERROR_TEXT: Record<LandError, Key> = {
   confirm: 'errConfirm',
@@ -134,6 +132,7 @@ export function LandFlow() {
     if (page < LAND_PAGES) {
       if (pageErrors(page, form, taken).length) {
         setTried(true);
+        revealFirstError();
         return;
       }
       go(page + 1);
@@ -143,10 +142,12 @@ export function LandFlow() {
     if (missing !== null) {
       go(missing);
       setTried(true);
+      revealFirstError();
       return;
     }
     if (!form.consent) {
       setTried(true);
+      revealFirstError();
       return;
     }
     setSending(true);
@@ -154,12 +155,13 @@ export function LandFlow() {
     setSubmittedId(id);
   };
 
-  const name = t(PAGE_NAME[page] ?? 'p1');
-  const where = t('stepOf', { n: page, m: LAND_PAGES, name });
+  const where = t('stepOf', { n: page, m: LAND_PAGES });
   const docsDone = REQUIRED_DOCS.filter((doc) => form[doc] !== null).length;
   const context =
-    page === 2 && plot
-      ? t('plotContext', { id: fmt.ltr(plot.id), area: fmt.area(plot.areaSqm) })
+    page === 2
+      ? plot
+        ? t('plotContext', { id: fmt.ltr(plot.id), area: fmt.area(plot.areaSqm) })
+        : t('pickPlot')
       : page === 4
         ? t('docsContext', { n: docsDone, m: REQUIRED_DOCS.length })
         : page === 5 && rent !== null
@@ -242,16 +244,19 @@ function KnowYou({ form, update, where, headRef, error }: PageProps & { error?: 
   const company = useApp(selectCompany);
   const eligibility = useApp((state) => state.world.eligibility);
   if (!company) return null;
+  // The card shows the company as the start flow does; the list says where each fact comes from.
   const items: FetchedItem[] = [
     { text: t('fIdentity', { name: pick(company.signatory.name) }), source: { name: t('srcNas'), live: true } },
     { text: t('fCompany', { company: pick(company.name), cr: fmt.ltr(company.cr) }), source: { name: t('srcGdx'), live: true } },
-    { text: t('fActivity', { activity: pick(company.activity) }), source: { name: t('srcGdx'), live: true } },
-    { text: t('fSignatory', { name: pick(company.signatory.name), role: pick(company.signatory.role) }), source: { name: t('srcGdx'), live: true } },
   ];
   if (eligibility) {
     const verdict = t(eligibility.verdict === 'targeted' ? 'vTargeted' : eligibility.verdict === 'review' ? 'vReview' : 'vNot');
     items.push({
-      text: t('fEligibility', { verdict, solution: pick(getSolution(eligibility.solution)?.name), area: fmt.area(eligibility.areaSqm) }),
+      // A non-targeted activity was checked on the activity alone: no solution or area to repeat.
+      text:
+        eligibility.verdict === 'not_targeted'
+          ? t('fEligibilityShort', { verdict })
+          : t('fEligibility', { verdict, solution: pick(getSolution(eligibility.solution)?.name), area: fmt.area(eligibility.areaSqm) }),
       source: { name: t('srcCheck'), live: true },
     });
   }
@@ -259,16 +264,9 @@ function KnowYou({ form, update, where, headRef, error }: PageProps & { error?: 
   return (
     <>
       <StepHead ref={headRef} where={where} question={t('p1Question')} hint={t('p1Hint')} />
-      <Card className={styles.company}>
-        <p className={cx('type-callout', styles.verifiedLine)}>
-          <Icon icon={BadgeCheck} size={18} className={flow.verified} />
-          {t('verified')}
-        </p>
-        <h3 className={cx('type-heading', styles.companyName)}>{pick(company.name)}</h3>
-        <p className={cx('type-callout num', styles.companyCr)}>{t('cr', { cr: fmt.ltr(company.cr) })}</p>
-      </Card>
+      <KnownCard company={company} />
       <Section title={t('fetched')} level={3}>
-        <FetchedList items={items} label={t('fetched')} />
+        <FetchedList items={items} caption={false} label={t('fetched')} />
       </Section>
       {!eligibility ? (
         <Banner tone="info" title={t('noCheckTitle')} action={{ label: t('runCheck'), to: checkLink }} className={styles.banner}>
@@ -343,8 +341,8 @@ function PlotPage({ form, update, where, headRef, errors, taken, own, rent }: Pa
           </Card>
         )
       ) : null}
-      <FinePrint demo="illustrative">{t('layoutNote')}</FinePrint>
       {errors.includes('plot') ? <StepError>{t('errPlot')}</StepError> : null}
+      <FinePrint demo="illustrative">{t('layoutNote')}</FinePrint>
 
       {plot ? (
         <Section title={t('yourPlot')} level={3}>
@@ -453,7 +451,7 @@ function ReviewPage({ form, update, where, headRef, error, taken, rent, onEdit }
         <Row eyebrow={t('preferredPlot')} title={plot ? <span className="num">{`${fmt.ltr(plot.id)} · ${fmt.area(plot.areaSqm)}`}</span> : t('none')} {...edit(t('preferredPlot'), 2)} />
         <Row eyebrow={t('activity')} title={pick(form.activity ? getActivity(form.activity)?.name : undefined)} wrap {...edit(t('activity'), 3)} />
         <Row eyebrow={t('alternatives')} title={alternatives.length ? <span className="num">{alternatives.map((id) => fmt.ltr(id)).join(' · ')}</span> : t('none')} {...edit(t('alternatives'), 3)} />
-        <Row eyebrow={t('documents')} title={t('docsCount', { n: docs })} {...edit(t('documents'), 4)} />
+        <Row eyebrow={t('documents')} title={fmt.plural(docs, docsCount)} {...edit(t('documents'), 4)} />
       </List>
 
       {solution ? (

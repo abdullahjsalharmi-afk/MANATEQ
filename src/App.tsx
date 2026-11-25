@@ -2,18 +2,21 @@ import { CircleUserRound, House, LayoutGrid, ListChecks, MapPinned } from 'lucid
 import { Suspense, useEffect, useLayoutEffect, useMemo } from 'react';
 import { ErrorBoundary } from '@/app/ErrorBoundary';
 import { LangProvider, useLang, useT } from '@/app/i18n';
-import { navigate, useLocation } from '@/app/router';
+import { buildTarget, navigate, useLocation } from '@/app/router';
 import { resolveRoute, RouteContext, type TabKey } from '@/app/routes';
 import { shell } from '@/app/strings';
 import { useAppearance } from '@/app/theme';
 import { catalog } from '@/data/catalog';
 import { Button, Footer, GlobalNav, Render, Screen, TabBar, Tile, ToastHost, type FooterColumn, type TabItem } from '@/design/core';
-import { setLang, tick } from '@/state/actions';
+import { enterAs, setLang, tick } from '@/state/actions';
 import { useApp } from '@/state/store';
 import styles from './App.module.css';
 
 /** How often the demo simulation moves requests forward. */
 const TICK_MS = 1000;
+
+/** Public screens that shared links and QR codes open directly, even on a first visit. */
+const PUBLIC_LINKS = new Set(['/verify']);
 
 export function App() {
   const settings = useApp((s) => s.settings);
@@ -34,7 +37,10 @@ export function App() {
 
   return (
     <LangProvider lang={settings.lang}>
-      <Shell />
+      {/* The last line of defence: whatever breaks outside a screen (the shell itself) still leaves a way home. */}
+      <ErrorBoundary fallback={(retry, error) => <Broken onRetry={retry} error={error} shell />}>
+        <Shell />
+      </ErrorBoundary>
       <ToastHost />
     </LangProvider>
   );
@@ -54,10 +60,20 @@ function Shell() {
   const waiting = useApp((s) => s.world.requests.filter((r) => r.status === 'needs_you').length);
   const match = useMemo(() => resolveRoute(location.path), [location.path]);
 
-  const mustWelcome = !onboarded && location.path !== '/welcome' && location.path !== '/gallery';
+  // A first visit meets the welcome. The address the visitor came for travels with it as ?next=, so a shared
+  // link to a service or a zone still opens once they have entered. The verifier is what QR codes and shared
+  // certificate links point to: it is public, so the visitor enters as a guest silently and stays on it.
+  const publicLink = PUBLIC_LINKS.has(location.path);
+  const mustWelcome = !onboarded && location.path !== '/welcome' && location.path !== '/gallery' && !publicLink;
   useEffect(() => {
-    if (mustWelcome) navigate('/welcome', { replace: true });
+    if (!mustWelcome) return;
+    const target = buildTarget(location.path, location.query);
+    navigate(target === '/' ? '/welcome' : buildTarget('/welcome', { next: target }), { replace: true });
+    // Only when the need to welcome first appears; the location is read at that moment.
   }, [mustWelcome]);
+  useLayoutEffect(() => {
+    if (!onboarded && publicLink) enterAs('guest');
+  }, [onboarded, publicLink]);
 
   // Tells the stylesheet what is pinned to the viewport, before the screen paints.
   const chrome = match?.route.chrome ?? 'tabs';
@@ -134,7 +150,7 @@ function Shell() {
         />
       ) : null}
       <div className={styles.app} key={location.path}>
-        <ErrorBoundary resetKey={location.path} fallback={(retry) => <Broken onRetry={retry} />}>
+        <ErrorBoundary resetKey={location.path} fallback={(retry, error) => <Broken onRetry={retry} error={error} />}>
           <Suspense fallback={<div className={styles.loading} role="status" aria-label={t('loading')} />}>{content}</Suspense>
         </ErrorBoundary>
         {tabbed ? <Footer label={t('footerLabel')} columns={footerColumns} note={t('footNote')} edition={t('footEdition', { edition: pick(catalog.edition) })} /> : null}
@@ -144,8 +160,20 @@ function Shell() {
   );
 }
 
-function Broken({ onRetry }: { onRetry: () => void }) {
+/** A screen whose code could not be downloaded (offline, or a new version replaced it): only a reload brings it back. */
+function isLoadFailure(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error ?? '');
+  return /dynamically imported module|importing a module script|module script failed|loading chunk/i.test(message);
+}
+
+function Broken({ onRetry, error, shell: whole = false }: { onRetry: () => void; error?: unknown; shell?: boolean }) {
   const t = useT(shell);
+  const retry = () => (isLoadFailure(error) ? window.location.reload() : onRetry());
+  // When the shell itself failed, "Back to Home" must also reset the route that broke it.
+  const home = () => {
+    navigate('/', { replace: true });
+    onRetry();
+  };
   return (
     <Screen title={t('brokenName')} bleed>
       <Tile
@@ -155,10 +183,16 @@ function Broken({ onRetry }: { onRetry: () => void }) {
         tagline={t('brokenBody')}
         actions={
           <>
-            <Button onClick={onRetry}>{t('tryAgain')}</Button>
-            <Button to="/" variant="secondary">
-              {t('goHome')}
-            </Button>
+            <Button onClick={retry}>{t('tryAgain')}</Button>
+            {whole ? (
+              <Button onClick={home} variant="secondary">
+                {t('goHome')}
+              </Button>
+            ) : (
+              <Button to="/" variant="secondary">
+                {t('goHome')}
+              </Button>
+            )}
           </>
         }
       />

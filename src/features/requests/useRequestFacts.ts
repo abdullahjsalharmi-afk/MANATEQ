@@ -1,10 +1,10 @@
 import { useCallback } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { peekServiceDetail } from '@/data/catalog';
-import type { ServiceDetail } from '@/data/types';
+import type { L10n, ServiceDetail, ServiceId } from '@/data/types';
 import type { Holder, RequestState } from '@/domain/types';
 import { requestView, selectSpeed, useApp, useCatalogueReady, type RequestView } from '@/state';
-import { strings } from './strings';
+import { entityNamesEn, requestNames, strings } from './strings';
 
 /**
  * The live view of one request (holder, clock, timeline, pending action), or undefined while the
@@ -34,10 +34,39 @@ export function entityOf(name: string): string {
   return match?.[1]?.trim() || name;
 }
 
+/** A name without its bracketed part: "الهيئة العامة للجمارك (النديب)" → "الهيئة العامة للجمارك". */
+const withoutBrackets = (name: string): string => name.replace(/\s*[(（][^()（）]+[)）]\s*$/, '').trim() || name;
+
+/**
+ * Who a national step is with, the same in both languages. The Arabic platform names carry their
+ * entity in brackets; the English ones do not, so a known entity is named from `entityNamesEn`, and a
+ * bracket that is not an entity (a system's own name) is dropped.
+ */
+export function nationalHolder(name: L10n, lang: 'ar' | 'en'): { headline: string; phrase: string } {
+  const bracket = entityOf(name.ar);
+  const known = bracket !== name.ar ? entityNamesEn[bracket] : undefined;
+  if (lang === 'ar') {
+    const entity = known ? bracket : withoutBrackets(name.ar);
+    return { headline: entity, phrase: entity };
+  }
+  if (known) return known;
+  const entity = withoutBrackets(name.en);
+  return { headline: entity, phrase: entity };
+}
+
+/** The name of a request: a noun («طلب أرض»), not the call to action that starts one («قدّم طلب أرض»). */
+export function useRequestName(): (serviceId: ServiceId, label: L10n | undefined) => string {
+  const { pick } = useLang();
+  return useCallback((serviceId, label) => {
+    const named = requestNames[serviceId];
+    return named ? pick(named) : label ? pick(label) : '';
+  }, [pick]);
+}
+
 /** Words for whoever holds a request now, in the voice of the requests feature. */
 export function useHolderWords(): HolderWords {
   const t = useT(strings);
-  const { pick } = useLang();
+  const { lang } = useLang();
   const phrase = useCallback(
     (holder: Holder): string => {
       switch (holder.lane) {
@@ -52,12 +81,12 @@ export function useHolderWords(): HolderWords {
         case 'field':
           return t('withField');
         case 'nat': {
-          const name = entityOf(pick(holder.name));
+          const name = nationalHolder(holder.name, lang).phrase;
           return name ? t('withEntity', { name }) : t('withGovernment');
         }
       }
     },
-    [t, pick],
+    [t, lang],
   );
   const headline = useCallback(
     (holder: Holder): string => {
@@ -73,10 +102,10 @@ export function useHolderWords(): HolderWords {
         case 'field':
           return t('holderField');
         case 'nat':
-          return entityOf(pick(holder.name)) || t('holderGovernment');
+          return nationalHolder(holder.name, lang).headline || t('holderGovernment');
       }
     },
-    [t, pick],
+    [t, lang],
   );
   return { phrase, headline };
 }

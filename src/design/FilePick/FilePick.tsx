@@ -65,6 +65,8 @@ export function FilePick({ label, hint, value, onChange, required = false, error
     clearTimeout(timer.current);
     setPending(file);
     setAnnouncement(t('checking'));
+    // Replace and Remove are hidden while the document is checked: keep the keyboard on this document.
+    document.getElementById(`${baseId}-group`)?.focus();
     timer.current = setTimeout(() => {
       setPending(null);
       setAnnouncement(t('verified'));
@@ -72,7 +74,7 @@ export function FilePick({ label, hint, value, onChange, required = false, error
     }, FILE_CHECK_MS);
   };
 
-  /** The choose/replace button is the one control present in every state. */
+  /** The choose button is there whenever no document is being checked. */
   const focusChoose = () => document.getElementById(`${baseId}-choose`)?.focus();
 
   const remove = () => {
@@ -98,8 +100,6 @@ export function FilePick({ label, hint, value, onChange, required = false, error
         onChoose={() => inputRef.current?.click()}
         onSample={() => {
           check({ name: t('sampleName', { label }), size: SAMPLE_BYTES });
-          // "Use a sample file" is about to go: keep the keyboard on this document.
-          focusChoose();
         }}
         onRemove={remove}
         className={className}
@@ -151,7 +151,7 @@ export function FilePickView({ id, label, hint, required = false, error, state, 
   const size = bytes === undefined ? '' : bytes >= 1_048_576 ? t('mb', { n: fmt.num(bytes / 1_048_576, 1) }) : t('kb', { n: fmt.num(Math.max(1, Math.round(bytes / 1024))) });
 
   return (
-    <div role="group" aria-labelledby={labelId} className={cx(styles.pick, error && state === 'empty' && styles.invalid, className)} data-state={state}>
+    <div id={`${id}-group`} tabIndex={-1} role="group" aria-labelledby={labelId} className={cx(styles.pick, error && state === 'empty' && styles.invalid, className)} data-state={state}>
       <span className={cx(styles.tile, state === 'verified' && styles.tileOk)} aria-hidden="true">
         {checking ? <span className={styles.spinner} /> : <Icon icon={state === 'verified' ? CircleCheck : FileText} size={22} />}
       </span>
@@ -192,29 +192,31 @@ export function FilePickView({ id, label, hint, required = false, error, state, 
             <span>{error}</span>
           </p>
         ) : null}
-        <div className={cx(styles.actions, state !== 'empty' && styles.actionsFlush)}>
-          <Button
-            id={chooseId}
-            size="sm"
-            variant={state === 'empty' ? 'secondary' : 'quiet'}
-            className={styles.action}
-            aria-labelledby={`${chooseId} ${labelId}`}
-            aria-describedby={describedBy}
-            aria-disabled={checking || undefined}
-            onClick={checking ? undefined : onChoose}
-          >
-            {state === 'empty' ? t('choose') : t('replace')}
-          </Button>
-          {state === 'empty' ? (
-            <Button key="sample" size="sm" variant="quiet" className={styles.action} onClick={onSample}>
-              {t('useSample')}
+        {/* While the document is checked there is nothing to do: Replace and Remove appear once the check is done. */}
+        {checking ? null : (
+          <div className={cx(styles.actions, state !== 'empty' && styles.actionsFlush)}>
+            <Button
+              id={chooseId}
+              size="sm"
+              variant={state === 'empty' ? 'secondary' : 'quiet'}
+              className={styles.action}
+              aria-labelledby={`${chooseId} ${labelId}`}
+              aria-describedby={describedBy}
+              onClick={onChoose}
+            >
+              {state === 'empty' ? t('choose') : t('replace')}
             </Button>
-          ) : (
-            <Button key="remove" id={removeId} size="sm" variant="quiet" className={styles.action} aria-labelledby={`${removeId} ${labelId}`} aria-disabled={checking || undefined} onClick={checking ? undefined : onRemove}>
-              {t('remove')}
-            </Button>
-          )}
-        </div>
+            {state === 'empty' ? (
+              <Button key="sample" size="sm" variant="quiet" className={styles.action} onClick={onSample}>
+                {t('useSample')}
+              </Button>
+            ) : (
+              <Button key="remove" id={removeId} size="sm" variant="quiet" className={styles.action} aria-labelledby={`${removeId} ${labelId}`} onClick={onRemove}>
+                {t('remove')}
+              </Button>
+            )}
+          </div>
+        )}
         <span className="visually-hidden" role="status">
           {announcement}
         </span>

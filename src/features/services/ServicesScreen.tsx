@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { SearchX } from 'lucide-react';
-import { Button, Chip, ChipRow, Container, Grid, List, Render, Screen, Section, Segmented, Tile } from '@/design/core';
+import { ChevronDown, SearchX } from 'lucide-react';
+import { Button, Card, Chip, ChipRow, Container, Grid, Icon, List, Render, Screen, Section, Segmented, Tile } from '@/design/core';
 import { EmptyState, SearchField } from '@/design/forms';
 import { useLang, useT } from '@/app/i18n';
+import { buildTarget, navigate } from '@/app/router';
 import { useQuery } from '@/app/routes';
 import { services } from '@/data/catalog';
 import { selectPersona, selectStation, useApp } from '@/state';
@@ -14,16 +15,40 @@ import styles from './ServicesScreen.module.css';
 
 type View = 'journey' | 'all';
 
+const FILTERS: readonly ServiceFilter[] = ['all', 'startable', 'automatic'];
+
+/** The groups the investor opened under «رحلتي», kept while the app is open so «رجوع» finds them as they were. */
+let openedGroups: readonly string[] = [];
+
+/** The catalogue's address: the view, the filter and the search live in the link, so going back restores them. */
+function catalogueTarget(view: View, filter: ServiceFilter, query: string): string {
+  return buildTarget('/services', { view: view === 'all' ? 'all' : undefined, filter: filter === 'all' ? undefined : filter, q: query.trim() || undefined });
+}
+
 /** The catalogue: the fifty services by journey station (the investor's own first), or as one filtered list. */
 export function ServicesScreen() {
   const t = useT(strings);
-  const { pick, fmt } = useLang();
+  const { fmt } = useLang();
   const station = useApp(selectStation);
   const persona = useApp(selectPersona);
   const params = useQuery();
-  const [query, setQuery] = useState(params.q ?? '');
-  const [view, setView] = useState<View>(params.view === 'all' ? 'all' : 'journey');
-  const [filter, setFilter] = useState<ServiceFilter>('all');
+  const [query, setQueryState] = useState(params.q ?? '');
+  const [view, setViewState] = useState<View>(params.view === 'all' ? 'all' : 'journey');
+  const [filter, setFilterState] = useState<ServiceFilter>(() => FILTERS.find((key) => key === params.filter) ?? 'all');
+
+  // Each change replaces the address in place (no new history entry), so the screen comes back as it was left.
+  const setQuery = (next: string) => {
+    setQueryState(next);
+    navigate(catalogueTarget(view, filter, next), { replace: true });
+  };
+  const setView = (next: View) => {
+    setViewState(next);
+    navigate(catalogueTarget(next, filter, query), { replace: true });
+  };
+  const setFilter = (next: ServiceFilter) => {
+    setFilterState(next);
+    navigate(catalogueTarget(view, next, query), { replace: true });
+  };
 
   const trimmed = query.trim();
   const matched = useMemo(() => (trimmed ? serviceSearch().search(trimmed) : services), [trimmed]);
@@ -35,7 +60,7 @@ export function ServicesScreen() {
   );
 
   const count = (n: number) => fmt.plural(n, servicesCount);
-  const hint = (group: ServiceGroup) => t('groupHint', { tagline: pick(group.domain.tagline), count: count(group.services.length) });
+  const hint = (group: ServiceGroup) => count(group.services.length);
 
   const nothing = trimmed !== '' && matched.length === 0;
 
@@ -68,11 +93,11 @@ export function ServicesScreen() {
           />
         </Container>
       ) : view === 'journey' ? (
-        <JourneyView groups={groups} station={station} showRender={!trimmed} hint={hint} />
+        <JourneyView groups={groups} station={station} showRender={!trimmed} searching={trimmed !== ''} hint={hint} />
       ) : (
         <Container pad="none" className={styles.all}>
           <ChipRow label={t('filterLabel')} className={styles.filters}>
-            {(['all', 'startable', 'automatic'] as const).map((key) => (
+            {FILTERS.map((key) => (
               <Chip key={key} selected={filter === key} onClick={() => setFilter(key)}>
                 {t(key === 'all' ? 'filterAll' : key === 'startable' ? 'filterStartable' : 'filterAutomatic')}
                 <span className={styles.chipCount}> {fmt.num(counts[key])}</span>
@@ -101,16 +126,30 @@ interface JourneyViewProps {
   groups: ServiceGroup[];
   station: string;
   showRender: boolean;
+  /** A search is on: every group that has a match is open. */
+  searching: boolean;
   hint: (group: ServiceGroup) => string;
 }
 
-/** «رحلتي»: the current station on a white tile with its render, then every other group on the page. */
-function JourneyView({ groups, station, showRender, hint }: JourneyViewProps) {
+/**
+ * «رحلتي»: the current station on a white tile with its render and its cards; every other station and domain
+ * is one quiet row in a card that opens in place to its services.
+ */
+function JourneyView({ groups, station, showRender, searching, hint }: JourneyViewProps) {
   const t = useT(strings);
   const { pick } = useLang();
+  const [opened, setOpened] = useState<readonly string[]>(openedGroups);
   const [first, ...rest] = groups;
   const current = first && first.station === station ? first : undefined;
   const others = current ? rest : groups;
+
+  const toggle = (code: string, open: boolean) => {
+    setOpened((list) => {
+      const next = open ? (list.includes(code) ? list : [...list, code]) : list.filter((other) => other !== code);
+      openedGroups = next;
+      return next;
+    });
+  };
 
   return (
     <>
@@ -130,17 +169,40 @@ function JourneyView({ groups, station, showRender, hint }: JourneyViewProps) {
           </Grid>
         </Tile>
       ) : null}
-      <Container>
-        {others.map((group) => (
-          <Section key={group.domain.code} title={group.stationNumber ? `${group.stationNumber} · ${pick(group.name)}` : pick(group.name)} hint={hint(group)}>
-            <Grid as="ul" columns={3} aria-label={pick(group.name)}>
-              {group.services.map((service) => (
-                <ServiceCard key={service.id} service={service} />
-              ))}
-            </Grid>
+      {others.length ? (
+        <Container>
+          <Section title={current ? t('otherGroups') : t('allGroups')}>
+            <Card pad="none" className={styles.groups}>
+              {others.map((group) => {
+                const name = group.stationNumber ? `${group.stationNumber} · ${pick(group.name)}` : pick(group.name);
+                return (
+                  <details
+                    key={group.domain.code}
+                    className={styles.group}
+                    open={searching || opened.includes(group.domain.code)}
+                    onToggle={(event) => {
+                      if (!searching) toggle(group.domain.code, event.currentTarget.open);
+                    }}
+                  >
+                    <summary className={styles.groupHead}>
+                      <span className={styles.groupText}>
+                        <span className={styles.groupName}>{name}</span>
+                        <span className={styles.groupHint}>{hint(group)}</span>
+                      </span>
+                      <Icon icon={ChevronDown} size={16} strokeWidth={2} className={styles.groupChevron} />
+                    </summary>
+                    <List variant="plain" aria-label={pick(group.name)} className={styles.groupList}>
+                      {group.services.map((service) => (
+                        <ServiceRow key={service.id} service={service} />
+                      ))}
+                    </List>
+                  </details>
+                );
+              })}
+            </Card>
           </Section>
-        ))}
-      </Container>
+        </Container>
+      ) : null}
     </>
   );
 }

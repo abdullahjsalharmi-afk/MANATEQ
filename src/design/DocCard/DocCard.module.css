@@ -118,6 +118,7 @@
 }
 
 .fact dd {
+  white-space: nowrap;
   font-size: var(--t-callout);
   font-weight: 400;
   line-height: 1.43;
@@ -160,6 +161,7 @@
 .foot {
   display: flex;
   align-items: flex-start;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: var(--s-5);
   margin-block-start: var(--s-8);
@@ -177,6 +179,8 @@
   font-weight: 600;
   line-height: 1.3;
   font-variant-numeric: tabular-nums;
+  /* A code is read as one unit: never break it at a hyphen. */
+  white-space: nowrap;
 }
 
 .hint {
@@ -215,4 +219,47 @@
   letter-spacing: var(--ls-caption);
   color: var(--ink-3);
   text-align: center;
+}
+
+/* A reference number or a date reads as one unit: it never breaks across lines. */
+.whole {
+  white-space: nowrap;
+}
+
+/* The compact card of the wallet's grid: glyph and seal, the title on up to two lines, reference · date. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+  block-size: 100%;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-block-end: var(--s-1);
+}
+
+.cardTitle {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: var(--t-body);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-body);
+  color: var(--ink);
+}
+
+.cardMeta {
+  margin-block-start: auto;
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }

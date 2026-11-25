@@ -1,26 +1,5 @@
 /* The land application (A4): layout only, tokens only. Shared flow pieces live in ../eligibility/Flow.module.css. */
 
-.company {
-  margin-block-end: var(--s-2);
-}
-
-.verifiedLine {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  margin: 0;
-  color: var(--ink-3);
-}
-
-.companyName {
-  margin-block: var(--s-2) 0;
-}
-
-.companyCr {
-  margin-block: var(--s-1) 0;
-  color: var(--ink-3);
-}
-
 .banner {
   margin-block-start: var(--s-8);
 }

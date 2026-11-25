@@ -4,11 +4,14 @@ import type { ServiceDetail, ServiceId } from '@/data/types';
 import { buildChains, chainFrom, followers, oncePerPlot, startedBy, unlocks } from '@/domain/chains';
 import { DOC_REF_PREFIX, VERIFY_CODE_PATTERN, docSpecs, leaseContractDoc, receiptDoc, requestDocs, verifyCode, type DocFacts } from '@/domain/documents';
 import { STATIONS, STATION_KEYS, checklist, focusPlot, journeyOf, stationOf } from '@/domain/journey';
-import { collectNextSteps, deadlineOf, nextStepOf, pendingAction, startRoute } from '@/domain/nextstep';
+import { collectNextSteps, deadlineOf, pendingAction, startRoute } from '@/domain/nextstep';
 import type { Company, Invoice, Lease, Plot, PlotStatus, RequestState, World } from '@/domain/types';
 import { calendarTiming, emptyWorld, seedWorld } from '@/state/seed';
 import { startIn, tickWorld } from '@/state/sim';
 import type { Env } from '@/state/types';
+
+/** Display text keeps codes and amounts whole with invisible joiners and no-break spaces; compare it as plain text. */
+const plain = (text: string | undefined): string | undefined => text?.replace(/\u2060/g, '').replace(/\u00A0/g, ' ');
 
 const files = import.meta.glob<{ default: ServiceDetail[] }>('../../src/data/generated/services-*.json', { eager: true });
 const all: ServiceDetail[] = Object.values(files).flatMap((m) => m.default);
@@ -129,9 +132,9 @@ describe('documents', () => {
     const contract = docs[0];
     expect(contract).toMatchObject({ kind: 'contract', ref: 'LC-2026-0001', signed: true, serviceId: 'A7', requestId: 'r1', issuedAt: NOW });
     expect(contract?.verifyCode).toMatch(VERIFY_CODE_PATTERN);
-    expect(contract?.title.en).toBe('Lease contract · AW-116');
+    expect(plain(contract?.title.en)).toBe('Lease contract · AW-116');
     expect(contract?.title.ar).toContain('عقد الإيجار');
-    const lines = contract?.lines.map((line) => `${line.label.en}: ${line.value.en}`) ?? [];
+    const lines = contract?.lines.map((line) => plain(`${line.label.en}: ${line.value.en}`)) ?? [];
     expect(lines).toContain('Issued to: Demo company');
     expect(lines).toContain('Plot: AW-116 · Al Wakra Logistics Park');
     expect(lines).toContain('Area: 5,000 m²');
@@ -145,7 +148,7 @@ describe('documents', () => {
     const noc = docs.find((doc) => doc.kind === 'noc');
     expect(noc?.ref).toMatch(/^NOC-2611-\d{4}$/);
     expect(noc?.signed).toBe(true);
-    expect(noc?.lines.some((line) => line.value.en === 'MQ-2611-0001')).toBe(true);
+    expect(noc?.lines.some((line) => plain(line.value.en) === 'MQ-2611-0001')).toBe(true);
     expect(new Set(docs.map((doc) => doc.id)).size).toBe(docs.length);
   });
 
@@ -153,8 +156,8 @@ describe('documents', () => {
     const invoice: Invoice = { id: 'i1', ref: 'INV-2026-0007', title: { ar: 'إيجار', en: 'Rent' }, leaseId: 'l1', amount: 18_750, issuedAt: NOW - DAY, dueAt: NOW + DAY, status: 'paid', paidAt: NOW };
     const receipt = receiptDoc({ id: 'd90', ref: 'RCP-2026-0007' }, invoice, facts, NOW);
     expect(receipt).toMatchObject({ kind: 'receipt', ref: 'RCP-2026-0007', signed: false, issuedAt: NOW });
-    expect(receipt.lines.map((line) => line.value.en)).toContain('QAR 18,750');
-    expect(receipt.lines.map((line) => line.value.ar)).toContain('18,750 ر.ق');
+    expect(receipt.lines.map((line) => plain(line.value.en))).toContain('QAR 18,750');
+    expect(receipt.lines.map((line) => plain(line.value.ar))).toContain('18,750 ر.ق');
     expect(receipt.lines.some((line) => /demo/i.test(line.value.en))).toBe(true);
 
     const contract = leaseContractDoc({ id: 'd91', ref: 'ignored' }, lease, facts, NOW);
@@ -271,7 +274,7 @@ describe('next steps', () => {
   it('offers the application after a positive result, and a saved draft instead of a fresh start', () => {
     const prospect = seedWorld('prospect', NOW);
     const checked: World = { ...prospect, eligibility: { at: NOW, activityCode: 'ACT-101', solution: 'logistics', areaSqm: 4000, verdict: 'targeted', zoneCodes: ['AW'] } };
-    expect(nextStepOf(checked, peekServiceDetail)).toMatchObject({ kind: 'start_service', route: '/start/A4' });
+    expect(collectNextSteps(checked, peekServiceDetail)[0]).toMatchObject({ kind: 'start_service', route: '/start/A4' });
 
     const drafted: World = { ...checked, drafts: { A4: { serviceId: 'A4', form: { area: 4000 }, page: 1, savedAt: NOW } } };
     const steps = collectNextSteps(drafted, peekServiceDetail);
@@ -292,12 +295,12 @@ describe('next steps', () => {
     const [invoice, renewal] = steps;
     expect(invoice?.dueAt).toBe(NOW + 5 * DAY);
     expect(invoice?.route).toMatch(/^\/account\/payments\//);
-    expect(invoice?.context.en).toContain('QAR 37,500');
-    expect(invoice?.context.ar).toContain('37,500 ر.ق');
+    expect(plain(invoice?.context.en)).toContain('QAR 37,500');
+    expect(plain(invoice?.context.ar)).toContain('37,500 ر.ق');
     const yard = tenant.leases.find((l) => l.plotId === 'AK-113');
     expect(renewal?.dueAt).toBe(yard?.endsAt);
     expect(renewal?.route).toMatch(/^\/requests\//);
-    expect(renewal?.context.en).toContain('QAR 50,000');
+    expect(plain(renewal?.context.en)).toContain('QAR 50,000');
     for (const step of steps) {
       expect(step.title.ar && step.title.en && step.cta.ar && step.cta.en).toBeTruthy();
       expect(`${step.title.ar}${step.title.en}${step.context.ar}${step.context.en}`).not.toContain('—');

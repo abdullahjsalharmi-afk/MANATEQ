@@ -1,13 +1,14 @@
 import { ChevronLeft, X } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from 'react';
 import { useT } from '@/app/i18n';
-import { back, getLocation } from '@/app/router';
+import { back, getLocation, useLocation } from '@/app/router';
 import { setChromeColor } from '@/app/theme';
 import { IconButton } from '../Button/Button';
 import type { ContainerWidth } from '../Container/Container';
 import { cx } from '../cx';
 import { designStrings } from '../strings';
 import styles from './Screen.module.css';
+import { strings } from './strings';
 
 /** The three column widths, shared by the bar, the content and the action bar. */
 const WIDTH = { form: styles.wForm, content: styles.wContent, grid: styles.wGrid } as const;
@@ -82,31 +83,50 @@ export function Screen({
   const [collapsed, setCollapsed] = useState(!large);
   const [scrolled, setScrolled] = useState(false);
   const toned = tone === 'dark' || tone === 'brand';
+  const ts = useT(strings);
+  const { path } = useLocation();
+
+  // The window title names the screen, then the product, in the reading language (WCAG 2.4.2).
+  // Home and the welcome are the product itself; a title that already names it («About Manateq One») stands alone.
+  const brand = ts('brand');
+  const documentTitle = path === '/' || path === '/welcome' ? brand : title.includes(brand) ? title : `${title} · ${brand}`;
+  useEffect(() => {
+    document.title = documentTitle;
+  }, [documentTitle]);
+
+  // Tells the global bar and the footer how wide this screen's column is, so their edges line up with it.
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.dataset.width = width;
+    return () => {
+      if (root.dataset.width === width) delete root.dataset.width;
+    };
+  }, [width]);
 
   // Move focus to the new screen after a navigation, so keyboard and screen-reader users land on it.
   useEffect(() => {
     if (getLocation().nav !== 'initial') mainRef.current?.focus({ preventScroll: true });
   }, []);
 
+  // The hairline appears once content scrolls under the bar. The large title hands over to the bar title once
+  // it has scrolled under the bar, and takes it back when it is in view again. Measured on every scroll and
+  // resize against where the bar is now (it sits lower under the global bar on wide screens).
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 4);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  // The large title hands over to the bar title once it has scrolled under the bar.
-  useEffect(() => {
-    if (!large) {
-      setCollapsed(true);
-      return;
-    }
-    const hero = heroRef.current;
-    if (!hero || typeof IntersectionObserver === 'undefined') return;
-    const barBottom = Math.max(0, Math.round(barRef.current?.getBoundingClientRect().bottom ?? 52));
-    const observer = new IntersectionObserver(([entry]) => setCollapsed(!(entry?.isIntersecting ?? true)), { rootMargin: `-${barBottom}px 0px 0px 0px`, threshold: 0 });
-    observer.observe(hero);
-    return () => observer.disconnect();
+    const update = () => {
+      setScrolled(window.scrollY > 4);
+      if (!large) return setCollapsed(true);
+      const hero = heroRef.current;
+      const bar = barRef.current;
+      if (!hero || !bar) return;
+      setCollapsed(hero.getBoundingClientRect().bottom <= bar.getBoundingClientRect().bottom);
+    };
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
   }, [large]);
 
   // A screen that is one colour from edge to edge colours the browser chrome and the canvas behind the page to match.

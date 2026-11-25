@@ -45,7 +45,7 @@ export const strings = {
   doneTagline: { ar: 'يُعرض الرمز عند البوابة.', en: 'Show the code at the gate.' },
   qrLabel: { ar: 'رمز تصريح الدخول {code}', en: 'Gate pass code {code}' },
   send: { ar: 'أرسِل التصريح', en: 'Send the pass' },
-  wallet: { ar: 'عرض في المحفظة', en: 'View in wallet' },
+  wallet: { ar: 'اعرضه في وثائقي', en: 'View in Documents' },
   another: { ar: 'تصريح آخر', en: 'Another pass' },
   copied: { ar: 'نُسخ التصريح. ألصقه في رسالة.', en: 'Pass copied. Paste it into a message.' },
   copyFailed: { ar: 'تعذّر النسخ. اعرض الرمز عند البوابة.', en: 'Could not copy. Show the code at the gate.' },
@@ -54,7 +54,7 @@ export const strings = {
     en: 'Gate pass to {zone}, plot {plot}. Holder: {holder}. Valid until {to}. Code: {code}',
   },
   shareTitle: { ar: 'تصريح دخول', en: 'Gate pass' },
-  simulated: { ar: 'نموذج تجريبي: التصريح للعرض ولا يفتح بوابة حقيقية.', en: 'Prototype: the pass is for demonstration and opens no real gate.' },
+  simulated: { ar: 'نسخة تجريبية: التصريح للعرض ولا يفتح بوابة حقيقية.', en: 'Prototype: the pass is for demonstration and opens no real gate.' },
   // No plot
   noPlotTitle: { ar: 'التصاريح لقطع المستأجرين', en: 'Passes are for tenants’ plots' },
   noPlotBody: { ar: 'يصدر تصريح الدخول لمنشأة على قطعة مستأجرة.', en: 'A gate pass is issued for a facility on a leased plot.' },

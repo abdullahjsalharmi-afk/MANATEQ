@@ -3,8 +3,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { LangProvider } from '@/app/i18n';
 import { getZone, solutions, zones } from '@/data/catalog';
 import { ZoneRow } from '@/features/zones/ZoneRow';
+import { ZoneTile } from '@/features/zones/ZoneTile';
 import { allocatedPct, annualEstimate, applyTarget, FILTERS, isValidArea, isZoneFilter, takenPct, zonePrice, zonesFor } from '@/features/zones/model';
 import { strings } from '@/features/zones/strings';
+
+/** Formatted figures keep non-breaking spaces and bidi isolates; compare their words. */
+const plain = (html: string) => html.replace(/[\u00a0\u202f]/g, ' ').replace(/[\u2066-\u2069]/g, '');
 
 const zone = (code: string) => {
   const found = getZone(code);
@@ -22,7 +26,11 @@ describe('zones explorer: filtering', () => {
 
   it('agrees with the zones each solution lists', () => {
     for (const solution of solutions) {
-      expect(zonesFor(solution.key).map((z) => z.code).sort()).toEqual([...solution.zoneCodes].sort());
+      expect(
+        zonesFor(solution.key)
+          .map((z) => z.code)
+          .sort(),
+      ).toEqual([...solution.zoneCodes].sort());
     }
   });
 
@@ -68,10 +76,12 @@ describe('zones explorer: figures', () => {
 
 describe('ZoneRow', () => {
   const render = (code: string, lang: 'ar' | 'en') =>
-    renderToStaticMarkup(
-      <LangProvider lang={lang}>
-        <ZoneRow zone={zone(code)} />
-      </LangProvider>,
+    plain(
+      renderToStaticMarkup(
+        <LangProvider lang={lang}>
+          <ZoneRow zone={zone(code)} />
+        </LangProvider>,
+      ),
     );
 
   it('shows type, area and the allocated share of a land zone', () => {
@@ -89,6 +99,31 @@ describe('ZoneRow', () => {
   });
 });
 
+describe('ZoneTile', () => {
+  const render = (code: string, lang: 'ar' | 'en') =>
+    plain(
+      renderToStaticMarkup(
+        <LangProvider lang={lang}>
+          <ul>
+            <ZoneTile zone={zone(code)} />
+          </ul>
+        </LangProvider>,
+      ),
+    );
+
+  it('links a land zone card to its page with its facts and published price', () => {
+    const html = render('BA', 'en');
+    expect(html).toContain('#/zones/BA');
+    expect(html).toContain('Birkat Al Awamer Logistics Park');
+    expect(html).toContain('58%');
+    expect(html).toContain('From QAR 15 / m² / year');
+  });
+
+  it('quotes the operator price for a park', () => {
+    expect(render('WK', 'ar')).toContain('حسب المشغّل');
+  });
+});
+
 describe('zones copy', () => {
   it('has both languages, no em dash and no banned words', () => {
     for (const [key, value] of Object.entries(strings)) {
@@ -96,6 +131,10 @@ describe('zones copy', () => {
       expect(value.en, key).toBeTruthy();
       expect(`${value.ar} ${value.en}`, key).not.toMatch(/—|!|SLA|عميل|مستخدم|customer|\buser\b/i);
     }
+  });
+
+  it('writes «مناطق ون» in guillemets inside running Arabic', () => {
+    expect(strings.fac_portal.ar).toContain('«مناطق ون»');
   });
 
   it('covers every zone in the catalogue', () => {

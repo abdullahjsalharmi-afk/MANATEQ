@@ -15,8 +15,8 @@ export const strings = {
 
   sheetTitle: { ar: 'دخول تجريبي', en: 'Demo sign-in' },
   sheetBody: {
-    ar: 'في الخدمة الفعلية تدخل مرة واحدة عبر نظام التوثيق الوطني، وتصل بيانات شركتك من تلقاء نفسها. هذه النسخة تحاكي ذلك ولا تطلب منك شيئًا.',
-    en: 'In the real service you sign in once with the National Authentication System and your company data arrives by itself. This prototype simulates that and asks you for nothing.',
+    ar: 'في الخدمة الفعلية تدخل مرة واحدة عبر نظام التوثيق الوطني «توثيق»، وتصل بيانات شركتك من تلقاء نفسها. هذه النسخة تحاكي ذلك ولا تطلب منك شيئًا.',
+    en: 'In the real service you sign in once with the National Authentication System (Tawtheeq) and your company data arrives by itself. This prototype simulates that and asks you for nothing.',
   },
   chooseProfile: { ar: 'اختر ملف العرض', en: 'Choose a demo profile' },
   prospect: { ar: 'مستثمر جديد', en: 'New investor' },

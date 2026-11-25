@@ -8,7 +8,8 @@ import { getZone } from '@/data/catalog';
 import type { InvoiceStatus } from '@/domain/types';
 import { useNow } from '@/features/shared/useNow';
 import { DocRow } from '@/features/wallet/DocRow';
-import { selectDoc, selectInvoice, selectLeases, selectPlots, useApp, useCatalogueReady } from '@/state';
+import { Atom, CodedText } from '@/features/wallet/Unbroken';
+import { selectDoc, selectInvoice, selectLeases, selectPlots, selectRequest, useApp, useCatalogueReady } from '@/state';
 import { DueText } from './InvoiceRow';
 import { dueLine } from './logic';
 import { PayInvoiceSheet } from './PayInvoiceSheet';
@@ -31,7 +32,7 @@ export function InvoiceScreen() {
   const receipt = useApp(selectDoc(invoice?.receiptDocId));
   const leases = useApp(selectLeases);
   const plots = useApp(selectPlots);
-  const requests = useApp((state) => state.world.requests);
+  const request = useApp(selectRequest(invoice?.requestId));
   const now = useNow(60_000);
   const [paying, setPaying] = useState(false);
 
@@ -50,7 +51,6 @@ export function InvoiceScreen() {
   const lease = invoice.leaseId === undefined ? undefined : leases.find((candidate) => candidate.id === invoice.leaseId);
   const plot = lease === undefined ? undefined : plots.find((candidate) => candidate.id === lease.plotId);
   const zone = plot === undefined ? undefined : getZone(plot.zoneCode);
-  const request = invoice.requestId === undefined ? undefined : requests.find((candidate) => candidate.id === invoice.requestId);
   // The calendar may not have marked a late invoice yet: the page reads the date itself.
   const status: InvoiceStatus = invoice.status === 'paid' ? 'paid' : dueLine(invoice, now).kind === 'overdue' ? 'overdue' : 'due';
   const state = STATUS[status];
@@ -79,7 +79,7 @@ export function InvoiceScreen() {
           </Pill>
         </header>
         <h2 id="invoice-title" className={styles.statementTitle}>
-          {pick(invoice.title)}
+          <CodedText text={pick(invoice.title)} />
         </h2>
         <p className={styles.statementAmount}>
           <Money amount={invoice.amount} size="display" />
@@ -87,23 +87,23 @@ export function InvoiceScreen() {
         <DueText invoice={invoice} now={now} />
 
         <dl className={styles.facts}>
-          <Fact label={t('reference')} value={<span className="ltr num">{invoice.ref}</span>} />
-          {lease ? <Fact label={t('lease')} value={<span className="ltr num">{lease.ref}</span>} /> : null}
+          <Fact label={t('reference')} value={<Atom code>{invoice.ref}</Atom>} />
+          {lease ? <Fact label={t('lease')} value={<Atom code>{lease.ref}</Atom>} /> : null}
           {plot ? (
             <Fact
               label={t('plot')}
               value={
                 <>
-                  <span className="ltr num">{plot.number}</span>
-                  {zone ? <> · {pick(zone.name)}</> : null}
+                  <Atom code>{plot.number}</Atom>
+                  {zone ? <> ·{'\u00A0'}{pick(zone.name)}</> : null}
                 </>
               }
             />
           ) : null}
-          {request ? <Fact label={t('request')} value={<span className="ltr num">{request.ref}</span>} /> : null}
-          <Fact label={t('issued')} value={<span className="num">{fmt.date(invoice.issuedAt)}</span>} />
-          <Fact label={t('dueDate')} value={<span className="num">{fmt.date(invoice.dueAt)}</span>} />
-          {invoice.paidAt !== undefined ? <Fact label={t('paidDate')} value={<span className="num">{fmt.date(invoice.paidAt)}</span>} /> : null}
+          {request ? <Fact label={t('request')} value={<Atom code>{request.ref}</Atom>} /> : null}
+          <Fact label={t('issued')} value={<Atom>{fmt.date(invoice.issuedAt)}</Atom>} />
+          <Fact label={t('dueDate')} value={<Atom>{fmt.date(invoice.dueAt)}</Atom>} />
+          {invoice.paidAt !== undefined ? <Fact label={t('paidDate')} value={<Atom>{fmt.date(invoice.paidAt)}</Atom>} /> : null}
         </dl>
       </Card>
 

@@ -42,10 +42,21 @@ export function AboutScreen() {
   useEffect(() => {
     const section = query.section;
     if (!section || !(ABOUT_SECTIONS as readonly string[]).includes(section)) return;
-    const target = document.getElementById(`about-${section}`);
-    if (!target) return;
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    target.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+    // Wait one frame: the router resets the scroll position right after a screen renders, and would cancel a
+    // scroll started now (the page is already loaded, or only the query changed).
+    const frame = window.requestAnimationFrame(() => {
+      const target = document.getElementById(`about-${section}`);
+      if (!target) return;
+      const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+      target.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+      // Move focus to the section's heading, so keyboard and screen-reader users arrive where the link pointed.
+      const heading = target.querySelector<HTMLElement>('h2, h3');
+      if (heading) {
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [query.section]);
 
   const reset = () => {

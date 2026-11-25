@@ -220,10 +220,26 @@ describe('choices that steer a request', () => {
     const waiting = tenant.requests.find((request) => request.id === again.id) as RequestState;
     expect(waiting).toMatchObject({ status: 'needs_you', current: 3 });
     expect(waiting.amount).toBeUndefined();
+    // The step says which receipt already covers it, and asks for no payment with the deposit.
+    const offerReceipt = tenant.docs.find((doc) => doc.id === waiting.prepaidDocId);
+    expect(offerReceipt).toMatchObject({ kind: 'receipt', serviceId: 'A6' });
+    expect(action && stepTasks('B2', action, 'deposit', waiting)).toEqual(['choose']);
+    expect(action && stepTasks('B2', action, 'guarantee', waiting)).toEqual(['choose', 'upload']);
     const before = tenant.invoices.length;
     tenant = actIn(tenant, again.id, { choice: 'deposit' }, NOW + 70_000, live);
     expect(tenant.invoices).toHaveLength(before);
     expect(tenant.requests.find((request) => request.id === again.id)?.status).toBe('active');
+  });
+
+  it('A2: an activity the rules cannot settle goes to the planning review; a clear one does not', () => {
+    const world = seedWorld('guest', NOW);
+    const form = { activity: 'ACT-301', solution: 'logistics', area: 5000, zone: 'BA' };
+    const review = startIn(world, { serviceId: 'A2', form: { ...form, verdict: 'review' } }, NOW, live);
+    const reviewed = tickWorld(review.world, NOW + 10 * 60_000, live).requests.find((request) => request.id === review.id) as RequestState;
+    expect(reviewed.visits.map((visit) => visit.step)).toContain(6);
+    const clear = startIn(world, { serviceId: 'A2', form: { ...form, verdict: 'targeted' } }, NOW, live);
+    const cleared = tickWorld(clear.world, NOW + 10 * 60_000, live).requests.find((request) => request.id === clear.id) as RequestState;
+    expect(cleared.visits.map((visit) => visit.step)).not.toContain(6);
   });
 
   it('C6, B2, E5, G1: a correction that loops back to an upload step is not asked twice', () => {

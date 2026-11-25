@@ -3,7 +3,8 @@ import type { ServiceDetail, WorkflowStep } from '@/data/types';
 import { DOMAIN_CODES } from '@/data/catalog';
 import type { RequestState } from '@/domain/types';
 import { act, advance, begin, fastForward, findStep, mainPath, progress, reachable, serviceClockMs, waitsForInvestor, type Timing } from '@/domain/workflow';
-import { pathScale, standardClock, standardDays, stepDays, timingFor, DAY_MS } from '@/domain/simulation';
+import { pathScale, standardDays, stepDays, timingFor } from '@/domain/simulation';
+import { durationText, standardHeadline } from '@/domain/standard';
 
 const files = import.meta.glob<{ default: ServiceDetail[] }>('../../src/data/generated/services-*.json', { eager: true });
 const all: ServiceDetail[] = Object.values(files).flatMap((m) => m.default);
@@ -153,9 +154,11 @@ describe('demo time', () => {
     expect(standardDays({ ar: '', en: '', value: null, unit: 'instant' })).toBe(0);
   });
 
-  it('reports the day of the standard', () => {
-    const clock = standardClock(DAY_MS * 1.5, { ar: '', en: '', value: 5, unit: 'working_day' });
-    expect(clock.dayNumber).toBe(2);
-    expect(clock.ratio).toBeCloseTo(0.3);
+  it('writes the Arabic dual in the genitive after a preposition', () => {
+    expect(durationText(2, 'working_day', 'ar')).toBe('يوما عمل');
+    expect(durationText(2, 'working_day', 'ar', { afterPreposition: true })).toBe('يومَي عمل');
+    expect(durationText(5, 'working_day', 'ar', { afterPreposition: true })).toBe('5 أيام عمل');
+    expect(durationText(2, 'hour', 'en', { afterPreposition: true })).toBe('2 hours');
+    expect(standardHeadline({ value: 2, unit: 'working_day' }, 'ar', { afterPreposition: true })).toBe('يومَي عمل');
   });
 });

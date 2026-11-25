@@ -6,6 +6,7 @@ import type { Doc } from '@/domain/types';
 import { selectDocs, useApp } from '@/state';
 import { findByCode, verifyRoute } from './logic';
 import { strings } from './strings';
+import { Atom, CodedText } from './Unbroken';
 import styles from './Wallet.module.css';
 
 /** How long the simulated Tasdeeq check takes. */
@@ -73,7 +74,9 @@ export function VerifyResult({ doc, code, link = 'public' }: { doc: Doc | undefi
     return (
       <div className={styles.status}>
         <Icon icon={SearchX} size={28} className={styles.neutralMark} />
-        <p className={styles.statusTitle}>{t('invalidDoc')}</p>
+        <p className={styles.statusTitle} tabIndex={-1} data-verdict="">
+          {t('invalidDoc')}
+        </p>
         <p className="type-callout">{t('vNotFoundBody')}</p>
       </div>
     );
@@ -81,19 +84,27 @@ export function VerifyResult({ doc, code, link = 'public' }: { doc: Doc | undefi
   return (
     <div className={styles.status}>
       <Icon icon={BadgeCheck} size={32} className={styles.okMark} />
-      <p className={styles.statusTitle}>{t('validDoc')}</p>
+      <p className={styles.statusTitle} tabIndex={-1} data-verdict="">
+        {t('validDoc')}
+      </p>
       <dl className={styles.facts}>
         <div className={styles.fact}>
           <dt>{t('title_')}</dt>
-          <dd>{pick(doc.title)}</dd>
+          <dd>
+            <CodedText text={pick(doc.title)} />
+          </dd>
         </div>
         <div className={styles.fact}>
           <dt>{t('reference')}</dt>
-          <dd className="ltr num">{doc.ref}</dd>
+          <dd>
+            <Atom code>{doc.ref}</Atom>
+          </dd>
         </div>
         <div className={styles.fact}>
           <dt>{t('issuedOn')}</dt>
-          <dd className="num">{fmt.date(doc.issuedAt)}</dd>
+          <dd>
+            <Atom>{fmt.date(doc.issuedAt)}</Atom>
+          </dd>
         </div>
         <div className={styles.fact}>
           <dt>{t('vSignature')}</dt>

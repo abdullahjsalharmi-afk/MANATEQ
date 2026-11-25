@@ -22,6 +22,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The figure never breaks: «94 %» stays on one line at every text size. */
+.figure {
+  white-space: nowrap;
+}
+
 /* The one headline figure of a screen. */
 .lg .value {
   font-size: var(--t-hero);

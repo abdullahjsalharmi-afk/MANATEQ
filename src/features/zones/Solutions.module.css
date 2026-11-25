@@ -29,6 +29,7 @@
 }
 
 .card {
+  scroll-margin-block-start: calc(var(--chrome-top) + var(--s-4));
   display: grid;
   align-content: start;
   gap: var(--s-3);
@@ -55,10 +56,10 @@
   border-block-start: 1px solid var(--line-soft);
 }
 
+/* One zone per line, in both languages, so the column never wraps raggedly. */
 .zoneLinks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--s-4);
+  display: grid;
+  justify-items: start;
   list-style: none;
   padding: 0;
   margin: 0;

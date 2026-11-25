@@ -110,6 +110,11 @@ export interface RequestState {
   docIds: string[];
   /** An amount attached to the request (deposit, fee…), in QAR. */
   amount?: number;
+  /**
+   * The open step's payment was already made earlier in the thread (the deposit, paid with the offer):
+   * the receipt that covers it. The step asks for no payment.
+   */
+  prepaidDocId?: string;
   rating?: { stars: number; comment?: string };
 }
 
@@ -165,6 +170,8 @@ export interface Pass {
   to: number;
   status: 'active' | 'expired' | 'revoked';
   code: string;
+  /** The request that issued the pass, when it came from one (D2). */
+  requestId?: string;
 }
 
 export type NotificationKind = 'action' | 'update' | 'done' | 'info';
@@ -247,6 +254,8 @@ export interface NextStep {
   cta: L10n;
   /** Hash route the button opens. */
   route: string;
+  /** For an invoice step: the invoice, so the screen can open the payment sheet in place. */
+  invoiceId?: string;
   /** Lower sorts first. */
   urgency: number;
   dueAt?: number;
@@ -256,4 +265,9 @@ export interface Holder {
   lane: Lane;
   /** A specific entity name when the workflow step names one (e.g. the Ministry of Municipality). */
   name: L10n;
+  /**
+   * The government body or utility behind a national platform, when there is one: `name` for a headline
+   * ("Ministry of Municipality"), `inText` inside a sentence ("With the Ministry of Municipality").
+   */
+  entity?: { name: L10n; inText: L10n };
 }

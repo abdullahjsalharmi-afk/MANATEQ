@@ -26,7 +26,7 @@ export function Stat({ value, unit, label, hint, size = 'md', align = 'start', c
     <div className={cx(styles.stat, styles[size], align === 'center' && styles.center, className)}>
       <span className={styles.label}>{label}</span>
       <span className={styles.value} data-num="">
-        {value}
+        <span className={styles.figure}>{value}</span>
         {unit ? (
           <>
             {' '}

@@ -121,6 +121,7 @@ function Picker<V extends string>({ control, label, options, value, onChange, pl
         id={control.id}
         aria-labelledby={labelledBy}
         aria-describedby={control.describedBy}
+        aria-invalid={control.invalid || undefined}
         aria-haspopup="dialog"
         aria-expanded={open}
         disabled={disabled}

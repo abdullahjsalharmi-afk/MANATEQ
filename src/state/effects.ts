@@ -228,7 +228,7 @@ const issueRequestedPass: Effect = (world, ctx) => {
   if (plotId === undefined) return world;
   const duplicate = world.passes.some((pass) => pass.kind === kind && pass.holder === holder && pass.plotId === plotId && pass.from === from && pass.status !== 'revoked');
   if (duplicate) return world;
-  return addPass(world, { kind, holder, ...(idOrPlate ? { idOrPlate } : {}), ...(company ? { company } : {}), plotId, from, to }, ctx.at).world;
+  return addPass(world, { kind, holder, ...(idOrPlate ? { idOrPlate } : {}), ...(company ? { company } : {}), plotId, from, to, requestId: request.id }, ctx.at).world;
 };
 
 /* ───────────────────────────── money ───────────────────────────── */
@@ -240,7 +240,7 @@ const ILLUSTRATIVE_QAR = { fee: 2500, fine: 1000, other: 500 } as const;
  * The amount a `pay` task asks for. The deposit is one quarter of the annual rent; a renewal asks for
  * the first billing period; a balance is what is outstanding on the lease.
  */
-export function amountFor(world: World, request: RequestState, action: StepAction): number {
+export function amountFor(world: World, request: RequestState, action: Pick<StepAction, 'amount'>): number {
   const plot = findPlotRecord(world, request.plotId);
   const lease = findLease(world, plot?.leaseId);
   const facts = plot ?? plotFacts(world, request);
@@ -265,19 +265,28 @@ export function amountFor(world: World, request: RequestState, action: StepActio
 
 /**
  * Once only: a deposit already paid in the same thread (with the offer, A6) is not asked for again when
- * the guarantee task of the new contract (B2) offers to pay one.
+ * the guarantee task of the new contract (B2) offers to pay one. Returns the paid invoice, or undefined.
  */
-export function depositPaidInThread(world: World, request: RequestState): boolean {
-  return world.requests.some(
-    (other) => other.id !== request.id && other.threadId === request.threadId && other.serviceId === 'A6' && world.invoices.some((invoice) => invoice.requestId === other.id && invoice.status === 'paid'),
-  );
+export function depositPaidWith(world: World, request: RequestState): Invoice | undefined {
+  const offers = new Set(world.requests.filter((other) => other.id !== request.id && other.threadId === request.threadId && other.serviceId === 'A6').map((other) => other.id));
+  if (!offers.size) return undefined;
+  return world.invoices.find((invoice) => invoice.requestId !== undefined && offers.has(invoice.requestId) && invoice.status === 'paid');
 }
 
-/** When a request starts waiting on a step that includes a payment, the amount is fixed and shown before paying. */
+export const depositPaidInThread = (world: World, request: RequestState): boolean => depositPaidWith(world, request) !== undefined;
+
+/**
+ * When a request starts waiting on a step that includes a payment, the amount is fixed and shown before
+ * paying. A deposit already paid with the offer is not fixed again: the step records the receipt that
+ * covers it instead, and asks for no payment (see `stepTasks`).
+ */
 export const whenWaiting = (world: World, ctx: EffectContext & { action: StepAction | undefined }): World => {
   const request = findRequest(world, ctx.id);
   if (!request || !ctx.action?.flow.includes('pay')) return world;
-  if (ctx.action.amount?.basis === 'deposit' && depositPaidInThread(world, request)) return world;
+  if (ctx.action.amount?.basis === 'deposit') {
+    const paid = depositPaidWith(world, request);
+    if (paid) return paid.receiptDocId !== undefined ? patchRequest(world, ctx.id, { prepaidDocId: paid.receiptDocId }) : world;
+  }
   return patchRequest(world, ctx.id, { amount: amountFor(world, request, ctx.action) });
 };
 

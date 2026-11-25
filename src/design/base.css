@@ -233,10 +233,12 @@ input[type='search']::-webkit-search-cancel-button {
   font-feature-settings: 'tnum' 1;
 }
 
-/* A left-to-right island inside Arabic text: reference numbers, codes, Latin names. */
+/* A left-to-right island inside Arabic text: reference numbers, codes, Latin names. A code is one unit:
+   it never breaks at its hyphens («AW-» / «116» would read as another code). */
 .ltr {
   direction: ltr;
   unicode-bidi: isolate;
+  white-space: nowrap;
 }
 
 .visually-hidden {

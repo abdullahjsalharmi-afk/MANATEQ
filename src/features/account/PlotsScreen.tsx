@@ -2,11 +2,23 @@ import { useLang, useT } from '@/app/i18n';
 import { Button, Card, Grid, Pill, Render, Screen } from '@/design/core';
 import { EmptyState } from '@/design/forms';
 import { getSolution, getZone } from '@/data/catalog';
-import type { Plot } from '@/domain/types';
+import type { L10n } from '@/data/types';
+import type { AppState, Plot } from '@/domain/types';
 import { selectJourneyOfPlot, selectLeaseOfPlot, selectPlots, useApp } from '@/state';
 import { plotRender, plotStatusMeta } from './account-model';
 import styles from './PlotsScreen.module.css';
 import { strings } from './strings';
+
+/**
+ * The name of the station a plot is at. A card shows only this name, so it subscribes to it alone: the name is a
+ * constant of the journey, and the card does not re-render each time the simulated world moves.
+ */
+function selectStationNameOfPlot(plotId: string): (state: AppState) => L10n | undefined {
+  return (state) => {
+    const journey = selectJourneyOfPlot(plotId)(state);
+    return journey.stations.find((candidate) => candidate.key === journey.station)?.name;
+  };
+}
 
 /** Plots and leases: one card per plot, or a calm empty state for an investor without land. */
 export function PlotsScreen() {
@@ -36,8 +48,7 @@ function PlotCard({ plot }: { plot: Plot }) {
   const t = useT(strings);
   const { pick, fmt } = useLang();
   const lease = useApp(selectLeaseOfPlot(plot.id));
-  const journey = useApp(selectJourneyOfPlot(plot.id));
-  const station = journey.stations.find((candidate) => candidate.key === journey.station);
+  const station = useApp(selectStationNameOfPlot(plot.id));
   const meta = plotStatusMeta(plot.status);
   const zone = getZone(plot.zoneCode);
   const solution = getSolution(plot.solution);
@@ -67,7 +78,7 @@ function PlotCard({ plot }: { plot: Plot }) {
         ) : (
           <p className="type-callout">{t('noLease')}</p>
         )}
-        {station ? <p className={`type-foot ${styles.station}`}>{t('stationNow', { station: pick(station.name) })}</p> : null}
+        {station ? <p className={`type-foot ${styles.station}`}>{t('stationNow', { station: pick(station) })}</p> : null}
       </div>
     </Card>
   );

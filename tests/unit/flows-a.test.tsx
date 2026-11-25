@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { checkEligibility, UNLISTED_ACTIVITY } from '@/domain/eligibility';
 import { plotsFor } from '@/domain/plots';
 import type { Company } from '@/domain/types';
-import { factsOf, freePlots, groupBySector, isValidArea, layoutAvailability, layoutForArea, resultKind } from '@/features/flows/eligibility/model';
+import { decidedByActivity, factsOf, freePlots, groupBySector, POPULAR_ACTIVITIES, quickActivities, isValidArea, layoutAvailability, layoutForArea, resultKind } from '@/features/flows/eligibility/model';
 import { choicesOf, choiceKey, defaultChoice, primaryOf } from '@/features/flows/eligibility/Result';
 import { activities } from '@/data/catalog';
 import {
@@ -161,5 +161,21 @@ describe('land application model', () => {
     const request = toRequestForm(form, new Set());
     expect(request).toMatchObject({ preferredPlot: plots[0]!.id, areaSqm: plots[0]!.areaSqm, solution: 'logistics', activity: FOOD, businessPlan: { name: 'a.pdf' } });
     expect(request.alternativePlots).toBe(plots.slice(1, 3).map((plot) => plot.id).join(','));
+  });
+});
+
+describe('eligibility step 1', () => {
+  it('shows a handful of activities: the chosen one first, never the licensed one, never twice', () => {
+    expect(quickActivities(null, undefined)).toEqual([...POPULAR_ACTIVITIES]);
+    expect(quickActivities('ACT-402', 'ACT-101')).toEqual(['ACT-402', ...POPULAR_ACTIVITIES.filter((code) => code !== 'ACT-101')]);
+    expect(quickActivities('ACT-501', undefined)).toEqual([...POPULAR_ACTIVITIES].sort((a, b) => (a === 'ACT-501' ? -1 : b === 'ACT-501' ? 1 : 0)));
+    expect(quickActivities('nope', undefined).length).toBeLessThanOrEqual(7);
+  });
+
+  it('decides a non-targeted activity on the activity alone', () => {
+    expect(decidedByActivity('ACT-703')).toBe(true);
+    expect(decidedByActivity('ACT-101')).toBe(false);
+    expect(decidedByActivity(UNLISTED_ACTIVITY)).toBe(false);
+    expect(decidedByActivity(null)).toBe(false);
   });
 });

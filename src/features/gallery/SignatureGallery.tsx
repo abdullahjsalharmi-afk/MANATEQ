@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { getIntegration, getService, getZone } from '@/data/catalog';
 import type { Lane } from '@/data/types';
-import { Card, Chip, ChipRow, List, Row, Section, toast } from '@/design/core';
+import { Card, Chip, ChipRow, Grid, List, Row, Section, toast } from '@/design/core';
 import { QR } from '@/design/QR/QR';
 import { Render } from '@/design/Render/Render';
 import {
@@ -81,9 +81,9 @@ const demo = {
   s1: { ar: 'قدّم الاستشاري طلب الرخصة', en: 'Your consultant lodged the permit application' },
   s2: { ar: 'طلب نظام الوزارة موافقة مناطق إلكترونيًا', en: 'The Ministry’s system requested Manateq’s approval' },
   s3: { ar: 'سُجّل مرجع الرخصة على قطعتك', en: 'Permit reference recorded against your plot' },
-  s4: { ar: 'هل شهادة عدم الممانعة سارية لهذا التصميم؟', en: 'Is the NOC valid for this design version?' },
-  s4Outcome: { ar: 'نعم · الشهادة سارية', en: 'Yes · the NOC is valid' },
-  s5: { ar: 'أُرسلت الشهادة وشروطها إلى الوزارة', en: 'NOC and its conditions sent to the Ministry' },
+  s4: { ar: 'هل شهادة عدم الممانعة سارية لهذا التصميم؟', en: 'Is the no-objection certificate valid for this design version?' },
+  s4Outcome: { ar: 'نعم · الشهادة سارية', en: 'Yes · the certificate is valid' },
+  s5: { ar: 'أُرسلت الشهادة وشروطها إلى الوزارة', en: 'Certificate and its conditions sent to the Ministry' },
   s6: { ar: 'الوزارة تراجع طلب الرخصة', en: 'The Ministry is reviewing the permit' },
   s6Text: {
     ar: 'تراجع وزارة البلدية المخططات المعتمدة. لا يلزمك شيء الآن، وسنبلغك فور صدور القرار.',
@@ -415,6 +415,12 @@ export function SignatureGallery() {
           <DocCard kind="noc" title={t('docNoc')} reference="MQ-NOC-2611-0057" date={issued} signed to="/gallery" />
           <DocCard kind="receipt" title={t('docReceipt')} reference="MQ-RC-2611-0031" date={issued} to="/gallery" />
         </List>
+        <div style={{ height: 20 }} />
+        <Grid as="ul">
+          <DocCard variant="card" kind="contract" title={t('docLease')} reference="MQ-LC-2611-0042" date={issued} signed to="/gallery" />
+          <DocCard variant="card" kind="noc" title={t('docNoc')} reference="MQ-NOC-2611-0057" date={issued} signed to="/gallery" />
+          <DocCard variant="card" kind="receipt" title={t('docReceipt')} reference="MQ-RC-2611-0031" date={issued} to="/gallery" />
+        </Grid>
         <DocCard
           variant="paper"
           kind="contract"

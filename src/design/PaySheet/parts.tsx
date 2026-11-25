@@ -1,6 +1,7 @@
 /** Pieces shared by the two transaction sheets (payment and signature). */
 import type { ReactNode } from 'react';
 import { cx } from '../cx';
+import { keepWhole } from '../List/keepWhole';
 import styles from './parts.module.css';
 
 /** One fact about what is being paid or signed: "Due date · 5 December 2026". */
@@ -18,7 +19,7 @@ export function Lines({ lines, bare = false, className }: { lines: SheetLine[]; 
         <div key={index} className={styles.line}>
           <dt className={styles.lineLabel}>{line.label}</dt>
           <dd className={styles.lineValue} data-num="">
-            <bdi>{line.value}</bdi>
+            <bdi>{keepWhole(line.value)}</bdi>
           </dd>
         </div>
       ))}

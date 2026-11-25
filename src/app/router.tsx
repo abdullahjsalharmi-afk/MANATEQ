@@ -54,6 +54,15 @@ export function buildTarget(path: string, query?: Record<string, string | number
   return normalise(path) + (qs ? `?${qs}` : '');
 }
 
+/** A malformed escape (a link cut short in the middle of «%D8%A3») is kept as typed, so the screen shows its not-found state. */
+function decodeSegment(segment: string): string {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+}
+
 /** Matches `/services/:id` against `/services/A4` → `{ id: 'A4' }`, or null. */
 export function matchPath(pattern: string, path: string): Record<string, string> | null {
   const want = normalise(pattern).split('/');
@@ -63,7 +72,7 @@ export function matchPath(pattern: string, path: string): Record<string, string>
   for (let i = 0; i < want.length; i++) {
     const w = want[i] as string;
     const h = have[i] as string;
-    if (w.startsWith(':')) params[w.slice(1)] = decodeURIComponent(h);
+    if (w.startsWith(':')) params[w.slice(1)] = decodeSegment(h);
     else if (w !== h) return null;
   }
   return params;
@@ -125,15 +134,19 @@ function commit(next: RouteLocation): void {
   if (hasWindow) scrollByIdx.set(current.idx, window.scrollY);
   pending = next;
   const apply = () => {
+    const from = current;
     current = next;
     if (pending === next) pending = null;
+    // A new screen starts at the top. Reset before the screen renders, so its own effects may scroll
+    // afterwards (About scrolls to ?section=). Replacing only the query of the same screen (a filter
+    // written to the address) keeps the reader where they are.
+    const keepPlace = next.nav === 'replace' && next.path === from.path;
+    if (hasWindow && next.nav !== 'pop' && !keepPlace) window.scrollTo(0, 0);
     flushSync(() => {
       for (const listener of [...listeners]) listener();
     });
-    if (hasWindow) {
-      const restore = next.nav === 'pop' ? (scrollByIdx.get(next.idx) ?? 0) : 0;
-      window.scrollTo(0, restore);
-    }
+    // Going back restores where the reader was, once the screen is there to scroll.
+    if (hasWindow && next.nav === 'pop') window.scrollTo(0, scrollByIdx.get(next.idx) ?? 0);
   };
   if (!hasWindow) {
     current = next;

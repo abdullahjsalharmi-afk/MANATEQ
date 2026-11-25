@@ -10,8 +10,14 @@ import { strings } from './strings';
 export interface StandardBadgeProps {
   /** The published standard of a service. */
   standard: Standard;
-  /** `full`: the figure in large type with the full text. `compact`: a small chip for list rows. */
-  variant?: 'full' | 'compact';
+  /**
+   * `full`: the figure in large type with the full text. `compact`: a small chip for list rows. `hero`: the
+   * figure alone, centred, in 34/600 with «معيار الخدمة · استرشادي» in fine print under it, for the white tile
+   * of a service page.
+   */
+  variant?: 'full' | 'compact' | 'hero';
+  /** `hero` only: the words to show when the standard has no headline duration (e.g. «عند التقديم»). Without it the hero renders nothing. */
+  fallback?: string;
   /** `full` only: show the standard's full sentence under the figure. Default true. */
   showText?: boolean;
   className?: string;
@@ -19,10 +25,10 @@ export interface StandardBadgeProps {
 
 /**
  * A service standard. The figure is short ("5 أيام عمل", "فوري"); the sentence under it says what it
- * measures. Every standard is labelled indicative. The compact chip renders nothing when the standard
- * has no headline duration.
+ * measures. Every standard is labelled indicative, the compact chip included («3 أيام عمل · استرشادي»). The
+ * compact chip renders nothing when the standard has no headline duration.
  */
-export function StandardBadge({ standard, variant = 'full', showText = true, className }: StandardBadgeProps) {
+export function StandardBadge({ standard, variant = 'full', showText = true, fallback, className }: StandardBadgeProps) {
   const t = useT(strings);
   const { lang, pick } = useLang();
 
@@ -34,11 +40,37 @@ export function StandardBadge({ standard, variant = 'full', showText = true, cla
         <Icon icon={isInstant(standard) ? Zap : Clock} size={14} strokeWidth={1.75} />
         <span className="visually-hidden">{t('label')}: </span>
         <span>{headline}</span>
+        <span className={styles.chipTag}>
+          <span aria-hidden="true">· </span>
+          {t('indicativeInline')}
+        </span>
       </span>
     );
   }
 
   const figure = standardFigure(standard, lang);
+
+  if (variant === 'hero') {
+    if (!figure && !fallback) return null;
+    return (
+      <div className={cx(styles.hero, className)}>
+        <p className={styles.heroFigure}>
+          {figure ? (
+            <>
+              {figure.value !== null ? <span className="num">{figure.value} </span> : null}
+              <span>{figure.words}</span>
+            </>
+          ) : (
+            fallback
+          )}
+        </p>
+        <p className={styles.heroFine}>
+          {t('label')} · {t('indicativeInline')}
+        </p>
+      </div>
+    );
+  }
+
   const text = pick(standard);
   const tag = <span className={styles.tag}>{t('indicative')}</span>;
   if (!figure) {

@@ -20,7 +20,19 @@ export interface RouteDef {
   open?: boolean;
 }
 
-const screen = <M,>(load: () => Promise<M>, pick: (module: M) => ComponentType) => lazy(() => load().then((module) => ({ default: pick(module) })));
+/** How long to wait before asking a second time for a screen's code that failed to download. */
+const RETRY_MS = 500;
+
+/**
+ * A screen loaded on demand. A download that fails (a flaky connection) is tried once more before the
+ * screen reports the error; React keeps a failed load for good, so the error screen then offers a reload.
+ */
+const screen = <M,>(load: () => Promise<M>, pick: (module: M) => ComponentType) =>
+  lazy(() =>
+    load()
+      .catch(() => new Promise<void>((resolve) => setTimeout(resolve, RETRY_MS)).then(load))
+      .then((module) => ({ default: pick(module) })),
+  );
 
 export const routes: RouteDef[] = [
   { pattern: '/welcome', Component: screen(() => import('@/features/welcome'), (m) => m.WelcomeScreen), chrome: 'plain', tab: null, open: true },

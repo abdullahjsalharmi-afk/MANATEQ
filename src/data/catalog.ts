@@ -15,6 +15,7 @@ import type {
   DomainCode,
   Integration,
   Knowledge,
+  L10n,
   Pattern,
   Reference,
   ServiceDetail,
@@ -51,6 +52,13 @@ const systemIndex = new Map<string, SystemRef>(reference.systems.map((s) => [s.i
 const activityIndex = new Map<string, Activity>(activities.map((a) => [a.code, a]));
 
 export const getService = (id: ServiceId): ServiceSummary | undefined => serviceIndex.get(id);
+
+/**
+ * What a request of the service is called once it exists: a noun («طلب أرض» / "Land application"),
+ * never the call to action that starts it («قدّم طلب أرض»). Falls back to the label, which is already a
+ * noun for the services the investor does not start.
+ */
+export const requestLabelOf = (service: Pick<ServiceSummary, 'label' | 'requestLabel'>): L10n => service.requestLabel ?? service.label;
 export const getDomain = (code: DomainCode): Domain | undefined => domainIndex.get(code);
 export const getZone = (code: string): Zone | undefined => zoneIndex.get(code);
 export const getSolution = (key: SolutionKey): Solution | undefined => solutionIndex.get(key);

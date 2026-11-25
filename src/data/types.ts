@@ -80,6 +80,11 @@ export interface FieldDef {
   required: boolean;
   help?: L10n;
   options?: Option[];
+  /**
+   * The field is asked only while another answer of the same form has this value (a toggle that is on,
+   * an option that is picked). While hidden it is neither asked, checked, reviewed nor sent.
+   */
+  showIf?: { key: string; equals: string | boolean };
 }
 
 /** The published service standard. `value`/`unit` hold the headline duration when one is stated. */
@@ -162,8 +167,15 @@ export interface ServiceSummary {
   name: L10n;
   /** The plain, verb-first label the investor sees. */
   label: L10n;
+  /**
+   * A request of the service once it exists, as a noun («طلب أرض» / "Land application"), for lists,
+   * titles and notifications. Only set where the label is a call to action; read it with `requestLabelOf`.
+   */
+  requestLabel?: L10n;
   /** One everyday sentence. */
   summary: L10n;
+  /** One short line for the next-step card when the service is suggested (no more than one line on a phone). */
+  hint?: L10n;
   promise: L10n;
   initiator: Initiator;
   startable: boolean;
@@ -230,6 +242,11 @@ export interface Integration {
   phase: number;
   /** True when the platform is available nationally today (the app must be honest about the rest). */
   live: boolean;
+  /**
+   * The entity behind the platform, where it is a government body or utility: `name` as a headline
+   * ("Ministry of Municipality"), `inText` inside a sentence ("the Ministry of Municipality").
+   */
+  entity?: { name: L10n; inText: L10n };
 }
 
 export interface Pattern {
