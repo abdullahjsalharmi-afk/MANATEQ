@@ -35,9 +35,10 @@
   cursor: default;
 }
 
-/* The system switch: a 51 × 31 track and a white thumb. Off: a quiet track, the thumb at the start and a
-   small ring at the end. On: the track fills with the accent (maroon on light, gold on dark), the thumb moves to the end and a short bar shows at
-   the start. Position and glyph tell the state as well as the colour. */
+/* The system switch: a 51 × 31 track and a thumb. Off: a quiet track, the thumb at the start and a small
+   ring at the end. On: the track fills with the accent (maroon on light, gold on dark: a switch is a control,
+   so it never wears a status colour), the thumb moves to the end and a short bar shows at the start.
+   Position and glyph tell the state as well as the colour. */
 .switch {
   position: relative;
   flex: none;

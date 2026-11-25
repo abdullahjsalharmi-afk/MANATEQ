@@ -20,7 +20,7 @@ export function keepWhole(text: string): string {
 }
 
 /**
- * The separator of an inline list ("A · B · C"). The dot is held to the item that follows it, so a line
- * never ends or starts with a dot standing on its own.
+ * The separator of an inline list ("A · B · C"). The dot is held to the item before it, so when the
+ * list wraps, a line ends with the dot and the next one starts with an item, never with a dot.
  */
-export const DOT = ` ·${NBSP}`;
+export const DOT = `${NBSP}· `;

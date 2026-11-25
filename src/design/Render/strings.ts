@@ -10,7 +10,7 @@ export const renderAlt: Record<RenderName, { ar: string; en: string }> = {
   yard: { ar: 'مجسّم ساحة تخزين مفتوحة مسوَّرة فيها حاويات', en: 'Model of a fenced open storage yard with containers' },
   units: { ar: 'مجسّم صف من وحدات التخزين الجاهزة', en: 'Model of a row of ready-built warehouse units' },
   gate: { ar: 'مجسّم بوابة المنطقة بمظلتها وحواجزها', en: 'Model of a zone entrance gate with its canopy and barriers' },
-  services: { ar: 'مجسّم مركز خدمات الأعمال بواجهة زجاجية', en: 'Model of a business services centre with a glass front' },
+  services: { ar: 'مجسّم مركز خدمات الأعمال بواجهة زجاجية', en: 'Model of the Business Services Center building with a glass front' },
   utilities: { ar: 'مجسّم مجمّع المرافق: محطة كهرباء وخزان مياه وبرج اتصالات', en: 'Model of a utilities compound: substation, water tank and mast' },
   zone: { ar: 'مجسّم مخطط منطقة صناعية بشوارعها ومبانيها', en: 'Model of an industrial zone block with its streets and buildings' },
   park: { ar: 'مجسّم مجمّع لوجستي من ثلاثة مستودعات حول ساحة شاحنات', en: 'Model of a logistics park: three warehouses around a truck court' },
