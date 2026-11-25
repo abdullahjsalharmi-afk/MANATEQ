@@ -118,9 +118,12 @@ export function SearchScreen() {
   const plotDocs = useApp(useMemo(() => selectDocsOfPlot(plotNamed?.id), [plotNamed?.id]));
   const foundInvoices = useMemo(() => {
     if (!own) return [];
-    const ofPlot = plotLease ? invoices.filter((invoice) => invoice.leaseId === plotLease.id) : [];
+    // An invoice belongs to the plot through its lease, or through the request that raised it (the deposit
+    // paid with the offer is billed before there is a lease).
+    const ofRequest = (invoice: Invoice) => invoice.requestId !== undefined && requests.some((request) => request.id === invoice.requestId && request.plotId === plotNamed?.id);
+    const ofPlot = plotNamed ? invoices.filter((invoice) => (plotLease !== undefined && invoice.leaseId === plotLease.id) || ofRequest(invoice)) : [];
     return inOrder(invoices, [...ofPlot, ...invoicesIdx.search(trimmed, invoices.length)]);
-  }, [own, invoices, invoicesIdx, trimmed, plotLease]);
+  }, [own, invoices, invoicesIdx, trimmed, plotLease, plotNamed, requests]);
   const foundDocs = useMemo(() => (own ? inOrder(docs, [...plotDocs, ...docsIdx.search(trimmed, docs.length)]) : []), [own, docs, docsIdx, trimmed, plotDocs]);
   const foundPasses = useMemo(() => {
     if (!own) return [];

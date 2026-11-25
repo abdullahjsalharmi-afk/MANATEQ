@@ -129,6 +129,16 @@ test('searching one of your plot numbers puts the plot first, with the requests 
   await expect(page.locator('main a[href^="#/account/payments/"]').first()).toBeVisible();
   const hyphened = await page.locator('main a[href^="#/"]').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href') ?? ''));
   expect(hyphenless).toEqual(hyphened);
+  // The same for the plot whose deposit was billed before it had a lease: that invoice belongs to it too.
+  const results = async (query: string) => {
+    await page.getByRole('searchbox').fill(query);
+    await expect(page.locator('main a[href="#/account/plots/AW-116"]')).toBeVisible();
+    return page.locator('main a[href^="#/"]').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href') ?? ''));
+  };
+  const spelled = await results('AW-116');
+  expect(await results('AW116')).toEqual(spelled);
+  expect(await results('aw 116')).toEqual(spelled);
+  expect(spelled.filter((href) => href.startsWith('#/account/payments/')).length).toBeGreaterThanOrEqual(2);
   // Another plot: its two running requests are found without typing their references.
   await page.getByRole('searchbox').fill('AW-116');
   await expect(page.locator('main a[href="#/requests/r95"]')).toBeVisible();

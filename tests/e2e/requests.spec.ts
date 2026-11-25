@@ -89,6 +89,36 @@ test('the signing sheet stays in place at the largest text: its title and close 
   expect(errors).toEqual([]);
 });
 
+test('closing the signing sheet gives the page back: it scrolls, and focus returns to what opened the sheets', async ({ page }) => {
+  const errors = watchErrors(page);
+  for (const close of ['Escape', 'button'] as const) {
+    await openApp(page, { route: '/requests/r85', lang: 'en', speed: 1 });
+    const opener = page.getByRole('main').getByRole('button', { name: 'Accept and renew' });
+    await opener.focus();
+    await page.keyboard.press('Enter');
+    const sheet = page.getByRole('dialog');
+    await sheet.getByRole('button', { name: 'I agree', exact: true }).click();
+    await expect(sheet.getByRole('button', { name: 'Sign', exact: true })).toBeVisible();
+    // The accepting sheet has finished closing: only the signing sheet is left. Leave it without signing.
+    await expect(page.getByRole('dialog')).toHaveCount(1);
+    if (close === 'Escape') await page.keyboard.press('Escape');
+    else await sheet.getByRole('button', { name: 'Close' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    // The page behind is no longer held still (the signing sheet had opened while the accepting sheet was closing).
+    expect([close, await page.evaluate(() => document.documentElement.style.overflow)]).toEqual([close, '']);
+    await page.mouse.wheel(0, 600);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100);
+    // Focus is back on the button that started the task, for the keyboard and for a screen reader.
+    await expect(opener).toBeFocused();
+    // And the rest of the app scrolls too.
+    await page.evaluate(() => (window.location.hash = '#/account/about'));
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await page.mouse.wheel(0, 600);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100);
+  }
+  expect(errors).toEqual([]);
+});
+
 test('declining the offer records nothing and keeps the request waiting', async ({ page }) => {
   await openApp(page, { route: '/requests', lang: 'en', speed: 1 });
   await page.getByRole('link', { name: /Your lease renewal offer/ }).first().click();

@@ -110,6 +110,11 @@ test('a pass and the request that issued it never disagree, and a worker’s ID 
   await expect(page.getByRole('heading', { name: 'Request closed' })).toBeVisible();
   await page.evaluate((hash) => (window.location.hash = hash), passUrl);
   await expect(card).toHaveAttribute('data-status', 'revoked');
+  // One word for it, on its page and in the list.
+  await expect(card.getByText('Cancelled', { exact: true })).toBeVisible();
+  await page.evaluate(() => (window.location.hash = '#/account/wallet?tab=passes'));
+  await expect(page.getByRole('main').getByText('Cancelled', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('main').getByText('Revoked')).toHaveCount(0);
 
   // The other way round: cancelling the pass closes the request that was still tracking it.
   main = await issue(1);

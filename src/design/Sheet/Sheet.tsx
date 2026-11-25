@@ -25,8 +25,53 @@ export interface SheetProps {
 const CLOSE_MS = 220;
 
 /**
+ * The page behind a sheet does not scroll. Sheets hand over to one another (accept, then sign, then pay): the
+ * next one opens while the last is still closing, so each cannot simply put back what it found. They share one
+ * lock: the first sheet to open holds the page still, and it scrolls again only when the last one lets go.
+ */
+let scrollLocks = 0;
+let overflowBefore = '';
+
+function lockPageScroll(): () => void {
+  const root = document.documentElement;
+  if (scrollLocks === 0) {
+    overflowBefore = root.style.overflow;
+    root.style.overflow = 'hidden';
+  }
+  scrollLocks += 1;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    scrollLocks -= 1;
+    if (scrollLocks === 0) root.style.overflow = overflowBefore;
+  };
+}
+
+/**
+ * What had focus before each open sheet took it. A sheet opened from inside another sheet (the next step of the
+ * same task) inherits that sheet's opener, so focus returns to the control on the page that started it all.
+ */
+const openers = new WeakMap<HTMLDialogElement, HTMLElement | null>();
+
+function noteOpener(dialog: HTMLDialogElement): void {
+  const active = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
+  const host = active?.closest('dialog');
+  openers.set(dialog, host instanceof HTMLDialogElement && openers.has(host) ? (openers.get(host) ?? null) : active);
+}
+
+/** Puts focus back on what opened the sheet, when closing it left focus nowhere. Never steals it from a sheet that took over. */
+function returnFocus(dialog: HTMLDialogElement): void {
+  const opener = openers.get(dialog);
+  const active = document.activeElement;
+  const dropped = !active || active === document.body || !active.isConnected || dialog.contains(active);
+  if (dropped && opener?.isConnected) opener.focus({ preventScroll: true });
+}
+
+/**
  * A modal sheet that rises from the bottom on phones and appears as a centred dialog on wide screens.
- * Built on the native <dialog>: focus is trapped, the page behind is inert, Escape closes it.
+ * Built on the native <dialog>: focus is trapped, the page behind is inert, Escape closes it. Closing it
+ * returns focus to the control that opened it, and the page behind scrolls again once no sheet is left.
  * On phones it can be dragged down by its grabber to dismiss. Give it one pill in `footer`.
  */
 export function Sheet({ open, onClose, title, description, children, footer, dismissible = true, closeLabel, className }: SheetProps) {
@@ -57,17 +102,19 @@ export function Sheet({ open, onClose, title, description, children, footer, dis
     const dialog = dialogRef.current;
     if (!mounted || !dialog) return;
     if (!dialog.open) {
+      noteOpener(dialog);
       try {
         dialog.showModal();
       } catch {
         dialog.setAttribute('open', '');
       }
     }
-    const previousOverflow = document.documentElement.style.overflow;
-    document.documentElement.style.overflow = 'hidden';
+    const release = lockPageScroll();
     return () => {
-      document.documentElement.style.overflow = previousOverflow;
+      release();
       if (dialog.open) dialog.close();
+      // By now the dialog may already be out of the page, where closing it cannot hand focus back.
+      returnFocus(dialog);
     };
   }, [mounted]);
 

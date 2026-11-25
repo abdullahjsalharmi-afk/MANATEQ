@@ -11,7 +11,7 @@ export const strings = {
   active: { ar: 'سارٍ', en: 'Active' },
   upcoming: { ar: 'قادم', en: 'Upcoming' },
   expired: { ar: 'منتهٍ', en: 'Expired' },
-  revoked: { ar: 'ملغى', en: 'Revoked' },
+  revoked: { ar: 'ملغى', en: 'Cancelled' },
   showAtGate: { ar: 'أبرِز هذا الرمز عند البوابة', en: 'Show this code at the gate' },
   showFrom: { ar: 'أبرِز هذا الرمز عند البوابة من {from}', en: 'Show this code at the gate from {from}' },
   notValid: { ar: 'هذا التصريح لم يعد صالحًا للدخول', en: 'This pass no longer opens the gate' },
