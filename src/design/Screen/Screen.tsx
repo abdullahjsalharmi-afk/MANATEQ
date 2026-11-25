@@ -22,6 +22,8 @@ export interface ScreenProps {
   subtitle?: ReactNode;
   /** Keep the name out of the bar, where the content already shows it (the welcome). The h1 stays for assistive technology. */
   hideTitle?: boolean;
+  /** The name the bar shows once the large title has scrolled away, when that title is a sentence (Home's greeting collapses to «الرئيسية»). Default: the title. */
+  barTitle?: string;
   /** `back` for inner screens (a chevron), `close` for flows (a circle), `none` for tab roots. */
   nav?: 'none' | 'back' | 'close';
   /** Where "back" goes when there is no previous screen (deep link). Default: home. */
@@ -63,6 +65,7 @@ export function Screen({
   large = false,
   subtitle,
   hideTitle = false,
+  barTitle,
   nav = 'none',
   backTo = '/',
   onNav,
@@ -157,7 +160,7 @@ export function Screen({
     <div className={cx(styles.screen, toned && styles[tone], footer ? styles.hasFooter : null, className)} data-tone={toned ? tone : undefined}>
       <ScreenBar
         ref={barRef}
-        title={title}
+        title={barTitle ?? title}
         showTitle={collapsed && !hideTitle}
         nav={nav}
         navLabel={navLabel}

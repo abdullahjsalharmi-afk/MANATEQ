@@ -5,8 +5,15 @@
   min-width: 0;
 }
 
+/* compact: two columns on phones while each tile keeps a word-sized width, one column when it cannot (the
+   narrowest phones, or a large text setting), so a tile's title never has to split a word. */
 .compact {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  --tile-min: 8.5em; /* the longest word of a tile title ("Landscaping", "appointment") plus the card padding */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(var(--tile-min), (100% - var(--s-3)) / 2)), 1fr));
+}
+
+.compact:lang(ar) {
+  --tile-min: 7em; /* Arabic words are shorter */
 }
 
 @media (min-width: 735px) {

@@ -24,6 +24,7 @@ material once content scrolls under it.
 | `title` | The name. In the bar (17 px on phones, 21 px from 735 px); visually hidden `<h1>` in the content. |
 | `large`, `subtitle` | Tab roots: the 34 px title sits in the content and moves into the bar on scroll. |
 | `hideTitle` | Keep the name out of the bar when the content shows it (the welcome). |
+| `barTitle` | A short name for the bar when the large title is a sentence: Home's greeting collapses to «الرئيسية». The bar title keeps its 17 px at every text setting (as a navigation bar does) and ends in an ellipsis when a long name does not fit. |
 | `nav` | `'none'` tab roots · `'back'` chevron (with `backTo`) · `'close'` circle for flows (`onNav` to confirm first). |
 | `actions` | Inline end of the bar: `IconButton`s, `<Button variant="quiet" size="sm">`, a small primary pill. Two at most on phones. |
 | `header` | A strip pinned under the bar, edge to edge: the flow's `<Stepper>` (no label). It replaces the hairline. |
@@ -55,7 +56,7 @@ surface you build yourself (`background: var(--tile-1)`).
 - `<Container width pad>`: the centred column with gutters, between tiles. `width` as on `Screen`;
   `pad="section"` (default) adds the vertical air of a page section, `pad="none"` only sets the width.
 - `<Grid columns compact as>`: card grid, 1 column on phones, 2 from 735 px, `columns` (2, 3 default, 4) from
-  1069 px. `compact` starts at 2 on phones (shortcuts). Gaps are built in. `as="ul"` with `<Card as="li">`.
+  1069 px. `compact` starts at 2 on phones (shortcuts, option tiles) while each tile keeps a word-sized width (`--tile-min`, 8.5em; 7em in Arabic) and drops to 1 when it cannot, so a title never splits a word. Gaps are built in. `as="ul"` with `<Card as="li">`.
 - `<Section title hint action level>`: a 21 px head with an optional quiet link, then the content. Sections space
   themselves (32 px, 48 from 735 px): never wrap them in a gap container, never separate them with rules.
 

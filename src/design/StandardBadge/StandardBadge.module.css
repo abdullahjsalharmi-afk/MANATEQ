@@ -105,7 +105,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* «· استرشادي»: the hedge rides with the figure, one step quieter. */
+/* «· استرشادي»: the hedge rides with the figure, one step quieter. The separator belongs to the figure, so
+   when a narrow row wraps the chip the dot ends the first line and never starts the second. */
 .chipTag {
   font-weight: 400;
 }

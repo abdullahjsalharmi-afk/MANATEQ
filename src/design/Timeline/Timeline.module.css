@@ -126,25 +126,39 @@
   color: var(--ink-3);
 }
 
+/* The line under a step: automatic, who, when. Each part carries its separator in its own leading room; the
+   row is pulled back by that room and the line clips it, so a part that starts a line (the first one, or one
+   that wrapped on a narrow screen) never shows a separator. */
 .meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  overflow-x: clip;
   font-size: var(--t-callout);
   line-height: 1.43;
   letter-spacing: var(--ls-caption);
   color: var(--ink-3);
 }
 
+.parts {
+  --sep: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-inline-start: calc(-1 * var(--sep));
+}
+
 .part {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  padding-inline-start: var(--sep);
 }
 
-.part + .part::before {
+.part::before {
   content: '·';
-  margin-inline: 6px;
+  position: absolute;
+  inset-inline-start: 0;
+  inline-size: var(--sep);
+  text-align: center;
 }
 
 .auto {

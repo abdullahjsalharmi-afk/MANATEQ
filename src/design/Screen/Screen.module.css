@@ -119,10 +119,12 @@
 }
 
 /* The page name: 17 px on phones, where it shares the bar with the capsule and the actions; 21 px from 735 px. */
+/* The name in the bar keeps its size at every text setting, as a navigation bar title does: the page's own
+   heading is what grows. A bar that grew with the text would cut names it shows whole today. */
 .barTitle {
   min-width: 0;
   overflow: hidden;
-  font-size: var(--t-body);
+  font-size: 17px;
   font-weight: var(--w-strong);
   line-height: var(--lh-heading);
   letter-spacing: var(--ls-body);
@@ -150,7 +152,7 @@
   border-radius: var(--r-pill);
   background: var(--sunken);
   color: var(--ink-2);
-  font-size: var(--t-cap);
+  font-size: 12px;
   font-weight: var(--w-regular);
   line-height: var(--lh-foot);
   letter-spacing: var(--ls-caption);

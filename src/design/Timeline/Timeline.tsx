@@ -154,20 +154,22 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
                   </p>
                   {automatic || who || when || item.state === 'skipped' || item.state === 'stopped' ? (
                     <p className={styles.meta}>
-                      {item.state === 'skipped' ? <span className={styles.part}>{t('skipped')} </span> : null}
-                      {item.state === 'stopped' ? (
-                        <span className={styles.part} aria-hidden="true">
-                          {t('stoppedHere')}{' '}
-                        </span>
-                      ) : null}
-                      {automatic ? (
-                        <span className={cx(styles.part, styles.auto)}>
-                          <Icon icon={Zap} size={12} strokeWidth={2.25} />
-                          {t('auto')}{' '}
-                        </span>
-                      ) : null}
-                      {who ? <span className={styles.part}>{who} </span> : null}
-                      {when ? <span className={cx(styles.part, 'num')}>{when}</span> : null}
+                      <span className={styles.parts}>
+                        {item.state === 'skipped' ? <span className={styles.part}>{t('skipped')} </span> : null}
+                        {item.state === 'stopped' ? (
+                          <span className={styles.part} aria-hidden="true">
+                            {t('stoppedHere')}{' '}
+                          </span>
+                        ) : null}
+                        {automatic ? (
+                          <span className={cx(styles.part, styles.auto)}>
+                            <Icon icon={Zap} size={12} strokeWidth={2.25} />
+                            {t('auto')}{' '}
+                          </span>
+                        ) : null}
+                        {who ? <span className={styles.part}>{who} </span> : null}
+                        {when ? <span className={cx(styles.part, 'num')}>{when}</span> : null}
+                      </span>
                     </p>
                   ) : null}
                   {item.outcome ? <Outcome text={item.outcome} /> : null}

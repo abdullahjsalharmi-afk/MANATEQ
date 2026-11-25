@@ -6,7 +6,7 @@ test.use({ viewport: { width: 320, height: 800 }, isMobile: true, hasTouch: true
 
 /**
  * Words the layout broke in the middle: letters of one word on more than one line. A compound that wraps
- * after its hyphen ("e-" / "signature") is ordinary typography, so each hyphenated part is measured alone.
+ * after its hyphen ("e-" / "signature") or a range after its dash ("4–" / "9") is ordinary typography, so each part is measured alone.
  */
 async function splitWords(page: Page): Promise<string[]> {
   return page.evaluate(() => {
@@ -19,7 +19,7 @@ async function splitWords(page: Page): Promise<string[]> {
       const style = getComputedStyle(parent);
       if (style.display === 'none' || style.visibility === 'hidden') continue;
       const text = node.textContent ?? '';
-      for (const match of text.matchAll(/[^\s -]+-?/g)) {
+      for (const match of text.matchAll(/[^\s \-–]+[-–]?/g)) {
         const word = match[0];
         // Marks that only steer direction or joining are not letters.
         if (word.replace(/[⁠⁦-⁩‎‏]/g, '').length < 2) continue;
@@ -46,7 +46,7 @@ async function go(page: Page, route: string): Promise<void> {
   await page.waitForTimeout(350);
 }
 
-const ROUTES = ['/', '/services', '/requests', '/requests/r94', '/notifications', '/zones', '/account', '/account/plots', '/account/plots/BA-121', '/account/wallet', '/account/payments', '/account/support', '/account/about', '/gallery'];
+const ROUTES = ['/', '/services', '/requests', '/requests/r94', '/notifications', '/zones', '/account', '/account/plots', '/account/plots/BA-121', '/account/wallet', '/account/payments', '/account/support', '/account/about', '/start/D1', '/start/D2', '/start/D3', '/gallery'];
 
 for (const lang of ['ar', 'en'] as const) {
   test(`at 320 px nothing scrolls sideways and no word is split (${lang})`, async ({ page }) => {

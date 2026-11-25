@@ -103,7 +103,7 @@ export function HomeScreen() {
   const heroInvoice = guest ? undefined : steps[0]?.invoiceId;
 
   return (
-    <Screen title={greeting} subtitle={company ? pick(company.name) : undefined} large bleed width="grid" actions={actions}>
+    <Screen title={greeting} barTitle={t('home')} subtitle={company ? pick(company.name) : undefined} large bleed width="grid" actions={actions}>
       {!ready && tenant ? (
         <Container width="grid">
           <Skeleton variant="block" height={420} label={t('loading')} />

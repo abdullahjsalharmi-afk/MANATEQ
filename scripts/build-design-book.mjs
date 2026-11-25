@@ -10,7 +10,8 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 
 const ROOT = process.cwd();
-const APP = path.join(ROOT, 'preview', 'index.html');
+// The build to capture: preview/index.html, or another single-file build named in MQ_APP_FILE (as the e2e tests do).
+const APP = process.env.MQ_APP_FILE ? path.resolve(process.env.MQ_APP_FILE) : path.join(ROOT, 'preview', 'index.html');
 const OUT = path.join(ROOT, 'docs', 'design');
 const SHOTS = path.join(OUT, 'shots');
 const DATA = path.join(ROOT, 'src', 'data', 'generated');
