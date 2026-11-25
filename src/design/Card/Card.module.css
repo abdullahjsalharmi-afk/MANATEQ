@@ -1,18 +1,22 @@
+/* A card: a white surface with a 1 px hairline and 18 px corners. Flat: no shadow, ever. */
 .card {
   display: block;
   min-width: 0;
+  border: 1px solid transparent;
   border-radius: var(--r-card);
   color: inherit;
+  text-align: start;
   text-decoration: none;
 }
 
 .plain {
+  border-color: var(--line);
   background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line);
 }
 
-.accent {
-  background: var(--accent-tint);
+/* For a card placed on a white tile: the page colour, no border. */
+.parchment {
+  background: var(--bg);
 }
 
 .sunken {
@@ -20,36 +24,83 @@
 }
 
 .outline {
+  border-color: var(--line-strong);
   background: transparent;
-  box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
+/* padding: 20 on phones, 24 from 735 px (the 1 px border is part of it) */
 .pad-none {
   padding: 0;
 }
 
 .pad-sm {
-  padding: var(--s-3) var(--s-4);
+  padding: 11px 16px;
 }
 
 .pad-md {
-  padding: var(--s-5);
+  padding: 19px;
 }
 
 .pad-lg {
-  padding: var(--s-6);
+  padding: 23px;
 }
 
-.link {
+@media (min-width: 735px) {
+  .pad-md {
+    padding: 23px;
+  }
+
+  .pad-lg {
+    padding: 31px;
+  }
+}
+
+/* A small render heading the card: centred, the same width in every card, with air under it. */
+.media {
+  display: flex;
+  justify-content: center;
+  margin-block-end: var(--s-6);
+}
+
+.mediaBox {
+  display: block;
+  width: min(100%, 180px);
+}
+
+.interactive {
+  cursor: pointer;
   transition:
     transform var(--d-1) var(--ease),
-    background-color var(--d-1) var(--ease);
+    border-color var(--d-1) var(--ease);
 }
 
-.link:active {
-  transform: scale(0.99);
+.interactive:active {
+  transform: scale(0.985);
 }
 
-.link.plain:hover {
-  background: var(--surface-2);
+/* Selection is a 2 px border in the focus blue and nothing else; the padding gives up 1 px so nothing moves. */
+.selected {
+  border: 2px solid var(--focus);
+}
+
+.selected.pad-sm {
+  padding: 10px 15px;
+}
+
+.selected.pad-md {
+  padding: 18px;
+}
+
+.selected.pad-lg {
+  padding: 22px;
+}
+
+@media (min-width: 735px) {
+  .selected.pad-md {
+    padding: 22px;
+  }
+
+  .selected.pad-lg {
+    padding: 30px;
+  }
 }
