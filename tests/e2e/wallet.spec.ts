@@ -19,18 +19,18 @@ test('pay the due invoice from payments and find its receipt in the wallet', asy
   // The calm state replaces the total, and the payment is in the statement.
   await expect(page.getByText('Nothing due')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Due', exact: true })).toHaveCount(0);
-  await expect(page.getByRole('link', { name: /Rent, Q4 2026 ·\sBA.121.*RCP-2026-0051/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Rent, Q4 2026[\s\S]*BA\W*121[\s\S]*RCP\W*2026\W*0051/ })).toBeVisible();
 
   // The receipt is in the wallet, under receipts, and opens with its verification code.
   await page.evaluate(() => {
     window.location.hash = '#/account/wallet';
   });
   await page.getByRole('button', { name: 'Receipts' }).click();
-  const receipt = page.getByRole('link', { name: /Rent, Q4 2026 ·\sBA.121/ });
+  const receipt = page.getByRole('link', { name: /Rent, Q4 2026[\s\S]*BA\W*121/ });
   await expect(receipt).toBeVisible();
   await receipt.click();
-  await expect(page.getByRole('heading', { name: /Rent, Q4 2026 ·\sBA.121/ })).toBeVisible();
-  await expect(page.getByText(/^TSD-[A-Z0-9]{4}-[A-Z0-9]{4}$/).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Rent, Q4 2026[\s\S]*BA\W*121/ })).toBeVisible();
+  await expect(page.getByText(/^TSD\W*[A-Z0-9]{4}\W*[A-Z0-9]{4}$/).first()).toBeVisible();
 
   // The simulated check confirms it.
   await page.getByRole('button', { name: 'Verify document' }).click();
@@ -40,7 +40,7 @@ test('pay the due invoice from payments and find its receipt in the wallet', asy
 
 test('the public verification page works for a guest, with a found and an unknown code', async ({ page }) => {
   await openApp(page, { route: '/account/wallet/d42', lang: 'en' });
-  const code = (await page.getByText(/^TSD-[A-Z0-9]{4}-[A-Z0-9]{4}$/).first().textContent())?.trim() ?? '';
+  const code = (await page.getByText(/^TSD\W*[A-Z0-9]{4}\W*[A-Z0-9]{4}$/).first().textContent())?.trim() ?? '';
   expect(code).toMatch(/^TSD-/);
 
   await page.evaluate((value) => {

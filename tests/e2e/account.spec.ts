@@ -19,7 +19,7 @@ test('account home leads to the company, plots, a plot and the team', async ({ p
   await page.getByRole('link', { name: /Plot AK-113/ }).click();
   await expect(page.getByRole('heading', { name: 'Plot and lease' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Services for this plot' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Report a maintenance issue/ })).toHaveAttribute('href', /start\/D1\?plot=AK-113/);
+  await expect(page.getByRole('link', { name: /Report a fault/ })).toHaveAttribute('href', /start\/D1\?plot=AK-113/);
 
   await openApp(page, { route: '/account/team', lang: 'en' });
   const switches = page.getByRole('switch');
