@@ -163,7 +163,12 @@ export const strings = {
   signedThenPay: { ar: 'بقيت خطوة واحدة: الدفع. تُحفظ الوثيقة الموقّعة بعد إتمامه.', en: 'One step left: the payment. The signed document is saved once it is made.' },
   signedThenMore: { ar: 'بقيت خطوة واحدة. تُحفظ الوثيقة الموقّعة بعد إتمامها.', en: 'One step left. The signed document is saved once it is done.' },
   continueToPay: { ar: 'تابع إلى الدفع', en: 'Continue to payment' },
-  unfinishedAfterSigning: {
+  // Said on the request's own page (the payment sheet was closed) and on another screen (the person left).
+  unfinishedHere: {
+    ar: 'لم تكتمل الخطوة: لم يتم الدفع، فلم يُحفظ توقيعك. يمكنك البدء من جديد متى شئت.',
+    en: 'Not completed: the payment was not made, so your signature was not saved. You can start again whenever you are ready.',
+  },
+  unfinishedAway: {
     ar: 'لم تكتمل الخطوة: لم يتم الدفع، فلم يُحفظ توقيعك. افتح الطلب لتعيدها.',
     en: 'Not completed: the payment was not made, so your signature was not saved. Open the request to do it again.',
   },

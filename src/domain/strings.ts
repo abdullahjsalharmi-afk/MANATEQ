@@ -10,6 +10,6 @@ export const nextStepText = {
   openRequest: { ar: 'افتح الطلب', en: 'Open request' },
   start: { ar: 'ابدأ', en: 'Start' },
   continueDraft: { ar: 'أكمل طلبك', en: 'Continue your request' },
-  continue: { ar: 'تابع', en: 'Continue' },
+  continue: { ar: 'متابعة', en: 'Continue' },
   draftSaved: { ar: 'حفظنا ما أدخلته', en: 'We saved what you entered' },
 } as const;

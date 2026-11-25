@@ -185,14 +185,14 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
   const afterSign = tasks.includes('sign') ? tasks[tasks.indexOf('sign') + 1] : undefined;
   const signedAlready = tasks.includes('sign') && tasks.indexOf('sign') < index;
   /** The person signed, then left before the rest was done: nothing was completed, and they are told so. */
-  const sayUnfinished = () => toast(t('unfinishedAfterSigning'), { tone: 'info', duration: 7000 });
+  const sayUnfinished = (where: 'here' | 'away') => toast(t(where === 'here' ? 'unfinishedHere' : 'unfinishedAway'), { tone: 'info', duration: 7000 });
 
   const leaveDedicated = () => {
     if (advanced.current) {
       advanced.current = false;
       return;
     }
-    if (signedAlready) sayUnfinished();
+    if (signedAlready) sayUnfinished('here');
     onClose();
   };
 
@@ -377,7 +377,7 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
         onSigned={(away) => {
           // The screen went away between the signature and what follows it: there is no one to ask for the rest.
           if (away && afterSign) {
-            sayUnfinished();
+            sayUnfinished('away');
             onClose();
             return;
           }

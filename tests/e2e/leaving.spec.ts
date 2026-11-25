@@ -136,6 +136,19 @@ test('the renewal: a signature left before its payment completes nothing and say
   await expect(sheet.getByText('One step left: the payment. The signed document is saved once it is made.')).toBeVisible();
   await expect(sheet.getByText('The signed document is saved in Documents and passes.')).toHaveCount(0);
   await sheet.getByRole('button', { name: 'Continue to payment' }).click();
+
+  // Signed, then the payment sheet closed: the same, in words for someone who is still on the request's page.
+  await expect(sheet.getByRole('button', { name: /^Pay QAR/ })).toBeVisible();
+  // The signing sheet is still on its way out while the payment sheet rises.
+  await expect(page.locator('dialog')).toHaveCount(1);
+  await sheet.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page.getByText('Not completed: the payment was not made, so your signature was not saved. You can start again whenever you are ready.')).toBeVisible();
+  await expectPageFree(page);
+  expect(await renewal()).toEqual(before);
+
+  // Once more, and this time paid: left while the payment is processing.
+  await acceptAndSign();
+  await sheet.getByRole('button', { name: 'Continue to payment' }).click();
   await sheet.getByRole('button', { name: /^Pay QAR/ }).click();
   await expect(sheet.getByText('Processing the payment…').first()).toBeVisible();
   await page.goBack();

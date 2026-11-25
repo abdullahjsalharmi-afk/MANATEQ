@@ -150,12 +150,12 @@ describe('the renewal: accept, sign, then pay', () => {
     signNow();
     leave();
     expect(JSON.stringify(byId(request.id))).toBe(before);
-    expect(text()).toContain('Not completed: the payment was not made, so your signature was not saved.');
+    expect(text()).toContain('Not completed: the payment was not made, so your signature was not saved. Open the request to do it again.');
     wait(SIGN_MS * 3);
     expect(JSON.stringify(byId(request.id))).toBe(before);
   });
 
-  it('says the same when the person signs and then closes the payment', () => {
+  it('says so too, in words for where they are, when the person signs and then closes the payment', () => {
     const request = renewal();
     const before = JSON.stringify(byId(request.id));
     const onClose = vi.fn();
@@ -168,7 +168,9 @@ describe('the renewal: accept, sign, then pay', () => {
     expect(button(/^Pay QAR/)).toBeTruthy();
     act(() => (document.querySelector('dialog[open] button[aria-label="Close"]') as HTMLElement).click());
     expect(onClose).toHaveBeenCalledTimes(1);
-    expect(text()).toContain('Not completed: the payment was not made, so your signature was not saved.');
+    // Still on the request's page: it does not tell them to open the request.
+    expect(text()).toContain('Not completed: the payment was not made, so your signature was not saved. You can start again whenever you are ready.');
+    expect(text()).not.toContain('Open the request');
     expect(JSON.stringify(byId(request.id))).toBe(before);
   });
 
