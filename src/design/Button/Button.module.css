@@ -1,103 +1,201 @@
+/* Two button grammars: pills for actions, compact rectangles for utility. Pressed is always a small
+   scale-down; nothing has a shadow; the colour never jumps. */
 .button {
+  --btn: var(--accent); /* the fill of the pill */
+  --btn-hover: var(--accent-press);
+  --btn-ink: var(--accent-ink); /* the text and border of the ghost pill and the link */
+  --on-btn: var(--on-accent);
+
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   min-width: 0;
-  border-radius: var(--r-control);
-  font-weight: 600;
-  line-height: 1.2;
+  max-width: 100%;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  font-weight: var(--w-regular);
   white-space: nowrap;
   text-decoration: none;
   user-select: none;
   -webkit-user-select: none;
   transition:
-    background-color var(--d-1) var(--ease),
     transform var(--d-1) var(--ease),
-    opacity var(--d-1) var(--ease);
+    background-color var(--d-1) var(--ease),
+    border-color var(--d-1) var(--ease),
+    color var(--d-1) var(--ease);
 }
 
 .button:active:not(:disabled) {
-  transform: scale(0.985);
+  transform: scale(var(--press));
 }
 
-.button:disabled {
-  opacity: 0.45;
+.danger {
+  --btn: var(--bad);
+  --btn-hover: color-mix(in srgb, var(--bad) 88%, var(--black));
+  --btn-ink: var(--bad);
+}
+
+/* On dark surfaces the error colour is light, so the label on it turns dark to stay readable. */
+:global([data-theme='dark']) .danger,
+:global([data-tone='dark']) .danger {
+  --on-btn: var(--black);
+  --btn-hover: color-mix(in srgb, var(--bad) 88%, var(--on-accent));
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-width: 0;
 }
 
 .label {
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   text-overflow: ellipsis;
 }
 
-.lg {
-  height: 52px;
-  padding-inline: 22px;
-  font-size: var(--t-body);
+.chevron {
+  margin-inline-start: -4px;
 }
 
+/* sizes */
 .md {
-  height: 44px;
-  padding-inline: 18px;
-  font-size: var(--t-callout);
+  min-height: var(--tap);
+  padding: 10px 21px;
+  font-size: var(--t-body);
+  line-height: 1.294;
+  letter-spacing: var(--ls-body);
 }
 
 .sm {
-  height: 36px;
-  padding-inline: 14px;
-  font-size: var(--t-foot);
-  border-radius: 11px;
+  min-height: 34px;
+  padding: 7px 14px;
+  font-size: var(--t-callout);
+  line-height: 1.286;
+  letter-spacing: var(--ls-caption);
+}
+
+/* The rare hero pill: larger and lighter. */
+.lg {
+  min-height: 50px;
+  padding: 13px 27px;
+  font-size: 1.0588rem;
+  font-weight: var(--w-light);
+  line-height: 1.222;
+  letter-spacing: 0;
+}
+
+/* Compact buttons look small but keep a 44 px target. */
+.sm::after {
+  content: '';
+  position: absolute;
+  inset: -6px 0;
 }
 
 .block {
   display: flex;
   width: 100%;
+  min-height: 50px;
 }
 
+.block:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+@media (min-width: 735px) {
+  .block {
+    max-width: 420px;
+  }
+}
+
+/* looks */
 .primary {
-  background: var(--accent);
-  color: var(--on-accent);
-}
-
-.primary:hover:not(:disabled) {
-  background: var(--accent-press);
+  background: var(--btn);
+  color: var(--on-btn);
 }
 
 .secondary {
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
-}
-
-.secondary:hover:not(:disabled) {
-  background: var(--surface-2);
+  background: transparent;
+  border-color: currentColor;
+  color: var(--btn-ink);
 }
 
 .quiet {
+  padding-inline: 0;
+  border-radius: var(--r-tile);
   background: transparent;
-  color: var(--accent-ink);
+  color: var(--btn-ink);
 }
 
-.quiet:hover:not(:disabled) {
-  background: var(--accent-tint);
+.utility {
+  border-radius: var(--r-tile);
+  background: var(--ink);
+  color: var(--surface);
 }
 
-.danger {
-  background: var(--bad-tint);
-  color: var(--bad);
+.pearl {
+  border-color: var(--line-soft);
+  border-radius: var(--r-control);
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
+@media (hover: hover) {
+  .primary:hover:not(:disabled) {
+    background: var(--btn-hover);
+  }
+
+  .secondary:hover:not(:disabled) {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+  }
+
+  .quiet:hover:not(:disabled) .label {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  .utility:hover:not(:disabled),
+  .pearl:hover:not(:disabled) {
+    opacity: 0.88;
+  }
+}
+
+/* states */
+.button:disabled:not(.loading) {
+  border-color: transparent;
+  background: var(--sunken);
+  color: var(--ink-disabled);
+}
+
+.secondary:disabled:not(.loading) {
+  border-color: var(--line-strong);
+  background: transparent;
+}
+
+.quiet:disabled:not(.loading) {
+  background: transparent;
 }
 
 .loading {
-  opacity: 1 !important;
   cursor: progress;
 }
 
+.loading .content {
+  visibility: hidden;
+}
+
 .spinner {
+  position: absolute;
+  inset: 0;
   width: 18px;
   height: 18px;
-  border-radius: 50%;
+  margin: auto;
   border: 2px solid currentColor;
   border-inline-start-color: transparent;
+  border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
 
@@ -125,46 +223,66 @@
   height: var(--tap);
   border-radius: 50%;
   color: var(--ink);
-  transition:
-    background-color var(--d-1) var(--ease),
-    transform var(--d-1) var(--ease);
+  transition: transform var(--d-1) var(--ease);
 }
 
-.iconButton:hover {
-  background: var(--line);
+.iconButton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  transition: background-color var(--d-1) var(--ease);
 }
 
-.iconButton:active {
-  transform: scale(0.94);
+.iconButton > * {
+  position: relative;
 }
 
-.soft {
-  background: var(--sunken);
+.iconSm::before {
+  inset: 6px;
+}
+
+.iconButton:active:not(:disabled) {
+  transform: scale(var(--press));
+}
+
+.iconButton:disabled {
+  color: var(--ink-disabled);
+}
+
+.soft::before {
+  background: var(--chip-on-image);
+}
+
+@media (hover: hover) {
+  .iconButton:not(.soft):hover:not(:disabled)::before {
+    background: var(--line-soft);
+  }
 }
 
 .badge {
   position: absolute;
-  top: 5px;
-  inset-inline-end: 4px;
-  min-width: 17px;
-  height: 17px;
+  inset-block-start: 4px;
+  inset-inline-end: 2px;
+  min-width: 16px;
+  height: 16px;
   padding-inline: 4px;
   border-radius: var(--r-pill);
   background: var(--accent);
   color: var(--on-accent);
-  font-size: 10.5px;
-  font-weight: 600;
-  line-height: 17px;
+  font-size: 0.6176rem;
+  font-weight: var(--w-strong);
+  line-height: 16px;
+  letter-spacing: 0;
   text-align: center;
   font-variant-numeric: tabular-nums;
-  box-shadow: 0 0 0 2px var(--bg);
 }
 
 .dot {
-  top: 9px;
+  inset-block-start: 9px;
   inset-inline-end: 9px;
-  min-width: 9px;
-  width: 9px;
-  height: 9px;
+  min-width: 8px;
+  width: 8px;
+  height: 8px;
   padding: 0;
 }

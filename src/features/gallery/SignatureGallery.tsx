@@ -1,7 +1,7 @@
 /**
  * Gallery section: the signature components in every state, with realistic content:
  * the next step as the dark hero tile and as quiet cards, a building-permit request at the Ministry of
- * Municipality on day 2 of 5, the four journey stations, a lease contract, a contractor pass, the map and
+ * Municipality on day 2 of 5, the four journey stations, a lease contract, a worker pass, the map and
  * a plot layout, and the same components placed on a dark tile.
  */
 import { useState } from 'react';
@@ -123,7 +123,7 @@ const demo = {
   docReceipt: { ar: 'إيصال سداد التأمين', en: 'Deposit payment receipt' },
   issuer: { ar: 'مناطق', en: 'Manateq' },
   tenant: { ar: 'المستأجر', en: 'Tenant' },
-  company: { ar: 'شركة المثال لتجارة قطع غيار السيارات ذ.م.م.', en: 'Al Mithal Auto Parts Trading W.L.L.' },
+  company: { ar: 'شركة المثال للصناعات', en: 'Example Industries Co.' },
   plot: { ar: 'القطعة', en: 'Plot' },
   area: { ar: 'المساحة', en: 'Area' },
   term: { ar: 'مدة العقد', en: 'Lease term' },
@@ -133,7 +133,7 @@ const demo = {
 
   // pass
   holder: { ar: 'مهندس الموقع (تجريبي)', en: 'Site engineer (demo)' },
-  contractor: { ar: 'شركة المثال للمقاولات ذ.م.م.', en: 'Al Mithal Contracting W.L.L.' },
+  contractor: { ar: 'شركة المثال للمقاولات', en: 'Example Contracting Co.' },
   visitor: { ar: 'زائر الشركة (تجريبي)', en: 'Company visitor (demo)' },
   qrPass: { ar: 'رمز تصريح الدخول', en: 'Gate pass code' },
 

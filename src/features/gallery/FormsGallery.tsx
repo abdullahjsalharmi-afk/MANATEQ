@@ -65,8 +65,8 @@ const strings = {
   passType: { ar: 'نوع التصريح', en: 'Pass type' },
   passVisitor: { ar: 'زائر', en: 'Visitor' },
   passVisitorHint: { ar: 'ليوم واحد', en: 'For one day' },
-  passContractor: { ar: 'مقاول', en: 'Contractor' },
-  passContractorHint: { ar: 'طوال مدة المشروع', en: 'For the length of the project' },
+  passWorker: { ar: 'عامل', en: 'Worker' },
+  passWorkerHint: { ar: 'طوال مدة المشروع', en: 'For the length of the project' },
   passVehicle: { ar: 'مركبة', en: 'Vehicle' },
   passVehicleHint: { ar: 'شاحنة أو معدّة', en: 'A truck or equipment' },
   solution: { ar: 'نوع الحل', en: 'Solution' },
@@ -188,7 +188,7 @@ export function FormsGallery() {
   const [area, setArea] = useState<number | null>(5000);
   const [investment, setInvestment] = useState<number | null>(12_500_000);
   const [fault, setFault] = useState(t('faultValue'));
-  const [passType, setPassType] = useState<'visitor' | 'contractor' | 'vehicle' | null>('contractor');
+  const [passType, setPassType] = useState<'visitor' | 'worker' | 'vehicle' | null>('worker');
   const [solution, setSolution] = useState<SolutionKey | null>(null);
   const [zone, setZone] = useState<string | null>('BA');
   const [emptyZone, setEmptyZone] = useState<string | null>(null);
@@ -252,7 +252,7 @@ export function FormsGallery() {
             onChange={setPassType}
             options={[
               { value: 'visitor', label: t('passVisitor'), hint: t('passVisitorHint'), icon: IdCard },
-              { value: 'contractor', label: t('passContractor'), hint: t('passContractorHint'), icon: HardHat },
+              { value: 'worker', label: t('passWorker'), hint: t('passWorkerHint'), icon: HardHat },
               { value: 'vehicle', label: t('passVehicle'), hint: t('passVehicleHint'), icon: Car },
             ]}
           />
@@ -456,7 +456,7 @@ export function FormsGallery() {
             onChange={setPassType}
             options={[
               { value: 'visitor', label: t('passVisitor'), icon: IdCard },
-              { value: 'contractor', label: t('passContractor'), icon: HardHat },
+              { value: 'worker', label: t('passWorker'), icon: HardHat },
             ]}
           />
           <div>

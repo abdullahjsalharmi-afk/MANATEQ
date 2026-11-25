@@ -1,4 +1,5 @@
-/* Manateq One — base styles: reset, document, type helpers, focus, motion, screen transitions. */
+/* Manateq One — base styles: reset, document, type, focus, frosted bars, screen changes, chrome metrics.
+   The tokens live in tokens.css; nothing here hard-codes a colour, a size or a duration. */
 
 *,
 *::before,
@@ -6,13 +7,47 @@
   box-sizing: border-box;
 }
 
+/* Type metrics the scale needs beside the tokens: the line heights of the two small sizes. */
+:root {
+  --lh-callout: 1.55; /* 14 px text */
+  --lh-foot: 1.5; /* 12 px text */
+}
+
+:root[lang='en'] {
+  --lh-callout: 1.43;
+  --lh-foot: 1.33;
+}
+
 html {
+  font-size: 17px; /* the text-size setting scales this (tokens.css) */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
   background: var(--bg);
-  scroll-padding-top: calc(var(--topbar-h) + var(--safe-top) + 12px);
-  scroll-padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 24px);
+
+  /* What the app shell pins to the viewport, so anything sticky or anchored can clear it.
+     html[data-chrome] is set by the shell: `tabs` for the five destinations, `plain` for flows and the welcome. */
+  --chrome-nav: 0px; /* the global bar (wide screens, tabbed screens only) */
+  --chrome-top: calc(var(--safe-top) + var(--chrome-nav) + var(--topbar-h)); /* everything pinned to the top */
+  --chrome-bottom: 0px; /* the tab bar (phones, tabbed screens only) */
+  --footer-safe: var(--safe-bottom); /* the home indicator, when nothing else covers it */
+
+  scroll-padding-top: calc(var(--chrome-top) + var(--s-3));
+  scroll-padding-bottom: calc(var(--chrome-bottom) + var(--s-6));
+}
+
+html[data-chrome='tabs'] {
+  --chrome-bottom: calc(var(--tabbar-h) + var(--safe-bottom));
+  --footer-safe: 0px;
+}
+
+/* From 834 px the tab bar gives way to the global bar at the top and the footer at the end of the page. */
+@media (min-width: 834px) {
+  html[data-chrome='tabs'] {
+    --chrome-nav: var(--nav-h);
+    --chrome-bottom: 0px;
+    --footer-safe: var(--safe-bottom);
+  }
 }
 
 body {
@@ -22,8 +57,9 @@ body {
   color: var(--ink);
   font-family: var(--font);
   font-size: var(--t-body);
+  font-weight: var(--w-regular);
   line-height: var(--lh-body);
-  font-weight: 400;
+  letter-spacing: var(--ls-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -56,17 +92,46 @@ ol {
   list-style: none;
 }
 
+/* Headings are 600, never heavier. Components set their own size; these are the defaults. */
 h1,
 h2,
 h3,
 h4 {
-  font-weight: 600;
+  font-weight: var(--w-strong);
   line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
   text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--t-display);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
+}
+
+h2 {
+  font-size: var(--t-heading);
+}
+
+h3,
+h4 {
+  font-size: var(--t-body);
+  letter-spacing: var(--ls-body);
 }
 
 p {
   text-wrap: pretty;
+}
+
+strong,
+b {
+  font-weight: var(--w-strong);
+}
+
+small {
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
 }
 
 a {
@@ -87,6 +152,7 @@ button {
   margin: 0;
   padding: 0;
   border: 0;
+  border-radius: 0;
   background: none;
   cursor: pointer;
   text-align: inherit;
@@ -105,6 +171,57 @@ svg {
 
 input[type='search']::-webkit-search-cancel-button {
   display: none;
+}
+
+/* The type scale as classes, for text that is not inside a component. Each sets size, weight, leading
+   and tracking together: tracking is a length once computed, so it must be set wherever the size is. */
+.type-hero {
+  font-size: var(--t-hero);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
+}
+
+.type-display {
+  font-size: var(--t-display);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
+}
+
+.type-title {
+  font-size: var(--t-title);
+  font-weight: var(--w-regular);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+}
+
+.type-heading {
+  font-size: var(--t-heading);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+}
+
+.type-body {
+  font-size: var(--t-body);
+  font-weight: var(--w-regular);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+}
+
+.type-callout {
+  font-size: var(--t-callout);
+  font-weight: var(--w-regular);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+}
+
+.type-foot {
+  font-size: var(--t-foot);
+  font-weight: var(--w-regular);
+  line-height: var(--lh-foot);
+  letter-spacing: var(--ls-caption);
 }
 
 /* Numbers that change or line up. */
@@ -133,90 +250,60 @@ input[type='search']::-webkit-search-cancel-button {
   border: 0;
 }
 
-/* One visible focus style everywhere; only for keyboard users. */
+/* One focus style everywhere, for keyboard users only: a 2 px ring that follows the element's own shape. */
 :focus {
   outline: none;
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
-  border-radius: 6px;
 }
 
 ::selection {
-  background: var(--accent-tint);
-  color: var(--ink);
+  background: color-mix(in srgb, var(--focus) 22%, transparent);
 }
 
-/* Screen transitions (View Transitions API). The direction follows the reading direction:
-   going forward moves towards the inline-end side. html[data-nav] is set by the router. */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: var(--d-2);
-  animation-timing-function: var(--ease);
+/* A frosted bar: the page shows through, blurred. Add a hairline on the side that faces the content. */
+.mq-frost {
+  background: var(--bar);
+  -webkit-backdrop-filter: var(--bar-filter);
+  backdrop-filter: var(--bar-filter);
 }
 
-html[data-nav='tab']::view-transition-old(root) {
-  animation-name: mq-fade-out;
-  animation-duration: 120ms;
-}
-html[data-nav='tab']::view-transition-new(root) {
-  animation-name: mq-fade-in;
-  animation-duration: 180ms;
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .mq-frost {
+    background: var(--bg);
+  }
 }
 
-html[data-nav='push']::view-transition-old(root) {
-  animation-name: mq-out-back;
-}
-html[data-nav='push']::view-transition-new(root) {
-  animation-name: mq-in-forward;
-}
-html[data-nav='pop']::view-transition-old(root) {
-  animation-name: mq-out-forward;
-}
-html[data-nav='pop']::view-transition-new(root) {
-  animation-name: mq-in-back;
+/* Screen changes. The router sets html[data-nav] and remounts the screen, so the new content plays this once:
+   a short fade and a 12 px rise going forward, the same settling from above going back, a plain fade between
+   tabs. Where the View Transitions API exists the bars cross-fade in place underneath. */
+html[data-nav='push'] main {
+  animation: mq-rise var(--d-2) var(--ease) backwards;
 }
 
-/* Left-to-right: forward enters from the right. */
-@keyframes mq-in-forward {
+html[data-nav='pop'] main {
+  animation: mq-settle var(--d-2) var(--ease) backwards;
+}
+
+html[data-nav='tab'] main {
+  animation: mq-fade-in var(--d-1) var(--ease) backwards;
+}
+
+@keyframes mq-rise {
   from {
     opacity: 0;
-    transform: translateX(18px);
-  }
-}
-@keyframes mq-out-back {
-  to {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-}
-@keyframes mq-in-back {
-  from {
-    opacity: 0;
-    transform: translateX(-18px);
-  }
-}
-@keyframes mq-out-forward {
-  to {
-    opacity: 0;
-    transform: translateX(10px);
+    transform: translateY(12px);
   }
 }
 
-/* Right-to-left: mirrored. */
-html[dir='rtl'][data-nav='push']::view-transition-new(root) {
-  animation-name: mq-in-back;
-}
-html[dir='rtl'][data-nav='push']::view-transition-old(root) {
-  animation-name: mq-out-forward;
-}
-html[dir='rtl'][data-nav='pop']::view-transition-new(root) {
-  animation-name: mq-in-forward;
-}
-html[dir='rtl'][data-nav='pop']::view-transition-old(root) {
-  animation-name: mq-out-back;
+@keyframes mq-settle {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
 }
 
 @keyframes mq-fade-in {
@@ -224,15 +311,25 @@ html[dir='rtl'][data-nav='pop']::view-transition-old(root) {
     opacity: 0;
   }
 }
-@keyframes mq-fade-out {
-  to {
-    opacity: 0;
-  }
+
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: var(--d-1);
+  animation-timing-function: var(--ease);
 }
 
-/* The tab bar and overlays stay put while screens change underneath. */
+/* What stays put while screens change underneath: the tab bar, the global bar, a toast. */
 .mq-keep {
-  view-transition-name: mq-keep;
+  view-transition-name: mq-tabs;
+}
+
+.mq-keep-nav {
+  view-transition-name: mq-nav;
+}
+
+.mq-keep-toast {
+  view-transition-name: mq-toast;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -244,45 +341,23 @@ html[dir='rtl'][data-nav='pop']::view-transition-old(root) {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
     animation: none !important;
   }
 }
 
 @media print {
+  html,
   body {
-    background: #fff;
-  }
-}
-
-/* What sits at the bottom of the viewport, so sticky footers and toasts can clear it.
-   html[data-chrome] is set by the app shell: `tabs` when the tab bar is shown, `plain` for flows. */
-html[data-chrome='tabs'] {
-  --chrome-bottom: calc(var(--tabbar-h) + var(--safe-bottom));
-  --footer-safe: 0px;
-}
-
-html[data-chrome='plain'] {
-  --chrome-bottom: 0px;
-  --footer-safe: var(--safe-bottom);
-}
-
-/* Wide screens (laptops, desktops): the tab bar gives way to a side rail and the content column widens.
-   The app stays one centred reading column: a government service site, not a stretched phone screen. */
-html {
-  --side: 0px;
-}
-
-@media (min-width: 960px) {
-  :root {
-    --content-max: 720px;
-    --gutter: 32px;
+    background: var(--surface);
   }
 
-  html[data-chrome='tabs'] {
-    --chrome-bottom: 0px;
-    --footer-safe: 0px;
-    --side: var(--side-w);
+  .mq-keep,
+  .mq-keep-nav,
+  .mq-keep-toast {
+    display: none !important;
   }
 }
