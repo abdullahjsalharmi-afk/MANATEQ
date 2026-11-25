@@ -11,3 +11,7 @@ playwright-report/
 data/source/
 src/data/generated/
 preview/
+
+# The design book is built from the running app: node scripts/build-design-book.mjs. Only the PDF is kept.
+docs/design/shots/
+docs/design/index.html
