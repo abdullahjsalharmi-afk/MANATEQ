@@ -303,6 +303,33 @@ describe('n=3 and n=6 · a "needs you" notification is settled once its ask is d
   });
 });
 
+describe('n=6, second look · every payment leaves the same note, whichever screen it was made on', () => {
+  it('paying inside a request step adds a read "payment received" note that opens its receipt', () => {
+    // The lease renewal: accept, sign and pay the first instalment at step 8.
+    const world = seedWorld('tenant', NOW);
+    const renewal = world.requests.find((request) => request.serviceId === 'B3') as RequestState;
+    expect(renewal.status).toBe('needs_you');
+    const before = world.notifications.length;
+    const after = actIn(world, renewal.id, {}, NOW + 1000, live);
+    const notes = after.notifications.slice(before).filter((notification) => notification.title.en.startsWith('Payment received'));
+    expect(notes).toHaveLength(1);
+    const note = notes[0] as World['notifications'][number];
+    expect(note.read).toBe(true);
+    expect(note.kind).toBe('done');
+    const receipt = after.docs.find((doc) => `/account/wallet/${doc.id}` === note.route);
+    expect(receipt).toBeDefined();
+    const invoice = after.invoices.find((candidate) => candidate.id === note.subject?.invoiceId);
+    expect(invoice).toMatchObject({ status: 'paid', requestId: renewal.id, receiptDocId: receipt?.id });
+    // It never counts as unread.
+    expect(selectUnreadCount(stateOf(after))).toBeLessThanOrEqual(selectUnreadCount(stateOf(world)));
+  });
+
+  it('the seeded history stays as it was: payments made long ago raise nothing new', () => {
+    const titles = seedWorld('tenant', NOW).notifications.map((notification) => notification.title.en);
+    expect(titles.filter((title) => title.startsWith('Payment received'))).toEqual([]);
+  });
+});
+
 describe('n=14 · E1: asking for an appointment books one', () => {
   const start = (form: Record<string, string | boolean>) => startIn(seedWorld('tenant', NOW), { serviceId: 'E1', form: { request: 'I need help with my permit', ...form } }, NOW + 1000, live);
 

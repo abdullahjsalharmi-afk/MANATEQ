@@ -45,6 +45,14 @@ test('the investor accepts, signs and pays the renewal, and the request moves on
   await expect(page.getByRole('main').getByText(ref).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Waiting for you' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Accept and renew' })).toHaveCount(0);
+
+  // A payment made inside a request leaves the same note as one made from Payments, and it opens the receipt.
+  await page.evaluate(() => (window.location.hash = '#/notifications'));
+  const note = page.getByRole('main').getByRole('button', { name: /Payment received/ }).first();
+  await expect(note).toBeVisible();
+  await note.click();
+  await expect(page).toHaveURL(/#\/account\/wallet\//);
+  await expect(page.getByRole('main').getByText(ref).first()).toBeVisible();
   expect(errors).toEqual([]);
 });
 

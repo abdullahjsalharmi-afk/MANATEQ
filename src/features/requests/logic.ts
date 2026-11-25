@@ -202,13 +202,13 @@ export function ratingFacts(
   const open = request.status === 'active' || request.status === 'needs_you';
   const reopenedOnce = request.reopenedAt !== undefined;
   const askAgain = open && reopenedOnce && action !== null && action.flow.includes('rate');
-  let reopened: RatingFacts['reopened'];
-  if (open && reopenedOnce && !askAgain) reopened = holderLane === 'staff' ? 'reopenedSupervisor' : 'reopened';
   const rating = request.rating;
+  // The latest rating is the one that reopened the request: a later, better rating closes it, and the steps
+  // that still run after that rating are no longer a reopening.
+  const same = rating !== undefined && request.reopenedRating !== undefined && rating.stars === request.reopenedRating.stars && (rating.comment ?? '') === (request.reopenedRating.comment ?? '');
+  let reopened: RatingFacts['reopened'];
+  if (open && reopenedOnce && !askAgain && same) reopened = holderLane === 'staff' ? 'reopenedSupervisor' : 'reopened';
   let ratingNote: RatingFacts['ratingNote'];
-  if (rating && request.reopenedRating) {
-    const same = rating.stars === request.reopenedRating.stars && (rating.comment ?? '') === (request.reopenedRating.comment ?? '');
-    ratingNote = same ? 'ratingReopenedThis' : 'ratingReopenedEarlier';
-  }
+  if (rating && request.reopenedRating) ratingNote = same ? 'ratingReopenedThis' : 'ratingReopenedEarlier';
   return { reopened, rating, ratingNote, askAgain };
 }

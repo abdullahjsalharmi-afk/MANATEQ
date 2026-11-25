@@ -34,3 +34,14 @@ export function makeZoneNamer<T extends Pick<Zone, 'code' | 'name'>>(list: reado
     },
   };
 }
+
+/**
+ * The investor's plot that a query names: its number in any letter case, with or without its hyphen or a space
+ * ("BA-121", "ba 121", "BA121"). Such a query is about that plot: the plot comes first, with the requests about it.
+ */
+export function namedPlot<T extends { id: string; number: string }>(plots: readonly T[], query: string): T | undefined {
+  const plain = (value: string) => value.toLowerCase().replace(/[\s\u00a0\-\u2010\u2011\u2013]/g, '');
+  const wanted = plain(query);
+  if (wanted.length < 3) return undefined;
+  return plots.find((plot) => plain(plot.number) === wanted || plain(plot.id) === wanted);
+}

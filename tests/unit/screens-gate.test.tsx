@@ -157,6 +157,16 @@ describe('n=15 · a low rating reopened the fault report', () => {
     expect(ratingFacts(request, 'inv', { flow: ['rate'] })).toMatchObject({ askAgain: true, reopened: undefined });
   });
 
+  it('stops saying it once a later, better rating has closed it, also while the last automatic step runs', () => {
+    // A complaint (E6) still has an automatic step after its rating step: the request is active for a moment.
+    const running = { status: 'active' as const, rating: { stars: 5 }, reopenedAt: NOW, reopenedRating: low };
+    expect(ratingFacts(running, 'eng', null)).toMatchObject({ reopened: undefined, rating: { stars: 5 }, ratingNote: 'ratingReopenedEarlier', askAgain: false });
+    expect(ratingFacts(running, 'staff', null).reopened).toBeUndefined();
+    // A second low rating reopens it again.
+    const again = { status: 'active' as const, rating: { stars: 2 }, reopenedAt: NOW + 1, reopenedRating: { stars: 2 } };
+    expect(ratingFacts(again, 'staff', null).reopened).toBe('reopenedSupervisor');
+  });
+
   it('shows the latest rating and which one reopened the report', () => {
     const done = { status: 'done' as const, rating: { stars: 5 }, reopenedAt: NOW, reopenedRating: low };
     expect(ratingFacts(done, undefined, null)).toMatchObject({ reopened: undefined, rating: { stars: 5 }, ratingNote: 'ratingReopenedEarlier' });

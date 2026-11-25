@@ -14,7 +14,7 @@ import type { Appointment, Doc, FormValue, RequestState, Visit, World } from '@/
 import { getService, getZone, requestLabelOf } from '@/data/catalog';
 import { findPlot, needsTenancy, plotsFor } from '@/domain/plots';
 import { act, advance, begin, currentStep, currentVisit, findStep, isTerminal, mainPath, waitsForInvestor, type EngineEvent, type InvestorRoute, type Outcome, type Timing } from '@/domain/workflow';
-import { addPass, atomEffects, recordPayload, settleInvoice, toTime, whenFinished, whenStarted, whenStopped, whenWaiting, type EffectContext } from './effects';
+import { addPass, atomEffects, payInvoiceNoted, recordPayload, toTime, whenFinished, whenStarted, whenStopped, whenWaiting, type EffectContext } from './effects';
 import { allocate, docRef, requestRef } from './refs';
 import { dateText, dateTimeText, dots, fill, moneyText, text } from './strings';
 import { holdOf, type ActPayload, type AppointmentInput, type Env, type PassInput, type SimRequest, type StartOptions } from './types';
@@ -559,22 +559,11 @@ export function resumeIn(world: World, now: number, env: Env): World {
 
 /**
  * The investor pays an invoice: it is settled with its receipt, the reminders to pay it are settled, and
- * a short note (already read: the investor just did it) opens the receipt in the wallet.
+ * a short note (already read: the investor just did it) opens the receipt in the wallet. A payment made
+ * inside a request step leaves the same note (`payInvoiceNoted`).
  */
 export function payInvoiceIn(world: World, invoiceId: string, now: number): { world: World; docId: string | null } {
-  const invoice = world.invoices.find((candidate) => candidate.id === invoiceId);
-  const paid = settleInvoice(world, invoiceId, now);
-  if (!invoice || paid.docId === null) return paid;
-  const noted = notify(paid.world, {
-    at: now,
-    kind: 'done',
-    title: text.paymentReceived,
-    body: dots(invoice.title, moneyText(invoice.amount)),
-    route: `/account/wallet/${paid.docId}`,
-    subject: { invoiceId },
-  });
-  const last = noted.notifications.length - 1;
-  return { world: { ...noted, notifications: noted.notifications.map((notification, index) => (index === last ? { ...notification, read: true } : notification)) }, docId: paid.docId };
+  return payInvoiceNoted(world, invoiceId, now);
 }
 
 export function issuePassIn(world: World, input: PassInput, now: number): { world: World; id: string } {

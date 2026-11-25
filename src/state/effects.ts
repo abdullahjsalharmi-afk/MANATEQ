@@ -9,7 +9,7 @@
  */
 import type { ActionAtom, ServiceDetail, ServiceId, StepAction } from '@/data/types';
 import { receiptDoc } from '@/domain/documents';
-import type { FormValue, Invoice, Lease, Pass, PassKind, Plot, PlotStatus, RequestState, World } from '@/domain/types';
+import type { AppNotification, FormValue, Invoice, Lease, Pass, PassKind, Plot, PlotStatus, RequestState, World } from '@/domain/types';
 import { allocate, invoiceRef, leaseRef, passCode, receiptRefFor } from './refs';
 import { dateText, dots, fill, moneyText, rentTitle, text } from './strings';
 import type { ActPayload, PassInput } from './types';
@@ -343,6 +343,30 @@ export function settleInvoice(world: World, invoiceId: string, at: number, sourc
   return { world: next, docId: slot.id };
 }
 
+/**
+ * The investor pays an invoice, on whichever screen: it is settled with its receipt, and a short note,
+ * already read (the investor just did it), opens the receipt in the wallet. History that is seeded as
+ * already paid uses `settleInvoice` and raises nothing.
+ */
+export function payInvoiceNoted(world: World, invoiceId: string, at: number, source?: { serviceId: ServiceId; requestId: string }): { world: World; docId: string | null } {
+  const invoice = world.invoices.find((candidate) => candidate.id === invoiceId);
+  const paid = settleInvoice(world, invoiceId, at, source);
+  if (!invoice || paid.docId === null) return paid;
+  // The note is named after its receipt, not numbered: it takes nothing from the sequence that numbers
+  // requests and documents, so the same history always gives the same ids.
+  const note: AppNotification = {
+    id: `pay-${paid.docId}`,
+    at,
+    kind: 'done',
+    title: text.paymentReceived,
+    body: dots(invoice.title, moneyText(invoice.amount)),
+    route: `/account/wallet/${paid.docId}`,
+    subject: { invoiceId },
+    read: true,
+  };
+  return { world: { ...paid.world, notifications: [...paid.world.notifications, note] }, docId: paid.docId };
+}
+
 /** `pay` of an outstanding balance: the unpaid invoices of the lease are settled, each with its receipt. */
 function settleBalance(world: World, request: RequestState, ctx: AtomContext): World | undefined {
   const lease = leaseOfPlot(world, request.plotId);
@@ -351,7 +375,7 @@ function settleBalance(world: World, request: RequestState, ctx: AtomContext): W
   let next = world;
   const receipts: string[] = [];
   for (const invoice of unpaid) {
-    const settled = settleInvoice(next, invoice.id, ctx.at, { serviceId: ctx.service.id, requestId: request.id });
+    const settled = payInvoiceNoted(next, invoice.id, ctx.at, { serviceId: ctx.service.id, requestId: request.id });
     next = settled.world;
     if (settled.docId !== null) receipts.push(settled.docId);
   }
@@ -385,7 +409,7 @@ const collectPayment: AtomEffect = (world, ctx) => {
     dueAt: ctx.at,
     status: 'due',
   };
-  const settled = settleInvoice({ ...slot.world, invoices: [...slot.world.invoices, invoice] }, invoice.id, ctx.at, { serviceId: ctx.service.id, requestId: request.id });
+  const settled = payInvoiceNoted({ ...slot.world, invoices: [...slot.world.invoices, invoice] }, invoice.id, ctx.at, { serviceId: ctx.service.id, requestId: request.id });
   if (settled.docId === null) return settled.world;
   return patchRequest(settled.world, request.id, { amount, docIds: [...request.docIds, settled.docId] });
 };

@@ -1,10 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { LangProvider } from '@/app/i18n';
 import { getService, getZone, loadServiceDetail, zones } from '@/data/catalog';
 import type { ServiceSummary } from '@/data/types';
 import { buildIndex, tokens } from '@/domain/search';
-import { makeZoneNamer } from '@/features/search/rank';
+import { makeZoneNamer, namedPlot } from '@/features/search/rank';
 import { makeServiceSearch, serviceSearch } from '@/features/services/catalogue';
 import { plotGate, PLOT_GATE_ACTION, type PlotGateInput } from '@/features/services/plotGate';
 import { ServiceRow } from '@/features/services/ServiceRow';
@@ -66,6 +68,33 @@ describe('search: a query that names a zone (gate n=20)', () => {
     // The forgiving pass is unchanged for everything else.
     expect(serviceSearch().search('ادفع فاتورة').map((s) => s.id)).toContain('B1');
     expect(makeServiceSearch().search('ادفع فاتورة', { forgive: false })).toEqual([]);
+  });
+});
+
+describe('search: a query that names one of the investor’s plots (second look)', () => {
+  const plots = [
+    { id: 'BA-121', number: 'BA-121' },
+    { id: 'AW-116', number: 'AW-116' },
+    { id: 'AK-113', number: 'AK-113' },
+  ];
+
+  it('finds the plot by its number in any case, with or without the hyphen or a space', () => {
+    for (const query of ['BA-121', 'ba-121', ' Ba 121 ', 'BA121', 'BA‑121', 'BA–121']) expect([query, namedPlot(plots, query)?.id]).toEqual([query, 'BA-121']);
+    expect(namedPlot(plots, 'aw-116')?.id).toBe('AW-116');
+  });
+
+  it('does not take a zone code, a part of a number or other words for a plot', () => {
+    for (const query of ['BA', '121', 'BA-12', 'BA-1211', 'rent', 'إيجار', '', '  ']) expect([query, namedPlot(plots, query)]).toEqual([query, undefined]);
+  });
+
+  it('puts the plot and its requests before the invoices on the results page', () => {
+    const page = readFileSync(resolve(__dirname, '../../src/features/search/SearchScreen.tsx'), 'utf8');
+    const named = page.slice(page.indexOf('{plotNamed ? ('), page.indexOf('{foundDocs.length || foundPasses.length ? ('));
+    const [first, second] = named.split(') : (');
+    expect(first?.indexOf('plotsSection')).toBeLessThan(first?.indexOf('paymentsSection') ?? -1);
+    expect(first?.indexOf('requestsSection')).toBeLessThan(first?.indexOf('paymentsSection') ?? -1);
+    expect(second?.indexOf('paymentsSection')).toBeLessThan(second?.indexOf('plotsSection') ?? -1);
+    expect(page).toMatch(/request\.plotId === plotNamed\.id/);
   });
 });
 

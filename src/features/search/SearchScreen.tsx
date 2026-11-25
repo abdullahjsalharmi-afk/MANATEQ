@@ -16,7 +16,7 @@ import { matchesReference, readRecent, serviceSearch, startTarget } from '@/feat
 import { DocRow, PassRow } from '@/features/wallet';
 import { ZoneRow } from '@/features/zones';
 import { selectDocs, selectInvoices, selectPasses, selectPersona, selectPlots, useApp } from '@/state';
-import { makeZoneNamer } from './rank';
+import { makeZoneNamer, namedPlot } from './rank';
 import { keywords, resultsCount, strings } from './strings';
 import styles from './SearchScreen.module.css';
 
@@ -88,21 +88,30 @@ export function SearchScreen() {
     const found = zoneIndex.search(trimmed, 6);
     return [...namedZones, ...found.filter((zone) => !namedZones.includes(zone))].slice(0, 6);
   }, [trimmed, namedZones]);
+  const own = persona !== 'guest' && trimmed !== '';
+  // A query that is one of the investor's plot numbers is about that plot: it comes first, with its requests.
+  const plotNamed = useMemo(() => (own ? namedPlot(plots, trimmed) : undefined), [own, plots, trimmed]);
   const foundRequests = useMemo(() => {
     if (!trimmed || persona === 'guest') return [];
     const ids = new Set(foundServices.slice(0, SERVICE_LIMIT).map((service) => service.id));
+    const open = (request: (typeof requests)[number]) => (request.status === 'done' || request.status === 'stopped' ? 0 : 1);
     return requests
-      .filter((request) => matchesReference(request.ref, trimmed) || ids.has(request.serviceId))
-      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .filter((request) => matchesReference(request.ref, trimmed) || ids.has(request.serviceId) || (plotNamed !== undefined && request.plotId === plotNamed.id))
+      // For a plot, what is still running comes before its history.
+      .sort((a, b) => (plotNamed ? open(b) - open(a) : 0) || b.updatedAt - a.updatedAt)
       .slice(0, 6);
-  }, [trimmed, persona, requests, foundServices]);
+  }, [trimmed, persona, requests, foundServices, plotNamed]);
 
-  const own = persona !== 'guest' && trimmed !== '';
   const plotsIdx = useMemo(() => plotIndex(plots), [plots]);
   const invoicesIdx = useMemo(() => invoiceIndex(invoices), [invoices]);
   const docsIdx = useMemo(() => docIndex(docs), [docs]);
   const passesIdx = useMemo(() => passIndex(passes), [passes]);
-  const foundPlots = useMemo(() => (own ? inOrder(plots, plotsIdx.search(trimmed, plots.length)) : []), [own, plots, plotsIdx, trimmed]);
+  const foundPlots = useMemo(() => {
+    if (!own) return [];
+    const found = inOrder(plots, plotsIdx.search(trimmed, plots.length));
+    // The plot the query names leads, also when it was typed without its hyphen.
+    return plotNamed ? [plotNamed, ...found.filter((plot) => plot !== plotNamed)].slice(0, OWN_LIMIT) : found;
+  }, [own, plots, plotsIdx, trimmed, plotNamed]);
   const foundInvoices = useMemo(() => (own ? inOrder(invoices, invoicesIdx.search(trimmed, invoices.length)) : []), [own, invoices, invoicesIdx, trimmed]);
   const foundDocs = useMemo(() => (own ? inOrder(docs, docsIdx.search(trimmed, docs.length)) : []), [own, docs, docsIdx, trimmed]);
   const foundPasses = useMemo(() => (own ? inOrder(passes, passesIdx.search(trimmed, passes.length)) : []), [own, passes, passesIdx, trimmed]);
@@ -115,6 +124,44 @@ export function SearchScreen() {
       <List aria-label={t('zones')}>
         {foundZones.map((zone) => (
           <ZoneRow key={zone.code} zone={zone} />
+        ))}
+      </List>
+    </Section>
+  ) : null;
+
+  const paymentsSection = foundInvoices.length ? (
+    <Section title={t('payments')}>
+      <List aria-label={t('payments')}>
+        {foundInvoices.map((invoice) => (
+          <InvoiceRow key={invoice.id} invoice={invoice} now={now} />
+        ))}
+      </List>
+    </Section>
+  ) : null;
+
+  const plotsSection = foundPlots.length ? (
+    <Section title={t('plots')}>
+      <List aria-label={t('plots')}>
+        {foundPlots.map((plot) => {
+          const zone = getZone(plot.zoneCode);
+          return (
+            <Row
+              key={plot.id}
+              to={`/account/plots/${plot.id}`}
+              title={<span className="ltr">{fmt.ltr(plot.number)}</span>}
+              subtitle={zone ? t('plotLine', { zone: pick(zone.name), area: fmt.area(plot.areaSqm) }) : fmt.area(plot.areaSqm)}
+            />
+          );
+        })}
+      </List>
+    </Section>
+  ) : null;
+
+  const requestsSection = foundRequests.length ? (
+    <Section title={t('requests')}>
+      <List aria-label={t('requests')}>
+        {foundRequests.map((request) => (
+          <RequestRow key={request.id} request={request} now={now} />
         ))}
       </List>
     </Section>
@@ -162,41 +209,19 @@ export function SearchScreen() {
         ) : (
           <>
             {zoneFirst ? zonesSection : null}
-            {foundInvoices.length ? (
-              <Section title={t('payments')}>
-                <List aria-label={t('payments')}>
-                  {foundInvoices.map((invoice) => (
-                    <InvoiceRow key={invoice.id} invoice={invoice} now={now} />
-                  ))}
-                </List>
-              </Section>
-            ) : null}
-            {foundPlots.length ? (
-              <Section title={t('plots')}>
-                <List aria-label={t('plots')}>
-                  {foundPlots.map((plot) => {
-                    const zone = getZone(plot.zoneCode);
-                    return (
-                      <Row
-                        key={plot.id}
-                        to={`/account/plots/${plot.id}`}
-                        title={<span className="ltr">{fmt.ltr(plot.number)}</span>}
-                        subtitle={zone ? t('plotLine', { zone: pick(zone.name), area: fmt.area(plot.areaSqm) }) : fmt.area(plot.areaSqm)}
-                      />
-                    );
-                  })}
-                </List>
-              </Section>
-            ) : null}
-            {foundRequests.length ? (
-              <Section title={t('requests')}>
-                <List aria-label={t('requests')}>
-                  {foundRequests.map((request) => (
-                    <RequestRow key={request.id} request={request} now={now} />
-                  ))}
-                </List>
-              </Section>
-            ) : null}
+            {plotNamed ? (
+              <>
+                {plotsSection}
+                {requestsSection}
+                {paymentsSection}
+              </>
+            ) : (
+              <>
+                {paymentsSection}
+                {plotsSection}
+                {requestsSection}
+              </>
+            )}
             {foundDocs.length || foundPasses.length ? (
               <Section title={t('documents')}>
                 <List aria-label={t('documents')}>

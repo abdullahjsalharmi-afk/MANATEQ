@@ -293,7 +293,11 @@ describe('the prospect journey, end to end', () => {
     expect(asks.length).toBeGreaterThanOrEqual(2);
     expect(asks.every((n) => n.resolvedAt !== undefined && n.read)).toBe(true);
     expect(selectUnreadCount(getState())).toBe(world().notifications.filter((n) => !n.read).length);
-    expect(selectUnreadCount(getState())).toBe(world().notifications.length - asks.length);
+    // The payment made on the way left its note, already read: the investor had just paid.
+    const paidNotes = world().notifications.filter((n) => n.id.startsWith('pay-'));
+    expect(paidNotes.length).toBeGreaterThanOrEqual(1);
+    expect(paidNotes.every((n) => n.read && n.kind === 'done' && n.route?.startsWith('/account/wallet/'))).toBe(true);
+    expect(selectUnreadCount(getState())).toBe(world().notifications.length - asks.length - paidNotes.length);
 
     // Handed over, not yet building: the design submission is the next step of the journey.
     expect(selectStation(getState())).toBe('contract');

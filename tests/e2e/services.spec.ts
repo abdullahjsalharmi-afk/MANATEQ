@@ -101,6 +101,33 @@ test('search reads common English spellings and puts a named zone first (gate n=
   expect(errors).toEqual([]);
 });
 
+test('searching one of your plot numbers puts the plot first, with the requests about it', async ({ page }) => {
+  const errors = watchErrors(page);
+  await openApp(page, { route: '/search', lang: 'en' });
+  for (const query of ['BA-121', 'ba 121']) {
+    await page.getByRole('searchbox').fill(query);
+    const main = page.getByRole('main');
+    await expect(main.locator('a[href="#/account/plots/BA-121"]')).toBeVisible();
+    // The plot leads; its invoices follow it.
+    const links = await main.locator('a[href^="#/"]').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href') ?? ''));
+    expect(links[0]).toBe('#/account/plots/BA-121');
+    const firstInvoice = links.findIndex((href) => href.startsWith('#/account/payments/'));
+    expect(firstInvoice).toBeGreaterThan(0);
+    // The fault report that is open on this plot is listed, before any invoice.
+    const report = links.indexOf('#/requests/r94');
+    expect(report).toBeGreaterThan(0);
+    expect(report).toBeLessThan(firstInvoice);
+  }
+  // Another plot: its two running requests are found without typing their references.
+  await page.getByRole('searchbox').fill('AW-116');
+  await expect(page.locator('main a[href="#/requests/r95"]')).toBeVisible();
+  await expect(page.locator('main a[href="#/requests/r77"]')).toBeVisible();
+  // A word that is no plot number keeps the usual order.
+  await page.getByRole('searchbox').fill('rent');
+  await expect(page.locator('main a[href^="#/account/payments/"]').first()).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test('a plot service offers the way to a plot, not Start, to a company without one (gate n=21)', async ({ page }) => {
   const errors = watchErrors(page);
   await openApp(page, { route: '/services/B7', demo: 'prospect', lang: 'en' });
