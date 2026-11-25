@@ -70,7 +70,8 @@
   --product-shadow: 3px 5px 30px rgba(35, 31, 32, 0.22);
 
   /* type */
-  --font: -apple-system, BlinkMacSystemFont, 'Manateq UI', 'Segoe UI', system-ui, sans-serif;
+  /* Arabic: Tajawal everywhere. Latin: the system face on Apple devices, Inter elsewhere. */
+  --font: 'Manateq Arabic', -apple-system, BlinkMacSystemFont, 'Manateq UI', 'Segoe UI', system-ui, sans-serif;
   --t-hero: 2.353rem; /* 40; 56 on wide screens */
   --t-display: 2rem; /* 34: large titles */
   --t-title: 1.647rem; /* 28: lead */

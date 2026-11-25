@@ -75,7 +75,7 @@ export interface Visit {
   step: number;
   enteredAt: number;
   doneAt?: number;
-  /** Gate outcome. */
+  /** Gate outcome; on an investor step that loops back, "no" means the investor declined the loop and went on. */
   outcome?: 'yes' | 'no';
 }
 

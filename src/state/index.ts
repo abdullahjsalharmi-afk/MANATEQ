@@ -26,13 +26,15 @@
  *         plot steps are then taken as answered: the request is submitted, not asked again.
  *       · any service about one of the investor's plots: `plotId`, or a `plot` field in the form.
  *       · the handover (A8) after the contract: `{ plotId, threadId, parentId }` of the contract request.
- *   actOnRequest(id, { rating?, choice?, form?, files? }) → completes the step in `view.pendingAction`:
- *       `pay` files a paid invoice and its receipt, `sign`/`accept` are recorded, `rate` saves the rating.
+ *   actOnRequest(id, { rating?, choice?, form?, files? }) → completes the step in `view.pendingAction`
+ *       (with a choice, only the tasks `stepTasks(serviceId, action, choice)` lists apply): `pay` files a paid invoice and its receipt, `sign`/`accept` are recorded, `rate` saves the rating.
  *   fastForwardRequest(id) · cancelRequest(id) · payInvoice(id) → receipt doc id
  *   issuePass(input) · revokePass(id) · bookAppointment(input) · cancelAppointment(id)
  *   markRead(id) · markAllRead() · saveDraft(serviceId, form, page) · clearDraft(serviceId)
  *   saveEligibility(result) · toggleWatchZone(code) · setDelegated(memberId, on)
  *   enterAs(persona) · signOut() · resetDemo() · setSpeed(n) · setLang · setTheme · setTextSize · setNotifications
+ *
+ * Full guide: src/state/README.md.
  *
  * The simulation (`tick`, once a second from the app shell) moves requests through their real
  * workflows, raises notifications, issues documents and starts the services that follow by themselves.
@@ -42,6 +44,7 @@ export * from './selectors';
 export { appStore, getState, useApp, resetEverything, STORAGE_KEY } from './store';
 export { applyBootParams, loadCatalogue } from './boot';
 export { isCatalogueReady } from './catalogue';
+export { stepTasks } from './sim';
 export { STATE_VERSION, seedWorld } from './seed';
 export { holdOf, type ActPayload, type AppointmentInput, type FileValue, type PassInput, type StartOptions } from './types';
 export type { Journey, JourneyItem, JourneyStation, StationKey, ItemState } from '@/domain/journey';
