@@ -1,0 +1,187 @@
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  padding-block: var(--s-6);
+}
+
+/* ── the holder tile ── */
+
+.tile {
+  padding-block-end: var(--s-8);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+}
+
+.tileText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  max-inline-size: 36rem;
+  margin-inline: auto;
+}
+
+.text {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.quiet {
+  margin: 0;
+  color: var(--ink-3);
+}
+
+/* ── the page under the tile ── */
+
+.body {
+  padding-block-start: var(--s-6);
+}
+
+/* Phones: one column in the order action, clock, timeline, documents, related. */
+.columns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+}
+
+.main,
+.aside {
+  display: contents;
+}
+
+.partAction {
+  order: 1;
+}
+
+.partClock {
+  order: 2;
+}
+
+.partTimeline {
+  order: 3;
+}
+
+.partDocs {
+  order: 4;
+}
+
+.partRelated {
+  order: 5;
+}
+
+/* Wide screens: the action and the timeline in the main column, the clock and the records beside them. */
+@media (min-width: 1069px) {
+  .columns {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+    gap: var(--s-8);
+  }
+
+  .main,
+  .aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-8);
+    min-inline-size: 0;
+  }
+
+  .aside {
+    padding-block-start: 0;
+  }
+}
+
+/* ── the action card ── */
+
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--gold);
+}
+
+.action h2 {
+  margin: 0;
+}
+
+.actionCta {
+  margin-block-start: var(--s-3);
+}
+
+/* ── the clock card ── */
+
+.clock {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-5);
+}
+
+.clockText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+  min-inline-size: 0;
+}
+
+.figure {
+  margin: 0;
+  font-size: var(--t-heading);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.unit {
+  font-size: var(--t-callout);
+  font-weight: var(--w-regular);
+  color: var(--ink-3);
+}
+
+.standard {
+  margin: 0;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* ── the demo controls, at the foot ── */
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+  margin-block-start: var(--s-12);
+  padding-block-start: var(--s-5);
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.demoActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-5);
+}
+
+.sheetFooter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+}

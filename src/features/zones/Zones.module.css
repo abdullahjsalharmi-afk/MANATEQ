@@ -1,0 +1,109 @@
+/* The zones explorer. Layout only: every surface and colour comes from the components and the tokens. */
+
+.top {
+  display: grid;
+  gap: var(--s-5);
+  padding-block: var(--s-6) var(--s-8);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--s-3);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3) var(--s-5);
+}
+
+.segmented {
+  flex: 1 1 220px;
+  max-inline-size: 320px;
+}
+
+.chips {
+  margin-block-start: calc(var(--s-1) * -1);
+}
+
+/* The map rests on a white tile; the card for the chosen zone sits under it on phones, beside it on wide screens. */
+.mapTile {
+  padding-block: var(--s-8) var(--s-10);
+}
+
+.mapLayout {
+  display: grid;
+  gap: var(--s-6);
+  justify-items: center;
+}
+
+.map {
+  inline-size: 100%;
+}
+
+.side {
+  inline-size: 100%;
+  max-inline-size: 420px;
+  text-align: start;
+}
+
+.hint {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.muted {
+  color: var(--ink-3);
+}
+
+.zoneCard {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.zoneName {
+  margin-block-end: var(--s-2);
+  text-wrap: balance;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-5);
+  padding-block: var(--s-3);
+  border-block: 1px solid var(--line-soft);
+}
+
+.priceLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-3);
+  margin-block-end: var(--s-2);
+}
+
+.open {
+  justify-self: start;
+}
+
+.notes {
+  padding-block: var(--s-6) var(--s-10);
+}
+
+@media (min-width: 1069px) {
+  .mapLayout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
+    align-items: center;
+    justify-items: center;
+    max-inline-size: 900px;
+    margin-inline: auto;
+  }
+
+  .side {
+    max-inline-size: 400px;
+  }
+}

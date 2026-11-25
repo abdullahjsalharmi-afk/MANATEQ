@@ -1,0 +1,40 @@
+/** The words of the welcome screen and the demo sign-in sheet. */
+export const strings = {
+  appName: { ar: 'مناطق ون', en: 'Manateq One' },
+  line: { ar: 'خمسون خدمة. رحلة واحدة.', en: 'Fifty services. One journey.' },
+  tagline: { ar: 'من الأرض إلى التشغيل، وخطوتك التالية واضحة دائمًا.', en: 'From land to operation, with your next step always clear.' },
+  language: { ar: 'اللغة', en: 'Language' },
+  signIn: { ar: 'الدخول عبر «توثيق»', en: 'Sign in with Tawtheeq' },
+  browse: { ar: 'تصفّح دون دخول', en: 'Browse without signing in' },
+  verify: { ar: 'تحقّق من وثيقة', en: 'Verify a document' },
+  close: { ar: 'العودة إلى التطبيق', en: 'Back to the app' },
+  finePrint: {
+    ar: 'نسخة تجريبية للعرض. جميع البيانات توضيحية، ولا يغادر جهازك شيء مما تُدخله.',
+    en: 'A prototype for demonstration. All data is illustrative, and nothing you enter leaves your device.',
+  },
+
+  sheetTitle: { ar: 'دخول تجريبي', en: 'Demo sign-in' },
+  sheetBody: {
+    ar: 'في الخدمة الفعلية تدخل مرة واحدة عبر نظام التوثيق الوطني، وتصل بيانات شركتك من تلقاء نفسها. هذه النسخة تحاكي ذلك ولا تطلب منك شيئًا.',
+    en: 'In the real service you sign in once with the National Authentication System and your company data arrives by itself. This prototype simulates that and asks you for nothing.',
+  },
+  chooseProfile: { ar: 'اختر ملف العرض', en: 'Choose a demo profile' },
+  prospect: { ar: 'مستثمر جديد', en: 'New investor' },
+  prospectLine: { ar: 'أبحث عن أرض لمشروعي', en: 'I am looking for land for my project' },
+  tenant: { ar: 'مستثمر قائم', en: 'Established investor' },
+  tenantLine: { ar: 'لديّ قطع ومنشأة قيد الإنشاء', en: 'I have plots and a facility under construction' },
+  current: { ar: 'الملف الحالي', en: 'Current profile' },
+  consent: {
+    ar: 'بالمتابعة توافق على جلب بيانات شركتك من نظام التوثيق الوطني ومنصة تبادل البيانات الحكومية لاستخدامها في خدمات مناطق.',
+    en: 'By continuing you agree that your company data is fetched from the National Authentication System and the Government Data Exchange for use in Manateq services.',
+  },
+  enter: { ar: 'دخول', en: 'Sign in' },
+  fetching: { ar: 'جارٍ جلب بيانات شركتك…', en: 'Fetching your company data…' },
+  identity: { ar: 'الهوية', en: 'Identity' },
+  identitySource: { ar: 'نظام التوثيق الوطني', en: 'National Authentication System' },
+  registry: { ar: 'السجل التجاري', en: 'Commercial registration' },
+  registrySource: { ar: 'منصة تبادل البيانات الحكومية', en: 'Government Data Exchange' },
+  waiting: { ar: 'جارٍ', en: 'In progress' },
+  fetched: { ar: 'تم', en: 'Done' },
+  ready: { ar: 'وصلت بيانات شركتك', en: 'Your company data has arrived' },
+} as const;

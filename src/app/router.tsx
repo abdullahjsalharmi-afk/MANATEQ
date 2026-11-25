@@ -104,12 +104,29 @@ function prefersReducedMotion(): boolean {
   return hasWindow && typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-type TransitionDocument = Document & { startViewTransition?: (update: () => void) => unknown };
+interface ViewTransitionLike {
+  ready?: Promise<unknown>;
+  finished?: Promise<unknown>;
+}
+type TransitionDocument = Document & { startViewTransition?: (update: () => void) => ViewTransitionLike | undefined };
+
+/**
+ * The location a transition is on its way to. A view transition applies the change a moment after it starts,
+ * so between the two the address bar is ahead of `current`. Going back fires both `popstate` and `hashchange`;
+ * without this the second event would start the same change again and cut the first transition short.
+ */
+let pending: RouteLocation | null = null;
+
+function latest(): RouteLocation {
+  return pending ?? current;
+}
 
 function commit(next: RouteLocation): void {
   if (hasWindow) scrollByIdx.set(current.idx, window.scrollY);
+  pending = next;
   const apply = () => {
     current = next;
+    if (pending === next) pending = null;
     flushSync(() => {
       for (const listener of [...listeners]) listener();
     });
@@ -120,6 +137,7 @@ function commit(next: RouteLocation): void {
   };
   if (!hasWindow) {
     current = next;
+    pending = null;
     for (const listener of [...listeners]) listener();
     return;
   }
@@ -127,7 +145,10 @@ function commit(next: RouteLocation): void {
   const doc = document as TransitionDocument;
   if (typeof doc.startViewTransition === 'function' && !prefersReducedMotion() && next.nav !== 'replace') {
     try {
-      doc.startViewTransition(apply);
+      const transition = doc.startViewTransition(apply);
+      // A newer navigation may cut this transition short; that is expected and not an error.
+      transition?.ready?.catch(() => undefined);
+      transition?.finished?.catch(() => undefined);
       return;
     } catch {
       /* fall through to an instant change */
@@ -139,8 +160,9 @@ function commit(next: RouteLocation): void {
 export function navigate(to: string, options: NavigateOptions = {}): void {
   const { path, query } = parseTarget(to);
   const target = buildTarget(path, query);
-  if (target === buildTarget(current.path, current.query)) return;
-  const idx = options.replace ? current.idx : current.idx + 1;
+  const from = latest();
+  if (target === buildTarget(from.path, from.query)) return;
+  const idx = options.replace ? from.idx : from.idx + 1;
   if (historyWorks) {
     try {
       if (options.replace) window.history.replaceState({ idx }, '', '#' + target);
@@ -154,7 +176,7 @@ export function navigate(to: string, options: NavigateOptions = {}): void {
 
 /** Goes back one screen; when there is nowhere to go back to, opens `fallback` instead. */
 export function back(fallback = '/'): void {
-  if (current.idx > 0 && historyWorks) {
+  if (latest().idx > 0 && historyWorks) {
     window.history.back();
     return;
   }
@@ -172,11 +194,12 @@ export function back(fallback = '/'): void {
 function onExternalChange(): void {
   const { path, query } = parseTarget(window.location.hash);
   const known = readIdx();
+  const from = latest();
   let idx: number;
   let nav: NavKind;
   if (known === null) {
     // The address was changed by hand or by a plain link: treat it as a forward step.
-    idx = current.idx + 1;
+    idx = from.idx + 1;
     nav = 'push';
     try {
       window.history.replaceState({ idx }, '');
@@ -185,9 +208,9 @@ function onExternalChange(): void {
     }
   } else {
     idx = known;
-    nav = known < current.idx ? 'pop' : 'push';
+    nav = known < from.idx ? 'pop' : 'push';
   }
-  if (buildTarget(path, query) === buildTarget(current.path, current.query) && idx === current.idx) return;
+  if (buildTarget(path, query) === buildTarget(from.path, from.query) && idx === from.idx) return;
   commit({ path, query, idx, nav });
 }
 

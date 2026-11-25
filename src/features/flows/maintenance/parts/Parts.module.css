@@ -1,0 +1,94 @@
+/* Shared pieces of the in-zone flows. Layout only around design-system components. */
+
+.option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+  min-height: 112px;
+  height: 100%;
+}
+
+.optionLarge {
+  min-height: 136px;
+}
+
+.optionIcon {
+  display: inline-flex;
+  color: var(--ink);
+}
+
+.optionIconOn {
+  color: var(--accent-ink);
+}
+
+.optionText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  text-align: start;
+}
+
+.optionLabel {
+  font-size: var(--t-body);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+}
+
+.optionDetail {
+  font-size: var(--t-callout);
+  line-height: var(--lh-body);
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+.question {
+  margin-block: var(--s-2) var(--s-6);
+}
+
+.questionText {
+  font-weight: var(--w-strong);
+}
+
+.questionHint {
+  margin-block-start: var(--s-2);
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+.check {
+  display: inline-flex;
+  color: var(--accent-ink);
+}
+
+.tileBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-6);
+  margin-block-start: var(--s-6);
+}
+
+.ref {
+  margin: 0;
+}
+
+.capsule {
+  display: inline-block;
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-control);
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  font-size: var(--t-callout);
+  font-weight: var(--w-strong);
+  color: var(--ink-2);
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding-block: var(--s-6);
+}

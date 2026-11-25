@@ -1,0 +1,21 @@
+.icon {
+  color: var(--ink-3);
+}
+
+.iconAction {
+  color: var(--accent-ink);
+}
+
+/* Unread: the title in 600 and a dot, so it never rests on colour alone. */
+.unreadTitle {
+  font-weight: var(--w-strong);
+}
+
+.dot {
+  display: block;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  flex: none;
+}

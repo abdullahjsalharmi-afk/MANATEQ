@@ -1,0 +1,90 @@
+/** Home: every word the screen shows that does not come from the data. */
+export const strings = {
+  home: { ar: 'الرئيسية', en: 'Home' },
+  morning: { ar: 'صباح الخير', en: 'Good morning' },
+  afternoon: { ar: 'مساء الخير', en: 'Good afternoon' },
+  evening: { ar: 'مساء الخير', en: 'Good evening' },
+  search: { ar: 'ابحث', en: 'Search' },
+  notifications: { ar: 'الإشعارات', en: 'Notifications' },
+  notificationsUnread: { ar: 'الإشعارات، {n} غير مقروءة', en: 'Notifications, {n} unread' },
+  loading: { ar: 'نجهّز صفحتك', en: 'Preparing your page' },
+
+  /* the hero */
+  nextEyebrow: { ar: 'خطوتك التالية', en: 'Your next step' },
+  moreOne: { ar: 'وإجراء آخر', en: 'and 1 more' },
+  moreTwo: { ar: 'وإجراءان آخران', en: 'and 2 more' },
+  moreFew: { ar: 'و{n} إجراءات أخرى', en: 'and {n} more' },
+  moreMany: { ar: 'و{n} إجراءً آخر', en: 'and {n} more' },
+  allStepsTitle: { ar: 'ما ينتظرك', en: 'Waiting for you' },
+  allStepsBody: { ar: 'الأقرب موعدًا أولًا.', en: 'The nearest deadline first.' },
+  clearEyebrow: { ar: 'كل شيء في موعده', en: 'All on track' },
+  clearTitle: { ar: 'لا شيء مطلوب منك الآن', en: 'Nothing needs you now' },
+  clearTagline: { ar: 'سنخبرك حين يحتاج أي طلب إلى إجراء منك.', en: 'We will tell you when a request needs you.' },
+  clearCta: { ar: 'تصفّح الخدمات', en: 'Browse services' },
+
+  /* guest hero */
+  guestEyebrow: { ar: 'مناطق ون', en: 'Manateq One' },
+  guestTitle: { ar: 'خمسون خدمة. رحلة واحدة.', en: 'Fifty services. One journey.' },
+  guestContext: { ar: 'اعرف في دقائق أين يناسب نشاطك، وكم تكلّفك الأرض.', en: 'See in minutes where your activity fits and what the land costs.' },
+  guestCta: { ar: 'افحص أهلية نشاطك', en: 'Check your activity' },
+  guestDemo: { ar: 'الدخول التجريبي', en: 'Demo sign-in' },
+
+  /* journey */
+  journeyTitle: { ar: 'رحلتك', en: 'Your journey' },
+  journeyHint: { ar: 'اختر مرحلة لترى ما تم وما بقي.', en: 'Choose a stage to see what is done and what is left.' },
+  plotCaption: { ar: 'القطعة {plot} · {station}', en: 'Plot {plot} · {station}' },
+  stationNow: { ar: 'أنت هنا', en: 'You are here' },
+  stationDone: { ar: 'اكتملت', en: 'Complete' },
+  stationLater: { ar: 'لاحقًا', en: 'Later' },
+  itemDone: { ar: 'تم', en: 'Done' },
+  itemCurrent: { ar: 'جارٍ الآن', en: 'In progress' },
+  itemStart: { ar: 'يمكنك البدء الآن', en: 'You can start now' },
+  itemUpcoming: { ar: 'لم يبدأ بعد', en: 'Not started yet' },
+  stationSheetBody: { ar: 'القطعة {plot}', en: 'Plot {plot}' },
+
+  /* requests */
+  requestsTitle: { ar: 'طلبات جارية', en: 'Open requests' },
+  seeAllCount: { ar: 'عرض الكل ({n})', en: 'See all ({n})' },
+  seeAll: { ar: 'عرض الكل', en: 'See all' },
+
+  /* dues */
+  duesTitle: { ar: 'المستحقات', en: 'Payments due' },
+  duesFor: { ar: 'تستحق في {date}', en: 'Due {date}' },
+  duesOverdue: { ar: 'متأخرة منذ {date}', en: 'Overdue since {date}' },
+  duesMore: { ar: 'ومستحقات أخرى بقيمة {amount}', en: 'and {amount} more outstanding' },
+  pay: { ar: 'ادفع', en: 'Pay' },
+  payTitle: { ar: 'ادفع الفاتورة', en: 'Pay the invoice' },
+  lineInvoice: { ar: 'الفاتورة', en: 'Invoice' },
+  lineFor: { ar: 'البيان', en: 'For' },
+  lineDue: { ar: 'تاريخ الاستحقاق', en: 'Due date' },
+  paid: { ar: 'تم الدفع. الإيصال في محفظتك.', en: 'Paid. The receipt is in your wallet.' },
+  viewReceipt: { ar: 'اعرض', en: 'View' },
+  invoicesLink: { ar: 'الفواتير', en: 'Invoices' },
+
+  /* shortcuts */
+  shortcutsTitle: { ar: 'اختصارات', en: 'Shortcuts' },
+  scFault: { ar: 'بلّغ عن عطل', en: 'Report a fault' },
+  scFaultSub: { ar: 'صوّره وأرسله إلى الفريق الميداني', en: 'Photograph it, send it to the field team' },
+  scPass: { ar: 'تصريح دخول', en: 'Gate pass' },
+  scPassSub: { ar: 'لزائر أو عامل أو مركبة', en: 'For a visitor, worker or vehicle' },
+  scStatement: { ar: 'كشف حساب أو شهادة', en: 'Statement or certificate' },
+  scStatementSub: { ar: 'يصل إلى محفظتك', en: 'Delivered to your wallet' },
+  scHelp: { ar: 'مساعدة أو موعد', en: 'Help or an appointment' },
+  scHelpSub: { ar: 'مركز خدمات الأعمال', en: 'Business Services Center' },
+
+  /* discover: guest and prospect */
+  howTitle: { ar: 'كيف تسير الرحلة', en: 'How the journey goes' },
+  howTagline: { ar: 'أربع مراحل، من أول سؤال إلى أول يوم تشغيل.', en: 'Four stages, from the first question to the first day of operation.' },
+  howJoin: { ar: 'افحص الأهلية وقدّم طلب الأرض.', en: 'Check eligibility and apply for land.' },
+  howContract: { ar: 'اقبل العرض، ووقّع العقد، واستلم القطعة.', en: 'Accept the offer, sign the lease, receive the plot.' },
+  howBuild: { ar: 'اعتمد التصميم، واحصل على الرخصة، وابنِ.', en: 'Approve the design, get the permit, build.' },
+  howOperate: { ar: 'شغّل منشأتك واطلب ما تحتاجه من خدمات.', en: 'Run your facility and request what you need.' },
+  solutionsTitle: { ar: 'الحلول الخمسة', en: 'The five solutions' },
+  solutionsHint: { ar: 'أسعار منشورة لكل متر مربع في السنة.', en: 'Published prices per square metre a year.' },
+  solutionsAll: { ar: 'قارن الحلول', en: 'Compare' },
+  zonesEyebrow: { ar: '{n} منطقة', en: '{n} zones' },
+  zonesTitle: { ar: 'المناطق على الخريطة', en: 'The zones on the map' },
+  zonesTagline: { ar: 'مناطق صناعية ولوجستية ومجمّعات تخزين في أنحاء قطر.', en: 'Industrial and logistics zones and warehousing parks across Qatar.' },
+  zonesCta: { ar: 'استكشف المناطق', en: 'Explore the zones' },
+  zonesMap: { ar: 'خريطة المناطق، اختر منطقة لتفتح صفحتها', en: 'Map of the zones, choose one to open its page' },
+} as const;

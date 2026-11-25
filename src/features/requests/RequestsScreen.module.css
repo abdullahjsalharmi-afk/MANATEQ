@@ -1,0 +1,24 @@
+.filter {
+  margin-block: var(--s-4) var(--s-6);
+}
+
+.grid {
+  align-items: start;
+}
+
+.loading {
+  margin-block-start: var(--s-2);
+}
+
+.card {
+  overflow: hidden;
+}
+
+/* A quiet footnote of the card: where this request sits in its chain. */
+.partOf {
+  margin: 0;
+  padding-block: var(--s-3) var(--s-5);
+  padding-inline: var(--s-5);
+  border-block-start: 1px solid var(--line-soft);
+  color: var(--ink-3);
+}

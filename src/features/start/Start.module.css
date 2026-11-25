@@ -1,0 +1,167 @@
+/* The "start a service" flow. Layout and a few text roles only; every component styles itself. */
+
+/* Page head: the step, the question, one line. */
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding-block: var(--s-6) var(--s-8);
+}
+
+.step {
+  margin: 0;
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--t-title);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.heading:focus {
+  outline: none;
+}
+
+.heading:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--r-tile);
+}
+
+.lead {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+/* What we already know. */
+.known {
+  margin-block-end: var(--s-2);
+}
+
+.companyCard {
+  overflow: hidden;
+}
+
+.companyHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-4);
+  padding: var(--s-6) var(--s-6) var(--s-2);
+}
+
+.companyName {
+  margin: 0;
+  font-size: var(--t-heading);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  color: var(--ink);
+}
+
+.verified {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin: 0;
+  font-size: var(--t-callout);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-callout);
+  color: var(--gold);
+}
+
+/* Review. */
+.answer {
+  overflow-wrap: anywhere;
+}
+
+.missing {
+  color: var(--ink-3);
+}
+
+.cardText {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.indicative {
+  margin-block-start: var(--s-3);
+}
+
+.consent {
+  padding-block: var(--s-8) var(--s-4);
+}
+
+/* The running context of the action bar. */
+.saved {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  color: var(--ink-3);
+}
+
+/* Received. */
+.check {
+  color: var(--accent-ink);
+}
+
+.refBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  margin-block-start: var(--s-6);
+}
+
+.refLabel {
+  margin: 0;
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  color: var(--ink-3);
+}
+
+.fine {
+  margin: var(--s-3) 0 0;
+  font-size: var(--t-foot);
+  line-height: var(--lh-foot);
+  color: var(--ink-3);
+}
+
+.homeLink {
+  display: flex;
+  justify-content: center;
+  padding-block-start: var(--s-6);
+}
+
+/* Leaving. */
+.sheetActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+/* Loading. */
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+  padding-block: var(--s-6);
+}

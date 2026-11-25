@@ -1,0 +1,174 @@
+/* Home: layout only. Every surface comes from the design system; these rules place and size text. */
+
+/* Open requests beside what is due, from wide screens up. */
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: var(--s-8);
+}
+
+@media (min-width: 1069px) {
+  .pair {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+  .pair > :only-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Dues */
+.dues {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.duesFor {
+  font-size: var(--t-callout);
+  line-height: var(--lh-body);
+  color: var(--ink-2);
+}
+
+.duesAmount {
+  margin-block: var(--s-1);
+}
+
+.duesDate,
+.duesLate,
+.duesRest {
+  font-size: var(--t-callout);
+  line-height: var(--lh-body);
+  color: var(--ink-3);
+}
+
+.duesLate {
+  color: var(--bad);
+  font-weight: var(--w-strong);
+}
+
+.duesAction {
+  margin-block-start: var(--s-3);
+}
+
+/* Shortcuts */
+.shortcut {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-1);
+  height: 100%;
+}
+
+.shortcutIcon {
+  color: var(--accent-ink);
+  margin-block-end: var(--s-3);
+}
+
+.shortcutTitle {
+  font-size: var(--t-body);
+  line-height: var(--lh-heading);
+  font-weight: var(--w-strong);
+  color: var(--ink);
+}
+
+.shortcutSub {
+  font-size: var(--t-callout);
+  line-height: var(--lh-body);
+  color: var(--ink-3);
+}
+
+/* Journey sheet */
+.sheetRibbon {
+  margin-block-end: var(--s-6);
+}
+
+.itemDone {
+  color: var(--ink);
+}
+
+.itemCurrent {
+  color: var(--accent-ink);
+}
+
+.itemUpcoming {
+  color: var(--ink-3);
+}
+
+/* How the journey goes: four captions under the wide render. */
+.how {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-8) var(--s-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+}
+
+@media (min-width: 735px) {
+  .how {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.howItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.howNum {
+  font-size: var(--t-callout);
+  line-height: var(--lh-body);
+  font-weight: var(--w-strong);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.howName {
+  font-size: var(--t-body);
+  line-height: var(--lh-heading);
+  font-weight: var(--w-strong);
+  color: var(--ink);
+}
+
+.howLine {
+  font-size: var(--t-callout);
+  line-height: var(--lh-body);
+  color: var(--ink-3);
+  max-inline-size: 24ch;
+}
+
+/* Solutions */
+.solution {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.solutionName {
+  font-size: var(--t-body);
+  line-height: var(--lh-heading);
+  font-weight: var(--w-strong);
+  color: var(--ink);
+}
+
+.solutionPrice {
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--ink);
+}
+
+.solutionTerm {
+  font-size: var(--t-callout);
+  line-height: var(--lh-body);
+  color: var(--ink-3);
+}
+
+/* The map on the dark tile */
+.map {
+  inline-size: 100%;
+  max-inline-size: 560px;
+  margin-inline: auto;
+}

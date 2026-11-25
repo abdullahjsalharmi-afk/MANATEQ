@@ -1,6 +1,8 @@
-// CONTRACT STUB — the services feature replaces the body, not the props.
-import { Row } from '@/design/core';
+import { Pill, Row, StandardBadge } from '@/design/core';
+import { useLang, useT } from '@/app/i18n';
 import type { ServiceSummary } from '@/data/types';
+import { strings } from './strings';
+import styles from './ServiceRow.module.css';
 
 export interface ServiceRowProps {
   service: ServiceSummary;
@@ -8,5 +10,19 @@ export interface ServiceRowProps {
 
 /** One service in a list: plain label, official name, standard chip; a quiet "automatic" tag when the investor cannot start it. */
 export function ServiceRow({ service }: ServiceRowProps) {
-  return <Row to={`/services/${service.id}`} title={service.label.ar} subtitle={service.name.ar} />;
+  const t = useT(strings);
+  const { pick } = useLang();
+  return (
+    <Row
+      to={`/services/${service.id}`}
+      title={pick(service.label)}
+      subtitle={pick(service.name)}
+      trailing={
+        <span className={styles.trailing}>
+          <StandardBadge standard={service.standard} variant="compact" />
+          {service.startable ? null : <Pill>{t('automatic')}</Pill>}
+        </span>
+      }
+    />
+  );
 }

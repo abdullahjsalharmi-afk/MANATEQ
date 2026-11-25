@@ -1,0 +1,60 @@
+/* The welcome: one maroon tile filling the viewport. Layout only; the tile and its tokens do the rest. */
+.tile {
+  padding-block: var(--s-10) var(--s-8);
+}
+
+.name {
+  font-size: var(--t-heading);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+}
+
+/* Phones: the two pills stacked at one width. From 640 px: side by side. */
+.actions {
+  display: grid;
+  gap: var(--s-3);
+  width: min(100%, 340px);
+  margin-inline: auto;
+}
+
+/* The render rests on the tile: the column on phones, about 55% of the width on wide screens. */
+.render {
+  width: min(100%, 560px);
+  margin-inline: auto;
+}
+
+.foot {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  margin-block-start: var(--s-6);
+}
+
+.finePrint {
+  max-width: 34em;
+  font-size: var(--t-foot);
+  line-height: var(--lh-foot);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+@media (min-width: 640px) {
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: auto;
+  }
+}
+
+@media (min-width: 1069px) {
+  .tile {
+    padding-block: var(--s-12) var(--s-10);
+  }
+
+  .render {
+    width: min(100%, 55vw);
+  }
+}

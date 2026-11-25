@@ -1,0 +1,8 @@
+/* The standard chip and, for automatic services, the quiet tag under it, aligned to the inline end. */
+.trailing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-1);
+  white-space: nowrap;
+}

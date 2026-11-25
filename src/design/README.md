@@ -1,7 +1,8 @@
 # Building a screen with the core primitives
 
-Import everything from `@/design/core`. Read SPEC 3 and 4.0 first: the language is Apple's, the colours Manateq's.
-Live reference: `#/gallery`, `#/gallery?page=welcome` (a whole maroon screen), `#/gallery?page=flow` (a flow step).
+Import everything from `@/design/core`: these primitives, and with them the fields, sheets and feedback of
+`forms` and the rings, timelines, document cards and map of `signature`. Read SPEC 3 and 4.0 first. Live reference:
+`#/gallery`, `#/gallery?page=welcome` (a whole maroon screen) and `#/gallery?page=flow` (a step of a flow).
 
 ## The anatomy
 
@@ -116,5 +117,4 @@ surface you build yourself (`background: var(--tile-1)`).
   (each sets size, weight, leading and tracking together). Wrap in `<strong>` for 600.
 - Radii: 0, `--r-tile`, `--r-control`, `--r-card`, `--r-pill`. Logical properties only, never left or right.
 - A render rests on a tile or heads a card: never boxed, cropped, tinted or rotated; one large one per screenful.
-- What you pin to the bottom must clear `var(--chrome-bottom)`; sticky tops use `var(--chrome-top)`. Check 390 × 844
-  and 1280 × 800, Arabic and English, light and dark, and the largest text size.
+- What you pin to the bottom must clear `var(--chrome-bottom)`; sticky tops use `var(--chrome-top)`.

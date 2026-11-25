@@ -1,0 +1,120 @@
+/* D3 emergency report: sober, no decoration. The only colour beyond ink is the danger tone of the call. */
+
+.life {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin-block-start: var(--s-4);
+}
+
+.lifeHint {
+  margin-block-end: var(--s-4);
+  color: var(--ink-3);
+}
+
+/* The 999 call, drawn like the design system's danger block pill (it has to be a tel: link). */
+.call {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: 50px;
+  padding: var(--s-3) var(--s-6);
+  border-radius: var(--r-pill);
+  background: var(--bad);
+  color: var(--on-accent);
+  font-size: var(--t-body);
+  font-weight: var(--w-strong);
+  text-decoration: none;
+  transition: transform var(--d-1) var(--ease);
+}
+
+.call:active {
+  transform: scale(0.985);
+}
+
+.call:focus-visible,
+.callQuiet:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (min-width: 735px) {
+  .call {
+    max-width: 420px;
+  }
+}
+
+.callQuiet {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 44px;
+  color: var(--bad);
+  font-size: var(--t-body);
+  text-decoration: none;
+}
+
+.types {
+  margin-block-start: var(--s-10);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+  margin-block-start: var(--s-8);
+}
+
+.context {
+  color: var(--ink-2);
+}
+
+.todo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.todoItem {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-4);
+  text-wrap: pretty;
+}
+
+.todoNumber {
+  flex: none;
+  min-width: 1.25em;
+  font-weight: var(--w-strong);
+  color: var(--ink-3);
+}
+
+.fine {
+  margin-block-start: var(--s-3);
+  font-size: var(--t-foot);
+  line-height: var(--lh-body);
+  color: var(--ink-3);
+}
+
+.worse {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-3);
+  margin-block-start: var(--s-8);
+}
+
+.worseText {
+  color: var(--ink-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .call {
+    transition: none;
+  }
+}

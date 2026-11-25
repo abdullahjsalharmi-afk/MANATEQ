@@ -1,0 +1,108 @@
+/* The zone page. Layout only: surfaces and colours come from the components and the tokens. */
+
+.facts {
+  margin-block-start: var(--s-2);
+}
+
+.muted {
+  color: var(--ink-3);
+}
+
+.solution {
+  display: grid;
+  align-content: start;
+  gap: var(--s-2);
+}
+
+.price {
+  margin-block: var(--s-1) var(--s-1);
+}
+
+.cardHead {
+  margin-block-end: var(--s-3);
+}
+
+.checks {
+  display: grid;
+  gap: var(--s-2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  color: var(--ink-2);
+}
+
+.check > :first-child {
+  flex: none;
+  margin-block-start: 2px;
+  color: var(--ink-3);
+}
+
+.distances {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-5) var(--s-4);
+}
+
+.plotsSection {
+  margin-block-start: var(--s-8);
+  scroll-margin-block-start: calc(var(--chrome-top, 0px) + var(--s-4));
+}
+
+.plots {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.plotCard {
+  display: grid;
+  align-content: start;
+  gap: var(--s-2);
+}
+
+.apply {
+  justify-self: start;
+  margin-block-start: var(--s-3);
+}
+
+.notes {
+  padding-block: var(--s-8) var(--s-4);
+}
+
+/* The idle hint repeats the grid's own line on phones; it earns its place only beside the grid. */
+@media (max-width: 1068.98px) {
+  .wideOnly {
+    display: none;
+  }
+}
+
+@media (min-width: 1069px) {
+  .plots {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: var(--s-6);
+    align-items: start;
+  }
+}
+
+/* One card alone spans the row, and its list flows into columns (doubled class: it must outrank the grid's own columns). */
+.single.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 735px) {
+  .single .checks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--s-6);
+  }
+}
+
+@media (min-width: 1069px) {
+  .single .checks {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

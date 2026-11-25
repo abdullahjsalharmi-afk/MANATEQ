@@ -1,0 +1,268 @@
+/* Layout of the wallet screens. Components keep their own look; this file only places them. */
+
+.controls {
+  margin-block-start: var(--s-5);
+  display: flex;
+  justify-content: center;
+}
+
+.controls > * {
+  inline-size: 100%;
+  max-inline-size: 420px;
+}
+
+.filters {
+  margin-block-start: var(--s-6);
+}
+
+.more,
+.cta {
+  margin-block: var(--s-6) 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* ── The document page ── */
+
+.docLayout {
+  display: grid;
+  gap: var(--s-8);
+  margin-block-start: var(--s-5);
+}
+
+@media (min-width: 1069px) {
+  .docLayout {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    align-items: start;
+  }
+
+  .aside {
+    position: sticky;
+    inset-block-start: calc(var(--chrome-top) + var(--s-6));
+  }
+}
+
+.paperWrap {
+  inline-size: 100%;
+  max-inline-size: 692px;
+  margin-inline: auto;
+}
+
+.actions {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+}
+
+.actions > :first-child {
+  inline-size: 100%;
+  max-inline-size: 420px;
+}
+
+.secondary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-3);
+}
+
+.asideList {
+  margin-block-start: var(--s-8);
+}
+
+.fine {
+  margin-block-start: var(--s-4);
+  color: var(--ink-3);
+  font-size: var(--t-foot);
+  line-height: var(--lh-body);
+  text-align: center;
+  text-wrap: pretty;
+}
+
+/* ── The pass page ── */
+
+.passWrap {
+  inline-size: 100%;
+  max-inline-size: 560px;
+  margin-inline: auto;
+  margin-block-start: var(--s-5);
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  margin-block-start: var(--s-5);
+  color: var(--ink-3);
+  font-size: var(--t-callout);
+  text-align: center;
+}
+
+.passActions {
+  display: flex;
+  justify-content: center;
+  margin-block-start: var(--s-8);
+}
+
+/* ── The verification sheet and page ── */
+
+.status {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-4);
+  padding-block: var(--s-6);
+  text-align: center;
+}
+
+.statusTitle {
+  font-size: var(--t-heading);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  text-wrap: balance;
+}
+
+.okMark {
+  color: var(--gold);
+}
+
+.neutralMark {
+  color: var(--ink-3);
+}
+
+.spinner {
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: var(--r-pill);
+  border: 2px solid var(--line-strong);
+  border-block-start-color: var(--accent);
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2400ms;
+  }
+}
+
+.facts {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  text-align: start;
+  inline-size: 100%;
+}
+
+.fact {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding-block: var(--s-3);
+  border-block-end: 1px solid var(--line-soft);
+}
+
+.fact:last-child {
+  border-block-end: 0;
+}
+
+.fact dt {
+  flex: none;
+  max-inline-size: 45%;
+  color: var(--ink-3);
+  font-size: var(--t-callout);
+}
+
+.fact dd {
+  min-inline-size: 0;
+  margin: 0;
+  text-align: end;
+  font-size: var(--t-callout);
+  color: var(--ink);
+}
+
+.note {
+  margin-block-start: var(--s-4);
+  color: var(--ink-3);
+  font-size: var(--t-foot);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
+}
+
+.form {
+  display: grid;
+  gap: var(--s-5);
+}
+
+.form > button {
+  justify-self: start;
+}
+
+.verifyColumn {
+  inline-size: 100%;
+  max-inline-size: 560px;
+  margin-inline: auto;
+  text-align: start;
+}
+
+.result {
+  margin-block-start: var(--s-5);
+}
+
+.resultHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.resultTitle {
+  font-size: var(--t-heading);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+}
+
+.resultBody {
+  margin-block-start: var(--s-2);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.resultActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  margin-block-start: var(--s-5);
+}
+
+.icon {
+  flex: none;
+  margin-block-start: 2px;
+}
+
+/* ── Print: the document alone ── */
+
+@media print {
+  :global(body) * {
+    visibility: hidden;
+  }
+
+  .printable,
+  .printable * {
+    visibility: visible;
+  }
+
+  .printable {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: 100%;
+    max-inline-size: none;
+  }
+}

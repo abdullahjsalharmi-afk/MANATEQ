@@ -201,8 +201,10 @@
   --float-shadow: 0 0 0 0.5px rgba(244, 242, 239, 0.14), 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
-/* A near-black tile inside a light page: set data-tone="dark" on the tile and give it background var(--tile-1). */
+/* A near-black tile inside a light page: set data-tone="dark" on the tile and give it background var(--tile-1).
+   Inside it --bg is the tile itself, so anything that paints "the surface behind me" stays right. */
 [data-tone='dark'] {
+  --bg: #231f20;
   color: var(--ink);
 }
 
@@ -210,6 +212,7 @@
    Use it for one hero moment; do not place status pills or rings on it. */
 [data-tone='brand'] {
   color-scheme: dark;
+  --bg: #862633;
   --surface: rgba(255, 255, 255, 0.1);
   --surface-2: rgba(255, 255, 255, 0.14);
   --sunken: rgba(0, 0, 0, 0.18);

@@ -1,0 +1,285 @@
+/* The promise, set as a pull-quote under the headline. */
+.promise {
+  display: block;
+  max-width: 30em;
+  margin-inline: auto;
+  color: var(--ink-2);
+  text-wrap: balance;
+}
+
+/* "How this service starts": a glyph and three short paragraphs. */
+.starts {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.startsIcon {
+  flex: none;
+  margin-block-start: 2px;
+  color: var(--ink-3);
+}
+
+.startsText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.startsLead {
+  font-weight: var(--w-strong);
+  color: var(--ink);
+}
+
+/* Two sections side by side from 835 px; each sits in its own wrapper so both start on the same line. */
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 var(--s-6);
+}
+
+.pair > div {
+  display: flex;
+  flex-direction: column;
+  margin-block-start: var(--s-8);
+}
+
+.pair > div > section {
+  flex: 1;
+}
+
+.pair > div > section > :last-child {
+  flex: 1;
+}
+
+@media (min-width: 835px) {
+  .pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Lines with a leading glyph, separated by inset hairlines. */
+.items,
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item,
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-5);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.item + .item,
+.step + .step {
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.item:first-child,
+.step:first-child {
+  padding-block-start: var(--s-4);
+}
+
+.item:last-child,
+.step:last-child {
+  padding-block-end: var(--s-4);
+}
+
+.itemIcon {
+  flex: none;
+  margin-block-start: 3px;
+  color: var(--ink-3);
+}
+
+.stepNumber {
+  flex: none;
+  min-width: 1.25em;
+  font-weight: var(--w-strong);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.none,
+.noneText {
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--ink-2);
+}
+
+.none {
+  padding: var(--s-4) var(--s-5);
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  margin-block-start: var(--s-8);
+}
+
+/* The disclosures: native <details>, a calm 52 px row each, separated by inset hairlines. */
+.details + .details {
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: 52px;
+  padding: var(--s-3) var(--s-5);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+  border-radius: var(--r-card);
+}
+
+.chevron {
+  flex: none;
+  color: var(--ink-3);
+  transition: transform var(--d-2) var(--ease);
+}
+
+.details[open] .chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: 0 var(--s-5) var(--s-5);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.body > * {
+  min-width: 0;
+}
+
+.lead {
+  color: var(--ink-2);
+}
+
+.flow,
+.bullets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding-inline-start: var(--s-5);
+}
+
+.flow {
+  list-style: decimal;
+}
+
+.bullets {
+  list-style: disc;
+}
+
+.flow li::marker,
+.bullets li::marker {
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.subhead {
+  margin-block-start: var(--s-3);
+  font-size: var(--t-callout);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink);
+}
+
+.platforms {
+  align-self: stretch;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.platform {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: 44px;
+  padding-block: var(--s-2);
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink);
+}
+
+.platform + .platform {
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.platform > :last-child {
+  flex: none;
+}
+
+.phase {
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+}
+
+.tag {
+  display: inline-block;
+  padding-inline: var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--sunken);
+  color: var(--ink-2);
+  font-size: var(--t-foot);
+  line-height: var(--lh-foot);
+}
+
+.example {
+  color: var(--ink);
+}
+
+.disclosures :global(ul) {
+  min-width: 0;
+}

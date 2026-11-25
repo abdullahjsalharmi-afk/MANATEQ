@@ -1,4 +1,8 @@
-/** Core primitives: the pieces every screen is made of. See README.md in this folder. */
+/**
+ * The design system, from one place. First the core primitives: the pieces every screen is made of (see
+ * README.md in this folder). Then, re-exported so that a screen needs a single import, the two other barrels:
+ * `forms` (fields, feedback, sheets) and `signature` (status, timeline, journey, documents, map).
+ */
 export { cx } from './cx';
 export { Icon, type IconProps } from './Icon/Icon';
 export { Button, IconButton, type ButtonProps, type IconButtonProps, type ButtonVariant, type ButtonSize } from './Button/Button';
@@ -19,3 +23,5 @@ export { ToastHost, toast, dismissToast, type ToastOptions } from './Toast/Toast
 export { Mark, type MarkProps } from './Mark/Mark';
 export { Render, type RenderProps } from './Render/Render';
 export { RENDERS, RENDER_NAMES, type RenderName, type RenderAsset } from './Render/renders';
+export * from './forms';
+export * from './signature';

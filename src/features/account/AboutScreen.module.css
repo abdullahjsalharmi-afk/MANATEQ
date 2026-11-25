@@ -1,0 +1,148 @@
+/* The idea, under the journey render: two sentences, centred like everything in a tile. */
+.idea {
+  max-width: 36em;
+  margin-inline: auto;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* A section a link can open at: it clears the bars when scrolled into view. */
+.anchor {
+  scroll-margin-block-start: calc(var(--chrome-top, 0px) + var(--s-4));
+}
+
+/* The six rules and the ten principles: calm numbered rows with inset dividers. */
+.rules,
+.principles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rule,
+.principle {
+  display: grid;
+  grid-template-columns: 2.25rem 1fr;
+  gap: var(--s-3);
+  padding-block: var(--s-4);
+  padding-inline-end: var(--s-5);
+  margin-inline-start: var(--s-5);
+}
+
+.rule + .rule,
+.principle + .principle {
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.ruleNumber {
+  font-size: var(--t-heading);
+  font-weight: var(--w-light);
+  line-height: var(--lh-heading);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.ruleTitle {
+  font-size: var(--t-body);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+}
+
+.ruleText {
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.prose {
+  display: grid;
+  justify-items: start;
+  gap: var(--s-3);
+  text-wrap: pretty;
+}
+
+.quiet {
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+/* Two short sections side by side on wide screens; their own heads keep the rhythm. */
+.pair {
+  align-items: stretch;
+}
+
+.pair > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.pair > div > * {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.pair > div > * > :last-child {
+  flex: 1;
+}
+
+.disclosure .principles {
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  min-height: var(--tap);
+  padding-block: var(--s-4);
+  padding-inline: var(--s-5);
+  cursor: pointer;
+  list-style: none;
+  color: var(--accent-ink);
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+  border-radius: var(--r-card);
+}
+
+.chevron {
+  flex: none;
+  transition: transform var(--d-2) var(--ease);
+}
+
+.disclosure[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.danger {
+  color: var(--bad);
+}
+
+.version {
+  margin-block-start: var(--s-4);
+  font-size: var(--t-foot);
+  line-height: var(--lh-foot);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+  text-align: center;
+}
+
+.sheetActions {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}

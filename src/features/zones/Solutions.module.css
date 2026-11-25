@@ -1,0 +1,87 @@
+/* The solutions page. Layout only: surfaces and colours come from the components and the tokens. */
+
+.estimator {
+  display: grid;
+  gap: var(--s-5);
+  max-inline-size: 692px;
+  margin-inline: auto;
+  margin-block-start: var(--s-8);
+  text-align: start;
+}
+
+.estimatorHead {
+  margin-block-end: calc(var(--s-1) * -1);
+}
+
+.result {
+  display: grid;
+  gap: var(--s-2);
+  padding-block-start: var(--s-5);
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.muted {
+  color: var(--ink-3);
+}
+
+.cards {
+  margin-block-start: var(--s-2);
+}
+
+.card {
+  display: grid;
+  align-content: start;
+  gap: var(--s-3);
+}
+
+.price {
+  margin-block-start: calc(var(--s-1) * -1);
+}
+
+.terms {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+}
+
+.terms dd {
+  margin: 0;
+}
+
+.offered {
+  display: grid;
+  gap: var(--s-1);
+  padding-block-start: var(--s-3);
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.zoneLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s-4);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.zoneLink {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 32px;
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+
+.zoneLink:hover {
+  text-decoration: underline;
+}
+
+.zoneLink:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--r-tile);
+}
+
+.notes {
+  padding-block: var(--s-8) var(--s-4);
+}

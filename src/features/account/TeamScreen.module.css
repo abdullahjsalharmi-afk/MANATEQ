@@ -1,0 +1,61 @@
+.intro {
+  display: grid;
+  gap: var(--s-2);
+  max-width: 692px;
+  margin-block: var(--s-6);
+}
+
+.intro p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.quiet {
+  color: var(--ink-3);
+}
+
+.member {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.words {
+  flex: 1;
+  min-width: 0;
+}
+
+.words h2,
+.words p {
+  margin: 0;
+}
+
+.mandate {
+  padding-block-start: var(--s-3);
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.fixed {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  min-height: 44px;
+  margin: 0;
+  padding-block-start: var(--s-2);
+  color: var(--ink-3);
+}
+
+.fixed svg {
+  flex: none;
+  margin-block-start: 2px;
+}
+
+.fine {
+  margin-block-start: var(--s-6);
+  color: var(--ink-3);
+}

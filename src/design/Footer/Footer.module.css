@@ -1,6 +1,12 @@
 /* The footer: the page colour, 12 px fine print, 14 px link columns with relaxed leading. Wide screens only. */
 .footer {
   display: none;
+  flex: none;
+  background: var(--bg);
+  color: var(--ink-3);
+  font-size: var(--t-foot);
+  line-height: var(--lh-foot);
+  letter-spacing: var(--ls-caption);
 }
 
 @media (min-width: 834px) {
@@ -9,17 +15,9 @@
   }
 }
 
+/* At every width, for the component gallery. */
 .footer.inline {
   display: block;
-}
-
-.footer {
-  flex: none;
-  background: var(--bg);
-  color: var(--ink-3);
-  font-size: var(--t-foot);
-  line-height: var(--lh-foot);
-  letter-spacing: var(--ls-caption);
 }
 
 .inner {

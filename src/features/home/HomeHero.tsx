@@ -1,0 +1,92 @@
+import { useState } from 'react';
+import { useLang, useT, type PluralForms } from '@/app/i18n';
+import { navigate } from '@/app/router';
+import { Button, List, Render, Row, Sheet, Tile } from '@/design/core';
+import { NextStepCard } from '@/design/signature';
+import type { NextStep, Persona } from '@/domain/types';
+import type { StationKey } from '@/state';
+import { STATION_RENDER } from './logic';
+import { strings } from './strings';
+
+export interface HomeHeroProps {
+  persona: Persona;
+  /** Everything waiting for the investor, the most urgent first. */
+  steps: NextStep[];
+  station: StationKey;
+  now: number;
+}
+
+/**
+ * The top of Home: the one thing to do next, on the maroon brand tile. More than one step: a quiet link
+ * opens them all. Nothing waiting: a calm white tile. A guest is welcomed and sent to the eligibility check.
+ */
+export function HomeHero({ persona, steps, station, now }: HomeHeroProps) {
+  const t = useT(strings);
+  const { pick, fmt } = useLang();
+  const [listOpen, setListOpen] = useState(false);
+
+  if (persona === 'guest') {
+    return (
+      <NextStepCard
+        tone="hero"
+        eyebrow={t('guestEyebrow')}
+        title={t('guestTitle')}
+        context={t('guestContext')}
+        cta={{ label: t('guestCta'), to: '/eligibility' }}
+        more={{ label: t('guestDemo'), onClick: () => navigate('/welcome') }}
+        render="plot"
+      />
+    );
+  }
+
+  const next = steps[0];
+  if (!next) {
+    return (
+      <Tile
+        tone="light"
+        eyebrow={t('clearEyebrow')}
+        headline={t('clearTitle')}
+        tagline={t('clearTagline')}
+        actions={<Button to="/services">{t('clearCta')}</Button>}
+        media={<Render name="warehouse" eager decorative />}
+      />
+    );
+  }
+
+  const others = steps.length - 1;
+  const moreForms: PluralForms = {
+    ar: { one: t('moreOne'), two: t('moreTwo'), few: t('moreFew'), many: t('moreMany') },
+    en: { one: t('moreFew'), other: t('moreFew') },
+  };
+
+  return (
+    <>
+      <NextStepCard
+        tone="hero"
+        eyebrow={t('nextEyebrow')}
+        title={pick(next.title)}
+        context={pick(next.context)}
+        due={next.dueAt !== undefined ? fmt.relative(next.dueAt, now) : undefined}
+        cta={{ label: pick(next.cta), to: next.route }}
+        more={others > 0 ? { label: fmt.plural(others, moreForms), onClick: () => setListOpen(true) } : undefined}
+        render={persona === 'prospect' ? 'plot' : STATION_RENDER[station]}
+      />
+      {others > 0 ? (
+        <Sheet open={listOpen} onClose={() => setListOpen(false)} title={t('allStepsTitle')} description={t('allStepsBody')}>
+          <List variant="plain">
+            {steps.map((step) => (
+              <Row
+                key={step.id}
+                to={step.route}
+                title={pick(step.title)}
+                subtitle={pick(step.context)}
+                trailing={step.dueAt !== undefined ? fmt.relative(step.dueAt, now) : undefined}
+                wrap
+              />
+            ))}
+          </List>
+        </Sheet>
+      ) : null}
+    </>
+  );
+}

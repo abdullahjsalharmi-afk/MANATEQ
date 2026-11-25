@@ -1,0 +1,32 @@
+.grid {
+  margin-block-start: var(--s-6);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.number {
+  margin: 0;
+}
+
+.facts {
+  margin-block-start: var(--s-3);
+}
+
+.lease {
+  display: grid;
+  gap: var(--s-1);
+  margin-block-start: var(--s-4);
+  padding-block-start: var(--s-4);
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.station {
+  margin-block-start: var(--s-2);
+  color: var(--ink-3);
+}

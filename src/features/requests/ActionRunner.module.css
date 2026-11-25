@@ -1,0 +1,103 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.text {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.note {
+  margin: 0;
+  font-size: var(--t-callout);
+  color: var(--ink-3);
+}
+
+.error {
+  margin: 0;
+  font-size: var(--t-callout);
+  color: var(--bad);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+/* Five stars as one radio group. */
+.stars {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-inline-size: 0;
+}
+
+.stars legend {
+  padding: 0;
+  margin-block-end: var(--s-3);
+}
+
+.starRow {
+  display: flex;
+  gap: var(--s-1);
+}
+
+.star {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  inline-size: var(--tap);
+  block-size: var(--tap);
+  border-radius: var(--r-pill);
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: transform var(--d-1) var(--ease);
+}
+
+.star:active {
+  transform: scale(var(--press));
+}
+
+.star[data-on] {
+  color: var(--accent);
+}
+
+.star[data-on] svg {
+  fill: currentColor;
+}
+
+.radio {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.star:has(.radio:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star {
+    transition: none;
+  }
+}

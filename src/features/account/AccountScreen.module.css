@@ -1,0 +1,51 @@
+/* Account home: one column on phones; from 1069 px the company card sits beside the lists. */
+.layout {
+  display: grid;
+  gap: var(--s-6);
+  align-items: start;
+}
+
+.lists {
+  display: grid;
+  gap: var(--s-6);
+  min-width: 0;
+}
+
+.company {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.companyHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-block-end: var(--s-3);
+}
+
+.companyName {
+  margin: 0;
+  text-wrap: balance;
+}
+
+.sync {
+  color: var(--ink-3);
+}
+
+.signOut {
+  display: flex;
+  justify-content: center;
+}
+
+@media (min-width: 1069px) {
+  .layout {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--s-8);
+  }
+
+  .company {
+    position: sticky;
+    inset-block-start: calc(var(--chrome-top) + var(--s-6));
+  }
+}

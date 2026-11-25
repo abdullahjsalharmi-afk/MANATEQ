@@ -1,0 +1,46 @@
+/* The search pill and the view switch, under the large title. */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding-block: var(--s-2) var(--s-6);
+}
+
+@media (min-width: 735px) {
+  .controls {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .controls > :first-child {
+    flex: 1;
+  }
+
+  .controls > :last-child {
+    flex: none;
+    width: 280px;
+  }
+}
+
+/* The current station's cards sit on its white tile, start-aligned like every card. */
+.tileGrid {
+  margin-block-start: var(--s-8);
+  text-align: start;
+}
+
+.filters {
+  margin-block-end: var(--s-3);
+}
+
+.chipCount {
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.count {
+  margin-block-end: var(--s-3);
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+}

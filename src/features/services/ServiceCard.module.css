@@ -1,0 +1,72 @@
+/* The whole card is the link to the service page (the title's link stretches over it); «ابدأ» sits above it. */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  text-align: start;
+  transition: transform var(--d-1) var(--ease);
+}
+
+.card:active:not(:has(.start:active)) {
+  transform: scale(var(--press-block, 0.985));
+}
+
+.title {
+  font-size: var(--t-body);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  text-wrap: balance;
+}
+
+.link {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-card);
+}
+
+.link:focus-visible {
+  outline: none;
+}
+
+.link:focus-visible::after {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.summary {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+  text-wrap: pretty;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* The standard at the inline start, the action at the inline end, on the card's last line. */
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-3);
+  margin-block-start: auto;
+  padding-block-start: var(--s-2);
+}
+
+.start {
+  position: relative;
+  z-index: 1;
+  margin-inline-end: calc(-1 * var(--s-2));
+}

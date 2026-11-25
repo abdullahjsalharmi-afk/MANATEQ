@@ -1,0 +1,33 @@
+/* A shorter white tile than a hero: the search is the moment, not a headline. */
+.tile {
+  padding-block: var(--s-6) var(--s-8);
+}
+
+@media (min-width: 735px) {
+  .tile {
+    padding-block: var(--s-10) var(--s-12);
+  }
+}
+
+.field {
+  max-width: 692px;
+  margin-inline: auto;
+}
+
+.try {
+  max-width: 692px;
+  margin-block-start: var(--s-6);
+  margin-inline: auto;
+}
+
+.tryLabel {
+  margin-block-end: var(--s-3);
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+}
+
+.chips {
+  justify-content: center;
+}

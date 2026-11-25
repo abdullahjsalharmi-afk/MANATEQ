@@ -1,0 +1,21 @@
+.bar {
+  display: block;
+  inline-size: 100%;
+  block-size: 4px;
+  margin-block-start: var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--sunken);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  block-size: 100%;
+  border-radius: var(--r-pill);
+  background: var(--ink-2);
+}
+
+.fine {
+  color: var(--ink-3);
+  text-wrap: pretty;
+}

@@ -1,0 +1,252 @@
+/* The two journey-1 flows: eligibility check (A2) and land application (A4). Layout only; tokens only. */
+
+/* ── the head of a step ─────────────────────────────────────────── */
+.head {
+  margin-block: var(--s-6) var(--s-8);
+}
+
+.where {
+  color: var(--ink-3);
+  margin: 0;
+}
+
+.question {
+  margin-block: var(--s-2) 0;
+  font-weight: var(--w-strong);
+  text-wrap: balance;
+}
+
+.question:focus {
+  outline: none;
+}
+
+.question:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: var(--r-tile);
+}
+
+.hint {
+  margin-block: var(--s-2) 0;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+.fine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  margin-block: var(--s-4) 0;
+  color: var(--ink-3);
+}
+
+.error {
+  margin-block: var(--s-3) 0;
+  color: var(--bad);
+}
+
+/* ── groups of choices ──────────────────────────────────────────── */
+.block {
+  margin-block-end: var(--s-8);
+}
+
+.block:last-child {
+  margin-block-end: 0;
+}
+
+.groupHead {
+  margin-block: 0 var(--s-3);
+  color: var(--ink-3);
+  font-weight: var(--w-regular);
+}
+
+.groups {
+  display: grid;
+  gap: var(--s-6);
+  margin-block-start: var(--s-6);
+}
+
+.search {
+  margin-block-end: var(--s-2);
+}
+
+.verified {
+  color: var(--gold);
+}
+
+/* ── option cards (solutions) ───────────────────────────────────── */
+.optionName {
+  margin: 0;
+}
+
+.optionPrice {
+  margin-block: var(--s-1) 0;
+  color: var(--ink-3);
+}
+
+.covers {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-block: var(--s-2) 0;
+  color: var(--ink-2);
+}
+
+/* ── the area ───────────────────────────────────────────────────── */
+.picks {
+  margin-block-start: var(--s-4);
+}
+
+/* ── the checking beat ──────────────────────────────────────────── */
+.checking {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-4);
+  padding-block: var(--s-16);
+  text-align: center;
+}
+
+.checkingBody {
+  margin: 0;
+  max-inline-size: 30ch;
+  color: var(--ink-3);
+}
+
+.skeletons {
+  display: grid;
+  gap: var(--s-3);
+  inline-size: 100%;
+  max-inline-size: 692px;
+  padding-inline: var(--gutter);
+}
+
+.zoneHint {
+  margin-block: var(--s-1) var(--s-4);
+  color: var(--ink-3);
+}
+
+/* ── the result ─────────────────────────────────────────────────── */
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-3) var(--s-6);
+  margin: var(--s-8) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fact {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--ink-2);
+}
+
+.factYes {
+  color: var(--ok);
+}
+
+.factNo {
+  color: var(--ink-3);
+}
+
+.note {
+  margin: var(--s-6) auto 0;
+  max-inline-size: 46ch;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+.matchLayout {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.mapCard {
+  display: flex;
+  justify-content: center;
+}
+
+@media (min-width: 1069px) {
+  .matchLayout {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: start;
+    gap: var(--s-6);
+  }
+
+  .mapCard {
+    position: sticky;
+    inset-block-start: calc(var(--chrome-top, 0px) + var(--s-6));
+  }
+}
+
+.zoneType {
+  margin: 0;
+  color: var(--ink-3);
+}
+
+.zoneName {
+  margin-block: var(--s-1) 0;
+}
+
+.figure {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-block: var(--s-4) 0;
+}
+
+.figureLabel {
+  inline-size: 100%;
+  margin: 0;
+  color: var(--ink-3);
+}
+
+.figureValue {
+  margin: 0;
+  font-size: var(--t-heading);
+  font-weight: var(--w-strong);
+  letter-spacing: var(--ls-heading);
+}
+
+.figureTag {
+  color: var(--ink-3);
+}
+
+.plots {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-block: var(--s-2) 0;
+  color: var(--ink-2);
+}
+
+.why {
+  margin-block: var(--s-2) 0;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-block-start: var(--s-5);
+  padding-block-start: var(--s-4);
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.change {
+  color: var(--accent-ink);
+}
+
+.saved {
+  margin-block: var(--s-4) 0;
+  color: var(--ink-3);
+  text-align: center;
+}

@@ -1,0 +1,40 @@
+/* A card that holds one control: its name, the control, one quiet line. */
+.control {
+  display: grid;
+  gap: var(--s-3);
+  align-content: start;
+}
+
+.label {
+  font-size: var(--t-body);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+}
+
+.hint,
+.note {
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+.note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  margin-block-start: var(--s-3);
+  padding-inline: var(--s-1);
+}
+
+/* The live preview of the text size: body text, as it reads everywhere in the app. */
+.preview {
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--ink);
+  text-wrap: pretty;
+}

@@ -44,6 +44,16 @@ for (const lang of langs) {
       await page.goto(`file://${file}${query}#${route}`);
       await page.evaluate(() => document.fonts.ready);
       await page.waitForTimeout(wait);
+      if (full) {
+        // Walk down the page first: images below the fold load only when they come near.
+        const total = await page.evaluate(() => document.documentElement.scrollHeight);
+        for (let y = 0; y < total; y += Math.round(height * 0.8)) {
+          await page.evaluate((top) => window.scrollTo(0, top), y);
+          await page.waitForTimeout(120);
+        }
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.waitForTimeout(250);
+      }
       const name = `${route === '/' ? 'home' : route.replace(/^\//, '').replace(/[/?=&]/g, '-')}.${lang}.${theme}${text ? `.t${text}` : ''}${mobile ? '' : `.w${width}`}.png`;
       await page.screenshot({ path: path.join(outDir, name), fullPage: full });
       console.log('shot', name);

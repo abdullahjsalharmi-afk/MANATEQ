@@ -1,0 +1,52 @@
+/* D2 gate pass. Layout only; components bring their own look. */
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.dates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--s-4);
+  margin-block-start: var(--s-6);
+}
+
+.rangeLine {
+  margin-block-start: var(--s-4);
+  font-size: var(--t-callout);
+  color: var(--ink-3);
+}
+
+.error {
+  margin-block-start: var(--s-3);
+  font-size: var(--t-callout);
+  color: var(--bad);
+}
+
+.context {
+  color: var(--ink-2);
+}
+
+.fine {
+  margin-block-start: var(--s-6);
+  font-size: var(--t-foot);
+  line-height: var(--lh-body);
+  color: var(--ink-3);
+}
+
+.pass {
+  width: 100%;
+  max-width: 420px;
+  margin-inline: auto;
+  text-align: start;
+}
+
+.after {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  text-align: center;
+}
