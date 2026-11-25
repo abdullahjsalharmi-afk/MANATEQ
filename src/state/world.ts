@@ -5,7 +5,7 @@
 import { getSolution, getZone } from '@/data/catalog';
 import type { L10n, SolutionKey } from '@/data/types';
 import type { DocFacts } from '@/domain/documents';
-import { findPlot } from '@/domain/plots';
+import { findPlot, plotsFor, type PlotCell } from '@/domain/plots';
 import type { AppNotification, Doc, FormValue, Invoice, Lease, Plot, RequestState, World } from '@/domain/types';
 import { allocate } from './refs';
 
@@ -143,7 +143,8 @@ const DEFAULT_AREA_SQM = 5000;
  * forms hold (`plotNumber` or `preferredPlot`, `zone` or `zoneCode`, `solution`, `areaSqm` for the
  * plot's exact area, `area` for the area asked for), the zone's illustrative plot layout, the saved
  * eligibility result, and the zone's first solution. A picked plot's own area wins over the area
- * asked for. Never fails: a missing answer falls back to something sensible.
+ * asked for. Never fails, and never invents a plot: without a plot of the zone's layout, the free
+ * plot closest to the asked area stands in.
  */
 export function plotFacts(world: World, request: RequestState): PlotFacts {
   const thread = threadOf(world, request);
@@ -152,9 +153,11 @@ export function plotFacts(world: World, request: RequestState): PlotFacts {
   const plotId = request.plotId ?? thread.find((member) => member.plotId !== undefined)?.plotId;
   const picked = asText(form.plotNumber) ?? asText(form.preferredPlot) ?? plotId;
 
-  const zoneCode =
-    request.zoneCode ?? thread.find((member) => member.zoneCode !== undefined)?.zoneCode ?? asText(form.zoneCode) ?? asText(form.zone) ?? world.eligibility?.zoneCodes[0] ?? picked?.split('-')[0] ?? 'BA';
-  const cell = picked ? findPlot(zoneCode, picked) : undefined;
+  const candidates = [request.zoneCode, thread.find((member) => member.zoneCode !== undefined)?.zoneCode, asText(form.zoneCode), asText(form.zone), world.eligibility?.zoneCodes[0], picked?.split('-')[0]];
+  const zoneCode = candidates.find((code) => code !== undefined && getZone(code) !== undefined) ?? 'BA';
+  const asked = asNumber(form.areaSqm) ?? asNumber(form.area) ?? world.eligibility?.areaSqm ?? DEFAULT_AREA_SQM;
+  // A plot that is not in the zone's layout is never invented: the free plot closest to the asked size stands in for it.
+  const cell = (picked ? findPlot(zoneCode, picked) : undefined) ?? freeCell(world, zoneCode, asked);
   const zone = getZone(zoneCode);
   const fromZone = zone?.solutions[0];
   const wanted = asSolution(form.solution) ?? world.eligibility?.solution;
@@ -163,9 +166,18 @@ export function plotFacts(world: World, request: RequestState): PlotFacts {
 
   return {
     id: plotId,
-    number: cell?.id ?? picked ?? `${zoneCode}-${100 + (world.seq % 900)}`,
+    number: cell.id,
     zoneCode,
-    areaSqm: asNumber(form.areaSqm) ?? cell?.areaSqm ?? asNumber(form.area) ?? world.eligibility?.areaSqm ?? DEFAULT_AREA_SQM,
+    areaSqm: asNumber(form.areaSqm) ?? cell.areaSqm,
     solution,
   };
+}
+
+/** The available plot of a zone's layout that is closest to the asked area and not already on record. */
+function freeCell(world: World, zoneCode: string, areaSqm: number): PlotCell {
+  const taken = new Set(world.plots.map((plot) => plot.number));
+  const cells = plotsFor(zoneCode);
+  const free = cells.filter((cell) => cell.status === 'available' && !taken.has(cell.id));
+  const pool = free.length ? free : cells;
+  return pool.reduce((best, cell) => (Math.abs(cell.areaSqm - areaSqm) < Math.abs(best.areaSqm - areaSqm) ? cell : best), pool[0] as PlotCell);
 }

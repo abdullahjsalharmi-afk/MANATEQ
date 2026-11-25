@@ -1,5 +1,5 @@
 /* Configurator chips: a handful of options, all visible. A one-line option is a pill; an option with a
-   second line is an option card. The chosen one takes a 2 px blue edge and a check; the fill never changes. */
+   second line is an option card. The chosen one takes a 2 px accent edge and a check; the fill never changes. */
 .tiles {
   display: flex;
   flex-direction: column;

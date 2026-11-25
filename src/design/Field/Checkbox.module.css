@@ -38,7 +38,7 @@
   width: 1.5rem;
   height: 1.5rem;
   border: 1.5px solid var(--ink-3);
-  border-radius: 50%;
+  border-radius: var(--r-pill);
   box-sizing: border-box;
   background: var(--surface);
   color: var(--on-accent);

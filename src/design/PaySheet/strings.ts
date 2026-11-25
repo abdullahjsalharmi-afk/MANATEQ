@@ -6,7 +6,7 @@ export const strings = {
   cardHint: { ar: 'بطاقة خصم أو ائتمان', en: 'Debit or credit card' },
   debit: { ar: 'خصم مباشر', en: 'Direct debit' },
   debitHint: { ar: 'من حساب الشركة البنكي', en: 'From the company’s bank account' },
-  notice: { ar: 'محاكاة — لن يُخصم أي مبلغ', en: 'Simulation — nothing is charged' },
+  notice: { ar: 'محاكاة: لن يُخصم أي مبلغ.', en: 'Simulation: nothing is charged.' },
   pay: { ar: 'ادفع {amount}', en: 'Pay {amount}' },
   processing: { ar: 'جارٍ تنفيذ الدفع…', en: 'Processing the payment…' },
   paid: { ar: 'تم الدفع', en: 'Payment complete' },

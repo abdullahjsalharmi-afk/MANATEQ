@@ -22,14 +22,14 @@ export interface NextStepCardProps {
   context?: string;
   /** The deadline in a few words, e.g. "خلال 5 أيام". */
   due?: string;
-  /** The one action: a blue pill. A link when `to` is given, otherwise a button. */
+  /** The one action: the accent pill. A link when `to` is given, otherwise a button. */
   cta?: NextStepAction;
   /** `hero` only: a second, quieter action beside the first, shown as a ghost pill. */
   secondary?: NextStepAction;
   /** A quiet link after the action, e.g. "و3 إجراءات أخرى". */
   more?: { label: string; onClick: () => void };
   /**
-   * `hero`: the dark full-bleed tile at the top of Home, with a large building render.
+   * `hero`: the maroon brand tile at the top of Home, with a large building render.
    * `action`: a quiet card, something is waiting for the investor.
    * `clear`: a calm card, nothing is needed right now.
    */
@@ -43,7 +43,7 @@ export interface NextStepCardProps {
 
 /**
  * The investor's single next step: a verb-first title, one line of context with the deadline, one pill.
- * As the hero of Home it is a near-black tile with the render of the current station resting below the words.
+ * As the hero of Home it is the maroon brand tile with the render of the current station resting below the words.
  * When nothing is waiting it says so calmly.
  */
 export function NextStepCard({ eyebrow, title, context, due, cta, secondary, more, tone = 'action', render, level = 2, className }: NextStepCardProps) {
@@ -67,7 +67,7 @@ export function NextStepCard({ eyebrow, title, context, due, cta, secondary, mor
 
   if (hero) {
     return (
-      <section className={cx(styles.hero, className)} data-tone="dark" aria-labelledby={titleId}>
+      <section className={cx(styles.hero, className)} data-tone="brand" aria-labelledby={titleId}>
         <div className={styles.heroInner}>
           {eyebrow || due ? (
             <p className={styles.heroEyebrow}>
@@ -107,42 +107,45 @@ export function NextStepCard({ eyebrow, title, context, due, cta, secondary, mor
 
   const clear = tone === 'clear';
   return (
-    <section className={cx(styles.card, styles[tone], className)} aria-labelledby={titleId}>
+    <section className={cx(styles.card, styles[tone], render && styles.withMedia, className)} aria-labelledby={titleId}>
       {render ? (
         <div className={styles.media}>
           <Render name={render} decorative />
         </div>
-      ) : clear ? (
-        <span className={styles.check} aria-hidden="true">
-          <Icon icon={CircleCheck} size={28} strokeWidth={1.5} />
-        </span>
       ) : null}
-      {eyebrow || due ? (
-        <div className={styles.top}>
-          {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : <span />}
-          {dueLine}
-        </div>
-      ) : null}
-      <Heading id={titleId} className={styles.title}>
-        {title}
-      </Heading>
-      {context ? <p className={styles.context}>{context}</p> : null}
-      {cta || moreLink ? (
-        <div className={styles.actions}>
-          {cta ? (
-            clear ? (
-              <Button variant="quiet" size="md" trailingIcon={ChevronRight} flipIcons to={cta.to} onClick={cta.onClick} className={styles.quiet}>
-                {cta.label}
-              </Button>
-            ) : (
-              <Button size="md" to={cta.to} onClick={cta.onClick}>
-                {cta.label}
-              </Button>
-            )
-          ) : null}
-          {moreLink}
-        </div>
-      ) : null}
+      <div className={styles.words}>
+        {!render && clear ? (
+          <span className={styles.check} aria-hidden="true">
+            <Icon icon={CircleCheck} size={28} strokeWidth={1.5} />
+          </span>
+        ) : null}
+        {eyebrow || due ? (
+          <div className={styles.top}>
+            {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : <span />}
+            {dueLine}
+          </div>
+        ) : null}
+        <Heading id={titleId} className={styles.title}>
+          {title}
+        </Heading>
+        {context ? <p className={styles.context}>{context}</p> : null}
+        {cta || moreLink ? (
+          <div className={styles.actions}>
+            {cta ? (
+              clear ? (
+                <Button variant="quiet" size="md" trailingIcon={ChevronRight} flipIcons to={cta.to} onClick={cta.onClick}>
+                  {cta.label}
+                </Button>
+              ) : (
+                <Button size="md" to={cta.to} onClick={cta.onClick}>
+                  {cta.label}
+                </Button>
+              )
+            ) : null}
+            {moreLink}
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

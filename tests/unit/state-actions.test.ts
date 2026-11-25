@@ -167,7 +167,9 @@ describe('the prospect journey, end to end', () => {
   it('goes from the eligibility check to a handed-over plot', () => {
     enterAs('prospect');
     expect(selectStation(getState())).toBe('join');
-    expect(selectNextStep(getState())).toMatchObject({ kind: 'start_service', route: '/eligibility' });
+    // The demo prospect has checked once already; the application is next. A new check replaces that result.
+    expect(world().eligibility).not.toBeNull();
+    expect(selectNextStep(getState())).toMatchObject({ kind: 'start_service', route: '/start/A4' });
 
     saveEligibility({ activityCode: 'ACT-101', solution: 'logistics', areaSqm: 4000, verdict: 'targeted', zoneCodes: ['AW', 'BA'] });
     expect(world().eligibility?.at).toBe(START);
@@ -324,7 +326,7 @@ describe('invoices', () => {
     enterAs('tenant');
     const dues = selectDues(getState());
     const invoice = dues.next;
-    expect(dues).toMatchObject({ total: 30_000, count: 1, overdue: 0 });
+    expect(dues).toMatchObject({ total: 37_500, count: 1, overdue: 0 });
     expect(selectNextStep(getState())).toMatchObject({ kind: 'invoice', route: `/account/payments/${invoice?.id}` });
     const docsBefore = world().docs.length;
 
@@ -337,7 +339,7 @@ describe('invoices', () => {
     expect(receipt).toMatchObject({ kind: 'receipt', ref: invoice?.ref.replace('INV-', 'RCP-'), issuedAt: START + 60_000 });
     expect(receipt?.verifyCode).toMatch(/^TSD-[0-9A-Z]{4}-[0-9A-Z]{4}$/);
     expect(world().docs).toHaveLength(docsBefore + 1);
-    expect(selectDocsOfPlot('BA-214')(getState())[0]).toBe(receipt);
+    expect(selectDocsOfPlot('BA-121')(getState())[0]).toBe(receipt);
     expect(selectDues(getState())).toEqual({ total: 0, count: 0, overdue: 0, next: null });
     expect(selectNextStep(getState())?.kind).toBe('renewal');
     expect(selectInvoices(getState()).every((candidate) => candidate.status === 'paid')).toBe(true);
@@ -373,7 +375,7 @@ describe('the tenant’s renewal', () => {
   it('is accepted, signed and paid, and the lease runs for another year', () => {
     enterAs('tenant');
     const renewal = requestOf('B3') as RequestState;
-    const yard = selectLeaseOfPlot('AK-OY-31')(getState());
+    const yard = selectLeaseOfPlot('AK-113')(getState());
     expect(renewal.status).toBe('needs_you');
     expect(yard?.status).toBe('expiring');
     expect(selectNextSteps(getState()).find((step) => step.kind === 'renewal')).toMatchObject({ route: `/requests/${renewal.id}`, dueAt: yard?.endsAt });
@@ -385,14 +387,14 @@ describe('the tenant’s renewal', () => {
     expect(byId(renewal.id).form.acceptedAt).toBeGreaterThanOrEqual(START);
     expect(byId(renewal.id).form.signedAt).toBeGreaterThanOrEqual(START);
 
-    const renewed = selectLeaseOfPlot('AK-OY-31')(getState());
+    const renewed = selectLeaseOfPlot('AK-113')(getState());
     expect(renewed?.status).toBe('active');
     expect(new Date(renewed?.endsAt ?? 0).getFullYear()).toBe(new Date(yard?.endsAt ?? 0).getFullYear() + 1);
     expect(Math.round(((renewed?.endsAt ?? 0) - (yard?.endsAt ?? 0)) / DAY)).toBe(365);
     const docs = selectDocsOfRequest(renewal.id)(getState());
     expect(docs.map((doc) => doc.kind).sort()).toEqual(['contract', 'receipt']);
     expect(docs.find((doc) => doc.kind === 'contract')).toMatchObject({ signed: true, serviceId: 'B3' });
-    expect(docs.find((doc) => doc.kind === 'contract')?.title.en).toBe('Lease renewal addendum · AK-OY-31');
+    expect(docs.find((doc) => doc.kind === 'contract')?.title.en).toBe('Lease renewal addendum · AK-113');
     expect(selectNextSteps(getState()).some((step) => step.kind === 'renewal')).toBe(false);
 
     // The renewal does not open again while the new term is far from its end.
@@ -428,7 +430,7 @@ describe('requests in motion', () => {
 
   it('takes a maintenance report from the photo to the rating', () => {
     enterAs('tenant');
-    const report = startRequest('D1', { category: 'roads', photo: { name: 'pothole.jpg' }, location: 'BA-214' }, { plotId: 'BA-214' });
+    const report = startRequest('D1', { category: 'roads', photo: { name: 'pothole.jpg' }, location: 'BA-121' }, { plotId: 'BA-121' });
     expect(byId(report).status).toBe('active');
     runUntil(() => byId(report).status === 'needs_you' && actionOf(byId(report))?.flow.includes('rate') === true, 180);
     const field = byId(report).visits.some((visit) => findStep(detailOf(byId(report)).workflow, visit.step)?.lane === 'field');
@@ -443,7 +445,7 @@ describe('requests in motion', () => {
 
   it('pauses and resumes', () => {
     enterAs('tenant');
-    const report = startRequest('D1', { category: 'roads', photo: { name: 'pothole.jpg' }, location: 'BA-214' }, { plotId: 'BA-214' });
+    const report = startRequest('D1', { category: 'roads', photo: { name: 'pothole.jpg' }, location: 'BA-121' }, { plotId: 'BA-121' });
     setSpeed(0);
     const paused = byId(report);
     vi.setSystemTime(START + 10 * 60_000);
@@ -459,12 +461,12 @@ describe('requests in motion', () => {
 
   it('runs faster at a higher speed', () => {
     enterAs('tenant');
-    const slow = startRequest('B8', { docType: 'statement' }, { plotId: 'BA-214' });
+    const slow = startRequest('B8', { docType: 'statement' }, { plotId: 'BA-121' });
     runUntil(() => byId(slow).status === 'done', 120);
     const normal = Date.now() - START;
     setSpeed(8);
     const begun = Date.now();
-    const fast = startRequest('B8', { docType: 'statement' }, { plotId: 'BA-214' });
+    const fast = startRequest('B8', { docType: 'statement' }, { plotId: 'BA-121' });
     runUntil(() => byId(fast).status === 'done', 120);
     expect(Date.now() - begun).toBeLessThan(normal / 3);
     expect(selectDocsOfRequest(fast)(getState())[0]?.kind).toBe('statement');
@@ -506,9 +508,9 @@ describe('the simulation tick', () => {
 describe('gate passes', () => {
   it('issues and revokes a pass', () => {
     enterAs('tenant');
-    const id = issuePass({ kind: 'vehicle', holder: 'Delivery van', idOrPlate: '000000', plotId: 'BA-214', from: START, to: START + DAY });
+    const id = issuePass({ kind: 'vehicle', holder: 'Delivery van', idOrPlate: '000000', plotId: 'BA-121', from: START, to: START + DAY });
     const pass = world().passes.find((candidate) => candidate.id === id);
-    expect(pass).toMatchObject({ status: 'active', kind: 'vehicle', plotId: 'BA-214' });
+    expect(pass).toMatchObject({ status: 'active', kind: 'vehicle', plotId: 'BA-121' });
     expect(pass?.code).toMatch(/^GP-[0-9A-Z]{6}$/);
     expect(selectPasses(getState())[0]?.status).toBe('active');
     revokePass(id);
@@ -522,7 +524,7 @@ describe('gate passes', () => {
 
   it('expires a pass when its time is up', () => {
     enterAs('tenant');
-    const id = issuePass({ kind: 'visitor', holder: 'Guest', plotId: 'BA-214', from: START, to: START + 60_000 });
+    const id = issuePass({ kind: 'visitor', holder: 'Guest', plotId: 'BA-121', from: START, to: START + 60_000 });
     tick(START + 61_000);
     expect(world().passes.find((candidate) => candidate.id === id)?.status).toBe('expired');
   });
@@ -530,12 +532,12 @@ describe('gate passes', () => {
   it('issues the pass of a gate-pass request exactly once', () => {
     enterAs('tenant');
     const before = world().passes.length;
-    const request = startRequest('D2', { passType: 'visitor', visitor: { name: 'Demo guest', phone: '0000' }, validFrom: '2026-11-20', validTo: '2026-11-20', plot: 'AW-131' });
-    expect(byId(request).plotId).toBe('AW-131');
+    const request = startRequest('D2', { passType: 'visitor', visitor: { name: 'Demo guest', phone: '0000' }, validFrom: '2026-11-20', validTo: '2026-11-20', plot: 'AW-116' });
+    expect(byId(request).plotId).toBe('AW-116');
     playUntil(() => byId(request).status === 'done', 120);
     expect(world().passes).toHaveLength(before + 1);
     const pass = world().passes[world().passes.length - 1];
-    expect(pass).toMatchObject({ kind: 'visitor', holder: 'Demo guest', plotId: 'AW-131', status: 'active' });
+    expect(pass).toMatchObject({ kind: 'visitor', holder: 'Demo guest', plotId: 'AW-116', status: 'active' });
     expect(pass?.from).toBe(new Date(2026, 10, 20).getTime());
     expect(pass?.to).toBe(new Date(2026, 10, 21).getTime() - 1);
     tick(Date.now() + 5000);

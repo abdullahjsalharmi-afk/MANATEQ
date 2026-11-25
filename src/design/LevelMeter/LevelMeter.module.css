@@ -29,6 +29,7 @@
   inset-block-start: calc(var(--mark-y) - 1px);
   height: 2px;
   background: var(--line-strong);
+  box-sizing: border-box;
 }
 
 .step::before {
@@ -57,14 +58,20 @@
 .ahead::before,
 .ahead::after,
 .target::before {
-  background: repeating-linear-gradient(90deg, var(--ink) 0 4px, #0000 4px 8px);
+  height: 0;
+  background: none;
+  border-block-start: 2px dashed var(--ink-2);
 }
 
 .from.target::before {
+  height: 2px;
+  border: 0;
   background: var(--ink-3);
 }
 
 .from.target::after {
+  height: 2px;
+  border: 0;
   background: var(--line-strong);
 }
 
@@ -99,8 +106,9 @@
 }
 
 .beyond .mark::before {
+  box-sizing: border-box;
   background: none;
-  box-shadow: inset 0 0 0 1.5px var(--ink-3);
+  border: 1.5px solid var(--ink-3);
 }
 
 .now .mark::before {
@@ -111,14 +119,17 @@
 
 /* the target: a ring with a centre */
 .target .mark::before {
+  box-sizing: border-box;
   width: 16px;
   height: 16px;
-  background: radial-gradient(circle, var(--ink) 0 3.5px, #0000 4px);
-  box-shadow: inset 0 0 0 2px var(--ink);
+  padding: 3px;
+  border: 2px solid var(--ink);
+  background: var(--ink);
+  background-clip: content-box;
 }
 
 .digit {
-  font-size: 0.6875rem;
+  font-size: var(--t-cap);
   line-height: 1.5;
   color: var(--ink-2);
 }
@@ -134,9 +145,10 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 2px 6px;
-  font-size: var(--t-foot);
-  line-height: 1.6;
-  color: var(--ink-2);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .name {

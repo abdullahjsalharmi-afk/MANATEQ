@@ -3,7 +3,7 @@ import { cx } from '../cx';
 import styles from './Skeleton.module.css';
 
 export interface SkeletonProps {
-  /** `text`: lines of a paragraph · `block`: one area (a card, a map, an image) · `row`: list rows with a leading tile. */
+  /** `text`: lines of a paragraph · `block`: one area (a card, a map, an image) · `row`: list rows with a leading circle. */
   variant?: 'text' | 'block' | 'row';
   /** How many lines (`text`, default 3) or rows (`row`, default 1). */
   count?: number;
@@ -18,8 +18,8 @@ export interface SkeletonProps {
 const LINE_WIDTHS = ['100%', '92%', '97%', '88%'] as const;
 
 /**
- * The shape of content that is on its way. A slow glint crosses it in the reading direction and
- * stands still when the person prefers reduced motion.
+ * The shape of content that is on its way: flat sunken blocks with a soft opacity pulse, which stands
+ * still when the person prefers reduced motion.
  */
 export function Skeleton({ variant = 'text', count, height = 120, label, className }: SkeletonProps) {
   let bones;

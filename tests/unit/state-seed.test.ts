@@ -3,6 +3,7 @@ import { getService, getSolution, getZone, loadAllServiceDetails, peekServiceDet
 import type { L10n, ServiceDetail } from '@/data/types';
 import { VERIFY_CODE_PATTERN } from '@/domain/documents';
 import { collectNextSteps } from '@/domain/nextstep';
+import { findPlot } from '@/domain/plots';
 import { timingFor } from '@/domain/simulation';
 import type { Persona, RequestState, World } from '@/domain/types';
 import { act, advance, findStep, firstStep, isTerminal, successor, waitsForInvestor, type Timing } from '@/domain/workflow';
@@ -105,6 +106,9 @@ function expectValidWorld(world: World, now: number): void {
     expect(getZone(plot.zoneCode), `zone ${plot.zoneCode}`).toBeDefined();
     expect(getZone(plot.zoneCode)?.solutions, `${plot.number}: ${plot.solution} in ${plot.zoneCode}`).toContain(plot.solution);
     expect(plot.areaSqm).toBeGreaterThan(0);
+    // Every plot is one of its zone's layout ("BA-117"), so the map and the account show the same plot.
+    expect(findPlot(plot.zoneCode, plot.number), `${plot.number} is not in the layout of ${plot.zoneCode}`).toBeDefined();
+    expect(world.plots.filter((other) => other.number === plot.number), `${plot.number} is on record twice`).toHaveLength(1);
     if (plot.leaseId !== undefined) {
       expect(leaseIds.has(plot.leaseId), `${plot.number}: lease ${plot.leaseId}`).toBe(true);
       expect(world.leases.find((lease) => lease.id === plot.leaseId)?.plotId).toBe(plot.id);
@@ -142,6 +146,8 @@ function expectValidWorld(world: World, now: number): void {
     }
     // An application names the plot it asked for before that plot is on record, and after it was given back.
     if (request.plotId !== undefined && !APPLICATION.includes(request.serviceId)) expect(plotIds.has(request.plotId), `${request.id}: plot ${request.plotId}`).toBe(true);
+    else if (request.plotId !== undefined) expect(plotIds.has(request.plotId) || findPlot(request.zoneCode ?? '', request.plotId) !== undefined, `${request.id}: plot ${request.plotId} in ${request.zoneCode}`).toBe(true);
+    if (request.zoneCode !== undefined) expect(getZone(request.zoneCode), `${request.id}: zone ${request.zoneCode}`).toBeDefined();
     for (const docId of request.docIds) expect(docIds.has(docId), `${request.id}: document ${docId}`).toBe(true);
     expect(request.createdAt).toBeLessThanOrEqual(request.updatedAt);
     expect(request.updatedAt).toBeLessThanOrEqual(now);
@@ -270,20 +276,28 @@ describe('the prospect', () => {
   const world = seedWorld('prospect', NOW);
 
   it('is a verified company with no plot and no request', () => {
-    expect(world.company?.name).toEqual({ ar: 'شركة المثال للصناعات الغذائية ذ.م.م.', en: 'Al Mithal Food Industries W.L.L.' });
+    expect(world.company?.name).toEqual({ ar: 'شركة النموذج للتجارة', en: 'Sample Trading Co.' });
     expect(world.company?.cr).toBe('123456');
-    expect(world.company?.signatory.name).toEqual({ ar: 'المفوَّض بالتوقيع (تجريبي)', en: 'Authorised signatory (demo)' });
-    expect(world.company?.activity.en).toMatch(/food/i);
+    expect(world.company?.signatory.name).toEqual({ ar: 'مستثمر تجريبي', en: 'Demo investor' });
+    expect(world.company?.activity.en).toMatch(/warehousing/i);
     expect(world.plots).toEqual([]);
     expect(world.requests).toEqual([]);
     expect(world.invoices).toEqual([]);
     expect(world.team.map((member) => member.scope)).toEqual(['owner']);
   });
 
-  it('is asked for one thing: the eligibility check', () => {
+  it('has checked its eligibility once, and the result is saved on the profile', () => {
+    const saved = world.eligibility;
+    expect(saved).toMatchObject({ activityCode: world.company?.activityCode, solution: 'logistics', areaSqm: 5000, verdict: 'targeted' });
+    expect(saved?.at).toBeLessThanOrEqual(NOW);
+    expect(saved?.zoneCodes.length).toBeGreaterThan(0);
+    for (const code of saved?.zoneCodes ?? []) expect(getZone(code)?.solutions).toContain('logistics');
+  });
+
+  it('is asked for one thing: the land application that follows the saved check', () => {
     const steps = collectNextSteps(world, peekServiceDetail);
     expect(steps).toHaveLength(1);
-    expect(steps[0]).toMatchObject({ kind: 'start_service', route: '/eligibility' });
+    expect(steps[0]).toMatchObject({ kind: 'start_service', route: '/start/A4' });
   });
 });
 
@@ -299,34 +313,34 @@ describe('the tenant', () => {
   const laneOf = (request: RequestState) => (request.current === null ? null : (findStep(detailOf(request).workflow, request.current)?.lane ?? null));
 
   it('is an illustrative company with a small team', () => {
-    expect(world.company?.name).toEqual({ ar: 'شركة المثال لتجارة قطع غيار السيارات ذ.م.م.', en: 'Al Mithal Auto Parts Trading W.L.L.' });
+    expect(world.company?.name).toEqual({ ar: 'شركة المثال للصناعات', en: 'Example Industries Co.' });
     expect(world.team.map((member) => member.scope)).toEqual(['owner', 'finance', 'engineering', 'operations']);
-    for (const member of world.team) expect(`${member.name.ar} ${member.name.en}`).toMatch(/تجريبي.*demo/);
+    for (const member of world.team) expect(`${member.name.ar} ${member.name.en}`).toMatch(/تجريبي.*Demo/);
   });
 
   it('holds three assets at three stages', () => {
     expect(world.plots).toHaveLength(3);
-    expect(plot('BA-214')).toMatchObject({ zoneCode: 'BA', areaSqm: 8000, solution: 'logistics', status: 'operating' });
-    expect(plot('AW-131')).toMatchObject({ zoneCode: 'AW', areaSqm: 5000, solution: 'logistics', status: 'building' });
-    expect(plot('AK-OY-31')).toMatchObject({ zoneCode: 'AK', areaSqm: 5000, solution: 'openYard' });
+    expect(plot('BA-121')).toMatchObject({ zoneCode: 'BA', areaSqm: 10_000, solution: 'logistics', status: 'operating' });
+    expect(plot('AW-116')).toMatchObject({ zoneCode: 'AW', areaSqm: 5000, solution: 'logistics', status: 'building' });
+    expect(plot('AK-113')).toMatchObject({ zoneCode: 'AK', areaSqm: 5000, solution: 'openYard' });
   });
 
-  it('has a 25-year lease on BA-214 at the published price, invoiced each quarter', () => {
-    const lease = leaseOf('BA-214');
-    expect(lease).toMatchObject({ ref: 'LC-2021-0318', ratePerSqmYear: 15, annualRent: 120_000, status: 'active' });
+  it('has a 25-year lease on BA-121 at the published price, invoiced each quarter', () => {
+    const lease = leaseOf('BA-121');
+    expect(lease).toMatchObject({ ref: 'LC-2021-0318', ratePerSqmYear: 15, annualRent: 150_000, status: 'active' });
     expect(new Date(lease?.startsAt ?? 0).getFullYear()).toBe(2021);
     expect(new Date(lease?.endsAt ?? 0).getFullYear()).toBe(2046);
     const invoices = world.invoices.filter((invoice) => invoice.leaseId === lease?.id);
-    expect(invoices.map((invoice) => invoice.amount)).toEqual([30_000, 30_000, 30_000]);
+    expect(invoices.map((invoice) => invoice.amount)).toEqual([37_500, 37_500, 37_500]);
     expect(invoices.map((invoice) => invoice.status)).toEqual(['paid', 'paid', 'due']);
     const due = invoices[2];
     expect(due?.dueAt).toBe(NOW + 5 * DAY);
-    expect(due?.title.en).toBe('Rent, Q4 2026 · BA-214');
+    expect(due?.title.en).toBe('Rent, Q4 2026 · BA-121');
     expect(due?.title.ar).toContain('إيجار الربع الرابع 2026');
   });
 
-  it('signed the lease of AW-131 six weeks ago and has paid its way since', () => {
-    const lease = leaseOf('AW-131');
+  it('signed the lease of AW-116 six weeks ago and has paid its way since', () => {
+    const lease = leaseOf('AW-116');
     expect(lease).toMatchObject({ ratePerSqmYear: 15, annualRent: 75_000, status: 'active' });
     const weeks = (NOW - (lease?.startsAt ?? 0)) / (7 * DAY);
     expect(weeks).toBeGreaterThan(5.5);
@@ -337,7 +351,7 @@ describe('the tenant', () => {
   });
 
   it('has a one-year lease on the open yard that ends in about a hundred days', () => {
-    const lease = leaseOf('AK-OY-31');
+    const lease = leaseOf('AK-113');
     expect(lease).toMatchObject({ ratePerSqmYear: 10, annualRent: 50_000, status: 'expiring' });
     const days = ((lease?.endsAt ?? 0) - NOW) / DAY;
     expect(days).toBeGreaterThan(98);
@@ -348,11 +362,11 @@ describe('the tenant', () => {
   it('owes one invoice, due in five days', () => {
     const unpaid = world.invoices.filter((invoice) => invoice.status !== 'paid');
     expect(unpaid).toHaveLength(1);
-    expect(unpaid[0]).toMatchObject({ amount: 30_000, status: 'due', dueAt: NOW + 5 * DAY });
+    expect(unpaid[0]).toMatchObject({ amount: 37_500, status: 'due', dueAt: NOW + 5 * DAY });
   });
 
-  it('came to AW-131 through the whole application chain', () => {
-    const chain = ['A4', 'A5', 'A6', 'A7', 'A8'].map((id) => requestsOf(id, 'AW-131')[0]);
+  it('came to AW-116 through the whole application chain', () => {
+    const chain = ['A4', 'A5', 'A6', 'A7', 'A8'].map((id) => requestsOf(id, 'AW-116')[0]);
     for (const request of chain) expect(request?.status).toBe('done');
     expect(new Set(chain.map((request) => request?.threadId)).size).toBe(1);
     expect(chain[1]?.parentId).toBe(chain[0]?.id);
@@ -363,13 +377,13 @@ describe('the tenant', () => {
   });
 
   it('has the no-objection certificate, and the building permit is with a national entity', () => {
-    const design = requestsOf('C1', 'AW-131')[0];
+    const design = requestsOf('C1', 'AW-116')[0];
     expect(design?.status).toBe('done');
     const noc = world.docs.find((doc) => doc.kind === 'noc');
     expect(noc?.requestId).toBe(design?.id);
     expect(noc?.signed).toBe(true);
 
-    const permit = requestsOf('C2', 'AW-131')[0] as RequestState;
+    const permit = requestsOf('C2', 'AW-116')[0] as RequestState;
     expect(permit.status).toBe('active');
     expect(laneOf(permit)).toBe('nat');
     expect(holdOf(permit)).toBeGreaterThan(NOW);
@@ -377,11 +391,11 @@ describe('the tenant', () => {
   });
 
   it('has the Kahramaa connection open and the street light with the field team', () => {
-    const utilities = requestsOf('C4', 'AW-131')[0] as RequestState;
+    const utilities = requestsOf('C4', 'AW-116')[0] as RequestState;
     expect(['active', 'needs_you']).toContain(utilities.status);
-    expect(utilities.parentId).toBe(requestsOf('A8', 'AW-131')[0]?.id);
+    expect(utilities.parentId).toBe(requestsOf('A8', 'AW-116')[0]?.id);
 
-    const light = requestsOf('D1', 'BA-214')[0] as RequestState;
+    const light = requestsOf('D1', 'BA-121')[0] as RequestState;
     expect(light.status).toBe('active');
     expect(laneOf(light)).toBe('field');
     expect(light.form.category).toBe('lighting');
@@ -389,14 +403,14 @@ describe('the tenant', () => {
   });
 
   it('has a renewal waiting to be accepted, signed and paid', () => {
-    const renewal = requestsOf('B3', 'AK-OY-31')[0] as RequestState;
+    const renewal = requestsOf('B3', 'AK-113')[0] as RequestState;
     expect(renewal.status).toBe('needs_you');
     expect(detailOf(renewal).actions.flatMap((action) => action.flow)).toEqual(expect.arrayContaining(['accept', 'sign', 'pay']));
     // The amount is on the request as soon as the step that asks for the payment is open.
     const action = detailOf(renewal).actions.find((candidate) => candidate.step === renewal.current);
     if (action?.flow.includes('pay')) expect(renewal.amount).toBe(50_000);
     // It opened 120 days before the lease ends.
-    expect(Math.round(((leaseOf('AK-OY-31')?.endsAt ?? 0) - renewal.createdAt) / DAY)).toBe(120);
+    expect(Math.round(((leaseOf('AK-113')?.endsAt ?? 0) - renewal.createdAt) / DAY)).toBe(120);
   });
 
   it('carries its papers in the wallet', () => {
@@ -437,7 +451,7 @@ describe('the tenant', () => {
   });
 
   it('lets a held request go when time is fast-forwarded, and then it runs on', () => {
-    const permit = requestsOf('C2', 'AW-131')[0] as RequestState;
+    const permit = requestsOf('C2', 'AW-116')[0] as RequestState;
     const live: Env = { detail: peekServiceDetail, timing: () => ({ duration: () => 1000 }) };
     const moved = fastForwardIn(world, permit.id, NOW + 1000, live);
     const after = moved.requests.find((request) => request.id === permit.id) as RequestState;

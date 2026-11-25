@@ -1,69 +1,73 @@
 /* Manateq One — design tokens.
 
-   The visual language: near-invisible interface, so the content and the building renders can speak.
-   White and parchment canvases, near-black tiles, one quiet blue for everything that can be pressed,
-   hairlines instead of shadows, pills for actions, 17 px body text.
+   The visual language is Apple's: a near-invisible interface, so the content and the building renders can speak.
+   The colours are Manateq's own, as its documents use them: maroon (#862633), gold (#84754E), a warm near-black
+   (#231F20) and warm paper neutrals.
 
    Rules the tokens encode:
-   - One accent. Every link, primary pill and focus signal is the blue. There is no second brand colour.
+   - One accent per surface. On light surfaces everything that can be pressed is maroon; on dark surfaces it is
+     gold; on the maroon brand tile it is paper white. Gold on light surfaces is only for "verified / official".
    - No shadows on cards, buttons or text. The single soft shadow belongs to building renders.
-   - No decorative gradients. Depth comes from a change of surface (light tile, dark tile) and from blur on bars.
+   - No decorative gradients. Depth comes from a change of surface (paper, white, near-black, maroon) and from
+     blur on bars.
    - Status colours never carry meaning alone: each status also has an icon or a word. */
 
 :root {
   color-scheme: light;
 
   /* surfaces */
-  --bg: #f5f5f7; /* parchment: the page */
+  --bg: #f4f2ef; /* warm paper: the page */
   --surface: #ffffff; /* cards and light tiles */
-  --surface-2: #fafafc; /* pearl: quiet buttons, insets on white */
-  --sunken: #e8e8ed; /* wells, tracks, pressed fills */
+  --surface-2: #fbfaf8; /* pearl: quiet buttons, insets on white */
+  --sunken: #ece8e2; /* wells, tracks, pressed fills */
 
-  /* near-black tiles (the same in both themes) */
-  --tile-1: #272729;
-  --tile-2: #2a2a2c;
-  --tile-3: #252527;
-  --black: #000000;
+  /* tiles that keep their colour in both themes */
+  --tile-1: #231f20; /* Manateq's near-black */
+  --tile-2: #2a2526;
+  --tile-3: #1e1a1b;
+  --black: #1c1819; /* the global bar */
+  --brand: #862633; /* the maroon tile: one hero moment */
 
   /* ink */
-  --ink: #1d1d1f;
-  --ink-2: #424245;
-  --ink-3: #6e6e73;
-  --ink-disabled: #86868b;
-  --line: rgba(0, 0, 0, 0.12); /* the card hairline (#e0e0e0 on white) */
-  --line-soft: rgba(0, 0, 0, 0.06); /* dividers inside a card */
-  --line-strong: #d2d2d7; /* inputs and chips */
+  --ink: #231f20;
+  --ink-2: #4a4446;
+  --ink-3: #6a6566;
+  --ink-disabled: #9a9596;
+  --line: rgba(35, 31, 32, 0.12); /* the card hairline */
+  --line-soft: rgba(35, 31, 32, 0.06); /* dividers inside a card */
+  --line-strong: #d3cec8; /* inputs and chips */
 
-  /* the one accent */
-  --accent: #0066cc;
-  --accent-press: #0059b3;
-  --accent-ink: #0066cc; /* links */
-  --accent-tint: rgba(0, 113, 227, 0.08);
-  --focus: #0071e3;
+  /* the accent: maroon on light surfaces */
+  --accent: #862633;
+  --accent-press: #6e1e2a;
+  --accent-ink: #862633; /* links, small accent graphics */
+  --accent-tint: rgba(134, 38, 51, 0.07);
+  --focus: #862633;
   --on-accent: #ffffff;
 
-  /* "verified" uses the accent; there is no second brand colour */
-  --gold: var(--accent);
-  --gold-tint: var(--accent-tint);
+  /* gold: "verified / official" marks and eyebrow labels only; never an action */
+  --gold: #7c6529; /* text-safe on paper and white */
+  --gold-line: #84754e; /* rules and icons */
+  --gold-tint: rgba(132, 117, 78, 0.12);
 
   /* status */
-  --ok: #248a3d;
-  --ok-tint: rgba(36, 138, 61, 0.1);
-  --warn: #b64400;
-  --warn-tint: rgba(182, 68, 0, 0.09);
-  --bad: #d70015;
-  --bad-tint: rgba(215, 0, 21, 0.08);
-  --info: var(--accent);
-  --info-tint: var(--accent-tint);
+  --ok: #1b7046;
+  --ok-tint: rgba(27, 112, 70, 0.1);
+  --warn: #8a5300;
+  --warn-tint: rgba(138, 83, 0, 0.1);
+  --bad: #b3261e;
+  --bad-tint: rgba(179, 38, 30, 0.08);
+  --info: #2a5c8a;
+  --info-tint: rgba(42, 92, 138, 0.1);
 
-  --scrim: rgba(0, 0, 0, 0.48);
-  --bar: rgba(245, 245, 247, 0.8); /* frosted bars: use with --bar-filter */
+  --scrim: rgba(35, 31, 32, 0.48);
+  --bar: rgba(244, 242, 239, 0.8); /* frosted bars: use with --bar-filter */
   --bar-filter: saturate(180%) blur(20px);
-  --chip-on-image: rgba(210, 210, 215, 0.64);
+  --chip-on-image: rgba(211, 206, 200, 0.64);
   /* Floating layers (sheets, menus, toasts) separate from the page with a scrim or a hairline, not a heavy shadow. */
-  --float-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.1), 0 16px 48px rgba(0, 0, 0, 0.1);
+  --float-shadow: 0 0 0 0.5px rgba(35, 31, 32, 0.1), 0 16px 48px rgba(35, 31, 32, 0.1);
   /* The only true shadow in the system: under a building render resting on a surface. */
-  --product-shadow: 3px 5px 30px rgba(0, 0, 0, 0.22);
+  --product-shadow: 3px 5px 30px rgba(35, 31, 32, 0.22);
 
   /* type */
   --font: -apple-system, BlinkMacSystemFont, 'Manateq UI', 'Segoe UI', system-ui, sans-serif;
@@ -153,64 +157,87 @@
   }
 }
 
-:root[data-theme='dark'] {
+/* The values of a dark surface. They apply to the dark theme and to a near-black tile inside a light page. */
+:root[data-theme='dark'],
+[data-tone='dark'] {
   color-scheme: dark;
-  --bg: #000000;
-  --surface: #1d1d1f;
-  --surface-2: #272729;
-  --sunken: #2a2a2c;
-  --ink: #f5f5f7;
-  --ink-2: #cccccc;
-  --ink-3: #a1a1a6;
-  --ink-disabled: #6e6e73;
-  --line: rgba(255, 255, 255, 0.16);
-  --line-soft: rgba(255, 255, 255, 0.08);
-  --line-strong: #424245;
-  --accent: #0071e3;
-  --accent-press: #0066cc;
-  --accent-ink: #2997ff;
-  --accent-tint: rgba(41, 151, 255, 0.16);
-  --focus: #2997ff;
-  --on-accent: #ffffff;
-  --ok: #30d158;
-  --ok-tint: rgba(48, 209, 88, 0.16);
-  --warn: #ff9f0a;
-  --warn-tint: rgba(255, 159, 10, 0.16);
-  --bad: #ff453a;
-  --bad-tint: rgba(255, 69, 58, 0.16);
-  --scrim: rgba(0, 0, 0, 0.64);
-  --bar: rgba(29, 29, 31, 0.8);
-  --chip-on-image: rgba(66, 66, 69, 0.72);
-  --float-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.14), 0 16px 48px rgba(0, 0, 0, 0.5);
+  --surface: #231f20;
+  --surface-2: #2a2526;
+  --sunken: #332d2e;
+  --ink: #f4f2ef;
+  --ink-2: #cfc8c2;
+  --ink-3: #a29b98;
+  --ink-disabled: #6f6a6b;
+  --line: rgba(244, 242, 239, 0.16);
+  --line-soft: rgba(244, 242, 239, 0.08);
+  --line-strong: #4a4446;
+  /* the accent on dark surfaces is Manateq's gold */
+  --accent: #c8b88c;
+  --accent-press: #b8a77c;
+  --accent-ink: #c8b88c;
+  --accent-tint: rgba(200, 184, 140, 0.16);
+  --focus: #c8b88c;
+  --on-accent: #231f20;
+  --gold: #c8b88c;
+  --gold-line: #b8a77c;
+  --gold-tint: rgba(184, 167, 124, 0.16);
+  --ok: #6cc495;
+  --ok-tint: rgba(108, 196, 149, 0.14);
+  --warn: #e3ad55;
+  --warn-tint: rgba(227, 173, 85, 0.14);
+  --bad: #ee7c73;
+  --bad-tint: rgba(238, 124, 115, 0.14);
+  --info: #8ab6e0;
+  --info-tint: rgba(138, 182, 224, 0.14);
+  --chip-on-image: rgba(74, 68, 70, 0.72);
   --product-shadow: 3px 5px 30px rgba(0, 0, 0, 0.5);
 }
 
-/* A near-black tile inside a light page: everything placed in it reads on dark.
-   Set data-tone="dark" on the tile; the tokens below reach every component inside. */
+:root[data-theme='dark'] {
+  --bg: #141112;
+  --scrim: rgba(0, 0, 0, 0.64);
+  --bar: rgba(35, 31, 32, 0.8);
+  --float-shadow: 0 0 0 0.5px rgba(244, 242, 239, 0.14), 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* A near-black tile inside a light page: set data-tone="dark" on the tile and give it background var(--tile-1). */
 [data-tone='dark'] {
+  color: var(--ink);
+}
+
+/* The maroon brand tile: set data-tone="brand" and background var(--brand). Text is white, the pill is paper.
+   Use it for one hero moment; do not place status pills or rings on it. */
+[data-tone='brand'] {
   color-scheme: dark;
-  --ink: #f5f5f7;
-  --ink-2: #cccccc;
-  --ink-3: #a1a1a6;
-  --ink-disabled: #6e6e73;
-  --surface: #1d1d1f;
-  --surface-2: #2a2a2c;
-  --sunken: #3a3a3c;
-  --line: rgba(255, 255, 255, 0.16);
-  --line-soft: rgba(255, 255, 255, 0.08);
-  --line-strong: #424245;
-  --accent: #0071e3;
-  --accent-press: #0066cc;
-  --accent-ink: #2997ff;
-  --accent-tint: rgba(41, 151, 255, 0.16);
-  --focus: #2997ff;
-  --ok: #30d158;
-  --ok-tint: rgba(48, 209, 88, 0.16);
-  --warn: #ff9f0a;
-  --warn-tint: rgba(255, 159, 10, 0.16);
-  --bad: #ff453a;
-  --bad-tint: rgba(255, 69, 58, 0.16);
-  --product-shadow: 3px 5px 30px rgba(0, 0, 0, 0.5);
+  --surface: rgba(255, 255, 255, 0.1);
+  --surface-2: rgba(255, 255, 255, 0.14);
+  --sunken: rgba(0, 0, 0, 0.18);
+  --ink: #ffffff;
+  --ink-2: rgba(255, 255, 255, 0.88);
+  --ink-3: rgba(255, 255, 255, 0.76);
+  --ink-disabled: rgba(255, 255, 255, 0.5);
+  --line: rgba(255, 255, 255, 0.28);
+  --line-soft: rgba(255, 255, 255, 0.14);
+  --line-strong: rgba(255, 255, 255, 0.4);
+  --accent: #f4f2ef;
+  --accent-press: #e3dfd8;
+  --accent-ink: #ffffff;
+  --accent-tint: rgba(255, 255, 255, 0.14);
+  --focus: #ffffff;
+  --on-accent: #231f20;
+  --gold: #e2cda0;
+  --gold-line: #e2cda0;
+  --gold-tint: rgba(226, 205, 160, 0.18);
+  --ok: #c9ecd9;
+  --ok-tint: rgba(255, 255, 255, 0.14);
+  --warn: #f6dfae;
+  --warn-tint: rgba(255, 255, 255, 0.14);
+  --bad: #ffd4cf;
+  --bad-tint: rgba(255, 255, 255, 0.14);
+  --info: #d3e4f5;
+  --info-tint: rgba(255, 255, 255, 0.14);
+  --chip-on-image: rgba(255, 255, 255, 0.22);
+  --product-shadow: 3px 5px 30px rgba(0, 0, 0, 0.36);
   color: var(--ink);
 }
 

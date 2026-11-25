@@ -1,43 +1,44 @@
+/* A notice inside the page: a card with a leading status icon. Only `warn` and `bad` take a tint; the
+   other tones sit on the card surface with its hairline. The icon carries the tone, never colour alone:
+   each tone has its own glyph, and warn and bad also say their word to screen readers. */
 .banner {
-  --tone: var(--info);
+  --tone: var(--ink-2);
   display: flex;
   align-items: flex-start;
   gap: var(--s-3);
   min-width: 0;
-  padding: 14px var(--s-4);
-  border-radius: var(--r-control);
-  background: var(--info-tint);
+  padding: var(--s-4) var(--s-5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--surface);
   color: var(--ink);
 }
 
-.info {
-  --tone: var(--info);
-  background: var(--info-tint);
+.info,
+.demo {
+  --tone: var(--ink-2);
 }
 
 .ok {
   --tone: var(--ok);
-  background: var(--ok-tint);
 }
 
 .warn {
   --tone: var(--warn);
+  border-color: transparent;
   background: var(--warn-tint);
 }
 
 .bad {
   --tone: var(--bad);
+  border-color: transparent;
   background: var(--bad-tint);
 }
 
-.demo {
-  --tone: var(--gold);
-  background: var(--gold-tint);
-}
-
 .icon {
+  flex: none;
   /* Sits level with the first line of text. */
-  margin-block-start: 2px;
+  margin-block-start: 1px;
   color: var(--tone);
 }
 
@@ -47,62 +48,95 @@
 }
 
 .title {
-  font-size: var(--t-callout);
+  font-size: var(--t-body);
   font-weight: 600;
-  line-height: 1.6;
+  line-height: 1.35;
+  letter-spacing: var(--ls-body);
   color: var(--ink);
 }
 
 .text {
   font-size: var(--t-callout);
-  line-height: 1.6;
+  line-height: 1.55;
+  letter-spacing: var(--ls-caption);
+  text-wrap: pretty;
   color: var(--ink);
 }
 
 .title + .text {
+  margin-block-start: 2px;
   color: var(--ink-2);
 }
 
+/* The one action is a link in the accent with a trailing chevron (mirrored in Arabic). */
 .action {
   position: relative;
   display: inline-flex;
   align-items: center;
   min-height: 32px;
-  margin-block: 4px -6px;
+  margin-block: var(--s-1) -6px;
   font-size: var(--t-callout);
-  font-weight: 600;
-  line-height: 1.5;
-  color: var(--tone);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 4px;
+  font-weight: 400;
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--accent-ink);
 }
 
-/* A 44px touch target around the text. */
 .action::after {
+  content: ' ›';
+  white-space: pre;
+}
+
+/* A 44 px touch target around the text. */
+.action::before {
   content: '';
   position: absolute;
   inset: -6px -8px;
 }
 
-.action:focus-visible {
-  outline-color: var(--tone);
-  border-radius: 6px;
+@media (hover: hover) {
+  .action:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
+.action:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--r-tile);
+}
+
+/* Compact: a footnote-like notice inside a sheet or a card, on the pearl surface. */
 .compact {
   gap: 10px;
-  padding: 10px 14px;
+  padding: var(--s-3) var(--s-4);
+  border-color: var(--line-soft);
+  border-radius: var(--r-control);
+  background: var(--surface-2);
+}
+
+.compact.warn,
+.compact.bad {
+  border-color: transparent;
+}
+
+.compact.warn {
+  background: var(--warn-tint);
+}
+
+.compact.bad {
+  background: var(--bad-tint);
 }
 
 .compact .icon {
-  margin-block-start: 1px;
+  margin-block-start: 0;
 }
 
 .compact .title,
 .compact .text,
 .compact .action {
-  font-size: var(--t-foot);
+  font-size: var(--t-callout);
 }
 
 /* Forced colours remove the tint that sets a notice apart: it gets a border instead. */

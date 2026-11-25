@@ -4,6 +4,8 @@
  *
  * A workflow is a small graph: steps run in order unless a step says otherwise (`next`), gates branch
  * (`yes` / `no`), a correction step may loop back (`back`), and `end` / `stop` steps finish the request.
+ * An investor step that loops back takes the loop by default ("yes"); when the investor declines the
+ * correction ("no", e.g. accepting a charge instead of reinstating) the request carries on forward.
  * Steps in the investor lane of kind `human` wait for the investor; every other step completes on its
  * own after its duration (see simulation.ts for how long that is in demo time).
  */
@@ -53,7 +55,7 @@ export function successor(wf: Workflow, step: WorkflowStep, outcome: Outcome = '
     const branch = outcome === 'no' ? step.no : step.yes;
     if (branch !== undefined) return branch;
   }
-  if (step.back !== undefined) return step.back;
+  if (step.back !== undefined && outcome === 'yes') return step.back;
   if (step.next !== undefined) return step.next;
   const index = wf.steps.indexOf(step);
   const following = wf.steps[index + 1];
@@ -209,8 +211,14 @@ export function advance(input: RequestState, wf: Workflow, now: number, timing: 
   return { req, events };
 }
 
+/**
+ * How the investor completes a step: the usual way ("yes"), declining a correction loop so the request
+ * carries on forward ("no", only meaningful on a step that loops back), or withdrawing the request there.
+ */
+export type InvestorRoute = Outcome | 'withdraw';
+
 /** The investor completes the step that was waiting for them. */
-export function act(input: RequestState, wf: Workflow, now: number, timing: Timing): { req: RequestState; events: EngineEvent[] } {
+export function act(input: RequestState, wf: Workflow, now: number, timing: Timing, route: InvestorRoute = 'yes'): { req: RequestState; events: EngineEvent[] } {
   const step = currentStep(wf, input);
   const open = currentVisit(input);
   if (!step || !open || !waitsForInvestor(step)) return { req: input, events: [] };
@@ -223,7 +231,16 @@ export function act(input: RequestState, wf: Workflow, now: number, timing: Timi
   req.status = 'active';
   const events: EngineEvent[] = [{ type: 'step_done', step: step.id, at: now }];
 
-  const nextId = successor(wf, step);
+  if (route === 'withdraw') {
+    req.current = null;
+    req.status = 'stopped';
+    events.push({ type: 'stopped', step: step.id, at: now });
+    return { req, events };
+  }
+  const outcome: Outcome = route === 'no' && step.back !== undefined ? 'no' : 'yes';
+  if (outcome === 'no') visit.outcome = 'no';
+
+  const nextId = successor(wf, step, outcome);
   if (nextId === null || !findStep(wf, nextId)) {
     req.current = null;
     req.status = 'done';

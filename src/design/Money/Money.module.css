@@ -14,8 +14,8 @@
 /* Smaller than the figure, but never below the caption size. */
 .currency {
   font-size: max(0.56em, var(--t-cap));
-  font-weight: 500;
-  color: var(--ink-2);
+  font-weight: 400;
+  color: var(--ink-3);
 }
 
 .plain .currency {
@@ -30,12 +30,12 @@
 
 .title {
   font-size: var(--t-title);
-  font-weight: 700;
+  font-weight: 600;
   line-height: var(--lh-tight);
 }
 
 .display {
   font-size: var(--t-display);
-  font-weight: 700;
+  font-weight: 600;
   line-height: var(--lh-tight);
 }

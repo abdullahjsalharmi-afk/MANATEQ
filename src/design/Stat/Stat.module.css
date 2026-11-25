@@ -1,7 +1,8 @@
+/* One figure with its label: a big 34 px / 600 number over a 14 px label. */
 .stat {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--s-1);
   min-width: 0;
   text-align: start;
 }
@@ -13,36 +14,41 @@
 
 .value {
   order: 1;
-  font-size: var(--t-title);
-  font-weight: 700;
+  font-size: var(--t-display);
+  font-weight: 600;
   line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
   color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
+/* The one headline figure of a screen. */
 .lg .value {
-  font-size: var(--t-display);
+  font-size: var(--t-hero);
 }
 
 /* Smaller than the figure, but never below the caption size. When the column is too narrow the unit
    moves to the next line whole, rather than breaking in the middle. */
 .unit {
   display: inline-block;
-  font-size: max(0.54em, var(--t-cap));
-  font-weight: 500;
-  color: var(--ink-2);
+  font-size: max(0.5em, var(--t-callout));
+  font-weight: 400;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
   white-space: nowrap;
 }
 
 .label {
   order: 2;
-  font-size: var(--t-foot);
-  line-height: 1.55;
-  color: var(--ink-2);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .hint {
   order: 3;
-  font-size: var(--t-cap);
-  line-height: 1.5;
+  font-size: var(--t-foot);
+  line-height: 1.33;
   color: var(--ink-3);
 }

@@ -1,7 +1,7 @@
 .map {
   display: flex;
   flex-direction: column;
-  gap: var(--s-3);
+  gap: var(--s-4);
   min-width: 0;
   margin: 0;
 }
@@ -25,17 +25,8 @@
   overflow: visible;
 }
 
-/* a very light band of shallow water along the coast */
-.shore {
-  fill: none;
-  stroke: var(--line);
-  stroke-width: 8px;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-}
-
 .ground {
-  fill: var(--surface);
+  fill: var(--sunken);
   stroke: var(--line-strong);
   stroke-width: 1px;
   stroke-linejoin: round;
@@ -54,17 +45,17 @@
 
 .marker:focus-visible {
   border-radius: 50%;
+  outline: 2px solid var(--focus);
   outline-offset: 0;
 }
 
 .glyph {
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
   background: var(--ink);
   transition:
     transform var(--d-2) var(--ease),
-    background-color var(--d-1) var(--ease),
-    box-shadow var(--d-2) var(--ease);
+    background-color var(--d-1) var(--ease);
 }
 
 .land {
@@ -72,29 +63,42 @@
 }
 
 .warehousing {
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 .glyph.warehousing {
-  width: 12.5px;
-  height: 12.5px;
+  width: 9px;
+  height: 9px;
 }
 
-.marker:hover .glyph {
-  transform: scale(1.15);
+.marker:active .glyph {
+  transform: scale(1.2);
 }
 
 .on {
   z-index: 2;
 }
 
+/* the selected zone: the accent, ringed in white so it lifts off the outline */
 .on .glyph,
-.on:hover .glyph {
-  transform: scale(1.5);
+.on:active .glyph {
+  width: 14px;
+  height: 14px;
   background: var(--accent);
-  box-shadow:
-    0 0 0 2px var(--surface),
-    0 0 0 3.2px var(--accent);
+  outline: 2px solid var(--on-accent);
+  transform: none;
+}
+
+.on .glyph.warehousing {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glyph {
+    transition: none;
+  }
 }
 
 /* zones outside the current filter: small, quiet, not selectable */
@@ -107,34 +111,40 @@
   transform: translate(-50%, -50%);
 }
 
+.faint.land {
+  border-radius: 50%;
+}
+
 .faint.warehousing {
   border-radius: 1.5px;
 }
 
-/* a short stem from the selected marker to its name */
+/* a short hairline from the selected marker to its name */
 .stem {
   position: absolute;
   inset: 0;
   overflow: visible;
   pointer-events: none;
-  stroke: var(--accent);
-  stroke-width: 1.5px;
+  stroke: var(--ink-3);
+  stroke-width: 1px;
   stroke-linecap: round;
 }
 
-/* the name of the selected zone */
+/* the name of the selected zone: a small neutral capsule */
 .tag {
   position: absolute;
   z-index: 3;
   width: max-content;
   max-width: 220px;
   padding: 3px 10px;
-  border-radius: 9px;
-  background: var(--ink);
-  color: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
   font-size: var(--t-cap);
   font-weight: 600;
   line-height: 1.5;
+  letter-spacing: var(--ls-caption);
   text-align: center;
   pointer-events: none;
 }
@@ -146,14 +156,16 @@
   justify-content: space-between;
   gap: var(--s-1) var(--s-4);
   font-size: var(--t-cap);
-  line-height: 1.6;
-  color: var(--ink-2);
+  line-height: 1.5;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .keys {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-1) var(--s-4);
+  color: var(--ink-2);
 }
 
 .key {
@@ -167,6 +179,11 @@
   width: 10px;
   height: 10px;
   background: var(--ink);
+}
+
+.sample.warehousing {
+  width: 9px;
+  height: 9px;
 }
 
 .note {

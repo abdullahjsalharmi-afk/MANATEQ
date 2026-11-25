@@ -1,9 +1,10 @@
+/* A quiet empty state: centred, generous air, nothing that competes with the one way forward. */
 .empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   min-width: 0;
-  padding: var(--s-14) var(--s-4) var(--s-10);
+  padding: var(--s-14) var(--s-4) var(--s-12);
   text-align: center;
 }
 
@@ -11,11 +12,24 @@
   padding-block: var(--s-8) var(--s-6);
 }
 
+/* A small render rests on the surface: about 200 px wide, never boxed, with room below it. */
+.render {
+  width: min(200px, 64%);
+  margin-block-end: var(--s-8);
+}
+
+.render > img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.icon,
 .illustration {
   display: flex;
   justify-content: center;
   max-width: 100%;
-  margin-block-end: var(--s-5);
+  margin-block-end: var(--s-4);
   color: var(--ink-3);
 }
 
@@ -24,15 +38,19 @@
   font-size: var(--t-heading);
   font-weight: 600;
   line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  text-wrap: balance;
   color: var(--ink);
 }
 
 .body {
   max-width: 30em;
   margin-block-start: var(--s-2);
-  font-size: var(--t-callout);
-  line-height: 1.7;
-  color: var(--ink-2);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  text-wrap: pretty;
+  color: var(--ink-3);
 }
 
 .action {
@@ -40,5 +58,5 @@
   flex-direction: column;
   align-items: center;
   gap: var(--s-2);
-  margin-block-start: var(--s-5);
+  margin-block-start: var(--s-6);
 }

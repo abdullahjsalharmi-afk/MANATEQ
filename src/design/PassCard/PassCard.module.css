@@ -1,111 +1,57 @@
-/*
- * A ticket made of two parts — the pass and its stub — with a notch on each side where they meet.
- * Each part is drawn twice: an outer layer in the hairline colour and, one pixel inside it, the surface.
- * Both layers are cut by the same circles (CSS masks), so the hairline follows the notches and the
- * ticket works on any background.
- */
+/* A gate pass: one clean card. The facts above, the code below a hairline. */
 .pass {
   display: flex;
   flex-direction: column;
   width: 100%;
   min-width: 0;
-  /* a ticket has a natural width: on wide screens it stays a ticket instead of stretching */
+  /* a pass has a natural width: on wide screens it does not stretch */
   max-width: 420px;
   margin-inline: auto;
-  color: var(--ink);
-  --notch: 10px;
-  --notch-in: 11px;
-  --cut: #0000 calc(100% - 0.5px), #000;
-}
-
-.main,
-.stub {
-  padding: 1px;
-  background: var(--line-strong);
-}
-
-.main {
-  padding-block-end: 0;
-  border-radius: var(--r-card) var(--r-card) 0 0;
-  -webkit-mask:
-    radial-gradient(circle var(--notch) at 0 100%, var(--cut)) 0 0 / 51% 100% no-repeat,
-    radial-gradient(circle var(--notch) at 100% 100%, var(--cut)) 100% 0 / 51% 100% no-repeat;
-  mask:
-    radial-gradient(circle var(--notch) at 0 100%, var(--cut)) 0 0 / 51% 100% no-repeat,
-    radial-gradient(circle var(--notch) at 100% 100%, var(--cut)) 100% 0 / 51% 100% no-repeat;
-}
-
-.stub {
-  padding-block-start: 0;
-  border-radius: 0 0 var(--r-card) var(--r-card);
-  -webkit-mask:
-    radial-gradient(circle var(--notch) at 0 0, var(--cut)) 0 0 / 51% 100% no-repeat,
-    radial-gradient(circle var(--notch) at 100% 0, var(--cut)) 100% 0 / 51% 100% no-repeat;
-  mask:
-    radial-gradient(circle var(--notch) at 0 0, var(--cut)) 0 0 / 51% 100% no-repeat,
-    radial-gradient(circle var(--notch) at 100% 0, var(--cut)) 100% 0 / 51% 100% no-repeat;
-}
-
-.mainInner,
-.stubInner {
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
   background: var(--surface);
+  color: var(--ink);
 }
 
 .mainInner {
   display: flex;
   flex-direction: column;
-  gap: var(--s-4);
+  gap: var(--s-5);
   padding: var(--s-5) var(--s-5) var(--s-6);
-  border-radius: calc(var(--r-card) - 1px) calc(var(--r-card) - 1px) 0 0;
-  -webkit-mask:
-    radial-gradient(circle var(--notch-in) at -1px 100%, var(--cut)) 0 0 / 51% 100% no-repeat,
-    radial-gradient(circle var(--notch-in) at calc(100% + 1px) 100%, var(--cut)) 100% 0 / 51% 100% no-repeat;
-  mask:
-    radial-gradient(circle var(--notch-in) at -1px 100%, var(--cut)) 0 0 / 51% 100% no-repeat,
-    radial-gradient(circle var(--notch-in) at calc(100% + 1px) 100%, var(--cut)) 100% 0 / 51% 100% no-repeat;
 }
 
 .stubInner {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--s-2);
-  padding: var(--s-6) var(--s-5) var(--s-5);
-  border-radius: 0 0 calc(var(--r-card) - 1px) calc(var(--r-card) - 1px);
+  margin-inline: var(--s-5);
+  padding: var(--s-8) 0 var(--s-6);
+  border-block-start: 1px solid var(--line-soft);
   text-align: center;
-  -webkit-mask:
-    radial-gradient(circle var(--notch-in) at -1px 0, var(--cut)) 0 0 / 51% 100% no-repeat,
-    radial-gradient(circle var(--notch-in) at calc(100% + 1px) 0, var(--cut)) 100% 0 / 51% 100% no-repeat;
-  mask:
-    radial-gradient(circle var(--notch-in) at -1px 0, var(--cut)) 0 0 / 51% 100% no-repeat,
-    radial-gradient(circle var(--notch-in) at calc(100% + 1px) 0, var(--cut)) 100% 0 / 51% 100% no-repeat;
 }
 
-/* the perforation, from notch to notch */
-.stubInner::before {
-  content: '';
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline: 18px;
-  height: 2px;
-  background: radial-gradient(circle, var(--line-strong) 1px, #0000 1.25px) 0 0 / 8px 2px repeat-x;
+@media (min-width: 735px) {
+  .mainInner {
+    padding: var(--s-6) var(--s-6) var(--s-6);
+  }
+
+  .stubInner {
+    margin-inline: var(--s-6);
+  }
 }
 
 .head {
   display: flex;
   align-items: center;
-  gap: var(--s-3);
+  gap: var(--s-2);
+  min-height: 24px;
 }
 
 .tile {
   flex: none;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--sunken);
   color: var(--ink-2);
 }
 
@@ -113,8 +59,9 @@
   flex: 1;
   min-width: 0;
   font-size: var(--t-callout);
-  font-weight: 500;
-  line-height: 1.5;
+  font-weight: 400;
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
   color: var(--ink-2);
 }
 
@@ -128,18 +75,21 @@
   font-size: var(--t-heading);
   font-weight: 600;
   line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
 }
 
 .company {
-  font-size: var(--t-foot);
-  line-height: 1.6;
-  color: var(--ink-2);
+  margin-block-start: 2px;
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .facts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--s-3) var(--s-4);
+  gap: var(--s-4) var(--s-4);
 }
 
 /* align-items keeps left-to-right values (plot numbers, IDs) on the reading side in Arabic */
@@ -156,44 +106,48 @@
 
 .fact dt {
   font-size: var(--t-cap);
-  line-height: 1.6;
-  color: var(--ink-2);
+  line-height: 1.5;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .fact dd {
   max-width: 100%;
-  font-size: var(--t-callout);
-  font-weight: 500;
-  line-height: 1.55;
+  font-size: var(--t-body);
+  font-weight: 400;
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  font-variant-numeric: tabular-nums;
 }
 
 .qr {
-  width: 132px;
+  width: 148px;
   line-height: 0;
 }
 
+/* the one big code */
 .code {
-  font-size: var(--t-body);
+  margin-block-start: var(--s-3);
+  font-size: var(--t-title);
   font-weight: 600;
-  line-height: 1.5;
-  letter-spacing: 0.08em;
+  line-height: 1.19;
   font-variant-numeric: tabular-nums;
 }
 
 .hint {
-  font-size: var(--t-cap);
-  line-height: 1.6;
-  color: var(--ink-2);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 /* expired or revoked: the pass stays readable but no longer looks ready to scan */
 .spent .holder,
 .spent .fact dd,
 .spent .code {
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 
 .spent .qr {
   opacity: 0.28;
-  filter: grayscale(1);
 }

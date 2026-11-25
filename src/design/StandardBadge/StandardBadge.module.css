@@ -28,37 +28,38 @@
 
 .value {
   font-size: var(--t-display);
-  font-weight: 700;
-  line-height: 1.15;
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
+  font-variant-numeric: tabular-nums;
 }
 
 .unit {
   font-size: var(--t-heading);
   font-weight: 600;
   line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
 }
 
 /* "يوم عمل واحد", "فوري": the whole figure is words */
 .words {
   font-size: var(--t-title);
-  font-weight: 700;
-  line-height: 1.385;
-}
-
-:global([lang='en']) .words {
-  line-height: 1.27;
-  letter-spacing: -0.012em;
+  font-weight: 600;
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
 }
 
 /* a standard without a headline duration: its sentence is the figure */
 .plain {
   min-width: 0;
   font-size: var(--t-body);
-  font-weight: 500;
+  font-weight: 400;
   line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
   color: var(--ink);
 }
 
+/* «استرشادي»: a neutral pill */
 .tag {
   flex: none;
   align-self: flex-start;
@@ -70,19 +71,22 @@
   background: var(--sunken);
   color: var(--ink-2);
   font-size: var(--t-cap);
-  font-weight: 500;
-  line-height: 1.5;
+  font-weight: 600;
+  line-height: 1.33;
+  letter-spacing: var(--ls-caption);
   white-space: nowrap;
 }
 
 .text {
   max-width: 36em;
   font-size: var(--t-callout);
-  line-height: 1.7;
-  color: var(--ink-2);
+  line-height: 1.55;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+  text-wrap: pretty;
 }
 
-/* compact: a quiet chip for list rows */
+/* compact: a neutral pill for list rows */
 .chip {
   display: inline-flex;
   align-items: center;
@@ -94,8 +98,9 @@
   background: var(--sunken);
   color: var(--ink-2);
   font-size: var(--t-cap);
-  font-weight: 500;
-  line-height: 1.5;
+  font-weight: 600;
+  line-height: 1.33;
+  letter-spacing: var(--ls-caption);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }

@@ -197,6 +197,7 @@ const LABEL = {
   validUntil: { ar: 'سارٍ حتى', en: 'Valid until' },
   service: { ar: 'الخدمة', en: 'Service' },
   request: { ar: 'رقم الطلب', en: 'Request number' },
+  issuedOn: { ar: 'تاريخ الإصدار', en: 'Issued on' },
   amount: { ar: 'المبلغ', en: 'Amount' },
   invoice: { ar: 'الفاتورة', en: 'Invoice' },
   paidOn: { ar: 'تاريخ السداد', en: 'Paid on' },
@@ -221,7 +222,7 @@ function partyLines(facts: DocFacts): DocLine[] {
   return [line(LABEL.issuedTo, facts.company.name), line(LABEL.cr, code(facts.company.cr))];
 }
 
-/** "AW-131 · مجمّع الوكرة اللوجستي" */
+/** "AW-116 · مجمّع الوكرة اللوجستي" */
 export function plotLabel(plot: Plot, zoneName?: L10n): L10n {
   if (!zoneName) return code(plot.number);
   return { ar: `${ltr(plot.number)} · ${zoneName.ar}`, en: `${plot.number} · ${zoneName.en}` };
@@ -242,7 +243,7 @@ function leaseLines(lease: Lease): DocLine[] {
 
 const signatureLine = (): DocLine => line(LABEL.signature, VALUE.demoSignature);
 
-/** "عقد الإيجار · AW-131" */
+/** "عقد الإيجار · AW-116" */
 function titled(title: L10n, plot?: Plot): L10n {
   if (!plot) return title;
   return { ar: `${title.ar} · ${ltr(plot.number)}`, en: `${title.en} · ${plot.number}` };
@@ -313,7 +314,7 @@ export function requestDocs(
     } else if (item.kind === 'certificate' && facts.lease) {
       lines.push(line(LABEL.lease, code(facts.lease.ref)), line(LABEL.validUntil, date(facts.lease.endsAt)));
     }
-    lines.push(line(LABEL.service, service.label), line(LABEL.request, code(request.ref)));
+    lines.push(line(LABEL.service, service.label), line(LABEL.request, code(request.ref)), line(LABEL.issuedOn, date(at)));
     if (item.signed) lines.push(signatureLine());
 
     return {

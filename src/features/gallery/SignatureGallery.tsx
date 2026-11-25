@@ -1,7 +1,8 @@
 /**
- * Gallery section — the signature components in every state, with realistic content:
- * a building-permit request at the Ministry of Municipality on day 2 of 5, the four journey stations,
- * a lease contract, a contractor pass, the map and a plot layout.
+ * Gallery section: the signature components in every state, with realistic content:
+ * the next step as the dark hero tile and as quiet cards, a building-permit request at the Ministry of
+ * Municipality on day 2 of 5, the four journey stations, a lease contract, a contractor pass, the map and
+ * a plot layout, and the same components placed on a dark tile.
  */
 import { useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
@@ -9,6 +10,7 @@ import { getIntegration, getService, getZone } from '@/data/catalog';
 import type { Lane } from '@/data/types';
 import { Card, Chip, ChipRow, List, Row, Section, toast } from '@/design/core';
 import { QR } from '@/design/QR/QR';
+import { Render } from '@/design/Render/Render';
 import {
   DocCard,
   FetchedList,
@@ -31,7 +33,13 @@ import { dayOf, timeLeft } from '@/domain/standard';
 
 /** Sample content of this gallery page. Everything here is illustrative. */
 const demo = {
-  // next step
+  // next step: the hero tile
+  heroEyebrow: { ar: 'خطوتك التالية', en: 'Your next step' },
+  heroTitle: { ar: 'قدّم طلب رخصة البناء', en: 'Apply for your building permit' },
+  heroContext: { ar: 'شهادة عدم الممانعة على التصميم جاهزة.', en: 'Your design no-objection certificate is ready.' },
+  heroCta: { ar: 'ابدأ الطلب', en: 'Start the application' },
+  heroSecondary: { ar: 'ما المطلوب', en: 'What you need' },
+  // next step: the quiet cards
   nextEyebrow: { ar: 'الخطوة التالية', en: 'Next step' },
   nextTitle: { ar: 'وقّع عقد الإيجار', en: 'Sign your lease contract' },
   nextContext: { ar: 'القطعة BA-117 محجوزة لك حتى 30 نوفمبر.', en: 'Plot BA-117 is reserved for you until 30 November.' },
@@ -39,6 +47,9 @@ const demo = {
   nextCta: { ar: 'راجِع ووقّع', en: 'Review and sign' },
   nextMore: { ar: 'و3 إجراءات أخرى', en: 'And 3 more actions' },
   clearEyebrow: { ar: 'اليوم', en: 'Today' },
+  runningTitle: { ar: 'منشأتك تعمل', en: 'Your facility is operating' },
+  runningContext: { ar: 'لا طلبات مفتوحة. التجديد القادم في مارس 2027.', en: 'No open requests. Your next renewal is in March 2027.' },
+  runningCta: { ar: 'اعرض قطعتك', en: 'View your plot' },
   clearTitle: { ar: 'كل شيء على ما يرام', en: 'Everything is on track' },
   clearContext: { ar: 'لا شيء مطلوب منك الآن. سنخبرك حين يحين دورك.', en: 'Nothing is needed from you right now. We will tell you when it is your turn.' },
   clearCta: { ar: 'تابع طلباتك', en: 'Follow your requests' },
@@ -145,20 +156,6 @@ const FILTER_ZONES: Record<Exclude<Filter, 'all'>, string[]> = {
   warehousing: ['WK', 'BS', 'BF', 'US1', 'US2'],
 };
 
-/** A small line drawing for the "all clear" card: a plot, a shed and a quiet sun. */
-function CalmSketch() {
-  return (
-    <svg width="168" height="76" viewBox="0 0 168 76" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 64h156" />
-      <path d="M38 64V38l24-12 24 12v26" />
-      <path d="M54 64V48h16v16" />
-      <path d="M96 64V46h34v18M104 46v18M122 46v18" />
-      <circle cx="140" cy="20" r="8" style={{ stroke: 'var(--accent)' }} />
-      <path d="M18 64c2-8 6-12 10-12" />
-    </svg>
-  );
-}
-
 export function SignatureGallery() {
   const t = useT(demo);
   const { lang, pick, fmt } = useLang();
@@ -227,9 +224,24 @@ export function SignatureGallery() {
 
   return (
     <>
-      <Section title="Next step">
-        <NextStepCard eyebrow={t('nextEyebrow')} title={t('nextTitle')} context={t('nextContext')} due={t('nextDue')} cta={{ label: t('nextCta'), to: '/gallery' }} more={{ label: t('nextMore'), onClick: () => toast(t('opened')) }} />
-        <NextStepCard tone="clear" eyebrow={t('clearEyebrow')} title={t('clearTitle')} context={t('clearContext')} cta={{ label: t('clearCta'), to: '/gallery' }} illustration={<CalmSketch />} />
+      <Section title="Next step" hint="Hero tile · build step">
+        <div style={{ marginInline: 'calc(var(--gutter) * -1)' }}>
+          <NextStepCard
+            tone="hero"
+            eyebrow={t('heroEyebrow')}
+            title={t('heroTitle')}
+            context={t('heroContext')}
+            due={t('nextDue')}
+            cta={{ label: t('heroCta'), to: '/gallery' }}
+            secondary={{ label: t('heroSecondary'), to: '/gallery' }}
+            render="construction"
+          />
+        </div>
+      </Section>
+      <Section title="Next step" hint="Quiet cards · contract · operation · all clear">
+        <NextStepCard eyebrow={t('nextEyebrow')} title={t('nextTitle')} context={t('nextContext')} due={t('nextDue')} cta={{ label: t('nextCta'), to: '/gallery' }} more={{ label: t('nextMore'), onClick: () => toast(t('opened')) }} render="plot" />
+        <NextStepCard tone="clear" eyebrow={t('clearEyebrow')} title={t('runningTitle')} context={t('runningContext')} cta={{ label: t('runningCta'), to: '/gallery' }} render="warehouse" />
+        <NextStepCard tone="clear" eyebrow={t('clearEyebrow')} title={t('clearTitle')} context={t('clearContext')} cta={{ label: t('clearCta'), to: '/gallery' }} />
       </Section>
 
       <Section title="Journey ribbon">
@@ -246,7 +258,7 @@ export function SignatureGallery() {
 
       <Section title="Ring">
         <Card>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
             <Ring size="sm" value={0.4} label={day2}>
               2/5
             </Ring>
@@ -264,13 +276,13 @@ export function SignatureGallery() {
             <Ring size="lg" value={0.4} label={day2}>
               <span style={{ display: 'grid', gap: 2 }}>
                 <span>2</span>
-                <span style={{ fontSize: 'var(--t-cap)', fontWeight: 500, color: 'var(--ink-2)' }}>{t('of', { total: 5 })}</span>
+                <span style={{ fontSize: 'var(--t-cap)', fontWeight: 400, color: 'var(--ink-2)' }}>{t('of', { total: 5 })}</span>
               </span>
             </Ring>
             <Ring size="lg" value={1.2} label={over}>
               <span style={{ display: 'grid', gap: 2 }}>
                 <span>6</span>
-                <span style={{ fontSize: 'var(--t-cap)', fontWeight: 500 }}>{t('of', { total: 5 })}</span>
+                <span style={{ fontSize: 'var(--t-cap)', fontWeight: 400 }}>{t('of', { total: 5 })}</span>
               </span>
             </Ring>
             <Ring size="lg" value={1} complete label={t('ringDone')} />
@@ -281,7 +293,7 @@ export function SignatureGallery() {
             <Ring size="lg" value={0.4} label={day2}>
               <span style={{ display: 'grid', gap: 2 }}>
                 <span>2</span>
-                <span style={{ fontSize: 'var(--t-cap)', fontWeight: 500, color: 'var(--ink-2)' }}>{t('of', { total: 5 })}</span>
+                <span style={{ fontSize: 'var(--t-cap)', fontWeight: 400, color: 'var(--ink-2)' }}>{t('of', { total: 5 })}</span>
               </span>
             </Ring>
             <div style={{ display: 'grid', gap: 6, justifyItems: 'start', minWidth: 0 }}>
@@ -424,6 +436,9 @@ export function SignatureGallery() {
       </Section>
 
       <Section title="Gate pass">
+        <div style={{ width: 200, marginInline: 'auto', marginBlock: '8px 32px' }}>
+          <Render name="gate" decorative />
+        </div>
         <PassCard
           kind="worker"
           holder={t('holder')}
@@ -455,6 +470,23 @@ export function SignatureGallery() {
         <Card>
           <PlotGrid plots={plotsFor('BA')} selected={plot} onSelect={(cell) => setPlot(cell.id)} own={['BA-124']} />
         </Card>
+      </Section>
+
+      <Section title="On a dark tile" hint="Ring · holder · journey · timeline · standard">
+        <div data-tone="dark" style={{ marginInline: 'calc(var(--gutter) * -1)', padding: 'var(--tile-pad) var(--gutter)', background: 'var(--tile-1)', display: 'grid', gap: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Ring size="lg" value={0.4} label={day2}>
+              2
+            </Ring>
+            <div style={{ display: 'grid', gap: 8, justifyItems: 'start', minWidth: 0 }}>
+              <HolderChip lane="nat" name={ministry} />
+              <HolderChip lane="inv" size="sm" />
+            </div>
+          </div>
+          <JourneyRibbon label={t('journey')} stations={stations} caption={t('journeyCaption')} />
+          <Timeline items={leaseSteps.slice(2)} />
+          {leaseService ? <StandardBadge standard={leaseService.standard} /> : null}
+        </div>
       </Section>
     </>
   );

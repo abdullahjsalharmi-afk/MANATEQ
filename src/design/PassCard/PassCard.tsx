@@ -42,8 +42,8 @@ export interface PassCardProps {
 }
 
 /**
- * A gate pass, in the shape of a ticket: who, where, until when — and the code the gate scans.
- * The notches and the perforation are drawn with CSS only.
+ * A gate pass on a clean card: who, where, until when, and below a hairline the QR the gate scans with
+ * its code in large type.
  */
 export function PassCard({ kind, holder, idOrPlate, company, zone, plot, validFrom, validTo, status, code, qr, className }: PassCardProps) {
   const t = useT(strings);
@@ -56,7 +56,7 @@ export function PassCard({ kind, holder, idOrPlate, company, zone, plot, validFr
         <div className={styles.mainInner}>
           <header className={styles.head}>
             <span className={styles.tile} aria-hidden="true">
-              <Icon icon={KIND_ICON[kind]} size={20} />
+              <Icon icon={KIND_ICON[kind]} size={20} strokeWidth={1.5} />
             </span>
             <p className={styles.kind}>{t(kind)}</p>
             <Pill tone={state.tone} icon={state.icon}>

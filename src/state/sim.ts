@@ -7,11 +7,13 @@
  * request ends, the documents of a finished request, the services that follow by themselves, and the
  * service's own effects (`effects.ts`). Nothing here reads the clock or the store.
  */
-import type { ActionAtom, ServiceDetail, ServiceId } from '@/data/types';
+import type { ActionAtom, ServiceDetail, ServiceId, StepAction } from '@/data/types';
 import { followers, oncePerPlot } from '@/domain/chains';
 import { requestDocs } from '@/domain/documents';
 import type { Appointment, Doc, FormValue, RequestState, Visit, World } from '@/domain/types';
-import { act, advance, begin, currentStep, currentVisit, findStep, isTerminal, mainPath, waitsForInvestor, type EngineEvent, type Timing } from '@/domain/workflow';
+import { getZone } from '@/data/catalog';
+import { findPlot } from '@/domain/plots';
+import { act, advance, begin, currentStep, currentVisit, findStep, isTerminal, mainPath, waitsForInvestor, type EngineEvent, type InvestorRoute, type Outcome, type Timing } from '@/domain/workflow';
 import { addPass, atomEffects, recordPayload, settleInvoice, whenFinished, whenStarted, whenStopped, whenWaiting, type EffectContext } from './effects';
 import { allocate, docRef, requestRef } from './refs';
 import { dateText, dots, fill, moneyText, text } from './strings';
@@ -82,6 +84,64 @@ function answeredAtStart(request: RequestState, service: ServiceDetail, step: nu
   return entrySteps(service).includes(step) && !request.visits.some((visit) => visit.step === step && visit.doneAt !== undefined);
 }
 
+/**
+ * True when the investor reaches this step straight from their own correction step that loops back to
+ * it ("replace the guarantee" → "upload the guarantee"): the correction already carried the new answer,
+ * so it is not asked again.
+ */
+function answeredByCorrection(request: RequestState, service: ServiceDetail, step: number): boolean {
+  const previous = request.visits[request.visits.length - 2];
+  const from = previous ? findStep(service.workflow, previous.step) : undefined;
+  return from !== undefined && previous?.doneAt !== undefined && waitsForInvestor(from) && from.back === step && previous.outcome !== 'no';
+}
+
+/** The investor's step is already answered: in the start flow, or by the correction that led back to it. */
+const answeredAlready = (request: RequestState, service: ServiceDetail, step: number): boolean => answeredAtStart(request, service, step) || answeredByCorrection(request, service, step);
+
+/* ───────────────────────────── choices that steer ───────────────────────────── */
+
+/** What one option of a `choose` step changes, beyond being recorded in the request's form. */
+interface ChoiceEffect {
+  /** Withdraw the request here, or decline the correction loop and carry on ("no"). */
+  route?: InvestorRoute;
+  /** The decision a later gate takes because of this choice (it is the investor's answer, not a rule). */
+  gate?: { step: number; outcome: Outcome };
+  /** The tasks of the step that apply with this option; the others are skipped. */
+  tasks?: ActionAtom[];
+}
+
+/**
+ * Options that change the course of a request, as the workflow pages describe them. Options not
+ * listed take the usual path and every task of their step.
+ */
+const CHOICES: Partial<Record<ServiceId, Record<number, Record<string, ChoiceEffect>>>> = {
+  // "Uploads the guarantee issued by the bank, or pays the deposit online".
+  B2: { 3: { guarantee: { tasks: ['choose', 'upload'] }, deposit: { tasks: ['choose', 'pay'] } } },
+  // "Redraws in line with the options" returns to step 1; the investor may instead withdraw the request.
+  B4: { 4: { withdraw: { route: 'withdraw' } } },
+  // Accepting the charge closes the inspection loop and goes on to the settlement.
+  B7: { 6: { acceptCharge: { route: 'no' } } },
+  // Paid, or a plan agreed: the case is no longer "unpaid and no plan". A plan asks for no payment now.
+  B10: { 6: { payNow: { gate: { step: 7, outcome: 'no' } }, paymentPlan: { gate: { step: 7, outcome: 'no' }, tasks: ['choose'] } } },
+  // An appeal or a request for more time is not "rectified on time": the HSE manager reviews it.
+  // Proof of the fix is uploaded; an appeal or a request for more time gives its reasons instead.
+  D6: {
+    5: {
+      rectified: { tasks: ['acknowledge', 'choose', 'upload'] },
+      appeal: { gate: { step: 6, outcome: 'no' }, tasks: ['acknowledge', 'choose', 'form'] },
+      extension: { gate: { step: 6, outcome: 'no' }, tasks: ['acknowledge', 'choose', 'form'] },
+    },
+  },
+};
+
+const choiceEffect = (serviceId: ServiceId, step: number, choice: string | undefined): ChoiceEffect | undefined => (choice === undefined ? undefined : CHOICES[serviceId]?.[step]?.[choice]);
+
+/** The tasks of a step that apply once the investor has picked `choice` (all of them when nothing was picked). */
+export function stepTasks(serviceId: ServiceId, action: Pick<StepAction, 'step' | 'flow'>, choice?: string): ActionAtom[] {
+  const only = choiceEffect(serviceId, action.step, choice)?.tasks;
+  return only ? action.flow.filter((task) => only.includes(task)) : action.flow;
+}
+
 /* ───────────────────────────── consequences of engine events ───────────────────────────── */
 
 /** The plot a request is about, as printed: the record's number, or the plot picked in an application. */
@@ -133,7 +193,7 @@ function settle(world: World, id: string, events: EngineEvent[], env: Env, now: 
     const ctx: EffectContext = { id, service, at: event.at };
 
     if (event.type === 'needs_you') {
-      if (answeredAtStart(request, service, event.step)) continue;
+      if (answeredAlready(request, service, event.step)) continue;
       const action = service.actions.find((candidate) => candidate.step === event.step);
       next = whenWaiting(next, { ...ctx, action });
       next = notify(next, {
@@ -206,7 +266,7 @@ function run(world: World, id: string, env: Env, now: number): World {
     if (!step || !open) return next;
 
     if (request.status === 'needs_you') {
-      if (!answeredAtStart(request, service, step.id)) return next;
+      if (!answeredAlready(request, service, step.id)) return next;
       const result = act(request, wf, open.enteredAt, base);
       next = settle(putRequest(next, result.req), id, result.events, env, now);
       continue;
@@ -242,6 +302,34 @@ function run(world: World, id: string, env: Env, now: number): World {
 
 /* ───────────────────────────── requests ───────────────────────────── */
 
+/** The land application and the services it starts by itself, which name a plot before it is the investor's. */
+const APPLICATION: ReadonlySet<ServiceId> = new Set<ServiceId>(['A4', 'A5', 'A6', 'A7']);
+
+/**
+ * Which plot and zone a new request is about. A service about a plot takes one of the investor's own
+ * plots (a generic form names it in its `plot` field). A land application may also name a plot of a
+ * zone's layout ("AW-117"). Anything else is left out, so a request never points at a plot that does
+ * not exist.
+ */
+function placeOf(world: World, input: StartInput, form: Record<string, FormValue>): { plotId?: string; zoneCode?: string } {
+  const application = APPLICATION.has(input.serviceId);
+  // A plot that is only reserved (its application still running) is not yet the investor's to use.
+  const own = (id: string | undefined) => {
+    const plot = findPlotRecord(world, id);
+    return plot && (application || plot.status !== 'reserved') ? plot.id : undefined;
+  };
+  const named = input.plotId ?? (typeof form.plot === 'string' ? form.plot : undefined);
+  let plotId = own(named);
+  const zoneOfPlot = findPlotRecord(world, plotId)?.zoneCode;
+  if (plotId === undefined && named !== undefined && application) {
+    const zone = input.zoneCode ?? named.split('-')[0] ?? '';
+    if (findPlot(zone, named)) plotId = named;
+  }
+  const asked = input.zoneCode !== undefined && getZone(input.zoneCode) ? input.zoneCode : undefined;
+  const zoneCode = zoneOfPlot ?? (plotId !== undefined ? plotId.split('-')[0] : asked);
+  return { ...(plotId !== undefined ? { plotId } : {}), ...(zoneCode !== undefined ? { zoneCode } : {}) };
+}
+
 /**
  * Creates a request at `at` and moves it up to `now`. When the service's workflow is not in memory
  * yet the request is queued and starts at the next tick.
@@ -249,9 +337,7 @@ function run(world: World, id: string, env: Env, now: number): World {
 export function startIn(world: World, input: StartInput, at: number, env: Env, now: number = at): { world: World; id: string } {
   const slot = allocate(world, 'r');
   const form = { ...(input.form ?? {}) };
-  // A generic form names the plot in its own `plot` field.
-  const plotId = input.plotId ?? (typeof form.plot === 'string' && findPlotRecord(world, form.plot) ? form.plot : undefined);
-  const zoneCode = input.zoneCode ?? findPlotRecord(world, plotId)?.zoneCode;
+  const { plotId, zoneCode } = placeOf(world, input, form);
   const queued: RequestState = {
     id: slot.id,
     ref: requestRef(slot.seq, at),
@@ -273,7 +359,11 @@ export function startIn(world: World, input: StartInput, at: number, env: Env, n
   return { world: run(putRequest(slot.world, queued), slot.id, env, now), id: slot.id };
 }
 
-/** The investor completes the step that was waiting for them: answers are recorded, the step's tasks take effect, the request moves on. */
+/**
+ * The investor completes the step that was waiting for them: answers are recorded, the step's tasks
+ * take effect (only those that apply to the option picked), and the request moves on, the way the
+ * option says when it steers the request.
+ */
 export function actIn(world: World, id: string, payload: ActPayload, now: number, env: Env): World {
   const request = findRequest(world, id);
   if (!request || request.status !== 'needs_you' || request.current === null) return world;
@@ -281,14 +371,17 @@ export function actIn(world: World, id: string, payload: ActPayload, now: number
   if (!service) return world;
   const stepId = request.current;
   const action = service.actions.find((candidate) => candidate.step === stepId);
+  const steer = choiceEffect(service.id, stepId, payload.choice);
 
   let next = recordPayload(world, id, stepId, payload);
   if (action) {
-    for (const atom of action.flow) next = atomEffects[atom]?.(next, { id, service, at: now, action, payload }) ?? next;
+    for (const atom of stepTasks(service.id, action, payload.choice)) next = atomEffects[atom]?.(next, { id, service, at: now, action, payload }) ?? next;
   }
   const ready = findRequest(next, id);
   if (!ready) return next;
-  const result = act(ready, service.workflow, now, env.timing(service));
+  const gate = steer?.gate;
+  const steered: RequestState = gate ? { ...ready, decisions: { ...(ready.decisions ?? {}), [gate.step]: gate.outcome } } : ready;
+  const result = act(steered, service.workflow, now, env.timing(service), steer?.route ?? 'yes');
   next = settle(putRequest(next, result.req), id, result.events, env, now);
   return run(next, id, env, now);
 }
@@ -308,12 +401,17 @@ export function cancelIn(world: World, id: string, now: number, env: Env): World
   const request = findRequest(world, id);
   if (!request || isFinished(request)) return world;
   const last = request.visits.length - 1;
-  const visits: Visit[] = request.visits.map((visit, index) => (index === last && visit.doneAt === undefined ? { ...visit, doneAt: Math.max(now, visit.enteredAt) } : visit));
   const open = currentVisit(request);
+  const service = env.detail(request.serviceId);
+  const openStep = service ? currentStep(service.workflow, request) : undefined;
+  // The open step closes at the moment of withdrawal; a decision that was not taken yet is left out.
+  const visits: Visit[] =
+    open && openStep?.kind === 'gate'
+      ? request.visits.slice(0, last)
+      : request.visits.map((visit, index) => (index === last && visit.doneAt === undefined ? { ...visit, doneAt: Math.max(now, visit.enteredAt) } : visit));
   const waited = request.status === 'needs_you' && open ? Math.max(0, now - open.enteredAt) : 0;
   const closed: RequestState = { ...released(request), visits, current: null, status: 'stopped', updatedAt: now, investorMs: request.investorMs + waited };
   const next = putRequest(world, closed);
-  const service = env.detail(request.serviceId);
   return service ? (whenStopped[service.id]?.(next, { id, service, at: now }) ?? next) : next;
 }
 

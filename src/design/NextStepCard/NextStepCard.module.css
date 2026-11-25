@@ -1,4 +1,4 @@
-/* ---------- hero: the near-black tile at the top of Home ---------- */
+/* ---------- hero: the maroon brand tile at the top of Home ---------- */
 
 .hero {
   display: flex;
@@ -7,7 +7,7 @@
   min-width: 0;
   padding: var(--tile-pad) var(--gutter);
   border-radius: 0;
-  background: var(--tile-1);
+  background: var(--brand);
   color: var(--ink);
   text-align: center;
 }
@@ -30,7 +30,7 @@
   font-weight: 400;
   line-height: 1.43;
   letter-spacing: var(--ls-caption);
-  color: var(--ink-3);
+  color: var(--gold);
 }
 
 .heroEyebrow .due {
@@ -105,11 +105,39 @@
   }
 }
 
-/* a small render heading the card, resting on it */
+/* a small render heading the card, resting on it; beside the words on wider screens */
 .media {
   width: 160px;
   max-width: 60%;
   margin-block-end: var(--s-6);
+}
+
+.words {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: stretch;
+  min-width: 0;
+}
+
+@media (min-width: 735px) {
+  .withMedia {
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: var(--s-8);
+  }
+
+  .withMedia .words {
+    flex: 1;
+    align-self: center;
+  }
+
+  .media {
+    flex: none;
+    width: 200px;
+    max-width: 34%;
+    margin-block-end: 0;
+  }
 }
 
 .check {
@@ -191,11 +219,6 @@
 
 .clear .actions {
   margin-block-start: var(--s-3);
-}
-
-/* the quiet link sits on the text edge, not indented by a button's padding */
-.quiet {
-  margin-inline-start: calc(var(--s-3) * -1);
 }
 
 /* a quiet text link with a chevron */

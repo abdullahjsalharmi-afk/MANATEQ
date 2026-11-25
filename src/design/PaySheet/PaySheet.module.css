@@ -1,7 +1,7 @@
 .review {
   display: flex;
   flex-direction: column;
-  gap: var(--s-5);
+  gap: var(--s-6);
   transition: opacity var(--d-2) var(--ease);
 }
 
@@ -10,19 +10,21 @@
   opacity: 0.55;
 }
 
+/* The amount is the hero of the sheet: one large figure, its label above. */
 .amount {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding-block: var(--s-2) var(--s-1);
+  gap: var(--s-1);
+  padding-block: var(--s-4) var(--s-3);
   text-align: center;
 }
 
 .amountLabel {
-  font-size: var(--t-foot);
-  line-height: 1.55;
-  color: var(--ink-2);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .amountValue {
@@ -41,7 +43,8 @@
 
 .paidNote {
   margin-block-start: var(--s-2);
-  font-size: var(--t-foot);
-  line-height: 1.55;
-  color: var(--ink-2);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }

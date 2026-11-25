@@ -33,10 +33,10 @@ const MARKER_CLEARANCE = 10;
 const KEYS: Record<string, Direction> = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
 
 /**
- * The schematic map: Qatar's outline with the 13 zones. Land zones are circles and warehousing parks
- * are rounded squares; the selected zone grows, takes the accent and shows its name. Markers are real
- * buttons; arrow keys move between them by compass direction. East stays on the right in Arabic too —
- * a map does not mirror.
+ * The schematic map: Qatar's quiet outline with the 13 zones as small ink marks. Land zones are dots and
+ * warehousing parks are rounded squares; the selected zone grows, takes the accent with a white ring and
+ * shows its name. Markers are real buttons; arrow keys move between them by compass direction. East stays
+ * on the right in Arabic too: a map does not mirror.
  */
 export function QatarMap({ selected, onSelect, highlight, height = 440, label, className }: QatarMapProps) {
   const t = useT(strings);
@@ -129,7 +129,6 @@ export function QatarMap({ selected, onSelect, highlight, height = 440, label, c
       <div ref={wrapRef} className={styles.wrap} onClick={onNearTap}>
         <div ref={stageRef} role="group" aria-label={label ?? t('map')} className={styles.stage} style={{ width, height }} onKeyDown={onKeyDown}>
           <svg className={styles.outline} width={width} height={height} viewBox={`${minX} ${minY} ${boxWidth} ${boxHeight}`} preserveAspectRatio="none" aria-hidden="true" focusable="false">
-            <path className={styles.shore} d={qatarMap.path} />
             <path className={styles.ground} d={qatarMap.path} />
           </svg>
 

@@ -12,7 +12,9 @@ import { getActivity, peekServiceDetail } from '@/data/catalog';
 import type { L10n, ServiceDetail, ServiceId, WorkflowStep } from '@/data/types';
 import { leaseContractDoc } from '@/domain/documents';
 import { pathScale, stepDays } from '@/domain/simulation';
-import type { AppState, Company, Invoice, Lease, Persona, Plot, RequestState, Settings, TeamMember, World } from '@/domain/types';
+import { checkEligibility, toEligibilityResult } from '@/domain/eligibility';
+import { plotsFor } from '@/domain/plots';
+import type { AppState, Company, EligibilityResult, Invoice, Lease, Persona, Plot, RequestState, Settings, TeamMember, World } from '@/domain/types';
 import { currentStep, currentVisit, findStep, mainPath, waitsForInvestor, type Timing } from '@/domain/workflow';
 import { addPass, issueRentInvoice, settleInvoice } from './effects';
 import { allocate, invoiceRef } from './refs';
@@ -22,7 +24,7 @@ import type { ActPayload, Env, PendingWorld } from './types';
 import { DAY, HOUR, MINUTE, PAYMENT_TERM_MS, addDocs, addYears, annualRentOf, docFacts, findRequest, isFinished, isOpen, notify, periodRentOf, rateOf, startOfDay } from './world';
 
 /** Bump when the saved shape changes; older saves are discarded on load. */
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 
 export function initialSettings(): Settings {
   return { lang: 'ar', theme: 'auto', textSize: 1, onboarded: false, notifications: true };
@@ -175,17 +177,18 @@ function story(initial: World, env: Env, now: number) {
 
 /* ───────────────────────────── people and companies ───────────────────────────── */
 
-const demoName = (ar: string, en: string): L10n => ({ ar: `${ar} (تجريبي)`, en: `${en} (demo)` });
+/** People of the demo are plainly illustrative: a role and the word «تجريبي» / "demo", never a real-looking name. */
+const demoName = (ar: string, en: string): L10n => ({ ar: `${ar} تجريبي`, en: `Demo ${en}` });
 
-const SIGNATORY = { name: demoName('المفوَّض بالتوقيع', 'Authorised signatory'), role: { ar: 'المالك والمفوَّض بالتوقيع', en: 'Owner and authorised signatory' } };
+const SIGNATORY = { name: demoName('مستثمر', 'investor'), role: { ar: 'المالك والمفوَّض بالتوقيع', en: 'Owner and authorised signatory' } };
 
 const OWNER: TeamMember = { id: 'm1', name: SIGNATORY.name, role: { ar: 'المالك · كل الصلاحيات', en: 'Owner · full access' }, scope: 'owner', delegated: true };
 
 const TENANT_TEAM: TeamMember[] = [
   OWNER,
-  { id: 'm2', name: demoName('مسؤول المالية', 'Finance officer'), role: { ar: 'الفواتير والسداد', en: 'Invoices and payments' }, scope: 'finance', delegated: true },
-  { id: 'm3', name: demoName('الاستشاري الهندسي', 'Engineering consultant'), role: { ar: 'التصاميم والتراخيص', en: 'Designs and permits' }, scope: 'engineering', delegated: true },
-  { id: 'm4', name: demoName('مسؤول العمليات', 'Operations lead'), role: { ar: 'تصاريح الدخول والبلاغات', en: 'Gate passes and reports' }, scope: 'operations', delegated: false },
+  { id: 'm2', name: demoName('محاسب', 'accountant'), role: { ar: 'الفواتير والسداد', en: 'Invoices and payments' }, scope: 'finance', delegated: true },
+  { id: 'm3', name: demoName('مهندس', 'engineer'), role: { ar: 'التصاميم والتراخيص', en: 'Designs and permits' }, scope: 'engineering', delegated: true },
+  { id: 'm4', name: demoName('مشرف عمليات', 'operations lead'), role: { ar: 'تصاريح الدخول والبلاغات', en: 'Gate passes and reports' }, scope: 'operations', delegated: false },
 ];
 
 function company(name: L10n, cr: string, activityCode: string, fallbackActivity: L10n, syncedAt: number): Company {
@@ -194,17 +197,21 @@ function company(name: L10n, cr: string, activityCode: string, fallbackActivity:
 
 /* ───────────────────────────── prospect ───────────────────────────── */
 
+/** The prospect's one saved eligibility check: dry warehousing and distribution on 5,000 m² of logistics land. */
+function savedCheck(at: number): EligibilityResult {
+  const input = { activityCode: PROSPECT_ACTIVITY, solution: 'logistics', areaSqm: 5000 } as const;
+  const free = (zoneCode: string, areaSqm: number) => plotsFor(zoneCode).filter((cell) => cell.status === 'available' && cell.areaSqm >= areaSqm).length;
+  return toEligibilityResult(input, checkEligibility(input, free), at);
+}
+
+const PROSPECT_ACTIVITY = 'ACT-501';
+
 function prospectWorld(now: number): World {
   const world: World = {
     ...emptyWorld('prospect'),
-    company: company(
-      { ar: 'شركة المثال للصناعات الغذائية ذ.م.م.', en: 'Al Mithal Food Industries W.L.L.' },
-      '123456',
-      'ACT-101',
-      { ar: 'صناعة المنتجات الغذائية', en: 'Food products manufacturing' },
-      now - 5 * MINUTE,
-    ),
+    company: company({ ar: 'شركة النموذج للتجارة', en: 'Sample Trading Co.' }, '123456', PROSPECT_ACTIVITY, { ar: 'التخزين الجاف والتوزيع', en: 'Dry warehousing and distribution' }, now - 5 * MINUTE),
     team: [OWNER],
+    eligibility: savedCheck(now - 3 * MINUTE),
   };
   return notify(world, {
     at: now - 4 * MINUTE,
@@ -223,9 +230,10 @@ function prospectWorld(now: number): World {
 /** Services the tenant's history runs through; their workflows must be in memory to build it. */
 const TENANT_SERVICES: ServiceId[] = ['A4', 'A5', 'A6', 'A7', 'A8', 'B2', 'B3', 'B8', 'C1', 'C2', 'C4', 'D1', 'D2'];
 
-const BA_214 = 'BA-214';
-const AW_131 = 'AW-131';
-const AK_YARD = 'AK-OY-31';
+/** The tenant's three plots, each one of its zone's layout (`plotsFor`) and shown there as allocated. */
+const BA_PLOT = 'BA-121';
+const AW_PLOT = 'AW-116';
+const AK_YARD = 'AK-113';
 
 /** A plot the company already holds, with its lease and signed contract. */
 function withLeasedPlot(world: World, plot: Omit<Plot, 'leaseId'>, startsAt: number, years: number, refNumber: string): World {
@@ -270,33 +278,33 @@ function tenantBase(now: number): World {
   let world: World = {
     ...emptyWorld('tenant'),
     company: company(
-      { ar: 'شركة المثال لتجارة قطع غيار السيارات ذ.م.م.', en: 'Al Mithal Auto Parts Trading W.L.L.' },
+      { ar: 'شركة المثال للصناعات', en: 'Example Industries Co.' },
       '654321',
-      'ACT-602',
-      { ar: 'تجارة قطع غيار السيارات وتخزينها', en: 'Auto-parts trading and storage' },
+      'ACT-301',
+      { ar: 'تشكيل المعادن', en: 'Metal fabrication' },
       now - 2 * HOUR,
     ),
     team: TENANT_TEAM,
     watchedZones: ['AW'],
   };
 
-  // BA-214: a logistics plot in operation for five years, on a 25-year lease invoiced each quarter.
+  // BA-121: a logistics plot of 10,000 m² in operation for five years, on a 25-year lease invoiced each quarter.
   const baStart = new Date(new Date(now).getFullYear() - 5, 3, 1).getTime();
-  world = withLeasedPlot(world, { id: BA_214, number: BA_214, zoneCode: 'BA', areaSqm: 8000, solution: 'logistics', status: 'operating' }, baStart, 25, '0318');
+  world = withLeasedPlot(world, { id: BA_PLOT, number: BA_PLOT, zoneCode: 'BA', areaSqm: 10000, solution: 'logistics', status: 'operating' }, baStart, 25, '0318');
 
-  // AK-OY-31: an open yard on a one-year lease that ends in about a hundred days.
+  // AK-113: an open yard on a one-year lease that ends in about a hundred days.
   const yardEnd = startOfDay(now) + 100 * DAY;
   const yardStart = addYears(yardEnd + DAY, -1);
   world = withLeasedPlot(world, { id: AK_YARD, number: AK_YARD, zoneCode: 'AK', areaSqm: 5000, solution: 'openYard', status: 'operating' }, yardStart, 1, '0077');
   world = withPaidRent(world, AK_YARD, yardStart - 14 * DAY, yardStart - 3 * DAY);
 
-  // BA-214's last three quarters: two paid, one due in five days.
+  // BA-121's last three quarters: two paid, one due in five days.
   const dueSoon = now + 5 * DAY;
   const issuedLatest = dueSoon - PAYMENT_TERM_MS;
-  world = withPaidRent(world, BA_214, issuedLatest - 182 * DAY, issuedLatest - 182 * DAY + 21 * DAY);
-  world = withPaidRent(world, BA_214, issuedLatest - 91 * DAY, issuedLatest - 91 * DAY + 26 * DAY);
-  const ba = world.plots.find((plot) => plot.id === BA_214);
-  const baLease = world.leases.find((lease) => lease.plotId === BA_214);
+  world = withPaidRent(world, BA_PLOT, issuedLatest - 182 * DAY, issuedLatest - 182 * DAY + 21 * DAY);
+  world = withPaidRent(world, BA_PLOT, issuedLatest - 91 * DAY, issuedLatest - 91 * DAY + 26 * DAY);
+  const ba = world.plots.find((plot) => plot.id === BA_PLOT);
+  const baLease = world.leases.find((lease) => lease.plotId === BA_PLOT);
   if (ba && baLease) {
     world = issueRentInvoice(world, baLease, ba, issuedLatest);
     // The notification of that invoice is weeks old; the reminder below is the one that matters now.
@@ -324,18 +332,18 @@ function tenantHistory(base: World, now: number): World {
   const ago = (days: number, hour: number, minute = 0) => dayAt(now, -days, hour, minute);
   const after = (planned: number, earlier: number | undefined, gap: number) => (earlier === undefined ? planned : Math.max(planned, earlier + gap));
 
-  // AW-131 — applied for 46 days ago; evaluated, offered, signed and handed over since.
+  // AW-116: applied for 46 days ago; evaluated, offered, signed and handed over since.
   const application = tale.start(
     {
       serviceId: 'A4',
-      plotId: AW_131,
+      plotId: AW_PLOT,
       zoneCode: 'AW',
       form: {
         detailsConfirmed: true,
         area: 5000,
         areaSqm: 5000,
         solution: 'logistics',
-        preferredPlot: AW_131,
+        preferredPlot: AW_PLOT,
         businessPlan: { name: 'business-plan.pdf', size: 1_240_000 },
         financials: { name: 'financial-statements.pdf', size: 860_000 },
       },
@@ -352,13 +360,13 @@ function tenantHistory(base: World, now: number): World {
   const signedAt = tale.doneAt(contract);
 
   const guarantee = tale.follower(contract, 'B2');
-  tale.complete(guarantee, ago(41, 11, 0), { files: [{ name: 'bank-guarantee.pdf', size: 310_000 }] });
+  tale.complete(guarantee, ago(41, 11, 0), { choice: 'guarantee', files: [{ name: 'bank-guarantee.pdf', size: 310_000 }] });
 
   let handover: string | undefined;
   if (signedAt !== undefined) {
     const booked = after(ago(40, 8, 40), signedAt, HOUR);
     handover = tale.start(
-      { serviceId: 'A8', plotId: AW_131, threadId: application, parentId: contract, form: { slot: booked + 20 * MINUTE, representative: { name: 'ممثل الموقع (تجريبي) · Site representative (demo)' } } },
+      { serviceId: 'A8', plotId: AW_PLOT, threadId: application, parentId: contract, form: { slot: booked + 20 * MINUTE, representative: { name: 'ممثل موقع تجريبي · Demo site representative' } } },
       booked,
     );
     tale.complete(handover, booked + 4 * HOUR);
@@ -367,13 +375,13 @@ function tenantHistory(base: World, now: number): World {
 
   // The utilities request opened by itself at handover; the consultant applied to Kahramaa and recorded the references.
   const utilities = tale.follower(handover, 'C4');
-  tale.park(utilities, (step) => step.lane === 'nat', now + 9 * DAY, ago(38, 10, 0), { form: { reference: 'KM-DEMO-0131' } });
+  tale.park(utilities, (step) => step.lane === 'nat', now + 9 * DAY, ago(38, 10, 0), { form: { reference: 'KM-DEMO-0116', designLoad: 850 } });
 
   // A certificate for the bank, for the plot in operation.
-  const certificate = tale.start({ serviceId: 'B8', plotId: BA_214, form: { docType: 'toWhomItMayConcern', plot: BA_214 } }, ago(40, 13, 15));
+  const certificate = tale.start({ serviceId: 'B8', plotId: BA_PLOT, form: { docType: 'toWhomItMayConcern', plot: BA_PLOT } }, ago(40, 13, 15));
   tale.complete(certificate, ago(40, 13, 40));
 
-  // The first rent of AW-131, paid before it fell due.
+  // The first rent of AW-116, paid before it fell due.
   const firstRent = tale.world.invoices.find((invoice) => invoice.requestId === contract && invoice.status === 'due');
   if (firstRent) {
     const paidAt = after(ago(20, 9, 30), firstRent.issuedAt, HOUR);
@@ -385,18 +393,18 @@ function tenantHistory(base: World, now: number): World {
   if (handedOverAt !== undefined) {
     const submitted = after(ago(16, 10, 10), handedOverAt, DAY);
     design = tale.start(
-      { serviceId: 'C1', plotId: AW_131, form: { plot: AW_131, drawings: { name: 'aw-131-drawings.pdf', size: 8_400_000 }, calculations: { name: 'aw-131-calculations.pdf', size: 2_100_000 } } },
+      { serviceId: 'C1', plotId: AW_PLOT, form: { plot: AW_PLOT, drawings: { name: 'aw-116-drawings.pdf', size: 8_400_000 }, calculations: { name: 'aw-116-calculations.pdf', size: 2_100_000 } } },
       submitted,
     );
-    tale.complete(design, submitted + 2 * HOUR, { files: [{ name: 'aw-131-drawings-v2.pdf', size: 8_600_000 }] });
+    tale.complete(design, submitted + 2 * HOUR, { files: [{ name: 'aw-116-drawings-v2.pdf', size: 8_600_000 }] });
 
-    // A contractor's pass for the site.
+    // A worker's pass for the site.
     const requested = after(ago(10, 8, 5), handedOverAt, 2 * DAY);
     const pass = tale.start(
       {
         serviceId: 'D2',
-        plotId: AW_131,
-        form: { passType: 'worker', holder: 'مقاول تجريبي · Demo contractor', company: 'المثال للمقاولات · Al Mithal Contracting', qid: '2•••••••••', validFrom: startOfDay(requested), validTo: dayAt(now, 80, 18), plot: AW_131 },
+        plotId: AW_PLOT,
+        form: { passType: 'worker', holder: 'عامل تجريبي · Demo worker', company: 'شركة مقاولات تجريبية · Demo Contracting Co.', qid: '2•••••••••', validFrom: startOfDay(requested), validTo: dayAt(now, 80, 18), plot: AW_PLOT },
       },
       requested,
     );
@@ -404,17 +412,17 @@ function tenantHistory(base: World, now: number): World {
   }
 
   // A visitor's pass that has since expired.
-  tale.world = addPass(tale.world, { kind: 'visitor', holder: 'زائر تجريبي · Demo visitor', plotId: BA_214, from: ago(3, 9, 0), to: ago(3, 17, 0) }, ago(3, 8, 30)).world;
+  tale.world = addPass(tale.world, { kind: 'visitor', holder: 'زائر تجريبي · Demo visitor', plotId: BA_PLOT, from: ago(3, 9, 0), to: ago(3, 17, 0) }, ago(3, 8, 30)).world;
 
   // A street light reported yesterday morning: the crew has the work order.
   const light = tale.start(
     {
       serviceId: 'D1',
-      plotId: BA_214,
+      plotId: BA_PLOT,
       form: {
         category: 'lighting',
         photo: { name: 'street-light.jpg', size: 482_000 },
-        location: 'قرب القطعة BA-214 · Near plot BA-214',
+        location: `قرب القطعة ${BA_PLOT} · Near plot ${BA_PLOT}`,
         details: 'عمود إنارة لا يعمل ليلًا · A street light is out at night',
       },
     },
@@ -425,7 +433,7 @@ function tenantHistory(base: World, now: number): World {
   // The building permit: lodged with the Ministry yesterday afternoon, now in the national permit system.
   if (tale.doneAt(design) !== undefined) {
     const lodged = ago(1, 14, 10);
-    const permit = tale.start({ serviceId: 'C2', plotId: AW_131, form: {} }, lodged);
+    const permit = tale.start({ serviceId: 'C2', plotId: AW_PLOT, form: {} }, lodged);
     const target = nationalStep(peekServiceDetail('C2'), 'I9');
     tale.park(permit, (step) => step.id === target, now + DAY, lodged + HOUR);
   }
@@ -433,7 +441,7 @@ function tenantHistory(base: World, now: number): World {
   // Everything else the calendar brings: the renewal of the yard opened 120 days before its lease ends.
   tale.until(now);
 
-  let world = bookAppointmentIn(tale.world, { at: dayAt(now, 2, 10, 30), topic: { ar: 'متابعة رخصة البناء للقطعة AW-131', en: 'Building permit follow-up for plot AW-131' }, channel: 'in_person' }).world;
+  let world = bookAppointmentIn(tale.world, { at: dayAt(now, 2, 10, 30), topic: { ar: `متابعة رخصة البناء للقطعة ${AW_PLOT}`, en: `Building permit follow-up for plot ${AW_PLOT}` }, channel: 'in_person' }).world;
   world = withRecentNotifications(world, now, light);
   return world;
 }
@@ -470,7 +478,7 @@ function withRecentNotifications(world: World, now: number, maintenanceId: strin
       at: maintenance.createdAt + 4 * MINUTE,
       kind: 'update',
       title: { ar: 'استلمنا بلاغك وأُرسل أمر العمل إلى الفريق الميداني', en: 'We received your report and sent the work order to the field team' },
-      body: dots({ ar: 'عطل في الإنارة', en: 'Street lighting issue' }, BA_214),
+      body: dots({ ar: 'عطل في الإنارة', en: 'Street lighting issue' }, BA_PLOT),
       route: `/requests/${maintenance.id}`,
     });
   }

@@ -24,7 +24,7 @@ export interface FetchedListProps {
 }
 
 /**
- * "جلبناها عنك" — the once-only principle made visible: every item the investor is not asked for,
+ * "جلبناها عنك": the once-only principle made visible: every item the investor is not asked for,
  * with the source it comes from. Sources that are not live nationally yet say so.
  */
 export function FetchedList({ items, caption, variant = 'card', label, className }: FetchedListProps) {
@@ -36,7 +36,7 @@ export function FetchedList({ items, caption, variant = 'card', label, className
         {items.map((item, index) => (
           <li key={index} className={styles.item}>
             <span className={styles.tick} aria-hidden="true">
-              <Icon icon={Check} size={13} strokeWidth={2.75} />
+              <Icon icon={Check} size={18} strokeWidth={2} />
             </span>
             <div className={styles.words}>
               <p className={styles.text}>{item.text}</p>
@@ -45,7 +45,7 @@ export function FetchedList({ items, caption, variant = 'card', label, className
                   <span className={styles.name}>{t('source', { name: item.source.name })}</span>{' '}
                   {item.source.live ? null : (
                     <span className={styles.planned}>
-                      <Icon icon={Link2} size={12} strokeWidth={2} />
+                      <Icon icon={Link2} size={14} strokeWidth={1.75} />
                       {t('planned')}
                     </span>
                   )}

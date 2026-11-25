@@ -26,12 +26,13 @@ export function Lines({ lines, bare = false, className }: { lines: SheetLine[]; 
   );
 }
 
-/** A tick that draws itself once inside a soft green disc. */
+/** The confirmation mark: an accent ring and a tick that draws itself once. */
 export function SuccessMark() {
   return (
     <span className={styles.mark} aria-hidden="true">
-      <svg viewBox="0 0 32 32" width="32" height="32" focusable="false">
-        <path className={styles.tick} d="M7.5 16.5l5.5 5.5L24.5 10" pathLength={1} />
+      <svg viewBox="0 0 56 56" width="56" height="56" focusable="false">
+        <circle className={styles.ring} cx="28" cy="28" r="26.5" pathLength={1} />
+        <path className={styles.tick} d="M17.5 28.5l7 7 14-15" pathLength={1} />
       </svg>
     </span>
   );

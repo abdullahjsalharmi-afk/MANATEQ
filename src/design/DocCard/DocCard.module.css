@@ -1,16 +1,14 @@
-/* the icon tile of the row */
+/* the leading glyph of a row */
 .tile {
   flex: none;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--sunken);
+  width: 28px;
+  height: 28px;
   color: var(--ink-2);
 }
 
-/* the row's title, with the gold mark right after it */
+/* the row's title, with the check-seal right after it */
 .rowTitle {
   display: flex;
   flex-wrap: wrap;
@@ -18,16 +16,45 @@
   gap: 2px var(--s-2);
 }
 
-/* the document on a sheet of paper */
+/* "موثّق": a small gold check-seal and the word; gold marks what is verified and nothing else */
+.seal {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--t-callout);
+  font-weight: 400;
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.seal > svg,
+.signedBy > svg {
+  flex: none;
+  color: var(--gold);
+}
+
+/* the document itself: a white sheet with generous margins */
 .paper {
   display: flex;
   flex-direction: column;
+  width: 100%;
   min-width: 0;
-  padding: var(--s-6) var(--s-5) var(--s-4);
-  border-radius: var(--r-control);
+  max-width: 692px;
+  margin-inline: auto;
+  padding: var(--s-8) var(--s-6) var(--s-6);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
   background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
   color: var(--ink);
+}
+
+@media (min-width: 735px) {
+  .paper {
+    padding: var(--s-12) var(--s-10) var(--s-8);
+  }
 }
 
 .head {
@@ -35,8 +62,6 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--s-3);
-  padding-block-end: var(--s-4);
-  box-shadow: 0 1px 0 var(--line);
 }
 
 .issuer {
@@ -48,27 +73,31 @@
 .issuerName {
   font-size: var(--t-callout);
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
 }
 
 .kind {
   font-size: var(--t-cap);
-  line-height: 1.6;
-  color: var(--ink-2);
+  line-height: 1.33;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .title {
-  margin-block-start: var(--s-5);
-  font-size: var(--t-heading);
-  font-weight: 700;
+  margin-block-start: var(--s-8);
+  font-size: var(--t-title);
+  font-weight: 600;
   line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  text-wrap: balance;
 }
 
 .facts {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--s-2) var(--s-6);
-  margin-block-start: var(--s-2);
+  gap: var(--s-2) var(--s-8);
+  margin-block-start: var(--s-3);
 }
 
 /* align-items keeps left-to-right values (reference numbers) on the reading side in Arabic */
@@ -83,20 +112,23 @@
 .line dt,
 .verifyLabel {
   font-size: var(--t-cap);
-  line-height: 1.6;
-  color: var(--ink-2);
+  line-height: 1.5;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .fact dd {
-  font-size: var(--t-foot);
-  font-weight: 500;
-  line-height: 1.6;
+  font-size: var(--t-callout);
+  font-weight: 400;
+  line-height: 1.43;
+  font-variant-numeric: tabular-nums;
 }
 
 .lines {
   display: flex;
   flex-direction: column;
-  margin-block-start: var(--s-5);
+  margin-block-start: var(--s-8);
+  border-block-start: 1px solid var(--line-soft);
 }
 
 .line {
@@ -104,44 +136,33 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--s-4);
-  padding-block: 10px;
-  box-shadow: 0 -1px 0 var(--line);
+  padding-block: var(--s-3);
+  border-block-end: 1px solid var(--line-soft);
 }
 
 .line dt {
   flex: none;
   max-width: 45%;
-  font-size: var(--t-foot);
+  font-size: var(--t-callout);
+  line-height: 1.43;
 }
 
 .line dd {
   min-width: 0;
-  font-size: var(--t-callout);
-  font-weight: 500;
-  line-height: 1.55;
+  font-size: var(--t-body);
+  font-weight: 400;
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
   text-align: end;
 }
 
+/* the verification: the words at the inline start, the QR at the inline end */
 .foot {
   display: flex;
-  flex-direction: column;
-  gap: var(--s-4);
-  margin-block-start: var(--s-2);
-  padding-block-start: var(--s-5);
-  border-block-start: 1px dashed var(--line-strong);
-}
-
-.verify {
-  display: flex;
-  align-items: center;
-  gap: var(--s-4);
-  min-width: 0;
-}
-
-.qr {
-  flex: none;
-  width: 92px;
-  line-height: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-5);
+  margin-block-start: var(--s-8);
 }
 
 .verifyWords {
@@ -152,54 +173,46 @@
 }
 
 .code {
-  font-size: var(--t-body);
+  font-size: var(--t-heading);
   font-weight: 600;
-  line-height: 1.5;
-  letter-spacing: 0.06em;
+  line-height: 1.3;
   font-variant-numeric: tabular-nums;
 }
 
 .hint {
-  margin-block-start: 2px;
+  margin-block-start: var(--s-1);
   font-size: var(--t-cap);
-  line-height: 1.6;
-  color: var(--ink-2);
+  line-height: 1.5;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+  text-wrap: pretty;
 }
 
-.signature {
-  align-self: flex-end;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.flourish {
-  stroke: var(--ink);
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.flourish path + path {
-  stroke: var(--line-strong);
-  stroke-width: 1;
+.qr {
+  flex: none;
+  width: 92px;
+  line-height: 0;
 }
 
 .signedBy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-block-start: var(--s-3);
   font-size: var(--t-cap);
-  line-height: 1.6;
+  line-height: 1.5;
+  letter-spacing: var(--ls-caption);
   color: var(--ink-2);
 }
 
 /* Honest: this is not a real document. */
 .watermark {
-  margin-block-start: var(--s-4);
+  margin-block-start: var(--s-6);
   padding-block-start: var(--s-3);
-  box-shadow: 0 -1px 0 var(--line);
+  border-block-start: 1px solid var(--line-soft);
   font-size: var(--t-cap);
-  font-weight: 500;
-  line-height: 1.6;
-  color: var(--ink-2);
+  line-height: 1.5;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
   text-align: center;
 }

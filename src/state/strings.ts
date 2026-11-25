@@ -22,7 +22,7 @@ export const dateText = (at: number): L10n => ({ ar: AR.date(at), en: EN.date(at
 
 const QUARTER_AR = ['الأول', 'الثاني', 'الثالث', 'الرابع'] as const;
 
-/** "إيجار الربع الرابع 2026 · BA-214" / "Rent, Q4 2026 · BA-214" — or the annual rent of a one-year lease. */
+/** "إيجار الربع الرابع 2026 · BA-121" / "Rent, Q4 2026 · BA-121" — or the annual rent of a one-year lease. */
 export function rentTitle(period: 'quarter' | 'year', at: number, plotNumber: string): L10n {
   const date = new Date(at);
   const year = date.getFullYear();

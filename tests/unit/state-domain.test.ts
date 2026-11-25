@@ -73,7 +73,7 @@ describe('chains', () => {
 
 describe('documents', () => {
   const company: Company = { name: { ar: 'شركة تجريبية', en: 'Demo company' }, cr: '000001', activity: { ar: 'نشاط', en: 'Activity' }, activityCode: 'ACT-000', signatory: { name: { ar: 'مفوَّض', en: 'Signatory' }, role: { ar: 'مالك', en: 'Owner' } }, syncedAt: NOW };
-  const plot: Plot = { id: 'p1', number: 'AW-131', zoneCode: 'AW', areaSqm: 5000, solution: 'logistics', status: 'leased', leaseId: 'l1' };
+  const plot: Plot = { id: 'p1', number: 'AW-116', zoneCode: 'AW', areaSqm: 5000, solution: 'logistics', status: 'leased', leaseId: 'l1' };
   const lease: Lease = { id: 'l1', ref: 'LC-2026-0001', plotId: 'p1', startsAt: NOW, endsAt: NOW + 365 * DAY, ratePerSqmYear: 15, annualRent: 75_000, status: 'active' };
   const facts: DocFacts = { company, plot, zoneName: { ar: 'مجمّع الوكرة اللوجستي', en: 'Al Wakra Logistics Park' }, lease };
   const request = (serviceId: ServiceId, form: RequestState['form'] = {}): Pick<RequestState, 'id' | 'ref' | 'serviceId' | 'form'> => ({ id: 'r1', ref: 'MQ-2611-0001', serviceId, form });
@@ -129,11 +129,11 @@ describe('documents', () => {
     const contract = docs[0];
     expect(contract).toMatchObject({ kind: 'contract', ref: 'LC-2026-0001', signed: true, serviceId: 'A7', requestId: 'r1', issuedAt: NOW });
     expect(contract?.verifyCode).toMatch(VERIFY_CODE_PATTERN);
-    expect(contract?.title.en).toBe('Lease contract · AW-131');
+    expect(contract?.title.en).toBe('Lease contract · AW-116');
     expect(contract?.title.ar).toContain('عقد الإيجار');
     const lines = contract?.lines.map((line) => `${line.label.en}: ${line.value.en}`) ?? [];
     expect(lines).toContain('Issued to: Demo company');
-    expect(lines).toContain('Plot: AW-131 · Al Wakra Logistics Park');
+    expect(lines).toContain('Plot: AW-116 · Al Wakra Logistics Park');
     expect(lines).toContain('Area: 5,000 m²');
     expect(lines).toContain('Rent rate: QAR 15 / m² / year');
     expect(lines).toContain('Annual rent: QAR 75,000');
@@ -191,13 +191,14 @@ describe('journey', () => {
 
   it('focuses on the plot that still has the furthest to go', () => {
     const tenant = seedWorld('tenant', NOW);
-    expect(focusPlot(tenant)?.number).toBe('AW-131');
+    expect(focusPlot(tenant)?.number).toBe('AW-116');
     expect(stationOf(tenant)).toBe('build');
-    expect(stationOf(tenant, 'BA-214')).toBe('operate');
+    expect(stationOf(tenant, 'BA-121')).toBe('operate');
   });
 
   it('opens the journey with the eligibility check, then the application', () => {
-    const prospect = seedWorld('prospect', NOW);
+    // Before any check (the seeded prospect has saved one; see below).
+    const prospect: World = { ...seedWorld('prospect', NOW), eligibility: null };
     const first = journeyOf(prospect);
     expect(first.station).toBe('join');
     expect(first.plotId).toBeNull();
@@ -214,6 +215,11 @@ describe('journey', () => {
 
     const refused: World = { ...checked, eligibility: { ...checked.eligibility!, verdict: 'not_targeted' } };
     expect(checklist(refused, 'join').find((i) => i.serviceId === 'A4')?.canStart).toBe(false);
+
+    // The seeded prospect stands at that point: one saved check, the application next.
+    const seeded = checklist(seedWorld('prospect', NOW), 'join');
+    expect(seeded.find((i) => i.serviceId === 'A2')?.state).toBe('done');
+    expect(seeded.find((i) => i.serviceId === 'A4')).toMatchObject({ state: 'current', canStart: true });
   });
 
   it('knows what the investor can start at each plot status', () => {
@@ -245,16 +251,16 @@ describe('journey', () => {
     const c2 = build.find((i) => i.serviceId === 'C2');
     expect(tenant.requests.find((r) => r.id === c2?.requestId)?.serviceId).toBe('C2');
     // The plot in operation has a due invoice and an open report.
-    const operate = checklist(tenant, 'operate', 'BA-214');
+    const operate = checklist(tenant, 'operate', 'BA-121');
     expect(operate.find((i) => i.serviceId === 'B1')?.state).toBe('current');
     expect(operate.find((i) => i.serviceId === 'D1')?.state).toBe('current');
-    expect(checklist(tenant, 'operate', 'AK-OY-31').find((i) => i.serviceId === 'B3')?.state).toBe('current');
+    expect(checklist(tenant, 'operate', 'AK-113').find((i) => i.serviceId === 'B3')?.state).toBe('current');
   });
 });
 
 describe('next steps', () => {
   it('sends a guest and a new investor to the eligibility check', () => {
-    for (const world of [emptyWorld('guest'), seedWorld('prospect', NOW)]) {
+    for (const world of [emptyWorld('guest'), { ...seedWorld('prospect', NOW), eligibility: null }]) {
       const steps = collectNextSteps(world, peekServiceDetail);
       expect(steps).toHaveLength(1);
       expect(steps[0]).toMatchObject({ kind: 'start_service', route: '/eligibility' });
@@ -275,7 +281,7 @@ describe('next steps', () => {
 
   it('builds routes for starting a service', () => {
     expect(startRoute('A2')).toBe('/eligibility');
-    expect(startRoute('A8', 'AW-131')).toBe('/start/A8?plot=AW-131');
+    expect(startRoute('A8', 'AW-116')).toBe('/start/A8?plot=AW-116');
     expect(startRoute('D1')).toBe('/start/D1');
   });
 
@@ -286,9 +292,9 @@ describe('next steps', () => {
     const [invoice, renewal] = steps;
     expect(invoice?.dueAt).toBe(NOW + 5 * DAY);
     expect(invoice?.route).toMatch(/^\/account\/payments\//);
-    expect(invoice?.context.en).toContain('QAR 30,000');
-    expect(invoice?.context.ar).toContain('30,000 ر.ق');
-    const yard = tenant.leases.find((l) => l.plotId === 'AK-OY-31');
+    expect(invoice?.context.en).toContain('QAR 37,500');
+    expect(invoice?.context.ar).toContain('37,500 ر.ق');
+    const yard = tenant.leases.find((l) => l.plotId === 'AK-113');
     expect(renewal?.dueAt).toBe(yard?.endsAt);
     expect(renewal?.route).toMatch(/^\/requests\//);
     expect(renewal?.context.en).toContain('QAR 50,000');
@@ -320,9 +326,10 @@ describe('next steps', () => {
   it('sorts hand-made cases exactly', () => {
     const base: World = { ...emptyWorld('tenant'), company: seedWorld('prospect', NOW).company, plots: [{ id: 'p1', number: 'AW-117', zoneCode: 'AW', areaSqm: 5000, solution: 'logistics', status: 'operating' }] };
     const invoice = (id: string, dueAt: number, status: Invoice['status']): Invoice => ({ id, ref: id, title: { ar: id, en: id }, amount: 100, issuedAt: dueAt - 30 * DAY, dueAt, status });
-    // Two requests that wait for the investor: the one started earlier has waited longer.
-    let world = startIn(base, { serviceId: 'C4', plotId: 'p1' }, NOW - 9 * DAY, env).world;
-    world = startIn(world, { serviceId: 'C4', plotId: 'p1' }, NOW - 2 * DAY, env).world;
+    // Two requests that wait for the investor: the one started earlier has waited longer. Since v1.1 the
+    // utilities case first spends Manateq's network capacity check (10 working days, 8 on the demo path).
+    let world = startIn(base, { serviceId: 'C4', plotId: 'p1' }, NOW - 20 * DAY, env).world;
+    world = startIn(world, { serviceId: 'C4', plotId: 'p1' }, NOW - 10 * DAY, env).world;
     world = tickWorld(world, NOW, env);
     const waiting = world.requests.filter((r) => r.status === 'needs_you');
     expect(waiting).toHaveLength(2);

@@ -1,7 +1,7 @@
 .review {
   display: flex;
   flex-direction: column;
-  gap: var(--s-4);
+  gap: var(--s-6);
   transition: opacity var(--d-2) var(--ease);
 }
 
@@ -10,30 +10,28 @@
   opacity: 0.55;
 }
 
-/* what is being signed */
+/* What is being signed, as the hero of the sheet: the document's name large, its terms below. */
 .document {
+  padding: var(--s-5) var(--s-5) var(--s-1);
+  border: 1px solid var(--line);
   border-radius: var(--r-control);
-  background: var(--surface-2);
-  box-shadow: inset 0 0 0 1px var(--line);
-  padding: 14px var(--s-4) 2px;
 }
 
 .documentHead {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--s-3);
-  padding-block-end: 12px;
+  padding-block-end: var(--s-4);
 }
 
 .tile {
   flex: none;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--accent-tint);
-  color: var(--accent-ink);
+  width: 28px;
+  height: 28px;
+  margin-block-start: 2px;
+  color: var(--ink-3);
 }
 
 .documentText {
@@ -42,21 +40,24 @@
 }
 
 .kicker {
-  font-size: var(--t-cap);
-  font-weight: 500;
-  line-height: 1.5;
+  font-size: var(--t-callout);
+  font-weight: 400;
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
   color: var(--ink-3);
 }
 
 .documentName {
-  font-size: var(--t-body);
+  font-size: var(--t-heading);
   font-weight: 600;
-  line-height: 1.5;
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  text-wrap: balance;
   color: var(--ink);
 }
 
 .documentLines {
-  box-shadow: 0 -1px 0 var(--line);
+  border-block-start: 1px solid var(--line-soft);
 }
 
 /* confirmation */
@@ -70,13 +71,15 @@
 .signedNote {
   max-width: 26em;
   font-size: var(--t-callout);
-  line-height: 1.65;
+  line-height: 1.55;
+  letter-spacing: var(--ls-caption);
+  text-wrap: pretty;
   color: var(--ink-2);
 }
 
 .signedDemo {
   margin-block-start: var(--s-2);
   font-size: var(--t-foot);
-  line-height: 1.55;
-  color: var(--ink-2);
+  line-height: 1.5;
+  color: var(--ink-3);
 }

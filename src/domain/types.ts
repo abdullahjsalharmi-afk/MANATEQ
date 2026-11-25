@@ -47,7 +47,7 @@ export type PlotStatus = 'reserved' | 'leased' | 'handed_over' | 'building' | 'o
 
 export interface Plot {
   id: string;
-  /** The plot number as printed on documents, e.g. "BA-2-117". */
+  /** The plot number as printed on documents, e.g. "BA-117" (one of its zone's layout, see `plotsFor`). */
   number: string;
   zoneCode: string;
   areaSqm: number;

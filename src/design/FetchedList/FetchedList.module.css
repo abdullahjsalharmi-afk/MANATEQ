@@ -5,10 +5,10 @@
 }
 
 .card {
-  padding: var(--s-2) var(--s-5) var(--s-4);
+  padding: var(--s-1) var(--s-5) var(--s-4);
+  border: 1px solid var(--line);
   border-radius: var(--r-card);
   background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .list {
@@ -18,27 +18,31 @@
 }
 
 .item {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: var(--s-3);
   padding-block: var(--s-3);
 }
 
-.item + .item {
-  box-shadow: 0 -1px 0 var(--line);
+/* dividers are inset from the inline start, under the words, never full bleed */
+.item + .item::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: calc(18px + var(--s-3)) 0;
+  height: 1px;
+  background: var(--line-soft);
 }
 
-/* The tick sits on the first line of the text. */
+/* The check sits on the first line of the text. */
 .tick {
   flex: none;
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
-  margin-block-start: calc((var(--t-callout) * 1.6 - 22px) / 2);
-  border-radius: 50%;
-  background: var(--ok-tint);
-  color: var(--ok);
+  width: 18px;
+  height: calc(var(--t-body) * var(--lh-body));
+  color: var(--ink);
 }
 
 .words {
@@ -46,12 +50,14 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  align-items: flex-start;
+  gap: 6px;
 }
 
 .text {
-  font-size: var(--t-callout);
-  line-height: 1.6;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
   color: var(--ink);
 }
 
@@ -60,37 +66,40 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 4px var(--s-2);
+  max-width: 100%;
   font-size: var(--t-cap);
-  line-height: 1.6;
+  line-height: 1.33;
+  letter-spacing: var(--ls-caption);
   color: var(--ink-2);
 }
 
+/* the source: a neutral capsule */
 .name {
   min-width: 0;
+  max-width: 100%;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  background: var(--sunken);
+  overflow-wrap: anywhere;
 }
 
-/* Honest about what is not connected yet — neutral, not a warning. */
+/* Honest about what is not connected yet: neutral words, not a warning. */
 .planned {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   flex: none;
-  padding: 1px 8px;
-  border-radius: var(--r-pill);
-  background: var(--sunken);
-  color: var(--ink-2);
-  font-weight: 500;
+  color: var(--ink-3);
   white-space: nowrap;
 }
 
 .caption {
+  margin-block-start: var(--s-1);
   padding-block-start: var(--s-3);
-  box-shadow: 0 -1px 0 var(--line);
-  font-size: var(--t-cap);
-  line-height: 1.7;
-  color: var(--ink-2);
-}
-
-.plain .caption {
-  padding-block-end: 0;
+  border-block-start: 1px solid var(--line-soft);
+  font-size: var(--t-callout);
+  line-height: 1.55;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+  text-wrap: pretty;
 }

@@ -73,8 +73,9 @@ function ensurePlot(world: World, id: string): { world: World; plot: Plot | unde
 
   const facts = plotFacts(world, request);
   let next = world;
-  let plotId = facts.id;
-  if (plotId === undefined || findPlotRecord(next, plotId)) {
+  // The record takes the plot's own number as its id ("AW-117") unless another record holds it already.
+  let plotId = facts.id ?? facts.number;
+  if (findPlotRecord(next, plotId)) {
     const slot = allocate(next, 'pl');
     next = slot.world;
     plotId = slot.id;
@@ -168,11 +169,18 @@ const endLease: Effect = (world, ctx) => {
   return lease ? patchLease(world, lease.id, { status: 'ended', endsAt: Math.min(lease.endsAt, startOfDay(ctx.at)) }) : world;
 };
 
-/** An application that stops before the lease exists gives the held plot back. */
+/**
+ * An application that stops before the lease exists gives the held plot back. The requests that named
+ * it keep the plot's number from the zone's layout, which is what they asked for.
+ */
 const releasePlot: Effect = (world, ctx) => {
   const plot = findPlotRecord(world, plotOf(world, ctx.id));
   if (!plot || plot.status !== 'reserved' || plot.leaseId) return world;
-  return { ...world, plots: world.plots.filter((other) => other.id !== plot.id) };
+  return {
+    ...world,
+    plots: world.plots.filter((other) => other.id !== plot.id),
+    requests: world.requests.map((request) => (request.plotId === plot.id && plot.id !== plot.number ? { ...request, plotId: plot.number } : request)),
+  };
 };
 
 /* ───────────────────────────── gate passes ───────────────────────────── */
@@ -184,7 +192,7 @@ export function addPass(world: World, input: PassInput, at: number): { world: Wo
   return { world: { ...slot.world, passes: [...slot.world.passes, pass] }, id: slot.id };
 }
 
-const PASS_KIND: Record<string, PassKind> = { worker: 'worker', contractor: 'worker', vehicle: 'vehicle', visitor: 'visitor' };
+const PASS_KIND: Record<string, PassKind> = { worker: 'worker', vehicle: 'vehicle', visitor: 'visitor' };
 
 const asText = (value: FormValue | undefined): string | undefined => (typeof value === 'string' && value.trim() ? value.trim() : undefined);
 const personName = (value: FormValue | undefined): string | undefined => (value !== null && typeof value === 'object' && value.name.trim() ? value.name.trim() : undefined);
@@ -215,7 +223,9 @@ const issueRequestedPass: Effect = (world, ctx) => {
   const company = asText(form.company);
   const from = toTime(form.validFrom) ?? ctx.at;
   const to = toTime(form.validTo, true) ?? from + (kind === 'visitor' ? DAY : 90 * DAY);
-  const plotId = request.plotId ?? asText(form.plot) ?? '';
+  // A pass is for one of the investor's plots: the one the request names, or else the first one held.
+  const plotId = findPlotRecord(world, request.plotId)?.id ?? findPlotRecord(world, asText(form.plot))?.id ?? world.plots.find((plot) => plot.leaseId !== undefined)?.id;
+  if (plotId === undefined) return world;
   const duplicate = world.passes.some((pass) => pass.kind === kind && pass.holder === holder && pass.plotId === plotId && pass.from === from && pass.status !== 'revoked');
   if (duplicate) return world;
   return addPass(world, { kind, holder, ...(idOrPlate ? { idOrPlate } : {}), ...(company ? { company } : {}), plotId, from, to }, ctx.at).world;
@@ -253,10 +263,21 @@ export function amountFor(world: World, request: RequestState, action: StepActio
   }
 }
 
+/**
+ * Once only: a deposit already paid in the same thread (with the offer, A6) is not asked for again when
+ * the guarantee task of the new contract (B2) offers to pay one.
+ */
+export function depositPaidInThread(world: World, request: RequestState): boolean {
+  return world.requests.some(
+    (other) => other.id !== request.id && other.threadId === request.threadId && other.serviceId === 'A6' && world.invoices.some((invoice) => invoice.requestId === other.id && invoice.status === 'paid'),
+  );
+}
+
 /** When a request starts waiting on a step that includes a payment, the amount is fixed and shown before paying. */
 export const whenWaiting = (world: World, ctx: EffectContext & { action: StepAction | undefined }): World => {
   const request = findRequest(world, ctx.id);
   if (!request || !ctx.action?.flow.includes('pay')) return world;
+  if (ctx.action.amount?.basis === 'deposit' && depositPaidInThread(world, request)) return world;
   return patchRequest(world, ctx.id, { amount: amountFor(world, request, ctx.action) });
 };
 
@@ -273,10 +294,31 @@ export function settleInvoice(world: World, invoiceId: string, at: number, sourc
   return { world: next, docId: slot.id };
 }
 
+/** `pay` of an outstanding balance: the unpaid invoices of the lease are settled, each with its receipt. */
+function settleBalance(world: World, request: RequestState, ctx: AtomContext): World | undefined {
+  const lease = leaseOfPlot(world, request.plotId);
+  const unpaid = lease ? world.invoices.filter((invoice) => invoice.leaseId === lease.id && invoice.status !== 'paid') : [];
+  if (!unpaid.length) return undefined;
+  let next = world;
+  const receipts: string[] = [];
+  for (const invoice of unpaid) {
+    const settled = settleInvoice(next, invoice.id, ctx.at, { serviceId: ctx.service.id, requestId: request.id });
+    next = settled.world;
+    if (settled.docId !== null) receipts.push(settled.docId);
+  }
+  const amount = unpaid.reduce((sum, invoice) => sum + invoice.amount, 0);
+  return patchRequest(next, request.id, { amount, docIds: [...request.docIds, ...receipts] });
+}
+
 /** `pay`: a paid invoice for the amount of the step, with its receipt, filed against the request. */
 const collectPayment: AtomEffect = (world, ctx) => {
   const request = findRequest(world, ctx.id);
   if (!request) return world;
+  if (ctx.action.amount?.basis === 'deposit' && depositPaidInThread(world, request)) return world;
+  if (ctx.action.amount?.basis === 'balance') {
+    const settled = settleBalance(world, request, ctx);
+    if (settled) return settled;
+  }
   const amount = request.amount ?? amountFor(world, request, ctx.action);
   if (amount <= 0) return world;
 

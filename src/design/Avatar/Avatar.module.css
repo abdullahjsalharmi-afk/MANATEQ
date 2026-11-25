@@ -1,8 +1,10 @@
+/* A quiet circle with initials. Neutral by default; `accent` (the person themself, the signatory) is the
+   ink-filled circle, the way the product marks "yours". */
 .avatar {
   flex: none;
   display: inline-grid;
   place-items: center;
-  border-radius: 50%;
+  border-radius: var(--r-pill);
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
@@ -34,17 +36,13 @@
   font-size: var(--t-title);
 }
 
-.neutral {
+.neutral,
+.gold {
   background: var(--sunken);
   color: var(--ink-2);
 }
 
 .accent {
-  background: var(--accent-tint);
-  color: var(--accent-ink);
-}
-
-.gold {
-  background: var(--gold-tint);
-  color: var(--gold);
+  background: var(--ink);
+  color: var(--surface);
 }

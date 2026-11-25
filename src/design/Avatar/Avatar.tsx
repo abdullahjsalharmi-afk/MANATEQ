@@ -6,7 +6,7 @@ export interface AvatarProps {
   /** The person's or company's name; the avatar shows its initials. */
   name: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
-  /** `accent` for the signed-in investor, `gold` for a verified entity. */
+  /** `accent` for the signed-in investor (an ink circle); `gold` is kept for older call sites and looks neutral. */
   tone?: 'neutral' | 'accent' | 'gold';
   /** Give the avatar a name for screen readers; without it it is decoration beside the written name. */
   label?: string;

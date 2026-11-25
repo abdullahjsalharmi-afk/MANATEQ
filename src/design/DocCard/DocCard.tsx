@@ -5,7 +5,6 @@ import type { DocKind } from '@/domain/types';
 import { cx } from '../cx';
 import { Icon } from '../Icon/Icon';
 import { Row } from '../List/List';
-import { Pill } from '../Pill/Pill';
 import styles from './DocCard.module.css';
 import { strings } from './strings';
 
@@ -28,7 +27,7 @@ interface DocCardBase {
   reference: string;
   /** The issue date, already formatted. */
   date: string;
-  /** The document carries an electronic signature: shows the gold "موثّق" mark. */
+  /** The document carries an electronic signature: shows the small gold "موثّق" check-seal. */
   signed?: boolean;
   className?: string;
 }
@@ -63,26 +62,28 @@ export interface DocPaperProps extends DocCardBase {
 
 export type DocCardProps = DocRowProps | DocPaperProps;
 
-/** The icon tile of a document kind. */
+/** The leading glyph of a document kind: a plain line icon, never inside a tinted shape. */
 export function DocIcon({ kind, className }: { kind: DocKind; className?: string }) {
   return (
     <span className={cx(styles.tile, className)} aria-hidden="true">
-      <Icon icon={KIND_ICON[kind]} size={20} />
+      <Icon icon={KIND_ICON[kind]} size={22} strokeWidth={1.5} />
     </span>
   );
 }
 
 /**
- * A document from the wallet. `row` is its line in a list; `paper` is the document itself: issuer,
- * title, facts, QR and verification code, a signature mark when signed — and a clear prototype line.
+ * A document from the wallet. `row` is its line in a list; `paper` is the document itself on a white
+ * sheet: issuer, title, facts, the verification code with its QR at the inline end, the check-seal when
+ * signed, and a clear prototype line.
  */
 export function DocCard(props: DocCardProps) {
   const t = useT(strings);
   const titleId = useId();
   const mark = props.signed ? (
-    <Pill tone="gold" icon={BadgeCheck}>
-      {t('verified')}
-    </Pill>
+    <span className={styles.seal}>
+      <Icon icon={BadgeCheck} size={16} strokeWidth={1.75} />
+      <span>{t('verified')}</span>
+    </span>
   ) : null;
 
   if (props.variant !== 'paper') {
@@ -150,33 +151,21 @@ export function DocCard(props: DocCardProps) {
       ) : null}
 
       <footer className={styles.foot}>
-        <div className={styles.verify}>
-          {qr ? <div className={styles.qr}>{qr}</div> : null}
-          <div className={styles.verifyWords}>
-            <p className={styles.verifyLabel}>{t('verifyCode')}</p>
-            <p className={cx(styles.code, 'ltr')}>{verifyCode}</p>
-            <p className={styles.hint}>{t('verifyHint')}</p>
-          </div>
+        <div className={styles.verifyWords}>
+          <p className={styles.verifyLabel}>{t('verifyCode')}</p>
+          <p className={cx(styles.code, 'ltr')}>{verifyCode}</p>
+          <p className={styles.hint}>{t('verifyHint')}</p>
+          {signed ? (
+            <p className={styles.signedBy}>
+              <Icon icon={BadgeCheck} size={14} strokeWidth={1.75} />
+              <span>{t('signed')}</span>
+            </p>
+          ) : null}
         </div>
-        {signed ? (
-          <div className={styles.signature}>
-            <SignatureMark />
-            <p className={styles.signedBy}>{t('signed')}</p>
-          </div>
-        ) : null}
+        {qr ? <div className={styles.qr}>{qr}</div> : null}
       </footer>
 
       <p className={styles.watermark}>{t('watermark')}</p>
     </article>
-  );
-}
-
-/** A pen flourish: says "signed" without imitating anyone's signature. */
-function SignatureMark() {
-  return (
-    <svg className={styles.flourish} viewBox="0 0 132 40" width="132" height="40" fill="none" aria-hidden="true" focusable="false">
-      <path d="M5 27c6-11 11-19 15-19 5 0-4 23 1 23 4 0 7-15 12-15 4 0-1 12 3 12 5 0 6-17 12-17 5 0 0 16 5 16 4 0 6-9 10-9 3 0 1 7 5 7 6 0 9-10 16-10 9 0 5 8 14 8 8 0 13-5 29-9" />
-      <path d="M22 35c24-3 56-4 96-3" />
-    </svg>
   );
 }

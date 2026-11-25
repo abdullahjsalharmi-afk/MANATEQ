@@ -27,8 +27,8 @@ type CellLook = PlotCellStatus | 'own';
 const STEP: Record<string, [number, number]> = { ArrowRight: [0, 1], ArrowLeft: [0, -1], ArrowDown: [1, 0], ArrowUp: [-1, 0] };
 
 /**
- * The illustrative plot layout of a zone. Available plots are buttons; leased and reserved plots are
- * disabled and carry a pattern, so the difference never depends on colour. The layout is a plan, so it
+ * The illustrative plot layout of a zone. Available plots are outlined buttons; leased plots are plain
+ * wells and reserved plots hatched wells, both disabled, so the difference never depends on colour alone. The layout is a plan, so it
  * keeps the same orientation in Arabic and English. Arrow keys move between available plots.
  */
 export function PlotGrid({ plots, selected, onSelect, own, label, className }: PlotGridProps) {

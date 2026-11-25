@@ -513,6 +513,37 @@ describe('signature components', () => {
     expect(box.textContent).toContain('Schematic map');
   });
 
+  it('shows the next step as a dark hero tile with its building render', () => {
+    const box = still(
+      <NextStepCard
+        tone="hero"
+        eyebrow="خطوتك التالية"
+        title="قدّم طلب رخصة البناء"
+        context="شهادة عدم الممانعة جاهزة."
+        due="خلال 5 أيام"
+        cta={{ label: 'ابدأ الطلب', to: '/start/C1' }}
+        secondary={{ label: 'ما المطلوب', to: '/services/C1' }}
+        render="construction"
+      />,
+    );
+    const tile = box.querySelector('section');
+    expect(tile?.getAttribute('data-tone')).toBe('brand');
+    expect(tile?.querySelector('h2')?.textContent).toBe('قدّم طلب رخصة البناء');
+    expect(box.querySelector('a[href="#/start/C1"]')?.textContent).toContain('ابدأ الطلب');
+    expect(box.querySelector('a[href="#/services/C1"]')?.textContent).toContain('ما المطلوب');
+    expect(box.textContent).toContain('خلال 5 أيام');
+    // the render rests below the words and is decorative: the headline already says it
+    const image = box.querySelector('img');
+    expect(image).not.toBeNull();
+    expect(image?.getAttribute('alt')).toBe('');
+    expect(tile?.lastElementChild?.contains(image ?? null)).toBe(true);
+    // quiet tones are not dark tiles; the calm card without a render shows no image
+    const calm = still(<NextStepCard tone="clear" title="كل شيء على ما يرام" />);
+    expect(calm.querySelector('section')?.hasAttribute('data-tone')).toBe(false);
+    expect(calm.querySelector('img')).toBeNull();
+    expect(still(<NextStepCard tone="clear" title="منشأتك تعمل" render="warehouse" />).querySelector('img')).not.toBeNull();
+  });
+
   it('renders the cards without crashing, in both languages', () => {
     for (const lang of ['ar', 'en'] as Lang[]) {
       const box = still(

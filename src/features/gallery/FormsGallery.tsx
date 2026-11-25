@@ -9,7 +9,7 @@ import { useLang, useT } from '@/app/i18n';
 import { useQuery } from '@/app/routes';
 import { solutions, zones, zonesData } from '@/data/catalog';
 import type { SolutionKey } from '@/data/types';
-import { Button, Card, Icon, List, Row, Section, toast } from '@/design/core';
+import { Button, Card, List, Row, Section, toast } from '@/design/core';
 import { FilePickView } from '@/design/FilePick/FilePick';
 import {
   Avatar,
@@ -130,7 +130,7 @@ const strings = {
   bannerWarn: { ar: 'جدّده الآن لتحتفظ بالقطعة دون انقطاع.', en: 'Renew it now to keep the plot without a gap.' },
   bannerWarnAction: { ar: 'جدّد العقد', en: 'Renew the lease' },
   bannerBad: { ar: 'تعذّر إرسال الطلب. تحقّق من الاتصال ثم حاول مرة أخرى.', en: 'The request could not be sent. Check your connection and try again.' },
-  bannerDemo: { ar: 'محاكاة — لن يُخصم أي مبلغ', en: 'Simulation — nothing is charged' },
+  bannerDemo: { ar: 'محاكاة: لن يُخصم أي مبلغ.', en: 'Simulation: nothing is charged.' },
   statZones: { ar: 'منطقة ومجمّعًا', en: 'Zones and parks' },
   statArea: { ar: 'المساحة الإجمالية', en: 'Total area' },
   statRate: { ar: 'نسبة التشغيل', en: 'Operational rate' },
@@ -139,6 +139,9 @@ const strings = {
   rentDue: { ar: 'إيجار الربع الرابع', en: 'Q4 rent' },
   roleSignatory: { ar: 'المخوَّل بالتوقيع', en: 'Authorised signatory' },
   roleEngineer: { ar: 'مهندسة المشروع', en: 'Project engineer' },
+  noPlotsTitle: { ar: 'لا قطع بعد', en: 'No plots yet' },
+  noPlotsBody: { ar: 'تظهر هنا القطع التي تستأجرها، مع عقودها.', en: 'The plots you lease appear here, with their contracts.' },
+  noPlotsAction: { ar: 'افحص أهلية نشاطك', en: 'Check your eligibility' },
 } as const;
 
 /** Non-breaking hyphens keep the plot number on one line. */
@@ -151,16 +154,25 @@ const stack: CSSProperties = { display: 'grid', gap: 12, minWidth: 0 };
 const cluster: CSSProperties = { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 };
 
 function Caption({ children }: { children: ReactNode }) {
-  return <p style={{ fontSize: 'var(--t-cap)', fontWeight: 500, color: 'var(--ink-3)', paddingInline: 2, marginBlockEnd: -4 }}>{children}</p>;
+  return <p style={{ fontSize: 'var(--t-foot)', fontWeight: 400, color: 'var(--ink-3)', marginBlockEnd: -4 }}>{children}</p>;
+}
+
+/** A near-black tile, to check that each component reads on dark inside a light page. */
+function DarkTile({ children }: { children: ReactNode }) {
+  return (
+    <div data-tone="dark" style={{ display: 'grid', gap: 20, minWidth: 0, padding: '32px var(--gutter)', marginInline: 'calc(var(--gutter) * -1)', background: 'var(--tile-1)', color: 'var(--ink)' }}>
+      {children}
+    </div>
+  );
 }
 
 /** A still picture of a sheet, so every phase can be seen side by side without opening one. */
 function SheetFrame({ title, footer, children }: { title: string; footer: ReactNode; children: ReactNode }) {
   return (
-    <div style={{ borderRadius: 26, background: 'var(--surface)', boxShadow: 'inset 0 0 0 1px var(--line)', overflow: 'hidden' }}>
-      <h3 style={{ padding: '22px var(--gutter) 12px', fontSize: 'var(--t-heading)', fontWeight: 600 }}>{title}</h3>
-      <div style={{ padding: '8px var(--gutter) 20px' }}>{children}</div>
-      <div style={{ padding: '12px var(--gutter) 16px', boxShadow: '0 -1px 0 var(--line)' }}>{footer}</div>
+    <div style={{ borderRadius: 'var(--r-card)', background: 'var(--surface)', border: '1px solid var(--line)', overflow: 'hidden' }}>
+      <h3 style={{ padding: '22px var(--gutter) 12px', fontSize: 'var(--t-heading)', fontWeight: 600, letterSpacing: 'var(--ls-heading)' }}>{title}</h3>
+      <div style={{ padding: '8px var(--gutter) 24px' }}>{children}</div>
+      <div style={{ padding: '12px var(--gutter) 16px', borderBlockStart: '1px solid var(--line)' }}>{footer}</div>
     </div>
   );
 }
@@ -357,19 +369,32 @@ export function FormsGallery() {
           </div>
         </Card>
         <Skeleton variant="block" height={96} />
+        <Caption>EmptyState · icon</Caption>
         <Card>
           <EmptyState
             compact
-            illustration={
-              <span style={{ width: 72, height: 72, borderRadius: '50%', background: 'var(--sunken)', display: 'grid', placeItems: 'center' }}>
-                <Icon icon={Inbox} size={32} strokeWidth={1.5} />
-              </span>
-            }
+            level={3}
+            icon={Inbox}
             title={t('emptyTitle')}
             body={t('emptyBody')}
             action={
               <Button size="md" to="/services">
                 {t('emptyAction')}
+              </Button>
+            }
+          />
+        </Card>
+        <Caption>EmptyState · render</Caption>
+        <Card>
+          <EmptyState
+            compact
+            level={3}
+            render="plot"
+            title={t('noPlotsTitle')}
+            body={t('noPlotsBody')}
+            action={
+              <Button size="md" to="/eligibility">
+                {t('noPlotsAction')}
               </Button>
             }
           />
@@ -403,7 +428,7 @@ export function FormsGallery() {
             <Avatar name={t('signer')} size="sm" />
             <Avatar name={t('signer')} />
             <Avatar name={t('engineer')} size="lg" tone="accent" />
-            <Avatar name={t('company')} size="xl" tone="gold" label={t('company')} />
+            <Avatar name={t('company')} size="xl" label={t('company')} />
           </div>
         </Card>
         <List>
@@ -419,6 +444,47 @@ export function FormsGallery() {
             <DemoPill kind="example" />
           </div>
         </Card>
+      </Section>
+
+      <Section title="On a dark tile">
+        <DarkTile>
+          <TextField label={t('visitor')} hint={t('visitorHint')} value={visitor} onChange={setVisitor} autoComplete="off" />
+          <TextField label={t('idNumber')} value={idNumber} onChange={setIdNumber} error={t('idError')} ltr inputMode="numeric" icon={IdCard} />
+          <SelectField
+            label={t('passType')}
+            value={passType}
+            onChange={setPassType}
+            options={[
+              { value: 'visitor', label: t('passVisitor'), icon: IdCard },
+              { value: 'contractor', label: t('passContractor'), icon: HardHat },
+            ]}
+          />
+          <div>
+            <Toggle label={t('notify')} hint={t('notifyHint')} checked={notify} onChange={setNotify} />
+            <Toggle label={t('remind')} checked={remind} onChange={setRemind} />
+            <Checkbox label={t('declare')} checked={declared} onChange={setDeclared} />
+          </div>
+          <SearchField label={t('searchServices')} value={filledSearch} onChange={setFilledSearch} />
+          <Stepper current={3} total={4} label={t('step', { n: 3, m: 4 })} showLabel />
+          <FilePick label={t('licence')} value={licence} onChange={setLicence} />
+          <FilePick label={t('plan')} hint={t('planHint')} value={plan} onChange={setPlan} />
+          <Banner tone="info">{t('bannerInfo')}</Banner>
+          <Banner tone="warn" title={t('bannerWarnTitle')} action={{ label: t('bannerWarnAction'), onClick: () => toast(t('bannerWarnAction'), { tone: 'info' }) }}>
+            {t('bannerWarn')}
+          </Banner>
+          <Skeleton count={2} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 }}>
+            <Stat value={fmt.num(totals.zones)} label={t('statZones')} />
+            <Stat value={<Money amount={QUARTER_RENT} />} label={t('rentDue')} />
+          </div>
+          <div style={cluster}>
+            <Avatar name={t('signer')} tone="accent" />
+            <Avatar name={t('engineer')} />
+            <DemoPill kind="simulation" />
+            <DemoPill kind="indicative" />
+          </div>
+          <EmptyState compact level={3} render="zone" title={t('noPlotsTitle')} body={t('noPlotsBody')} />
+        </DarkTile>
       </Section>
     </>
   );

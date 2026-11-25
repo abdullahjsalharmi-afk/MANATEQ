@@ -1,17 +1,15 @@
-/* label · value pairs */
+/* label · value pairs: a quiet list with hairline dividers, inside a hairline box */
 .lines {
   margin: 0;
-  padding: 2px var(--s-4);
+  padding: 0 var(--s-4);
+  border: 1px solid var(--line);
   border-radius: var(--r-control);
-  background: var(--surface-2);
-  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .bare {
   padding: 0;
+  border: 0;
   border-radius: 0;
-  background: none;
-  box-shadow: none;
 }
 
 .line {
@@ -24,25 +22,28 @@
 }
 
 .line + .line {
-  box-shadow: 0 -1px 0 var(--line);
+  border-block-start: 1px solid var(--line-soft);
 }
 
 .lineLabel {
   flex: none;
   max-width: 50%;
   font-size: var(--t-callout);
-  line-height: 1.5;
-  color: var(--ink-2);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .lineValue {
   min-width: 0;
   margin: 0;
   font-size: var(--t-callout);
-  font-weight: 500;
-  line-height: 1.5;
+  font-weight: 400;
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
   color: var(--ink);
   text-align: end;
+  font-variant-numeric: tabular-nums;
 }
 
 /* the confirmation */
@@ -59,41 +60,50 @@
 .mark {
   display: grid;
   place-items: center;
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   margin-block-end: var(--s-3);
-  border-radius: 50%;
-  background: var(--ok-tint);
-  color: var(--ok);
+  color: var(--accent);
   animation: mark-in var(--d-3) var(--ease) both;
 }
 
+.ring,
 .tick {
   fill: none;
   stroke: currentColor;
-  stroke-width: 2.75;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 1;
   stroke-dashoffset: 0;
-  animation: tick-draw 420ms var(--ease) 160ms both;
+}
+
+.ring {
+  stroke-width: 2;
+  animation: tick-draw 480ms var(--ease) both;
+}
+
+.tick {
+  stroke-width: 2.5;
+  animation: tick-draw 360ms var(--ease) 320ms both;
 }
 
 .successTitle {
   font-size: var(--t-title);
-  font-weight: 700;
-  line-height: var(--lh-tight);
+  font-weight: 600;
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-display);
+  text-wrap: balance;
   color: var(--ink);
 }
 
 @keyframes mark-in {
   from {
     opacity: 0;
-    transform: scale(0.6);
+    transform: scale(0.9);
   }
 }
 
-/* Hidden until it starts: a round line cap would otherwise show as a dot while the tick waits its turn. */
+/* Hidden until it starts: a round line cap would otherwise show as a dot while the line waits its turn. */
 @keyframes tick-draw {
   from {
     opacity: 0;
@@ -106,6 +116,7 @@
 
 /* Reduced motion makes animations end at once; without their delay the tick is simply there. */
 @media (prefers-reduced-motion: reduce) {
+  .ring,
   .tick {
     animation-delay: 0s;
   }

@@ -1,3 +1,4 @@
+import { Inbox } from 'lucide-react';
 import { act, useState, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,6 +10,7 @@ import {
   Banner,
   Checkbox,
   DemoPill,
+  EmptyState,
   Field,
   FILE_CHECK_MS,
   FilePick,
@@ -339,7 +341,7 @@ describe('FilePick', () => {
 
     advance(200);
     expect(state()).toBe('verified');
-    expect(status()).toBe('Checked — the document is readable');
+    expect(status()).toBe('Checked: the document is readable');
     expect(seen).toHaveLength(1);
     // Only the name and the size are kept.
     expect(Object.keys(must(seen[0], 'file')).sort()).toEqual(['name', 'size']);
@@ -435,7 +437,7 @@ describe('transaction sheets', () => {
     const onPaid = vi.fn();
     const onClose = vi.fn();
     render(<PaySheet open onClose={onClose} title="Pay the rent invoice" lines={[{ label: 'Invoice', value: 'INV-2611-018' }]} amount={18750} reference="RCT-2611-0046" onPaid={onPaid} />);
-    expect(document.body.textContent).toContain('Simulation — nothing is charged');
+    expect(document.body.textContent).toContain('Simulation: nothing is charged.');
     expect(document.body.textContent).toContain('INV-2611-018');
     // No card number, no credentials: the only inputs are the two stand-in methods.
     expect(queryAll('input').every((input) => input.getAttribute('type') === 'radio')).toBe(true);
@@ -525,5 +527,16 @@ describe('small pieces', () => {
     expect(queryAll('[role="note"]')).toHaveLength(1);
     expect(document.body.textContent).toContain('نسخة تجريبية');
     expect(document.body.textContent).toContain('استرشادي');
+  });
+
+  it('heads an empty state with a decorative render, or an icon when no render fits', () => {
+    render(<EmptyState render="plot" title="No plots yet" body="The plots you lease appear here." />, 'en');
+    const img = query<HTMLImageElement>('img');
+    expect(img.getAttribute('alt')).toBe('');
+    expect(query('h2').textContent).toBe('No plots yet');
+    render(<EmptyState icon={Inbox} title="No requests in progress" level={3} />, 'en');
+    expect(document.body.querySelector('img')).toBeNull();
+    expect(query('[aria-hidden="true"] svg')).toBeTruthy();
+    expect(query('h3').textContent).toBe('No requests in progress');
   });
 });

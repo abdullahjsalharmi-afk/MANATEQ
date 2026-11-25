@@ -1,46 +1,25 @@
+/* The shape of content on its way: flat blocks in the sunken fill that breathe with a soft opacity pulse. */
 .skeleton {
-  --bone-glint: var(--surface);
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-/* On dark surfaces the glint has to be lighter than the bone, not the colour of the surface. */
-:global([data-theme='dark']) .skeleton {
-  --bone-glint: var(--line);
-}
-
 .text {
   gap: 10px;
-  padding-block: 4px;
+  padding-block: var(--s-1);
 }
 
 .bone {
-  position: relative;
   display: block;
-  overflow: hidden;
-  border-radius: 7px;
-  background: var(--line);
-}
-
-.bone::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent 0%, var(--bone-glint) 50%, transparent 100%);
-  opacity: 0.75;
-  transform: translateX(-100%);
-  animation: glint 1.9s ease-in-out infinite;
-}
-
-/* The glint travels in the reading direction. */
-:global([dir='rtl']) .bone::after {
-  animation-name: glint-rtl;
-  transform: translateX(100%);
+  border-radius: var(--r-tile);
+  background: var(--sunken);
+  animation: pulse 1.6s var(--ease) infinite;
 }
 
 .line {
   height: 12px;
+  border-radius: var(--r-pill);
 }
 
 .thin {
@@ -52,7 +31,7 @@
   border-radius: var(--r-card);
 }
 
-/* The same measures as a list row: a 40px tile and two lines. */
+/* The same measures as a list row: a 40 px leading circle and two lines. */
 .row {
   display: flex;
   align-items: center;
@@ -65,7 +44,7 @@
   flex: none;
   width: 40px;
   height: 40px;
-  border-radius: 12px;
+  border-radius: var(--r-pill);
 }
 
 .rowText {
@@ -76,20 +55,18 @@
   gap: 9px;
 }
 
-@keyframes glint {
-  to {
-    transform: translateX(100%);
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
   }
-}
-
-@keyframes glint-rtl {
-  to {
-    transform: translateX(-100%);
+  50% {
+    opacity: 0.5;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bone::after {
-    display: none;
+  .bone {
+    animation: none;
   }
 }

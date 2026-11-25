@@ -29,8 +29,8 @@ describe('start-up', () => {
 
     // What needs no workflow is there at once: the company, the plots in operation and their accounts.
     expect(seedIsPartial(state.world)).toBe(true);
-    expect(state.world.company?.name.en).toBe('Al Mithal Auto Parts Trading W.L.L.');
-    expect(state.world.plots.map((plot) => plot.number)).toEqual(['BA-214', 'AK-OY-31']);
+    expect(state.world.company?.name.en).toBe('Example Industries Co.');
+    expect(state.world.plots.map((plot) => plot.number)).toEqual(['BA-121', 'AK-113']);
     expect(state.world.requests).toEqual([]);
     expect(state.world.invoices.filter((invoice) => invoice.status === 'due')).toHaveLength(1);
     expect(selectNextStep(state)?.kind).toBe('invoice');
@@ -41,9 +41,9 @@ describe('start-up', () => {
   });
 
   it('keeps a request that is started before its workflow has loaded', () => {
-    const id = startRequest('D1', { category: 'roads' }, { plotId: 'BA-214' });
+    const id = startRequest('D1', { category: 'roads' }, { plotId: 'BA-121' });
     const queued = getState().world.requests.find((request) => request.id === id) as RequestState;
-    expect(queued).toMatchObject({ serviceId: 'D1', visits: [], current: null, status: 'active', plotId: 'BA-214' });
+    expect(queued).toMatchObject({ serviceId: 'D1', visits: [], current: null, status: 'active', plotId: 'BA-121' });
     tick(Date.now());
     expect(getState().world.requests.find((request) => request.id === id)).toBe(queued);
     // The next step is still worked out, from the light catalogue alone.
@@ -62,7 +62,7 @@ describe('start-up', () => {
     expect(notified).toBeGreaterThan(0);
     const world = getState().world;
     expect(seedIsPartial(world)).toBe(false);
-    expect(world.plots.map((plot) => plot.number).sort()).toEqual(['AK-OY-31', 'AW-131', 'BA-214']);
+    expect(world.plots.map((plot) => plot.number).sort()).toEqual(['AK-113', 'AW-116', 'BA-121']);
     expect(world.requests.length).toBeGreaterThan(5);
     expect(world.requests.every((request) => request.visits.length > 0)).toBe(true);
     // What selectors derived before is worked out again with the full catalogue.

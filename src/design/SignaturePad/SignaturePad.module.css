@@ -4,21 +4,22 @@
   min-width: 0;
 }
 
-/* The paper. Its edge is the same inset hairline as a text field. `--signature-ink` is the colour the
-   canvas draws with; it follows the theme. */
+/* The sheet to sign on: a white surface with a hairline edge and a baseline. `--signature-ink` is the
+   colour the canvas draws with; it follows the theme. */
 .pad {
   --signature-ink: var(--ink);
   position: relative;
-  height: 168px;
+  height: 176px;
   overflow: hidden;
+  border: 1px solid var(--line-strong);
   border-radius: var(--r-control);
-  background: var(--surface-2);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
+  background: var(--surface);
   color: var(--ink);
+  transition: border-color var(--d-1) var(--ease);
 }
 
 .invalid {
-  box-shadow: inset 0 0 0 1px var(--bad);
+  border-color: var(--bad);
 }
 
 /* The canvas lies over everything else in the pad and takes the pointer; dragging on it never scrolls the page. */
@@ -38,14 +39,14 @@
   cursor: default;
 }
 
-/* The line to sign on, with the customary cross at its start. */
+/* The baseline to sign on, with the customary cross at its start. */
 .line {
   position: absolute;
-  inset-inline: 18px;
+  inset-inline: var(--s-5);
   inset-block-end: 46px;
   display: flex;
   align-items: flex-end;
-  border-block-end: 1px dashed var(--line-strong);
+  border-block-end: 1px solid var(--line-strong);
   pointer-events: none;
 }
 
@@ -56,13 +57,14 @@
 
 .signer {
   position: absolute;
-  inset-inline: 18px;
-  inset-block-end: 14px;
+  inset-inline: var(--s-5);
+  inset-block-end: 16px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--t-cap);
-  line-height: 1.5;
+  font-size: var(--t-foot);
+  line-height: 1.33;
+  letter-spacing: var(--ls-caption);
   color: var(--ink-3);
   pointer-events: none;
 }
@@ -73,6 +75,7 @@
   display: grid;
   place-items: center;
   font-size: var(--t-callout);
+  letter-spacing: var(--ls-caption);
   color: var(--ink-3);
   pointer-events: none;
 }
@@ -80,7 +83,7 @@
 /* The adopted signature: the typed name, set on the line with the slant of a hand. */
 .typed {
   position: absolute;
-  inset-inline: 44px 18px;
+  inset-inline: 44px var(--s-5);
   inset-block-end: 48px;
   display: flex;
   justify-content: center;
@@ -94,8 +97,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   padding-inline: 8px;
-  font-size: 1.875rem;
-  font-weight: 500;
+  font-size: var(--t-title);
+  font-weight: 400;
   line-height: 1.5;
   color: var(--ink);
   transform: rotate(-4deg) skewX(-10deg);
@@ -108,7 +111,7 @@
   transform: rotate(4deg) skewX(10deg);
 }
 
-/* The buttons are text only; their 18px padding puts their text level with the ends of the line above. */
+/* The buttons are text only and sit under the sheet's two ends. */
 .actions {
   display: flex;
   align-items: center;
@@ -148,12 +151,10 @@
   }
 }
 
-/* Forced colours remove the shadow edge and choose the text colour: the pad gets a real border and the
-   ink follows the system's text colour. */
+/* Forced colours choose the text colour: the ink follows it and the edge uses the system's colour. */
 @media (forced-colors: active) {
   .pad {
     --signature-ink: CanvasText;
-    border: 1px solid ButtonText;
-    box-shadow: none;
+    border-color: ButtonText;
   }
 }

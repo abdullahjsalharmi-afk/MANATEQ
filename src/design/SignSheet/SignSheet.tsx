@@ -161,7 +161,7 @@ export function SignContent({ phase, documentName, lines, signerName, consent, o
       <div className={styles.document}>
         <div className={styles.documentHead}>
           <span className={styles.tile} aria-hidden="true">
-            <Icon icon={FileSignature} size={20} />
+            <Icon icon={FileSignature} size={24} />
           </span>
           <div className={styles.documentText}>
             <p className={styles.kicker}>{t('document')}</p>

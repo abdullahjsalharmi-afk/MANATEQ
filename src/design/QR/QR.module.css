@@ -1,15 +1,17 @@
 /* The plate keeps its own two colours in both themes on purpose: a QR code is read by cameras, and
-   cameras need dark modules on a light ground. */
+   cameras need dark modules on a light ground. The code's own quiet zone gives it white margins; a
+   hairline outlines the plate where it sits on white. */
 .plate {
   --qr-plate: #ffffff;
-  --qr-ink: #1f1b1c;
+  --qr-ink: #231f20;
   flex: none;
   display: block;
   overflow: hidden;
   border-radius: var(--r-tile);
   background: var(--qr-plate);
   color: var(--qr-ink);
-  box-shadow: 0 0 0 1px var(--line);
+  outline: 1px solid var(--line);
+  outline-offset: -1px;
   /* Also when the system forces its own colours: an inverted code does not scan. */
   forced-color-adjust: none;
 }

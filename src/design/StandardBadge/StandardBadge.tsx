@@ -31,7 +31,7 @@ export function StandardBadge({ standard, variant = 'full', showText = true, cla
     if (headline === null) return null;
     return (
       <span className={cx(styles.chip, className)}>
-        <Icon icon={isInstant(standard) ? Zap : Clock} size={13} strokeWidth={2} />
+        <Icon icon={isInstant(standard) ? Zap : Clock} size={14} strokeWidth={1.75} />
         <span className="visually-hidden">{t('label')}: </span>
         <span>{headline}</span>
       </span>
