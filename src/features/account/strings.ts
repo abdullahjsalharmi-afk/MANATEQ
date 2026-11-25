@@ -68,7 +68,7 @@ export const strings = {
   inZone: { ar: 'في {zone}', en: 'In {zone}' },
   openZone: { ar: 'اعرض المنطقة', en: 'View the zone' },
   journeyLabel: { ar: 'رحلة هذه القطعة', en: 'This plot’s journey' },
-  journeyCaption: { ar: 'أنت الآن في مرحلة {station}', en: 'You are now at {station}' },
+  journeyCaption: { ar: 'أنت الآن في مرحلة {station}. اختر مرحلة لترى ما تم وما بقي.', en: 'You are now at {station}. Choose a stage to see what is done and what is left.' },
   facts: { ar: 'تفاصيل القطعة والعقد', en: 'Plot and lease' },
   area: { ar: 'المساحة', en: 'Area' },
   solution: { ar: 'الحل', en: 'Solution' },

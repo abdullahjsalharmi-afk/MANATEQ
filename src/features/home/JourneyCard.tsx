@@ -32,7 +32,6 @@ export function JourneyCard({ journey, plotNumber }: JourneyCardProps) {
 
   const stations: RibbonStation[] = journey.stations.map((station) => ({ key: station.key, label: pick(station.name), state: station.state }));
   const current = journey.stations.find((station) => station.key === journey.station);
-  const shown = journey.stations.find((station) => station.key === open);
   const plot = fmt.ltr(plotNumber);
 
   return (
@@ -45,38 +44,64 @@ export function JourneyCard({ journey, plotNumber }: JourneyCardProps) {
           onSelect={(key) => setOpen(key as StationKey)}
         />
       </Card>
-      <Sheet open={shown !== undefined} onClose={() => setOpen(null)} title={shown ? pick(shown.name) : ''} description={t('stationSheetBody', { plot })}>
-        <JourneyRibbon label={t('journeyTitle')} stations={stations} size="expanded" selected={open ?? undefined} onSelect={(key) => setOpen(key as StationKey)} className={styles.sheetRibbon} />
-        {shown ? (
-          <List variant="plain" aria-label={pick(shown.name)}>
-            {shown.items.flatMap((item) => {
-              const service = getService(item.serviceId);
-              const words = itemWords(item);
-              const icon = itemIcon(item);
-              const rows = [
-                <Row
-                  key={item.serviceId}
-                  to={itemRoute(item)}
-                  leading={<Icon icon={icon.icon} size={22} className={icon.className} />}
-                  title={service ? pick(words.name === 'noun' ? requestLabelOf(service) : service.label) : item.serviceId}
-                  subtitle={words.status.map((word) => t(word)).join(DOT)}
-                />,
-              ];
-              if (words.closedLink) {
-                rows.push(
-                  <Row
-                    key={`${item.serviceId}-closed`}
-                    to={words.closedLink}
-                    leading={<Icon icon={CircleX} size={22} className={styles.itemUpcoming} />}
-                    title={t('itemClosedLink')}
-                  />,
-                );
-              }
-              return rows;
-            })}
-          </List>
-        ) : null}
-      </Sheet>
+      <StationSheet journey={journey} plotNumber={plotNumber} open={open} onChange={setOpen} />
     </Section>
+  );
+}
+
+export interface StationSheetProps {
+  journey: Journey;
+  /** The plot number the journey is about, e.g. "AW-116". */
+  plotNumber: string;
+  /** The station whose checklist shows, or null when the sheet is closed. */
+  open: StationKey | null;
+  onChange: (station: StationKey | null) => void;
+}
+
+/**
+ * The checklist of one station of a plot's journey, in a sheet: what is done, what is running and what comes
+ * next, each a link to its request or its service. Home opens it for the plot furthest behind; a plot page for
+ * that plot.
+ */
+export function StationSheet({ journey, plotNumber, open, onChange }: StationSheetProps) {
+  const t = useT(strings);
+  const { pick, fmt } = useLang();
+  const stations: RibbonStation[] = journey.stations.map((station) => ({ key: station.key, label: pick(station.name), state: station.state }));
+  const shown = journey.stations.find((station) => station.key === open);
+  const plot = fmt.ltr(plotNumber);
+
+  return (
+    <Sheet open={shown !== undefined} onClose={() => onChange(null)} title={shown ? pick(shown.name) : ''} description={t('stationSheetBody', { plot })}>
+      <JourneyRibbon label={t('journeyTitle')} stations={stations} size="expanded" selected={open ?? undefined} onSelect={(key) => onChange(key as StationKey)} className={styles.sheetRibbon} />
+      {shown ? (
+        <List variant="plain" aria-label={pick(shown.name)}>
+          {shown.items.flatMap((item) => {
+            const service = getService(item.serviceId);
+            const words = itemWords(item);
+            const icon = itemIcon(item);
+            const rows = [
+              <Row
+                key={item.serviceId}
+                to={itemRoute(item)}
+                leading={<Icon icon={icon.icon} size={22} className={icon.className} />}
+                title={service ? pick(words.name === 'noun' ? requestLabelOf(service) : service.label) : item.serviceId}
+                subtitle={words.status.map((word) => t(word)).join(DOT)}
+              />,
+            ];
+            if (words.closedLink) {
+              rows.push(
+                <Row
+                  key={`${item.serviceId}-closed`}
+                  to={words.closedLink}
+                  leading={<Icon icon={CircleX} size={22} className={styles.itemUpcoming} />}
+                  title={t('itemClosedLink')}
+                />,
+              );
+            }
+            return rows;
+          })}
+        </List>
+      ) : null}
+    </Sheet>
   );
 }

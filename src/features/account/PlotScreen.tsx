@@ -1,5 +1,5 @@
 import { CalendarClock, FileText, MapPin, Receipt } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { useParams } from '@/app/routes';
 import { Button, Card, Container, Icon, List, Pill, Render, Row, Screen, Section, Tile } from '@/design/core';
@@ -7,6 +7,7 @@ import { EmptyState } from '@/design/forms';
 import { JourneyRibbon } from '@/design/signature';
 import { getService, getSolution, getZone } from '@/data/catalog';
 import type { Lease, Plot } from '@/domain/types';
+import { StationSheet } from '@/features/home';
 import { InvoiceRow } from '@/features/payments';
 import { RequestRow } from '@/features/requests';
 import { DocRow } from '@/features/wallet';
@@ -19,6 +20,7 @@ import {
   selectPlot,
   selectRequestsOfPlot,
   useApp,
+  type StationKey,
 } from '@/state';
 import { invoicesOfLease, leaseEndingSoon, openRenewal, plotRender, plotServiceIds, plotStatusMeta, startRoute } from './account-model';
 import styles from './PlotScreen.module.css';
@@ -58,6 +60,8 @@ function PlotPage({ plot }: { plot: Plot }) {
   const zone = getZone(plot.zoneCode);
   const meta = plotStatusMeta(plot.status);
   const station = journey.stations.find((candidate) => candidate.key === journey.station);
+  // A station opens its checklist for this plot, as it does on Home for the plot furthest behind.
+  const [stationOpen, setStationOpen] = useState<StationKey | null>(null);
   const title = t('plotLabel', { number: plot.number });
 
   return (
@@ -87,8 +91,10 @@ function PlotPage({ plot }: { plot: Plot }) {
             label={t('journeyLabel')}
             stations={journey.stations.map((s) => ({ key: s.key, label: pick(s.name), state: s.state }))}
             caption={station ? t('journeyCaption', { station: pick(station.name) }) : undefined}
+            onSelect={(key) => setStationOpen(key as StationKey)}
           />
         </Card>
+        <StationSheet journey={journey} plotNumber={plot.number} open={stationOpen} onChange={setStationOpen} />
 
         <div className={styles.columns}>
           <div className={styles.column}>

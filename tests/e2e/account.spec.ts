@@ -32,6 +32,29 @@ test('account home leads to the company, plots, a plot and the team', async ({ p
   expect(errors).toEqual([]);
 });
 
+test('a plot page opens the checklist of each stage of that plot’s journey', async ({ page }) => {
+  const errors = watchErrors(page);
+  // Home shows the journey of the plot furthest behind; every plot shows its own on its page.
+  await openApp(page, { route: '/account/plots/BA-121', lang: 'en' });
+  await page.getByRole('main').getByRole('button', { name: /Operate/ }).first().click();
+  const operate = page.getByRole('dialog', { name: 'Operate' });
+  // The code is kept whole and left to right with invisible marks, so match around them.
+  await expect(operate.getByText(/Plot\W*BA\W+121/)).toBeVisible();
+  // The fault report that is open on this plot is in progress and leads to its request.
+  const report = operate.getByRole('link', { name: /Fault report/ });
+  await expect(report).toContainText('In progress');
+  await report.click();
+  await expect(page).toHaveURL(/#\/requests\/r94/);
+
+  await page.evaluate(() => (window.location.hash = '#/account/plots/AW-116'));
+  await page.getByRole('main').getByRole('button', { name: /Build/ }).first().click();
+  const build = page.getByRole('dialog', { name: 'Build' });
+  await expect(build.getByText(/Plot\W*AW\W+116/)).toBeVisible();
+  await expect(build.getByRole('link', { name: /building permit/i })).toContainText('In progress');
+  await expect(build.getByRole('link', { name: /^Design review/ })).toContainText('Done');
+  expect(errors).toEqual([]);
+});
+
 test('an unknown plot shows a way back', async ({ page }) => {
   await openApp(page, { route: '/account/plots/XX-000', lang: 'en' });
   await expect(page.getByRole('heading', { name: 'We could not find this plot' })).toBeVisible();
