@@ -40,6 +40,11 @@ test('the tenant sends a complaint (E6) and lands on the request', async ({ page
   await expect(page.getByRole('heading', { name: 'Request received' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Copy reference MQ-/ })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'What happens now' })).toBeVisible();
+  // The next steps a person takes, with who holds them: no decisions and no steps the system runs by itself.
+  const next = page.getByRole('list', { name: 'Next steps' }).getByRole('listitem');
+  await expect(next.first()).toContainText('Owner investigates');
+  await expect(next.first()).toContainText('Manateq staff');
+  await expect(page.getByRole('list', { name: 'Next steps' })).not.toContainText('?');
   await page.getByRole('button', { name: 'Track request' }).click();
   await expect(page).toHaveURL(/#\/requests\/r\d+/);
   expect(errors).toEqual([]);

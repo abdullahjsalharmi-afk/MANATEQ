@@ -44,6 +44,14 @@
   }
 }
 
+/* A legend key: drawn before the looks below, so the available key keeps its hairline edge. */
+.swatch {
+  width: 14px;
+  height: 14px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
 .available {
   border-color: var(--line-strong);
   background: var(--surface);
@@ -116,13 +124,6 @@ button.available:active {
   line-height: 1.5;
   letter-spacing: var(--ls-caption);
   color: var(--ink-2);
-}
-
-.swatch {
-  width: 14px;
-  height: 14px;
-  border: 1px solid transparent;
-  border-radius: 4px;
 }
 
 .caption {

@@ -23,6 +23,10 @@ test('the catalogue groups by journey, filters as you type and opens a service',
   await page.getByRole('button', { name: /Automatic/ }).click();
   await expect(page.getByText('24 services')).toBeVisible();
 
+  // Further down the list, so going back has a place to restore.
+  await page.getByRole('link', { name: /Your rent invoices and payments/ }).scrollIntoViewIfNeeded();
+  await page.evaluate(() => window.scrollBy(0, 200));
+  const top = await page.evaluate(() => window.scrollY);
   await page.getByRole('link', { name: /Your rent invoices and payments/ }).click();
   await expect(page.getByRole('heading', { name: 'Your rent invoices and payments', level: 2 })).toBeVisible();
   await expect(page.getByText('How this service starts')).toBeVisible();
@@ -32,6 +36,7 @@ test('the catalogue groups by journey, filters as you type and opens a service',
   await page.goBack();
   await expect(page).toHaveURL(/view=all&filter=automatic/);
   await expect(page.getByText('24 services')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(top);
   expect(errors).toEqual([]);
 });
 

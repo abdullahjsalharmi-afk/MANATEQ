@@ -546,3 +546,46 @@ describe('small pieces', () => {
     expect(query('h3').textContent).toBe('No requests in progress');
   });
 });
+
+describe('round 2: shared APIs that replace local copies', () => {
+  it('files the payment through onPay and confirms the receipt it returns', () => {
+    vi.useFakeTimers();
+    const onPay = vi.fn(() => 'RCP-2026-0101');
+    const onPaid = vi.fn();
+    render(<PaySheet open onClose={() => undefined} title="Pay the deposit" lines={[]} amount={5000} onPay={onPay} onPaid={onPaid} />);
+    click(byText('button', 'Pay QAR 5,000'));
+    expect(onPay).not.toHaveBeenCalled();
+    advance(PAY_MS + 50);
+    expect(onPay).toHaveBeenCalledTimes(1);
+    expect(document.body.textContent).toContain('RCP-2026-0101');
+    click(byText('button', 'Done'));
+    expect(onPaid).toHaveBeenCalledTimes(1);
+  });
+
+  it('confirms nothing when onPay cannot file the payment', () => {
+    vi.useFakeTimers();
+    const onFailed = vi.fn();
+    render(<PaySheet open onClose={() => undefined} title="Pay the deposit" lines={[]} amount={5000} onPay={() => null} onFailed={onFailed} onPaid={() => undefined} />);
+    click(byText('button', 'Pay QAR 5,000'));
+    advance(PAY_MS + 50);
+    expect(onFailed).toHaveBeenCalledTimes(1);
+    expect(document.body.textContent).not.toContain('Payment complete');
+  });
+
+  it('draws a radio mark on every choice tile, chosen or not', () => {
+    render(
+      <SelectField
+        label="Kind"
+        value="complaint"
+        onChange={() => undefined}
+        options={[
+          { value: 'complaint', label: 'Complaint' },
+          { value: 'note', label: 'Note' },
+        ]}
+      />,
+    );
+    const tiles = queryAll('[role="radiogroup"] label');
+    expect(tiles).toHaveLength(2);
+    expect(tiles.every((tile) => tile.querySelectorAll('span[aria-hidden="true"]').length === 1)).toBe(true);
+  });
+});
