@@ -7,6 +7,19 @@
 }
 
 /* A section a link can open at: it clears the bars when scrolled into view. */
+.anchor,
+.pair {
+  margin-block-start: var(--s-8);
+}
+
+.pair .anchor {
+  margin-block-start: 0;
+}
+
+.tag {
+  margin-block-end: var(--s-3);
+}
+
 .anchor {
   scroll-margin-block-start: calc(var(--chrome-top, 0px) + var(--s-4));
 }
@@ -144,5 +157,16 @@
 @media (prefers-reduced-motion: reduce) {
   .chevron {
     transition: none;
+  }
+}
+
+@media (min-width: 735px) {
+  .anchor,
+  .pair {
+    margin-block-start: var(--s-12);
+  }
+
+  .pair .anchor {
+    margin-block-start: 0;
   }
 }

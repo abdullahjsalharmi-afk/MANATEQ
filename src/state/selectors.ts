@@ -8,7 +8,7 @@
 import { peekServiceDetail } from '@/data/catalog';
 import { journeyOf, stationOf, type Journey, type StationKey } from '@/domain/journey';
 import { collectNextSteps, deadlineOf } from '@/domain/nextstep';
-import type { AppNotification, AppState, Appointment, Company, Doc, Draft, Invoice, Lease, NextStep, Pass, Persona, Plot, RequestState, World } from '@/domain/types';
+import type { AppNotification, AppState, Appointment, Company, Doc, Draft, Invoice, Lease, NextStep, Pass, Persona, Plot, RequestState, TeamMember, World } from '@/domain/types';
 import { isCatalogueReady } from './catalogue';
 import { findLease, isFinished, threadOf } from './world';
 
@@ -232,6 +232,10 @@ const appointmentsOf = perWorld((world) => world.appointments.filter((appointmen
 
 /** Booked appointments, the soonest first. */
 export const selectAppointments: Selector<Appointment[]> = (state) => appointmentsOf(state.world);
+
+export const selectTeam: Selector<TeamMember[]> = (state) => state.world.team;
+
+export const selectWatchedZones: Selector<string[]> = (state) => state.world.watchedZones;
 
 export const selectDraft =
   (serviceId: string | undefined): Selector<Draft | undefined> =>

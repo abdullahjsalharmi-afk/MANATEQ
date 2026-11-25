@@ -90,9 +90,12 @@ export function AboutScreen() {
 
         <div id="about-prototype" className={styles.anchor}>
           <Section title={t('simulated')} hint={t('simulatedHint')}>
+            <p className={styles.tag}>
+              <DemoPill kind="simulation" />
+            </p>
             <List>
               {SIMULATED.map(({ key, icon }) => (
-                <Row key={key} leading={<Icon icon={icon} />} title={t(key)} subtitle={t(`${key}Text`)} wrap trailing={<DemoPill kind="simulation" />} />
+                <Row key={key} leading={<Icon icon={icon} />} title={t(key)} subtitle={t(`${key}Text`)} wrap />
               ))}
             </List>
           </Section>

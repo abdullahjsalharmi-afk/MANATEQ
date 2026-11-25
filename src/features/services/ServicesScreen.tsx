@@ -70,7 +70,7 @@ export function ServicesScreen() {
       ) : view === 'journey' ? (
         <JourneyView groups={groups} station={station} showRender={!trimmed} hint={hint} />
       ) : (
-        <Container>
+        <Container pad="none" className={styles.all}>
           <ChipRow label={t('filterLabel')} className={styles.filters}>
             {(['all', 'startable', 'automatic'] as const).map((key) => (
               <Chip key={key} selected={filter === key} onClick={() => setFilter(key)}>

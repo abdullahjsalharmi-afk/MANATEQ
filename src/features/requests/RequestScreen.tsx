@@ -114,16 +114,15 @@ function RequestPage({ request, service, title }: { request: RequestState; servi
           <div className={styles.main}>
             {action ? (
               <div className={styles.partAction}>
-                <Card className={styles.action} aria-labelledby="request-action-title">
-                  <p className={`type-callout ${styles.eyebrow}`}>{t('actionEyebrow')}</p>
-                  <h2 id="request-action-title" className="type-heading">
-                    {pick(action.title)}
-                  </h2>
-                  <p className={styles.text}>{pick(action.detail)}</p>
-                  <div className={styles.actionCta}>
-                    <Button onClick={() => setRunning(true)}>{pick(action.cta)}</Button>
-                  </div>
-                </Card>
+                <Section title={t('actionEyebrow')}>
+                  <Card className={styles.action}>
+                    <h3 className="type-heading">{pick(action.title)}</h3>
+                    <p className={styles.text}>{pick(action.detail)}</p>
+                    <div className={styles.actionCta}>
+                      <Button onClick={() => setRunning(true)}>{pick(action.cta)}</Button>
+                    </div>
+                  </Card>
+                </Section>
               </div>
             ) : null}
 

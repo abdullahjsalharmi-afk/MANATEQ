@@ -5,7 +5,7 @@
 import { Bell, Mail, MessageSquareText, Repeat2, Smartphone, UserRound } from 'lucide-react';
 import { useId } from 'react';
 import { useLang, useT } from '@/app/i18n';
-import { Card, Grid, Icon, List, Row, Screen, Section, Segmented } from '@/design/core';
+import { Card, Chip, ChipRow, Grid, Icon, List, Row, Screen, Section, Segmented } from '@/design/core';
 import { DemoPill, Switch } from '@/design/forms';
 import type { Lang } from '@/data/types';
 import type { TextSize, ThemeChoice } from '@/domain/types';
@@ -69,12 +69,13 @@ export function SettingsScreen() {
 
           <Card className={styles.control}>
             <h3 className={styles.label}>{t('textSize')}</h3>
-            <Segmented<`${TextSize}`>
-              label={t('textSize')}
-              value={`${settings.textSize}`}
-              onChange={(value) => setTextSize(Number(value) as TextSize)}
-              options={TEXT_SIZES.map((size) => ({ value: `${size}` as const, label: t(`size${size}`) }))}
-            />
+            <ChipRow label={t('textSize')} wrap>
+              {TEXT_SIZES.map((size) => (
+                <Chip key={size} selected={settings.textSize === size} onClick={() => setTextSize(size)}>
+                  {t(`size${size}`)}
+                </Chip>
+              ))}
+            </ChipRow>
             <p className={styles.preview} aria-live="polite">
               <span className="visually-hidden">{t('previewLabel')}: </span>
               {t('preview')}

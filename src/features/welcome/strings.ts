@@ -2,7 +2,7 @@
 export const strings = {
   appName: { ar: 'مناطق ون', en: 'Manateq One' },
   line: { ar: 'خمسون خدمة. رحلة واحدة.', en: 'Fifty services. One journey.' },
-  tagline: { ar: 'من الأرض إلى التشغيل، وخطوتك التالية واضحة دائمًا.', en: 'From land to operation, with your next step always clear.' },
+  tagline: { ar: 'خطوتك التالية واضحة دائمًا.', en: 'Your next step, always clear.' },
   language: { ar: 'اللغة', en: 'Language' },
   signIn: { ar: 'الدخول عبر «توثيق»', en: 'Sign in with Tawtheeq' },
   browse: { ar: 'تصفّح دون دخول', en: 'Browse without signing in' },

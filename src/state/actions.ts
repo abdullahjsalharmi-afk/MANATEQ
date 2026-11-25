@@ -261,6 +261,12 @@ export function saveEligibility(result: Omit<EligibilityResult, 'at'> & { at?: n
   changeWorld((world) => ({ ...world, eligibility: { ...result, at: result.at ?? now } }));
 }
 
+/** "Update now" on the company profile: the demo re-reads the register and stamps the time. */
+export function syncCompany(): void {
+  const now = Date.now();
+  changeWorld((world) => (world.company ? { ...world, company: { ...world.company, syncedAt: now } } : world));
+}
+
 /** Follows or unfollows a zone for availability alerts. */
 export function toggleWatchZone(code: string): void {
   changeWorld((world) => ({ ...world, watchedZones: world.watchedZones.includes(code) ? world.watchedZones.filter((zone) => zone !== code) : [...world.watchedZones, code] }));

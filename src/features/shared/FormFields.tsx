@@ -304,7 +304,6 @@ export function FormFields({ fields, values, onChange, errors = {}, context, idP
       if (wanted) onChange(field.key, wanted);
     }
     // Only when the choices change, not on every keystroke.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fields, plots, context?.plotId]);
 
   return (

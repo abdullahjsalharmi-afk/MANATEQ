@@ -31,7 +31,7 @@ export function KnownCard({ company, plot }: KnownCardProps) {
         </div>
         <List variant="plain">
           <Row title={t('cr')} trailing={<span className="ltr">{company.cr}</span>} />
-          <Row title={t('signatory')} subtitle={pick(company.signatory.role)} trailing={pick(company.signatory.name)} />
+          <Row title={t('signatory')} trailing={pick(company.signatory.name)} />
           <Row title={t('activity')} trailing={pick(company.activity)} />
           {plot ? <Row title={t('plot')} subtitle={zone ? pick(zone.name) : undefined} trailing={<span className="ltr">{fmt.ltr(plot.number)}</span>} /> : null}
         </List>

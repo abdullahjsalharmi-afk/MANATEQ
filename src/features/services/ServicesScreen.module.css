@@ -44,3 +44,8 @@
   letter-spacing: var(--ls-caption);
   color: var(--ink-3);
 }
+
+/* The flat list follows the controls closely; the page air comes after it. */
+.all {
+  padding-block-end: var(--s-12);
+}

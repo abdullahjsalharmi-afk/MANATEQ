@@ -32,6 +32,7 @@ export function RequestsScreen() {
     <Screen title={t('title')} large width="content">
       <Segmented<Segment>
         className={styles.filter}
+        inline
         label={t('filter')}
         value={segment}
         onChange={choose}

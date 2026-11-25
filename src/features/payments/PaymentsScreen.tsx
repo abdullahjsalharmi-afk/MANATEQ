@@ -118,7 +118,6 @@ export function PaymentsScreen() {
                 {month.invoices.map((invoice) => (
                   <Row
                     key={invoice.id}
-                    leading={<Icon icon={Receipt} size={22} />}
                     title={pick(invoice.title)}
                     subtitle={
                       <>

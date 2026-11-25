@@ -491,7 +491,9 @@ describe('small pieces', () => {
     expect(initials('Khalid Al-Marri')).toBe('KA');
     expect(initials('mariam')).toBe('M');
     expect(initials('خالد المري')).toBe('خ‌م');
-    expect(initials('شركة الأفق للخدمات اللوجستية')).toBe('ش‌ل');
+    expect(initials('شركة الأفق للخدمات اللوجستية')).toBe('أ‌ل');
+    expect(initials('شركة المثال للصناعات')).toBe('م‌ص');
+    expect(initials('Example Industries Co.')).toBe('EI');
     expect(initials('   ')).toBe('');
     render(<Avatar name="Khalid Al-Marri" label="Khalid Al-Marri" />);
     expect(query('[role="img"]').textContent).toBe('KA');

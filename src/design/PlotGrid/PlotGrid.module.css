@@ -22,12 +22,14 @@
   height: 46px;
   border: 1px solid transparent;
   border-radius: var(--r-tile);
-  font-size: var(--t-cap);
   font-weight: 400;
   line-height: 1;
   text-align: center;
   font-variant-numeric: tabular-nums;
   transition: transform var(--d-1) var(--ease);
+  /* Plot numbers never wrap; at the largest text sizes they shrink to fit the cell instead. */
+  white-space: nowrap;
+  font-size: min(var(--t-cap), 3.1vw);
 }
 
 .cell:focus-visible {

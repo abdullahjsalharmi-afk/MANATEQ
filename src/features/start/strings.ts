@@ -65,6 +65,7 @@ export const strings = {
   discard: { ar: 'تجاهل', en: 'Discard' },
 
   // States.
+  notFoundName: { ar: 'خدمة غير موجودة', en: 'Service not found' },
   notFoundTitle: { ar: 'لم نجد هذه الخدمة', en: 'We could not find this service' },
   notFoundBody: { ar: 'ربما تغيّر الرابط. تصفّح الخدمات وابدأ من هناك.', en: 'The link may have changed. Browse the services and start from there.' },
   browse: { ar: 'تصفّح الخدمات', en: 'Browse services' },

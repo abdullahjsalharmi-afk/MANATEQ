@@ -49,7 +49,7 @@ export const supportStrings = {
   title: { ar: 'الدعم', en: 'Support' },
   eyebrow: { ar: 'الدعم', en: 'Support' },
   headline: { ar: 'مركز خدمات الأعمال', en: 'Business Services Center' },
-  tagline: { ar: 'فريق يرشدك في كل إجراء.', en: 'A team that guides you through every procedure.' },
+  tagline: { ar: 'فريق يرشدك في كل إجراء.', en: 'A team beside you at every step.' },
 
   ways: { ar: 'طرق التواصل', en: 'Ways to reach us' },
   visitTitle: { ar: 'موعد مع الفريق', en: 'An appointment' },
@@ -80,7 +80,7 @@ export const supportStrings = {
 
   feedback: { ar: 'شكوى أو ملاحظة', en: 'A complaint or a suggestion' },
   feedbackRow: { ar: 'قدّم شكوى أو ملاحظة', en: 'Make a complaint or a suggestion' },
-  feedbackLine: { ar: 'يصلك إشعار الاستلام فورًا، وتتبّعها في «طلباتي» مثل أي طلب.', en: 'You get an acknowledgement at once and track it in Requests like any other request.' },
+  feedbackLine: { ar: 'يصلك إشعار الاستلام فورًا، وتتبّعها في «طلباتي».', en: 'Acknowledged at once; track it in Requests.' },
 
   faq: { ar: 'أسئلة شائعة', en: 'Common questions' },
   q1: { ar: 'كم تستغرق الخدمات، وما معنى «استرشادي»؟', en: 'How long do services take, and what does “indicative” mean?' },
@@ -115,7 +115,7 @@ export const aboutStrings = {
   title: { ar: 'عن مناطق ون', en: 'About Manateq One' },
   eyebrow: { ar: 'عن مناطق ون', en: 'About Manateq One' },
   headline: { ar: 'رفيق لرحلة واحدة.', en: 'A companion for one journey.' },
-  tagline: { ar: 'من الانضمام إلى العقد والبناء والتشغيل.', en: 'From joining to contract, build and operation.' },
+  tagline: { ar: 'من الانضمام إلى التشغيل.', en: 'From joining to operation.' },
   idea: {
     ar: 'تعرف مناطق ون خطوة المستثمر التالية في كل وقت، فلا يبحث بين خمسين نموذجًا. تجمع خدمات مناطق في رحلة واحدة، وتبيّن عند مَن كل طلب ومتى ينتهي.',
     en: 'Manateq One always knows the investor’s next step, so nobody has to search through fifty forms. It gathers Manateq’s services into one journey and shows who holds each request and when it should finish.',

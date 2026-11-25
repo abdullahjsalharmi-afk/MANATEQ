@@ -102,6 +102,25 @@ export function plotsText(n: number, fmt: LangValue['fmt'], none: string): strin
   });
 }
 
+/** One line under the verdict: how many zones fit, or what to do next. */
+function taglineOf(kind: ResultKind, choices: number, fmt: LangValue['fmt'], t: (key: Key) => string): string {
+  switch (kind) {
+    case 'eligible':
+      return fmt.plural(choices, {
+        ar: { one: 'تناسبك منطقة واحدة.', two: 'تناسبك منطقتان.', few: '{n} مناطق تناسبك.', many: '{n} منطقة تناسبك.', other: '{n} منطقة تناسبك.' },
+        en: { one: 'One zone fits.', other: '{n} zones fit.' },
+      });
+    case 'elsewhere':
+      return choices ? t('tagElsewhere') : t('tagNotTargeted');
+    case 'noPlots':
+      return choices ? t('tagElsewhere') : t('tagFollow');
+    case 'review':
+      return t('tagReview');
+    case 'notTargeted':
+      return t('tagNotTargeted');
+  }
+}
+
 export interface EligibilityResultViewProps {
   input: EligibilityInput;
   outcome: EligibilityOutcome;
@@ -140,8 +159,9 @@ export function EligibilityResultView({ input, outcome, persona, chosen, onChoos
             {t(verdict.head)}
           </span>
         }
-        tagline={pick(outcome.reason)}
+        tagline={taglineOf(kind, options.length, fmt, t)}
       >
+        <p className={cx('type-body', styles.reason)}>{pick(outcome.reason)}</p>
         {facts.length ? (
           <ul className={cx('type-callout', styles.facts)} aria-label={t('facts')}>
             {facts.map((fact) => (
@@ -152,8 +172,6 @@ export function EligibilityResultView({ input, outcome, persona, chosen, onChoos
             ))}
           </ul>
         ) : null}
-        {kind === 'review' ? <p className={cx('type-body', styles.note)}>{t('reviewWithin')}</p> : null}
-        {kind === 'notTargeted' ? <p className={cx('type-body', styles.note)}>{t('notTargetedNext')}</p> : null}
         {outcome.note ? <p className={cx('type-body', styles.note)}>{pick(outcome.note)}</p> : null}
         <p className={cx('type-foot', styles.saved)}>{persona === 'guest' ? t('savedGuest') : savedForProfile ? t('saved') : null}</p>
       </Tile>

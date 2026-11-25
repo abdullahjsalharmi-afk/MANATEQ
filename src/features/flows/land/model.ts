@@ -15,7 +15,7 @@ export const LAND_PAGES = 5;
 /** The documents of the application, in order; the last one is optional. */
 export const LAND_DOCS = ['businessPlan', 'financials', 'solutionDocs'] as const;
 export type LandDoc = (typeof LAND_DOCS)[number];
-export const REQUIRED_DOCS: readonly LandDoc[] = ['businessPlan', 'financials'];
+export const REQUIRED_DOCS = ['businessPlan', 'financials'] as const satisfies readonly LandDoc[];
 
 /** The most alternatives an application lists, in order. */
 export const MAX_ALTERNATIVES = 3;

@@ -164,6 +164,7 @@ export function GenericFlow({ service, company }: GenericFlowProps) {
     const id = startRequest(service.id, form, { plotId, zoneCode });
     clearDraft(service.id);
     setSubmittedId(id);
+    window.scrollTo({ top: 0 });
   };
 
   const total = pages.length;

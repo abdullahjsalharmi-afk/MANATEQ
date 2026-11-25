@@ -1,0 +1,89 @@
+/* The land application (A4): layout only, tokens only. Shared flow pieces live in ../eligibility/Flow.module.css. */
+
+.company {
+  margin-block-end: var(--s-2);
+}
+
+.verifiedLine {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  color: var(--ink-3);
+}
+
+.companyName {
+  margin-block: var(--s-2) 0;
+}
+
+.companyCr {
+  margin-block: var(--s-1) 0;
+  color: var(--ink-3);
+}
+
+.banner {
+  margin-block-start: var(--s-8);
+}
+
+.confirm {
+  margin-block-start: var(--s-8);
+}
+
+.layout {
+  overflow-x: auto;
+}
+
+.files {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.rank {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 20px;
+  block-size: 20px;
+  border-radius: var(--r-pill);
+  border: 1px solid currentColor;
+  font-size: var(--t-cap);
+  font-weight: var(--w-strong);
+}
+
+.sheetActions {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+}
+
+/* ── the confirmation ───────────────────────────────────────────── */
+.check {
+  color: var(--accent);
+}
+
+.capsule {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2);
+  margin: var(--s-6) 0 0;
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-control);
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  color: var(--ink-2);
+}
+
+.ref {
+  color: var(--ink);
+  font-weight: var(--w-strong);
+}
+
+.standards {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  margin-block: var(--s-3) 0;
+  color: var(--ink-3);
+}

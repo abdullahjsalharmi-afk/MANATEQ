@@ -17,7 +17,7 @@ import { strings } from './strings';
 const DOMAIN_RENDER: Record<DomainCode, RenderName> = { A: 'zone', B: 'plot', C: 'construction', D: 'utilities', E: 'services', F: 'units', G: 'gate' };
 
 /**
- * `#/start/:id` — starts a service. A purpose-built flow when the service has one, a dedicated screen when it
+ * `#/start/:id`: starts a service. A purpose-built flow when the service has one, a dedicated screen when it
  * redirects, otherwise the generic flow driven by the service's fields. Query: plot, zone, activity, from.
  */
 export function StartScreen() {
@@ -39,7 +39,6 @@ export function StartScreen() {
       navigate(params ? `${redirect}?${params}` : redirect, { replace: true });
     }
     // The query is read once, when the screen opens.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [guest, redirect]);
 
   if (guest || redirect) return <StartLoading />;
@@ -61,7 +60,7 @@ function GenericStart({ id }: { id: string }) {
 
   if (!summary) {
     return (
-      <Screen title={t('notFoundTitle')} nav="back" backTo="/services">
+      <Screen title={t('notFoundName')} nav="back" backTo="/services">
         <EmptyState icon={SearchX} title={t('notFoundTitle')} body={t('notFoundBody')} action={<Button to="/services">{t('browse')}</Button>} />
       </Screen>
     );

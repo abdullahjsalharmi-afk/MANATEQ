@@ -29,56 +29,50 @@ export function WelcomeScreen() {
     navigate('/verify');
   };
 
+  // The sheet sits outside the maroon screen, so it reads in the page's own tokens, not the brand tile's.
   return (
-    <Screen
-      title={t('appName')}
-      hideTitle
-      tone="brand"
-      bleed
-      nav={onboarded ? 'close' : 'none'}
-      navLabel={t('close')}
-      backTo="/"
-      actions={<LanguageSwitch />}
-    >
-      <Tile
-        tone="brand"
-        size="hero"
-        fill
-        className={styles.tile}
-        lead={
-          <>
-            <Mark size={48} />
-            <span className={styles.name}>{t('appName')}</span>
-          </>
-        }
-        headline={t('line')}
-        tagline={t('tagline')}
-        actions={
-          <div className={styles.actions}>
-            <Button size="lg" onClick={() => setSigningIn(true)}>
-              {t('signIn')}
+    <>
+      <Screen title={t('appName')} hideTitle tone="brand" bleed nav={onboarded ? 'close' : 'none'} navLabel={t('close')} backTo="/" actions={<LanguageSwitch />}>
+        <Tile
+          tone="brand"
+          size="hero"
+          fill
+          className={styles.tile}
+          lead={
+            <>
+              <Mark size={48} />
+              <span className={styles.name}>{t('appName')}</span>
+            </>
+          }
+          headline={t('line')}
+          tagline={t('tagline')}
+          actions={
+            <div className={styles.actions}>
+              <Button size="lg" onClick={() => setSigningIn(true)}>
+                {t('signIn')}
+              </Button>
+              <Button size="lg" variant="secondary" onClick={browse}>
+                {t('browse')}
+              </Button>
+            </div>
+          }
+          mediaWidth="wide"
+          media={
+            <div className={styles.render}>
+              <Render name="zone" eager decorative />
+            </div>
+          }
+        >
+          <div className={styles.foot}>
+            <Button variant="quiet" size="sm" chevron onClick={verify}>
+              {t('verify')}
             </Button>
-            <Button size="lg" variant="secondary" onClick={browse}>
-              {t('browse')}
-            </Button>
+            <p className={styles.finePrint}>{t('finePrint')}</p>
           </div>
-        }
-        mediaWidth="wide"
-        media={
-          <div className={styles.render}>
-            <Render name="zone" eager decorative />
-          </div>
-        }
-      >
-        <div className={styles.foot}>
-          <Button variant="quiet" size="sm" chevron onClick={verify}>
-            {t('verify')}
-          </Button>
-          <p className={styles.finePrint}>{t('finePrint')}</p>
-        </div>
-      </Tile>
+        </Tile>
+      </Screen>
       <SignInSheet open={signingIn} onClose={() => setSigningIn(false)} />
-    </Screen>
+    </>
   );
 }
 

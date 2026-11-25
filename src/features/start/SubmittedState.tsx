@@ -1,5 +1,5 @@
 import { CircleCheck, Copy } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { navigate } from '@/app/router';
 import { getService, peekServiceDetail } from '@/data/catalog';
@@ -35,11 +35,18 @@ export function SubmittedState({ requestId, steps = 3 }: SubmittedStateProps) {
   const summary = request ? getService(request.serviceId) : undefined;
   const detail = request ? peekServiceDetail(request.serviceId) : undefined;
 
+  // The steps that were still ahead when the screen opened stay in view: as the demo clock moves they turn
+  // current and done in place, instead of sliding away.
+  const anchor = useRef<number | null>(null);
   const next = useMemo(() => {
     if (!request || !detail) return null;
     const view = requestView(request, detail, now, speed);
-    const upcoming = view.timeline.filter((entry) => entry.state !== 'done').slice(0, steps);
-    return timelineRows(upcoming, lang, now);
+    if (anchor.current === null) {
+      const open = view.timeline.findIndex((entry) => entry.state !== 'done');
+      anchor.current = open >= 0 ? open : Math.min(1, view.timeline.length - 1);
+    }
+    const start = Math.max(0, anchor.current);
+    return timelineRows(view.timeline.slice(start, start + steps), lang, now);
   }, [request, detail, now, speed, steps, lang, ready]);
 
   const track = () => navigate(`/requests/${requestId}`, { replace: true });

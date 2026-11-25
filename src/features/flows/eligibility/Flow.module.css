@@ -250,3 +250,10 @@
   color: var(--ink-3);
   text-align: center;
 }
+
+.reason {
+  margin: var(--s-4) auto 0;
+  max-inline-size: 52ch;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}

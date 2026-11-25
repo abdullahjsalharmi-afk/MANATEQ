@@ -177,13 +177,11 @@ function PassSteps({ service, onIssued }: { service: ServiceDetail; onIssued: (p
               </List>
             ) : (
               <>
-                <ChipRow label={t('plot')} wrap>
+                <Grid as="ul" compact columns={3} aria-label={t('plot')}>
                   {plots.map((option) => (
-                    <Chip key={option.id} selected={plotId === option.id} onClick={() => setPlotId(option.id)} detail={pick(option.zoneName)}>
-                      <span className="ltr">{option.number}</span>
-                    </Chip>
+                    <OptionCard key={option.id} icon={MapPin} label={option.number} detail={pick(option.zoneName)} selected={plotId === option.id} onSelect={() => setPlotId(option.id)} />
                   ))}
-                </ChipRow>
+                </Grid>
                 {showErrors && !plot ? (
                   <p className={styles.error} role="alert">
                     {t('plotMissing')}
