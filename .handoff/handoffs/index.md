@@ -1,0 +1,1 @@
+2026-11-25T18:07:13.251Z | manateq one, workflows book, confirmed task, pay sheet, sign sheet, persist store, leaving, renewal, design book, artifact page | Goal: "Manateq One", bilingual (Arabic first, English) high-fidelity prototype of investor-services app for government e | 2026-11-25/handoff-2026-11-25T18-07-13-251Z.md
