@@ -7,7 +7,7 @@ import { Check } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { navigate } from '@/app/router';
-import { Button, Card, Icon, List, Pill, Row, Sheet } from '@/design/core';
+import { Button, Card, CardChoiceGroup, Icon, List, Pill, Row, Sheet } from '@/design/core';
 import { DemoPill } from '@/design/forms';
 import { enterAs } from '@/state/actions';
 import { useApp } from '@/state/store';
@@ -88,11 +88,11 @@ function Profiles({ value, onChange, current }: { value: DemoProfile; onChange: 
   return (
     <>
       <p className={styles.lead}>{t('sheetBody')}</p>
-      <div className={styles.options} role="group" aria-label={t('chooseProfile')}>
+      <CardChoiceGroup className={styles.options} label={t('chooseProfile')}>
         {DEMO_PROFILES.map((p) => {
           const company = companies[p];
           return (
-            <Card key={p} onClick={() => onChange(p)} selected={value === p} className={styles.option}>
+            <Card key={p} choice onClick={() => onChange(p)} selected={value === p} className={styles.option}>
               <span className={styles.optionHead}>
                 <strong className={styles.optionTitle}>{t(p)}</strong>
                 {current === p ? <Pill tone="neutral">{t('current')}</Pill> : null}
@@ -102,7 +102,7 @@ function Profiles({ value, onChange, current }: { value: DemoProfile; onChange: 
             </Card>
           );
         })}
-      </div>
+      </CardChoiceGroup>
     </>
   );
 }

@@ -157,6 +157,17 @@
   white-space: nowrap;
 }
 
+/* On the narrowest phones the bar gives its name a little more room: a tighter gap and a slimmer capsule. */
+@media (max-width: 359px) {
+  .barInner {
+    gap: var(--s-2);
+  }
+
+  .proto {
+    padding-inline: 6px;
+  }
+}
+
 /* On wide tabbed screens the global bar carries the capsule. */
 @media (min-width: 834px) {
   :global(html[data-chrome='tabs']) .bar:not(.barInline) .proto {

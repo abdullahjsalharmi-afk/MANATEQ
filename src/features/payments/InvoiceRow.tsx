@@ -2,8 +2,6 @@ import { CircleAlert, CircleCheck, Clock, type LucideIcon } from 'lucide-react';
 import { useLang, useT } from '@/app/i18n';
 import { cx, Icon, Money, Row } from '@/design/core';
 import type { Invoice } from '@/domain/types';
-import { unbroken } from '@/features/wallet/logic';
-import { CodedText } from '@/features/wallet/Unbroken';
 import { dueLine, type DueLine } from './logic';
 import styles from './Payments.module.css';
 import { plurals, strings } from './strings';
@@ -22,7 +20,7 @@ export function useDueText(): (line: DueLine) => string {
   return (line) => {
     switch (line.kind) {
       case 'paid':
-        return t('paidOn', { date: unbroken(fmt.date(line.at)) });
+        return t('paidOn', { date: fmt.date(line.at) });
       case 'overdue':
         return fmt.plural(line.days, plurals.overdue);
       case 'today':
@@ -30,7 +28,7 @@ export function useDueText(): (line: DueLine) => string {
       case 'soon':
         return fmt.plural(line.days, plurals.dueIn);
       case 'later':
-        return t('dueOn', { date: unbroken(fmt.date(line.at)) });
+        return t('dueOn', { date: fmt.date(line.at) });
     }
   };
 }
@@ -53,7 +51,7 @@ export function InvoiceRow({ invoice, now }: InvoiceRowProps) {
   return (
     <Row
       to={`/account/payments/${invoice.id}`}
-      title={<CodedText text={pick(invoice.title)} />}
+      title={pick(invoice.title)}
       subtitle={<DueText invoice={invoice} now={now} />}
       trailing={<Money amount={invoice.amount} />}
       wrap

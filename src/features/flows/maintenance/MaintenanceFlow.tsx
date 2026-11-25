@@ -10,15 +10,14 @@ import { useLang, useT } from '@/app/i18n';
 import { useQuery } from '@/app/routes';
 import { getService } from '@/data/catalog';
 import type { FieldDef, ServiceDetail } from '@/data/types';
-import { Button, Card, Container, Grid, List, Pill, Row, Screen, Section } from '@/design/core';
-import { PhotoPick, Stepper, TextArea, TextField, type PickedPhoto } from '@/design/forms';
+import { Button, Card, CardChoiceGroup, Container, Grid, List, Pill, Row, Screen, Section } from '@/design/core';
+import { PhotoPick, StepHead, Stepper, TextArea, TextField, useStepLabel, type PickedPhoto } from '@/design/forms';
 import { JourneyRibbon } from '@/design/signature';
 import type { FormValue } from '@/domain/types';
 import { useService } from '@/features/shared/useService';
 import { selectPlots, selectRequest, startRequest, useApp } from '@/state';
 import styles from './MaintenanceFlow.module.css';
-import { ConfirmationTile, FlowFailed, FlowLoading, leaveFlow, OptionCard, Question } from './parts/Parts';
-import { useChoiceGroup } from '../shared/Choice';
+import { ConfirmationTile, FlowFailed, FlowLoading, leaveFlow, OptionCard } from './parts/Parts';
 import { initialPlotId, plotOptions } from './parts/plots';
 import { partsStrings } from './parts/strings';
 import { strings } from './strings';
@@ -65,9 +64,7 @@ function MaintenanceSteps({ service, onSubmitted }: { service: ServiceDetail; on
 
   const chosen = categories.find((option) => option.value === category);
   const plot = plots.find((option) => option.id === place);
-  const categoryChoice = useChoiceGroup({ keys: categories.map((option) => option.value), value: category, onPick: setCategory, label: t('categories') });
-  const placeChoice = useChoiceGroup({ keys: [...plots.map((option) => option.id), PUBLIC], value: place, onPick: setPlace, label: t('places') });
-  const where = tp('stepOf', { n: step, m: STEPS });
+  const stepLabel = useStepLabel();
   const placeError = place === null ? t('placeMissing') : place === PUBLIC && !note.trim() ? t('noteMissing') : undefined;
 
   const locationText = (): string => {
@@ -116,18 +113,20 @@ function MaintenanceSteps({ service, onSubmitted }: { service: ServiceDetail; on
       navLabel={step === 1 ? tp('close') : tp('back')}
       onNav={step === 1 ? leaveFlow : () => setStep(step - 1)}
       width="form"
-      header={<Stepper current={step} total={STEPS} label={where} />}
+      header={<Stepper current={step} total={STEPS} label={stepLabel(step, STEPS)} />}
       footerContext={chosen ? <span className={styles.context}>{pick(chosen)}</span> : undefined}
       footer={footer}
     >
       {step === 1 ? (
         <>
-          <Question where={where} hint={t('whatHint')}>{t('whatQ')}</Question>
-          <Grid compact columns={3} className={styles.options} {...categoryChoice.group}>
-            {categories.map((option) => (
-              <OptionCard key={option.value} icon={categoryIcon(option.value)} label={pick(option)} item={categoryChoice.item(option.value)} />
-            ))}
-          </Grid>
+          <StepHead current={step} total={STEPS} question={t('whatQ')} hint={t('whatHint')} />
+          <CardChoiceGroup label={t('categories')}>
+            <Grid compact columns={3} className={styles.options}>
+              {categories.map((option) => (
+                <OptionCard key={option.value} icon={categoryIcon(option.value)} label={pick(option)} selected={category === option.value} onClick={() => setCategory(option.value)} />
+              ))}
+            </Grid>
+          </CardChoiceGroup>
           <p className={styles.danger}>
             {t('danger')}{' '}
             <Button variant="quiet" tone="danger" to="/start/D3">
@@ -139,13 +138,15 @@ function MaintenanceSteps({ service, onSubmitted }: { service: ServiceDetail; on
 
       {step === 2 ? (
         <>
-          <Question where={where} hint={t('whereHint')}>{t('whereQ')}</Question>
-          <Grid compact columns={plots.length + 1 >= 3 ? 3 : 2} className={styles.options} {...placeChoice.group}>
-            {plots.map((option) => (
-              <OptionCard key={option.id} icon={MapPin} label={option.number} detail={pick(option.zoneName) || t('plotDetail')} item={placeChoice.item(option.id)} />
-            ))}
-            <OptionCard icon={MapGlyph} label={t('publicArea')} detail={t('publicAreaDetail')} item={placeChoice.item(PUBLIC)} />
-          </Grid>
+          <StepHead current={step} total={STEPS} question={t('whereQ')} hint={t('whereHint')} />
+          <CardChoiceGroup label={t('places')}>
+            <Grid compact columns={plots.length + 1 >= 3 ? 3 : 2} className={styles.options}>
+              {plots.map((option) => (
+                <OptionCard key={option.id} icon={MapPin} label={option.number} detail={pick(option.zoneName) || t('plotDetail')} selected={place === option.id} onClick={() => setPlace(option.id)} />
+              ))}
+              <OptionCard icon={MapGlyph} label={t('publicArea')} detail={t('publicAreaDetail')} selected={place === PUBLIC} onClick={() => setPlace(PUBLIC)} />
+            </Grid>
+          </CardChoiceGroup>
           {showErrors && place === null ? (
             <p className={styles.error} role="alert">
               {t('placeMissing')}
@@ -164,7 +165,7 @@ function MaintenanceSteps({ service, onSubmitted }: { service: ServiceDetail; on
 
       {step === 3 ? (
         <>
-          <Question where={where} hint={t('describeHint')}>{t('describeQ')}</Question>
+          <StepHead current={step} total={STEPS} question={t('describeQ')} hint={t('describeHint')} />
           <TextArea label={t('details')} value={details} onChange={setDetails} maxLength={280} placeholder={t('detailsPlaceholder')} />
           <Section title={t('summary')} level={3}>
             <List>

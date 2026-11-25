@@ -1,4 +1,4 @@
-import { CircleUserRound, House, LayoutGrid, ListChecks, MapPinned } from 'lucide-react';
+import { CircleUserRound, House, LayoutList, ListChecks, MapPinned } from 'lucide-react';
 import { Suspense, useEffect, useLayoutEffect, useMemo } from 'react';
 import { ErrorBoundary } from '@/app/ErrorBoundary';
 import { LangProvider, useLang, useT } from '@/app/i18n';
@@ -85,7 +85,7 @@ function Shell() {
 
   const tabs: TabItem[] = [
     { key: 'home', to: '/', label: t('tabHome'), icon: House },
-    { key: 'services', to: '/services', label: t('tabServices'), icon: LayoutGrid },
+    { key: 'services', to: '/services', label: t('tabServices'), icon: LayoutList },
     { key: 'requests', to: '/requests', label: t('tabRequests'), icon: ListChecks, badge: waiting },
     { key: 'zones', to: '/zones', label: t('tabZones'), icon: MapPinned },
     { key: 'account', to: '/account', label: t('tabAccount'), icon: CircleUserRound },

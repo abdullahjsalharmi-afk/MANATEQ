@@ -1,5 +1,6 @@
 /* A toast: an ink pill with 14 px text and one small icon in the same colour. It floats above whatever
-   is pinned to the bottom: the tab bar, a screen's action bar, the home indicator. */
+   is pinned to the bottom: the tab bar, a screen's action bar, the home indicator. When that spot would cover the
+   control the toast confirms (a link at the foot of a page, such as a demo footer), it shows under the top bar. */
 .host {
   position: fixed;
   inset-inline: 0;
@@ -9,6 +10,11 @@
   justify-content: center;
   padding-inline: var(--gutter);
   pointer-events: none;
+}
+
+.top {
+  inset-block-start: calc(var(--chrome-top, 0px) + var(--s-3));
+  inset-block-end: auto;
 }
 
 .toast {
@@ -61,5 +67,16 @@
   from {
     opacity: 0;
     transform: translateY(12px);
+  }
+}
+
+.top .toast {
+  animation-name: toast-down;
+}
+
+@keyframes toast-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
   }
 }

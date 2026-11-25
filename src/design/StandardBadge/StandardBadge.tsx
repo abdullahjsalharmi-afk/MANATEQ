@@ -16,7 +16,10 @@ export interface StandardBadgeProps {
    * of a service page.
    */
   variant?: 'full' | 'compact' | 'hero';
-  /** `hero` only: the words to show when the standard has no headline duration (e.g. «عند التقديم»). Without it the hero renders nothing. */
+  /**
+   * `hero` and `compact`: the words to show when the standard has no headline duration (e.g. «عند التقديم»), so
+   * every card in a grid ends the same way. Without it the hero and the chip render nothing.
+   */
   fallback?: string;
   /** `full` only: show the standard's full sentence under the figure. Default true. */
   showText?: boolean;
@@ -26,14 +29,14 @@ export interface StandardBadgeProps {
 /**
  * A service standard. The figure is short ("5 أيام عمل", "فوري"); the sentence under it says what it
  * measures. Every standard is labelled indicative, the compact chip included («3 أيام عمل · استرشادي»). The
- * compact chip renders nothing when the standard has no headline duration.
+ * compact chip shows the `fallback` when the standard has no headline duration, and nothing without one.
  */
 export function StandardBadge({ standard, variant = 'full', showText = true, fallback, className }: StandardBadgeProps) {
   const t = useT(strings);
   const { lang, pick } = useLang();
 
   if (variant === 'compact') {
-    const headline = standardHeadline(standard, lang);
+    const headline = standardHeadline(standard, lang) ?? fallback ?? null;
     if (headline === null) return null;
     return (
       <span className={cx(styles.chip, className)}>

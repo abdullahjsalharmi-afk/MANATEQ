@@ -1,15 +1,3 @@
-/* A fact: the label is the quiet part, the value the information. */
-.factLabel {
-  font-size: var(--t-callout);
-  line-height: var(--lh-callout);
-  letter-spacing: var(--ls-caption);
-  color: var(--ink-3);
-}
-
-.factValue {
-  color: var(--ink);
-}
-
 .journey {
   margin-block-start: var(--s-6);
 }

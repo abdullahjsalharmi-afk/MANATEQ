@@ -79,13 +79,17 @@ export function layoutAvailability(taken: ReadonlySet<string> = new Set()): Avai
 }
 
 /**
- * The layout to draw on the plot map for a requested area: a free plot smaller than the area, or one
- * the investor already holds or applied for, is drawn as not available, so only plots that fit can be chosen.
+ * The layout to draw on the plot map: a free plot the investor already applied for is drawn as not
+ * available. A free plot smaller than the area stays available in the layout; the map dims it and says
+ * why through `PlotGrid`'s `isSelectable` (see `fitsArea`), so it is never mistaken for a leased plot.
  */
-export function layoutForArea(zoneCode: string, areaSqm: number, taken: ReadonlySet<string> = new Set(), own: ReadonlySet<string> = new Set()): PlotCell[] {
-  return plotsFor(zoneCode).map((plot) =>
-    plot.status === 'available' && !own.has(plot.id) && (plot.areaSqm < areaSqm || taken.has(plot.id)) ? { ...plot, status: 'allocated' } : plot,
-  );
+export function layoutForArea(zoneCode: string, taken: ReadonlySet<string> = new Set(), own: ReadonlySet<string> = new Set()): PlotCell[] {
+  return plotsFor(zoneCode).map((plot) => (plot.status === 'available' && !own.has(plot.id) && taken.has(plot.id) ? { ...plot, status: 'allocated' } : plot));
+}
+
+/** Whether a plot is large enough for the area asked for (the `isSelectable` of the land application's map). */
+export function fitsArea(plot: PlotCell, areaSqm: number): boolean {
+  return plot.areaSqm >= areaSqm;
 }
 
 /** The zones that offer a solution, land zones before warehousing parks, in catalogue order. */

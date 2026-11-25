@@ -2,22 +2,24 @@ import { Check, CircleAlert, Copy, SearchX, TriangleAlert } from 'lucide-react';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { useParams } from '@/app/routes';
+import { requestLabelOf } from '@/data/catalog';
 import type { ServiceDetail, StepAction } from '@/data/types';
 import { Button, Card, Container, EmptyState, List, Pill, Screen, Section, Sheet, Skeleton, Tile, toast } from '@/design/core';
 import { Timeline } from '@/design/signature';
+import { durationText } from '@/domain/standard';
 import type { RequestState } from '@/domain/types';
 import { useNow } from '@/features/shared/useNow';
 import { useService } from '@/features/shared/useService';
 import { DocRow, PassRow } from '@/features/wallet';
-import { cancelRequest, fastForwardRequest, selectDeadline, selectDocsOfRequest, selectPasses, selectRequest, selectThread, timelineRows, useApp, type RequestView } from '@/state';
+import { cancelRequest, fastForwardRequest, selectDeadline, selectDocsOfRequest, selectPassesOfRequest, selectRequest, selectThread, timelineRows, useApp, type RequestView } from '@/state';
 import type { Doc, Pass } from '@/domain/types';
 import { ActionRunner } from './ActionRunner';
 import { RequestRing } from './RequestRing';
 import { RequestRow } from './RequestRow';
 import styles from './RequestScreen.module.css';
-import { hasDayClock, passOfRequest } from './logic';
-import { strings, workingDays, workingDaysAfter } from './strings';
-import { nationalHolder, useHolderWords, useRequestName, useRequestView } from './useRequestFacts';
+import { hasDayClock } from './logic';
+import { strings } from './strings';
+import { nationalHolder, useHolderWords, useRequestView, withoutBrackets } from './useRequestFacts';
 
 const HOUR = 3_600_000;
 
@@ -26,9 +28,9 @@ export function RequestScreen() {
   const t = useT(strings);
   const { id } = useParams<{ id: string }>();
   const request = useApp(selectRequest(id));
+  const { pick } = useLang();
   const { summary, detail, failed } = useService(request?.serviceId);
-  const name = useRequestName();
-  const title = request && summary ? name(request.serviceId, summary.label) : t('requestFallback');
+  const title = request && summary ? pick(requestLabelOf(summary)) : t('requestFallback');
 
   if (!request) {
     return (
@@ -82,7 +84,7 @@ function RequestPage({ request, service, title }: { request: RequestState; servi
   const now = useNow();
   const view = useRequestView(request, now, service) as RequestView;
   const docs = useApp(selectDocsOfRequest(request.id));
-  const passes = useApp(selectPasses);
+  const passes = useApp(selectPassesOfRequest(request.id));
   const thread = useApp(selectThread(request.id));
   const deadline = useApp(selectDeadline(request.id));
   // The action being run stays mounted until its sheets close, even once the step it completes has moved on.
@@ -92,7 +94,8 @@ function RequestPage({ request, service, title }: { request: RequestState; servi
   const headlineId = useId();
 
   const related = thread.filter((other) => other.id !== request.id);
-  const pass = passOfRequest(request, passes);
+  // The pass a gate pass request issued: the active one, else the latest.
+  const pass = passes.find((candidate) => candidate.status === 'active') ?? passes[0];
   // The tile above already tells what the current step is about: the timeline keeps it to its title.
   const rows = timelineRows(view.timeline, lang, now).map((row) => (row.state === 'current' && view.holder?.lane !== 'inv' ? { ...row, text: undefined } : row));
   const action = view.pendingAction;
@@ -284,10 +287,9 @@ interface HolderTileProps {
  */
 function HolderTile({ request, view, now, deadline, docs, pass, headlineId, copy }: HolderTileProps) {
   const t = useT(strings);
-  const { pick, fmt, lang } = useLang();
+  const { pick, fmt } = useLang();
   const words = useHolderWords();
   const finished = request.status === 'done' || request.status === 'stopped';
-  const step = view.currentStep;
   const holder = view.holder;
 
   let eyebrow: string;
@@ -317,11 +319,17 @@ function HolderTile({ request, view, now, deadline, docs, pass, headlineId, copy
       meta = view.heldSince ? t('waitingSince', { date: fmt.dayMonth(view.heldSince) }) : undefined;
     }
   } else {
-    eyebrow = holder && holder.lane !== 'eng' ? t('nowWith') : t('now');
-    headline = holder ? words.headline(holder) : t('statusActive');
-    if (view.expectedAt !== undefined && view.expectedAt - now > HOUR) tagline = t('expected', { when: fmt.relative(view.expectedAt, now) });
-    else if (step && pick(step.std)) tagline = t('stepStandard', { std: pick(step.std) });
-    switch (holder?.lane) {
+    // The step the headline describes (the state's `focus`): the open step, or, while a decision or an
+    // automatic step passes, the next one a person or an entity holds. Null when nothing human is left;
+    // when the next one is the investor's own, the action card says so as soon as it opens.
+    const focus = view.focus && view.focus.holder.lane !== 'inv' ? view.focus : null;
+    const shown = focus?.holder ?? holder;
+    eyebrow = shown && shown.lane !== 'eng' ? t('nowWith') : t('now');
+    headline = shown ? words.headline(shown) : t('statusActive');
+    const expectedAt = focus ? focus.expectedAt : view.expectedAt;
+    if (expectedAt !== undefined && expectedAt - now > HOUR) tagline = t('expected', { when: fmt.relative(expectedAt, now) });
+    else if (focus && pick(focus.step.std)) tagline = t('stepStandard', { std: pick(focus.step.std) });
+    switch (focus ? shown?.lane : 'eng') {
       case 'one':
         body = t('bodyOne');
         break;
@@ -338,8 +346,8 @@ function HolderTile({ request, view, now, deadline, docs, pass, headlineId, copy
         body = t('bodyField');
         break;
       case 'nat': {
-        const platform = withoutEntity(pick(holder.name));
-        body = platform && platform !== nationalHolder(holder.name, lang).headline ? t('bodyNat', { platform }) : t('bodyNatPlain');
+        const platform = shown ? withoutBrackets(pick(shown.name)) : '';
+        body = shown && platform && platform !== nationalHolder(shown, pick).headline ? t('bodyNat', { platform }) : t('bodyNatPlain');
         break;
       }
       default:
@@ -381,9 +389,6 @@ function HolderTile({ request, view, now, deadline, docs, pass, headlineId, copy
   );
 }
 
-/** A platform's own name, without the entity in brackets (the headline already names it). */
-const withoutEntity = (name: string): string => name.replace(/\s*[(（][^()（）]+[)）]\s*$/, '').trim();
-
 function StatusPill({ request }: { request: RequestState }) {
   const t = useT(strings);
   switch (request.status) {
@@ -409,19 +414,19 @@ function StatusPill({ request }: { request: RequestState }) {
 /** The published service standard: where the request stands against it, the standard's words, and why the clock pauses. */
 function ClockCard({ request, view, service }: { request: RequestState; view: RequestView; service: ServiceDetail }) {
   const t = useT(strings);
-  const { pick, fmt } = useLang();
+  const { pick, fmt, lang } = useLang();
   const { clock } = view;
   const done = request.status === 'done';
   const open = request.status === 'active' || request.status === 'needs_you';
-  const target = hasDayClock(request.serviceId, clock) ? clock.targetDays : null;
+  const target = hasDayClock(clock) ? clock.targetDays : null;
 
   let figure: string | undefined;
   if (target !== null) {
     if (done) {
       const used = Math.max(1, Math.ceil(clock.usedDays));
-      figure = `${t('clockDone', { n: fmt.plural(used, workingDaysAfter) })} · ${used <= target ? t('clockWithin') : t('clockBeyond', { m: fmt.plural(target, workingDays) })}`;
+      figure = `${t('clockDone', { n: durationText(used, 'working_day', lang, { afterPreposition: true }) })} · ${used <= target ? t('clockWithin') : t('clockBeyond', { m: durationText(target, 'working_day', lang) })}`;
     } else if (open) {
-      figure = `${t('clockDay', { n: fmt.num(clock.dayNumber) })} · ${t('clockOf', { m: fmt.plural(target, workingDays) })}`;
+      figure = `${t('clockDay', { n: fmt.num(clock.dayNumber) })} · ${t('clockOf', { m: durationText(target, 'working_day', lang) })}`;
     }
   }
 

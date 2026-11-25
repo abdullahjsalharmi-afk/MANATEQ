@@ -11,7 +11,7 @@ import type { ActionAtom, ServiceDetail, ServiceId, StepAction } from '@/data/ty
 import { followers, oncePerPlot } from '@/domain/chains';
 import { requestDocs } from '@/domain/documents';
 import type { Appointment, Doc, FormValue, RequestState, Visit, World } from '@/domain/types';
-import { getZone } from '@/data/catalog';
+import { getZone, requestLabelOf } from '@/data/catalog';
 import { findPlot } from '@/domain/plots';
 import { act, advance, begin, currentStep, currentVisit, findStep, isTerminal, mainPath, waitsForInvestor, type EngineEvent, type InvestorRoute, type Outcome, type Timing } from '@/domain/workflow';
 import { addPass, atomEffects, recordPayload, settleInvoice, whenFinished, whenStarted, whenStopped, whenWaiting, type EffectContext } from './effects';
@@ -175,7 +175,7 @@ function finish(world: World, ctx: EffectContext, env: Env, now: number): World 
   next = notify(next, {
     at: ctx.at,
     kind: 'done',
-    title: dots(ctx.service.label, plotNumberOf(next, request)),
+    title: dots(requestLabelOf(ctx.service), plotNumberOf(next, request)),
     body: end && isTerminal(end) ? end.label : ctx.service.output,
     route: `/requests/${request.id}`,
   });
@@ -205,7 +205,7 @@ function settle(world: World, id: string, events: EngineEvent[], env: Env, now: 
         at: event.at,
         kind: 'action',
         title: action?.title ?? text.needsYou,
-        body: dots(service.label, plotNumberOf(next, request)),
+        body: dots(requestLabelOf(service), plotNumberOf(next, request)),
         route: `/requests/${id}`,
       });
     } else if (event.type === 'finished') {
@@ -216,7 +216,7 @@ function settle(world: World, id: string, events: EngineEvent[], env: Env, now: 
       next = notify(next, {
         at: event.at,
         kind: 'update',
-        title: dots(service.label, plotNumberOf(next, request)),
+        title: dots(requestLabelOf(service), plotNumberOf(next, request)),
         body: reason?.label ?? service.output,
         route: `/requests/${id}`,
       });

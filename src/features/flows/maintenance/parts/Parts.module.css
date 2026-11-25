@@ -44,28 +44,6 @@
   text-wrap: pretty;
 }
 
-.question {
-  margin-block: var(--s-6) var(--s-8);
-}
-
-.where {
-  margin-block: 0 var(--s-2);
-  font-size: var(--t-callout);
-  line-height: var(--lh-callout);
-  letter-spacing: var(--ls-caption);
-  color: var(--ink-3);
-}
-
-.questionText {
-  font-weight: var(--w-strong);
-}
-
-.questionHint {
-  margin-block-start: var(--s-2);
-  color: var(--ink-3);
-  text-wrap: pretty;
-}
-
 .check {
   display: inline-flex;
   color: var(--accent-ink);

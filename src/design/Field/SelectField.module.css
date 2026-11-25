@@ -119,18 +119,31 @@
   color: var(--ink-2);
 }
 
-.tileCheck {
+.mark {
   flex: none;
-  color: var(--accent-ink);
-  opacity: 0;
-  transform: scale(0.6);
-  transition:
-    opacity var(--d-1) var(--ease),
-    transform var(--d-2) var(--ease);
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--ink-3);
+  border-radius: 50%;
+  transition: border-color var(--d-1) var(--ease);
 }
 
-.tileOn .tileCheck {
-  opacity: 1;
+.mark::after {
+  content: '';
+  position: absolute;
+  inset: 3.5px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: scale(0);
+  transition: transform var(--d-2) var(--ease);
+}
+
+.tileOn .mark {
+  border-color: var(--accent);
+}
+
+.tileOn .mark::after {
   transform: none;
 }
 

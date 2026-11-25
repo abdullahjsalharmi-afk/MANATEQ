@@ -1,5 +1,5 @@
 import { CalendarClock, FileText, MapPin, Receipt } from 'lucide-react';
-import { useMemo, type ReactNode } from 'react';
+import { useMemo } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { useParams } from '@/app/routes';
 import { Button, Card, Container, Icon, List, Pill, Render, Row, Screen, Section, Tile } from '@/design/core';
@@ -143,36 +143,21 @@ function Facts({ plot: p, lease: l, now: n }: { plot: Plot; lease: Lease | undef
   return (
     <Section title={t('facts')}>
       <List aria-label={t('facts')}>
-        <Fact label={t('area')} value={<span className="num">{fmt.area(p.areaSqm)}</span>} />
-        <Fact label={t('solution')} value={pick(solution?.name)} />
+        <Row fact title={t('area')} trailing={fmt.area(p.areaSqm)} />
+        <Row fact title={t('solution')} trailing={pick(solution?.name)} />
         {l ? (
           <>
-            <Fact label={t('rate')} value={<span className="num">{t('ratePerSqm', { amount: fmt.money(l.ratePerSqmYear) })}</span>} />
-            <Fact label={t('annualRent')} value={<span className="num">{fmt.money(l.annualRent)}</span>} />
-            <Fact label={t('leaseRef')} value={<span className="ltr num">{l.ref}</span>} />
-            <Fact label={t('leaseStart')} value={<span className="num">{fmt.date(l.startsAt)}</span>} />
-            <Fact
-              label={t('leaseEnd')}
-              note={l.endsAt > n ? t('endsIn', { when: fmt.relative(l.endsAt, n) }) : t('ended')}
-              value={<span className="num">{fmt.date(l.endsAt)}</span>}
-            />
+            <Row fact title={t('rate')} trailing={t('ratePerSqm', { amount: fmt.money(l.ratePerSqmYear) })} />
+            <Row fact title={t('annualRent')} trailing={fmt.money(l.annualRent)} />
+            <Row fact title={t('leaseRef')} trailing={<span className="ltr">{l.ref}</span>} />
+            <Row fact title={t('leaseStart')} trailing={fmt.date(l.startsAt)} />
+            <Row fact title={t('leaseEnd')} subtitle={l.endsAt > n ? t('endsIn', { when: fmt.relative(l.endsAt, n) }) : t('ended')} trailing={fmt.date(l.endsAt)} />
           </>
         ) : (
           <Row title={t('noLease')} />
         )}
       </List>
     </Section>
-  );
-}
-
-/** One fact of the plot or its lease: the label quiet at the start, the value in ink at the end (the value is the information). */
-function Fact({ label, value, note }: { label: string; value: ReactNode; note?: string }) {
-  return (
-    <Row
-      title={<span className={styles.factLabel}>{label}</span>}
-      subtitle={note}
-      trailing={<span className={styles.factValue}>{value}</span>}
-    />
   );
 }
 

@@ -1,7 +1,6 @@
 /** Strings shared by the three in-zone flows (maintenance, gate pass, emergency). */
 export const partsStrings = {
   reference: { ar: 'الرقم المرجعي', en: 'Reference' },
-  stepOf: { ar: 'الخطوة {n} من {m}', en: 'Step {n} of {m}' },
   back: { ar: 'الخطوة السابقة', en: 'Previous step' },
   close: { ar: 'إغلاق', en: 'Close' },
   edit: { ar: 'تعديل', en: 'Change' },

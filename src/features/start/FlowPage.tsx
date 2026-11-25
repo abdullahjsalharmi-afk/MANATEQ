@@ -1,8 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useT } from '@/app/i18n';
 import { Screen } from '@/design/core';
-import { Stepper } from '@/design/forms';
-import styles from './Start.module.css';
+import { StepHead, Stepper, useStepLabel } from '@/design/forms';
 import { strings } from './strings';
 
 export interface FlowPageProps {
@@ -29,6 +28,7 @@ export interface FlowPageProps {
 /** One page of a flow: close, the 2 px progress line, the step, the heading, the content and the action bar. */
 export function FlowPage({ title, step, total, heading, lead, onClose, footer, footerContext, pageKey, children }: FlowPageProps) {
   const t = useT(strings);
+  const stepLabel = useStepLabel();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const first = useRef(true);
 
@@ -42,7 +42,6 @@ export function FlowPage({ title, step, total, heading, lead, onClose, footer, f
     headingRef.current?.focus({ preventScroll: true });
   }, [pageKey]);
 
-  const stepText = t('stepOf', { n: step, m: total });
   return (
     <Screen
       title={title}
@@ -50,17 +49,11 @@ export function FlowPage({ title, step, total, heading, lead, onClose, footer, f
       navLabel={t('closeFlow')}
       onNav={onClose}
       width="form"
-      header={<Stepper current={step} total={total} label={stepText} />}
+      header={<Stepper current={step} total={total} label={stepLabel(step, total)} />}
       footer={footer}
       footerContext={footerContext}
     >
-      <div className={styles.head}>
-        <p className={styles.step}>{stepText}</p>
-        <h2 ref={headingRef} tabIndex={-1} className={styles.heading}>
-          {heading}
-        </h2>
-        {lead ? <p className={styles.lead}>{lead}</p> : null}
-      </div>
+      <StepHead ref={headingRef} current={step} total={total} question={heading} hint={lead} />
       {children}
     </Screen>
   );

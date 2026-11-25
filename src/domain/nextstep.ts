@@ -7,7 +7,7 @@
  * suggestions. Pure: the catalogue lookup is passed in, because full service records load on demand.
  */
 import { langTools, ltr } from '@/app/i18n';
-import { getService } from '@/data/catalog';
+import { getService, requestLabelOf } from '@/data/catalog';
 import type { L10n, ServiceDetail, ServiceId, StepAction } from '@/data/types';
 import { journeyOf } from './journey';
 import { leaseOfPlot } from './plots';
@@ -63,13 +63,14 @@ function requestStep(world: World, request: RequestState, lookup: DetailLookup):
   const plot = world.plots.find((candidate) => candidate.id === request.plotId);
   const dueAt = deadlineOf(world, request);
   const waitingSince = currentVisit(request)?.enteredAt ?? request.updatedAt;
-  const title = action?.title ?? summary?.label ?? { ar: request.ref, en: request.ref };
+  const name = summary ? requestLabelOf(summary) : undefined;
+  const title = action?.title ?? name ?? { ar: request.ref, en: request.ref };
   return {
     id: `request:${request.id}`,
     kind: request.serviceId === 'B3' ? 'renewal' : 'request_action',
     title,
     // An application names the plot it picked before the plot is on record.
-    context: join([action ? summary?.label : undefined, plotName(plot?.number ?? request.plotId), money(request.amount)]),
+    context: join([action ? name : undefined, plotName(plot?.number ?? request.plotId), money(request.amount)]),
     cta: action?.cta ?? COPY.openRequest,
     route: `/requests/${request.id}`,
     urgency: dueAt !== undefined ? BAND.deadline * BAND_SIZE + dueAt : BAND.waiting * BAND_SIZE + waitingSince,
@@ -134,7 +135,7 @@ function draftSteps(world: World): NextStep[] {
         id: `draft:${draft.serviceId}`,
         kind: 'start_service',
         title: COPY.continueDraft,
-        context: join([service.label, COPY.draftSaved]),
+        context: join([requestLabelOf(service), COPY.draftSaved]),
         cta: COPY.continue,
         route: startRoute(draft.serviceId),
         // The most recently saved draft comes first.

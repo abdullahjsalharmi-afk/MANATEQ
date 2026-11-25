@@ -1,10 +1,9 @@
+import { useRef } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { navigate } from '@/app/router';
 import { toast } from '@/design/core';
 import { PaySheet } from '@/design/forms';
 import type { Invoice } from '@/domain/types';
-import { unbroken } from '@/features/wallet/logic';
-import { Atom, CodedText } from '@/features/wallet/Unbroken';
 import { payInvoice, receiptRefFor } from '@/state';
 import { useDueText } from './InvoiceRow';
 import { dueLine } from './logic';
@@ -27,6 +26,7 @@ export function PayInvoiceSheet({ invoice, now, onClose, onPaid }: PayInvoiceShe
   const t = useT(strings);
   const { pick, fmt } = useLang();
   const dueText = useDueText();
+  const receiptId = useRef<string | null>(null);
   return (
     <PaySheet
       open={invoice !== null}
@@ -37,22 +37,22 @@ export function PayInvoiceSheet({ invoice, now, onClose, onPaid }: PayInvoiceShe
       lines={
         invoice
           ? [
-              { label: t('invoice'), value: <CodedText text={pick(invoice.title)} /> },
-              { label: t('reference'), value: <Atom code>{invoice.ref}</Atom> },
-              { label: t('dueDate'), value: `${unbroken(fmt.date(invoice.dueAt))} ·\u00A0${dueText(dueLine(invoice, now))}` },
+              { label: t('invoice'), value: pick(invoice.title) },
+              { label: t('reference'), value: <span className="ltr">{invoice.ref}</span> },
+              { label: t('dueDate'), value: `${fmt.date(invoice.dueAt)} ·\u00A0${dueText(dueLine(invoice, now))}` },
             ]
           : []
       }
       onPaid={() => {
         if (!invoice) return;
         const receipt = payInvoice(invoice.id);
-        // The receipt is one tap away from where the person paid.
-        toast(t('paidToast'), {
-          tone: 'ok',
-          duration: 6000,
-          action: receipt === null ? undefined : { label: t('viewReceipt'), onClick: () => navigate(`/account/wallet/${receipt}`) },
-        });
+        receiptId.current = receipt;
+        toast(t('paidToast'), { tone: 'ok' });
         onPaid?.(receipt);
+      }}
+      // The confirmation's pill opens the receipt just filed (called after onPaid).
+      onViewReceipt={() => {
+        if (receiptId.current) navigate(`/account/wallet/${receiptId.current}`);
       }}
     />
   );

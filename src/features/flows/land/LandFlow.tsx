@@ -11,12 +11,12 @@ import { useLang, useT } from '@/app/i18n';
 import { activities, getActivity, getSolution, getZone } from '@/data/catalog';
 import type { SolutionKey } from '@/data/types';
 import { Button, Card, Chip, ChipRow, List, Row, Screen, Section, Sheet, cx, toast } from '@/design/core';
-import { Banner, Checkbox, EmptyState, FilePick, NumberField, SelectField, Stepper } from '@/design/forms';
+import { Banner, Checkbox, EmptyState, FilePick, NumberField, SelectField, StepHead, Stepper, useStepLabel } from '@/design/forms';
 import { FetchedList, PlotGrid, type FetchedItem } from '@/design/signature';
 import { clearDraft, saveDraft, selectCompany, selectDraft, selectPersona, startRequest, useApp } from '@/state';
-import { freePlots, isValidArea, LAND_SOLUTIONS, layoutForArea, zonesOffering } from '../eligibility/model';
+import { fitsArea, freePlots, isValidArea, LAND_SOLUTIONS, layoutForArea, zonesOffering } from '../eligibility/model';
 import { KnownCard } from '@/features/start/KnownCard';
-import { FinePrint, revealFirstError, StepError, StepHead, useStepFocus } from '../eligibility/parts';
+import { FinePrint, revealFirstError, StepError, useStepFocus } from '../eligibility/parts';
 import { useOwnPlots, useTakenPlots } from '../eligibility/useTakenPlots';
 import {
   chosenPlot,
@@ -74,6 +74,7 @@ export function LandFlow() {
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const headRef = useStepFocus(page);
+  const stepLabel = useStepLabel();
   const announced = useRef(false);
 
   useEffect(() => {
@@ -155,7 +156,6 @@ export function LandFlow() {
     setSubmittedId(id);
   };
 
-  const where = t('stepOf', { n: page, m: LAND_PAGES });
   const docsDone = REQUIRED_DOCS.filter((doc) => form[doc] !== null).length;
   const context =
     page === 2
@@ -175,7 +175,7 @@ export function LandFlow() {
       navLabel={t('close')}
       onNav={close}
       width="form"
-      header={<Stepper current={page} total={LAND_PAGES} label={where} />}
+      header={<Stepper current={page} total={LAND_PAGES} label={stepLabel(page, LAND_PAGES)} />}
       actions={
         page > 1 ? (
           <Button variant="quiet" size="sm" onClick={() => go(page - 1)}>
@@ -190,11 +190,11 @@ export function LandFlow() {
         </Button>
       }
     >
-      {page === 1 ? <KnowYou form={form} update={update} where={where} headRef={headRef} error={errorOf('confirm')} /> : null}
-      {page === 2 ? <PlotPage form={form} update={update} where={where} headRef={headRef} errors={errors} taken={taken} own={own} rent={rent} /> : null}
-      {page === 3 ? <ProjectPage form={form} update={update} where={where} headRef={headRef} error={errorOf('activity')} taken={taken} /> : null}
-      {page === 4 ? <DocsPage form={form} update={update} where={where} headRef={headRef} errorOf={errorOf} /> : null}
-      {page === 5 ? <ReviewPage form={form} update={update} where={where} headRef={headRef} error={errorOf('consent')} taken={taken} rent={rent} onEdit={go} /> : null}
+      {page === 1 ? <KnowYou form={form} update={update} headRef={headRef} error={errorOf('confirm')} /> : null}
+      {page === 2 ? <PlotPage form={form} update={update} headRef={headRef} errors={errors} taken={taken} own={own} rent={rent} /> : null}
+      {page === 3 ? <ProjectPage form={form} update={update} headRef={headRef} error={errorOf('activity')} taken={taken} /> : null}
+      {page === 4 ? <DocsPage form={form} update={update} headRef={headRef} errorOf={errorOf} /> : null}
+      {page === 5 ? <ReviewPage form={form} update={update} headRef={headRef} error={errorOf('consent')} taken={taken} rent={rent} onEdit={go} /> : null}
 
       <Sheet
         open={leaving}
@@ -232,13 +232,12 @@ export function LandFlow() {
 interface PageProps {
   form: LandForm;
   update: (patch: Partial<LandForm>) => void;
-  where: string;
   headRef: Ref<HTMLHeadingElement>;
 }
 
 /* ── 1 · We know you already ─────────────────────────────────────── */
 
-function KnowYou({ form, update, where, headRef, error }: PageProps & { error?: string }) {
+function KnowYou({ form, update, headRef, error }: PageProps & { error?: string }) {
   const t = useT(strings);
   const { pick, fmt } = useLang();
   const company = useApp(selectCompany);
@@ -263,7 +262,7 @@ function KnowYou({ form, update, where, headRef, error }: PageProps & { error?: 
   const checkLink = `/eligibility${form.activity ? `?activity=${encodeURIComponent(form.activity)}${form.zone ? `&zone=${form.zone}` : ''}` : ''}`;
   return (
     <>
-      <StepHead ref={headRef} where={where} question={t('p1Question')} hint={t('p1Hint')} />
+      <StepHead ref={headRef} current={1} total={LAND_PAGES} question={t('p1Question')} hint={t('p1Hint')} />
       <KnownCard company={company} />
       <Section title={t('fetched')} level={3}>
         <FetchedList items={items} caption={false} label={t('fetched')} />
@@ -282,14 +281,14 @@ function KnowYou({ form, update, where, headRef, error }: PageProps & { error?: 
 
 /* ── 2 · The plot ────────────────────────────────────────────────── */
 
-function PlotPage({ form, update, where, headRef, errors, taken, own, rent }: PageProps & { errors: LandError[]; taken: ReadonlySet<string>; own: ReadonlySet<string>; rent: number | null }) {
+function PlotPage({ form, update, headRef, errors, taken, own, rent }: PageProps & { errors: LandError[]; taken: ReadonlySet<string>; own: ReadonlySet<string>; rent: number | null }) {
   const t = useT(strings);
   const { pick, fmt } = useLang();
   const zones = useMemo(() => zonesOffering(form.solution).filter((zone) => zone.kind === 'land'), [form.solution]);
   const zone = form.zone ? getZone(form.zone) : undefined;
   const area = isValidArea(form.area) ? form.area : null;
   const free = form.zone && area !== null ? freePlots(form.zone, area, taken) : [];
-  const layout = useMemo(() => (form.zone && area !== null ? layoutForArea(form.zone, area, taken, own) : []), [form.zone, area, taken, own]);
+  const layout = useMemo(() => (form.zone ? layoutForArea(form.zone, taken, own) : []), [form.zone, taken, own]);
   const plot = chosenPlot(form, taken);
 
   const chooseSolution = (solution: SolutionKey) => {
@@ -300,7 +299,7 @@ function PlotPage({ form, update, where, headRef, errors, taken, own, rent }: Pa
 
   return (
     <>
-      <StepHead ref={headRef} where={where} question={t('p2Question')} hint={t('p2Hint')} />
+      <StepHead ref={headRef} current={2} total={LAND_PAGES} question={t('p2Question')} hint={t('p2Hint')} />
       <div className={flow.block}>
         <ChipRow label={t('solution')} wrap>
           {LAND_SOLUTIONS.map((key) => {
@@ -333,7 +332,15 @@ function PlotPage({ form, update, where, headRef, errors, taken, own, rent }: Pa
       {zone && area !== null ? (
         free.length ? (
           <Card className={styles.layout}>
-            <PlotGrid plots={layout} selected={plot?.id} onSelect={(cell) => update({ preferredPlot: cell.id, alternativePlots: form.alternativePlots.filter((id) => id !== cell.id) })} own={[...own]} label={t('layout', { zone: pick(zone.name) })} />
+            <PlotGrid
+              plots={layout}
+              selected={plot?.id}
+              onSelect={(cell) => update({ preferredPlot: cell.id, alternativePlots: form.alternativePlots.filter((id) => id !== cell.id) })}
+              own={[...own]}
+              isSelectable={(cell) => fitsArea(cell, area)}
+              unfitLabel={t('tooSmall')}
+              label={t('layout', { zone: pick(zone.name) })}
+            />
           </Card>
         ) : (
           <Card>
@@ -359,7 +366,7 @@ function PlotPage({ form, update, where, headRef, errors, taken, own, rent }: Pa
 
 /* ── 3 · The project ─────────────────────────────────────────────── */
 
-function ProjectPage({ form, update, where, headRef, error, taken }: PageProps & { error?: string; taken: ReadonlySet<string> }) {
+function ProjectPage({ form, update, headRef, error, taken }: PageProps & { error?: string; taken: ReadonlySet<string> }) {
   const t = useT(strings);
   const { pick, fmt } = useLang();
   const options = useMemo(
@@ -373,7 +380,7 @@ function ProjectPage({ form, update, where, headRef, error, taken }: PageProps &
   const chosen = validAlternatives(form, taken);
   return (
     <>
-      <StepHead ref={headRef} where={where} question={t('p3Question')} hint={t('p3Hint')} />
+      <StepHead ref={headRef} current={3} total={LAND_PAGES} question={t('p3Question')} hint={t('p3Hint')} />
       <div className={flow.block}>
         <SelectField label={t('activity')} options={options} value={form.activity} onChange={(code) => update({ activity: code })} placeholder={t('activityPlaceholder')} error={error} required presentation="sheet" />
       </div>
@@ -410,11 +417,11 @@ function ProjectPage({ form, update, where, headRef, error, taken }: PageProps &
 
 /* ── 4 · Documents ───────────────────────────────────────────────── */
 
-function DocsPage({ form, update, where, headRef, errorOf }: PageProps & { errorOf: (error: LandError) => string | undefined }) {
+function DocsPage({ form, update, headRef, errorOf }: PageProps & { errorOf: (error: LandError) => string | undefined }) {
   const t = useT(strings);
   return (
     <>
-      <StepHead ref={headRef} where={where} question={t('p4Question')} hint={t('p4Hint')} />
+      <StepHead ref={headRef} current={4} total={LAND_PAGES} question={t('p4Question')} hint={t('p4Hint')} />
       <div className={styles.files}>
         <FilePick id="land-business-plan" label={t('businessPlan')} hint={t('docHint')} value={form.businessPlan} onChange={(value) => update({ businessPlan: value })} error={errorOf('businessPlan')} required />
         <FilePick id="land-financials" label={t('financials')} hint={t('docHint')} value={form.financials} onChange={(value) => update({ financials: value })} error={errorOf('financials')} required />
@@ -427,7 +434,7 @@ function DocsPage({ form, update, where, headRef, errorOf }: PageProps & { error
 
 /* ── 5 · Review and submit ───────────────────────────────────────── */
 
-function ReviewPage({ form, update, where, headRef, error, taken, rent, onEdit }: PageProps & { error?: string; taken: ReadonlySet<string>; rent: number | null; onEdit: (page: number) => void }) {
+function ReviewPage({ form, update, headRef, error, taken, rent, onEdit }: PageProps & { error?: string; taken: ReadonlySet<string>; rent: number | null; onEdit: (page: number) => void }) {
   const t = useT(strings);
   const { pick, fmt } = useLang();
   const company = useApp(selectCompany);
@@ -443,7 +450,7 @@ function ReviewPage({ form, update, where, headRef, error, taken, rent, onEdit }
   });
   return (
     <>
-      <StepHead ref={headRef} where={where} question={t('p5Question')} hint={t('p5Hint')} />
+      <StepHead ref={headRef} current={5} total={LAND_PAGES} question={t('p5Question')} hint={t('p5Hint')} />
       <List aria-label={t('answers')}>
         <Row eyebrow={t('company')} title={pick(company?.name)} {...edit(t('company'), 1)} />
         <Row eyebrow={t('solution')} title={pick(solution?.name)} {...edit(t('solution'), 2)} />

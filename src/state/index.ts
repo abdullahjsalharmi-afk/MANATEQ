@@ -6,7 +6,8 @@
  * READ — `useApp(selector)` re-renders a component when its slice changes.
  *   Home          selectNextStep · selectNextSteps · selectJourney · selectStation · selectDues · selectUnreadCount
  *   Requests      selectActiveRequests · selectDoneRequests · selectRequest(id) · selectThread(id) ·
- *                 selectDocsOfRequest(id) · selectDeadline(id) · selectWaitingCount
+ *                 selectDocsOfRequest(id) · selectPassesOfRequest(id) · selectDeadline(id) ·
+ *                 selectStepAmount(id, action) · selectWaitingCount
  *   Account       selectCompany · selectPlots · selectPlot(id) · selectLeaseOfPlot(id) · selectRequestsOfPlot(id) ·
  *                 selectDocsOfPlot(id) · selectInvoices · selectInvoice(id) · selectDocs · selectDoc(id) ·
  *                 selectPasses · selectPass(id) · selectAppointments · selectNotifications · selectDraft(serviceId)

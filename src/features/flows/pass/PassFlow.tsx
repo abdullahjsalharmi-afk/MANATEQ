@@ -9,16 +9,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { useQuery } from '@/app/routes';
 import type { FieldDef, ServiceDetail } from '@/data/types';
-import { Button, Chip, ChipRow, Container, Grid, Icon, List, Row, Screen, Section, toast } from '@/design/core';
-import { DateField, EmptyState, isoDateToMs, msToIsoDate, Stepper, TextField, QR } from '@/design/forms';
+import { Button, CardChoiceGroup, Chip, ChipRow, Container, Grid, Icon, List, Row, Screen, Section, toast } from '@/design/core';
+import { DateField, EmptyState, isoDateToMs, msToIsoDate, StepHead, Stepper, TextField, QR, useStepLabel } from '@/design/forms';
 import { PassCard } from '@/design/signature';
 import type { PassKind } from '@/domain/types';
 import { useService } from '@/features/shared/useService';
 import { issuePass, selectPass, selectPlots, startRequest, useApp } from '@/state';
-import { ConfirmationTile, FlowFailed, FlowLoading, leaveFlow, OptionCard, Question } from '../maintenance/parts/Parts';
+import { ConfirmationTile, FlowFailed, FlowLoading, leaveFlow, OptionCard } from '../maintenance/parts/Parts';
 import { initialPlotId, plotOptions, type PlotOption } from '../maintenance/parts/plots';
 import { partsStrings } from '../maintenance/parts/strings';
-import { useChoiceGroup } from '../shared/Choice';
+import { passMoment } from '@/features/wallet/logic';
 import styles from './PassFlow.module.css';
 import { KIND_ICON, passKinds } from './kinds';
 import { strings } from './strings';
@@ -82,9 +82,7 @@ function PassSteps({ service, onIssued }: { service: ServiceDetail; onIssued: (p
   const missing = kind ? missingDetails(kind, details) : [];
   const detailsValid = missing.length === 0 && plot !== undefined && typeof range !== 'string';
 
-  const kindChoice = useChoiceGroup({ keys: kinds.map((option) => option.kind), value: kind, onPick: (next: PassKind) => chooseKind(next), label: t('kinds') });
-  const plotChoice = useChoiceGroup({ keys: plots.map((option) => option.id), value: plotId, onPick: setPlotId, label: t('plot') });
-  const where = tp('stepOf', { n: step, m: STEPS });
+  const stepLabel = useStepLabel();
   const set = (key: keyof PassDetails) => (value: string) => setDetails((current) => ({ ...current, [key]: value }));
   const chooseKind = (next: PassKind) => {
     if (next !== kind) setShowErrors(false);
@@ -149,24 +147,26 @@ function PassSteps({ service, onIssued }: { service: ServiceDetail; onIssued: (p
       navLabel={step === 1 ? tp('close') : tp('back')}
       onNav={step === 1 ? leaveFlow : () => setStep(step - 1)}
       width="form"
-      header={<Stepper current={step} total={STEPS} label={where} />}
+      header={<Stepper current={step} total={STEPS} label={stepLabel(step, STEPS)} />}
       footerContext={kindOption ? <span className={styles.context}>{pick(kindOption.option)}</span> : undefined}
       footer={footer}
     >
       {step === 1 ? (
         <>
-          <Question where={where} hint={t('whoHint')}>{t('whoQ')}</Question>
-          <Grid columns={3} {...kindChoice.group}>
-            {kinds.map((option) => (
-              <OptionCard key={option.kind} size="lg" icon={KIND_ICON[option.kind]} label={pick(option.option)} detail={t(`${option.kind}Detail`)} item={kindChoice.item(option.kind)} />
-            ))}
-          </Grid>
+          <StepHead current={step} total={STEPS} question={t('whoQ')} hint={t('whoHint')} />
+          <CardChoiceGroup label={t('kinds')}>
+            <Grid columns={3}>
+              {kinds.map((option) => (
+                <OptionCard key={option.kind} size="lg" icon={KIND_ICON[option.kind]} label={pick(option.option)} detail={t(`${option.kind}Detail`)} selected={kind === option.kind} onClick={() => chooseKind(option.kind)} />
+              ))}
+            </Grid>
+          </CardChoiceGroup>
         </>
       ) : null}
 
       {step === 2 && kind ? (
         <>
-          <Question where={where}>{t(`${kind}Q`)}</Question>
+          <StepHead current={step} total={STEPS} question={t(`${kind}Q`)} />
           <div className={styles.fields}>
             <TextField label={t(kind === 'worker' ? 'workerName' : kind === 'vehicle' ? 'driverName' : 'visitorName')} value={details.name} onChange={set('name')} required autoComplete="off" error={err('name', t('nameMissing'))} />
             {kind === 'worker' ? <TextField label={qidLabel} value={details.qid} onChange={set('qid')} required ltr inputMode="numeric" autoComplete="off" error={err('qid', t('qidMissing'))} /> : null}
@@ -181,11 +181,13 @@ function PassSteps({ service, onIssued }: { service: ServiceDetail; onIssued: (p
               </List>
             ) : (
               <>
-                <Grid compact columns={3} {...plotChoice.group}>
-                  {plots.map((option) => (
-                    <OptionCard key={option.id} icon={MapPin} label={option.number} detail={pick(option.zoneName)} item={plotChoice.item(option.id)} />
-                  ))}
-                </Grid>
+                <CardChoiceGroup label={t('plot')}>
+                  <Grid compact columns={3}>
+                    {plots.map((option) => (
+                      <OptionCard key={option.id} icon={MapPin} label={option.number} detail={pick(option.zoneName)} selected={plotId === option.id} onClick={() => setPlotId(option.id)} />
+                    ))}
+                  </Grid>
+                </CardChoiceGroup>
                 {showErrors && !plot ? (
                   <p className={styles.error} role="alert">
                     {t('plotMissing')}
@@ -224,7 +226,7 @@ function PassSteps({ service, onIssued }: { service: ServiceDetail; onIssued: (p
 
       {step === 3 && kind && plot ? (
         <>
-          <Question where={where} hint={t('reviewHint')}>{t('reviewQ')}</Question>
+          <StepHead current={step} total={STEPS} question={t('reviewQ')} hint={t('reviewHint')} />
           <List>
             <Row title={t('rowType')} trailing={kindOption ? pick(kindOption.option) : ''} onClick={() => setStep(1)} chevron />
             <Row title={t('rowHolder')} subtitle={[details.name.trim(), idOrPlateOf(kind, details), kind === 'visitor' ? details.company.trim() : ''].filter(Boolean).join(' · ')} onClick={() => setStep(2)} chevron wrap />
@@ -254,8 +256,8 @@ function PassIssued({ passId, onAnother }: { passId: string; onAnother: () => vo
   if (!pass) return <FlowLoading title={t('doneTitle')} />;
 
   const zone = pick(plot?.zoneName);
-  // Date and time, as the wallet's pass viewer shows them: a one-day pass reads 12:00 am to 11:59 pm.
-  const when = (ms: number) => `${fmt.date(ms)}${lang === 'ar' ? '، ' : ', '}${fmt.time(ms)}`;
+  // Date and time, exactly as the wallet's pass viewer shows them: a one-day pass reads 12:00 am to 11:59 pm.
+  const when = (ms: number) => passMoment(ms, fmt, lang);
   const plotNumber = plot?.number ?? pass.plotId;
 
   const send = async () => {

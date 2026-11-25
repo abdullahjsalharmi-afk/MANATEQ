@@ -12,13 +12,12 @@ import { useLang, useT } from '@/app/i18n';
 import { getActivity, getSolution, getZone, solutions } from '@/data/catalog';
 import type { SolutionKey } from '@/data/types';
 import { checkEligibility, estimateAnnualRent, searchActivities, toEligibilityResult, UNLISTED_ACTIVITY, type EligibilityInput } from '@/domain/eligibility';
-import { Button, Chip, ChipRow, Icon, Render, Screen, Sheet, cx, toast } from '@/design/core';
-import { EmptyState, NumberField, SearchField, Skeleton, Stepper } from '@/design/forms';
+import { Button, Card, CardChoiceGroup, Chip, ChipRow, Icon, Render, Screen, Sheet, cx, toast } from '@/design/core';
+import { EmptyState, NumberField, SearchField, Skeleton, StepHead, Stepper, useStepLabel } from '@/design/forms';
 import { saveEligibility, selectCompany, selectPersona, startRequest, useApp } from '@/state';
 import { AREA_PICKS, DEFAULT_AREA, decidedByActivity, groupBySector, isValidArea, layoutAvailability, quickActivities, SOLUTION_ORDER, SOLUTION_RENDER, zonesOffering } from './model';
 import { EligibilityResultView, primaryOf, type Primary } from './Result';
-import { FinePrint, revealFirstError, StepError, StepHead, useStepFocus } from './parts';
-import { ChoiceCard, useChoiceGroup } from '../shared/Choice';
+import { FinePrint, revealFirstError, StepError, useStepFocus } from './parts';
 import { useTakenPlots } from './useTakenPlots';
 import { strings } from './strings';
 import styles from './Flow.module.css';
@@ -58,6 +57,7 @@ export function EligibilityScreen() {
   const [busy, setBusy] = useState(false);
   const timer = useRef<number | undefined>(undefined);
   const headRef = useStepFocus(phase);
+  const stepLabel = useStepLabel();
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
@@ -201,7 +201,6 @@ export function EligibilityScreen() {
 
   // ── the three questions ─────────────────────────────────────────
   const step = typeof phase === 'number' ? phase : 3;
-  const where = t('step', { n: step, m: STEPS });
   const price = solution ? getSolution(solution)?.price.qarPerSqmYear ?? null : null;
   const yearly = (sqm: number) => {
     const rent = solution ? estimateAnnualRent(solution, sqm) : null;
@@ -227,7 +226,7 @@ export function EligibilityScreen() {
       navLabel={t('close')}
       onNav={close}
       width="form"
-      header={<Stepper current={step} total={STEPS} label={where} />}
+      header={<Stepper current={step} total={STEPS} label={stepLabel(step, STEPS)} />}
       actions={
         step > 1 ? (
           <Button variant="quiet" size="sm" onClick={previous}>
@@ -244,7 +243,7 @@ export function EligibilityScreen() {
     >
       {step === 1 ? (
         <>
-          <StepHead ref={headRef} where={where} question={t('s1Question')} hint={t('s1Hint')} />
+          <StepHead ref={headRef} current={step} total={STEPS} question={t('s1Question')} hint={t('s1Hint')} />
           {licensed && !search.trim() ? (
             <section className={styles.block} aria-labelledby="elig-register">
               <h3 id="elig-register" className={cx('type-callout', styles.groupHead)}>
@@ -267,13 +266,13 @@ export function EligibilityScreen() {
         </>
       ) : step === 2 ? (
         <>
-          <StepHead ref={headRef} where={where} question={t('s2Question')} hint={t('s2Hint')} />
+          <StepHead ref={headRef} current={step} total={STEPS} question={t('s2Question')} hint={t('s2Hint')} />
           <SolutionPicker value={solution} onChange={setSolution} covered={activity?.solutions ?? []} />
           {tried && !solution ? <StepError>{t('needSolution')}</StepError> : null}
         </>
       ) : (
         <>
-          <StepHead ref={headRef} where={where} question={t('s3Question')} hint={t('s3Hint')} />
+          <StepHead ref={headRef} current={step} total={STEPS} question={t('s3Question')} hint={t('s3Hint')} />
           <div className={styles.block}>
             <NumberField
               label={t('area')}
@@ -413,11 +412,10 @@ function ActivityPicker({ value, onChange, search, onSearch, skip, lang }: Activ
 function SolutionPicker({ value, onChange, covered }: { value: SolutionKey | null; onChange: (key: SolutionKey) => void; covered: readonly SolutionKey[] }) {
   const t = useT(strings);
   const { pick } = useLang();
-  const choice = useChoiceGroup({ keys: SOLUTION_ORDER, value, onPick: onChange, label: t('s2Name') });
   return (
-    <div className={styles.options} {...choice.group}>
+    <CardChoiceGroup label={t('s2Name')} className={styles.options}>
       {solutions.map((option) => (
-        <ChoiceCard key={option.key} item={choice.item(option.key)} layout="row" className={styles.option}>
+        <Card key={option.key} choice selected={value === option.key} onClick={() => onChange(option.key)} className={styles.option}>
           <span className={styles.optionMedia}>
             <Render name={SOLUTION_RENDER[option.key]} decorative />
           </span>
@@ -433,8 +431,8 @@ function SolutionPicker({ value, onChange, covered }: { value: SolutionKey | nul
               </span>
             ) : null}
           </span>
-        </ChoiceCard>
+        </Card>
       ))}
-    </div>
+    </CardChoiceGroup>
   );
 }

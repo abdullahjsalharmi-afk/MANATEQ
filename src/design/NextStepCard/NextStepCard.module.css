@@ -48,22 +48,28 @@
   text-wrap: balance;
 }
 
+/* 17 px on phones, so one line holds a title, a plot and an amount; 21 px once there is room. */
 .heroContext {
   max-width: 30em;
   margin-block-start: var(--s-3);
-  font-size: var(--t-heading);
+  font-size: var(--t-body);
   font-weight: 400;
-  line-height: var(--lh-heading);
-  letter-spacing: var(--ls-heading);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
   color: var(--ink-2);
   text-wrap: balance;
-  /* The context is one line of copy; the clamp is a guard so a long string never turns the brand tile into a
-     paragraph (the copy itself must stay short: see nextstep.ts). */
+  /* The context is one line of copy (two at the largest text size); the clamp is a guard so a long string never
+     turns the brand tile into a paragraph (the copy itself must stay short: see nextstep.ts). */
   display: -webkit-box;
   overflow: hidden;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+:global(:root[data-text='3']) .heroContext {
   -webkit-line-clamp: 2;
   line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 
 .heroActions {
@@ -87,8 +93,43 @@
 }
 
 @media (min-width: 735px) {
+  .heroContext {
+    font-size: var(--t-heading);
+    line-height: var(--lh-heading);
+    letter-spacing: var(--ls-heading);
+  }
+
   .heroMedia {
     width: 60%;
+  }
+}
+
+/* From 834 px the tile is wide enough for both side by side: the words at the inline start, the render resting
+   beside them at the end, so the whole moment sits in the first screenful. */
+@media (min-width: 834px) {
+  .hero.withRender {
+    flex-direction: row;
+    justify-content: center;
+    gap: var(--s-10);
+    text-align: start;
+  }
+
+  .withRender .heroInner {
+    flex: 3 1 0;
+    align-items: flex-start;
+    max-width: 30em;
+  }
+
+  .withRender .heroEyebrow,
+  .withRender .heroActions {
+    justify-content: flex-start;
+  }
+
+  .withRender .heroMedia {
+    flex: 2 1 0;
+    width: auto;
+    max-width: 560px;
+    margin-block-start: 0;
   }
 }
 

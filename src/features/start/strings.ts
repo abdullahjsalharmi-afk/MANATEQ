@@ -1,7 +1,6 @@
 /** Words of the "start a service" flow and of the pieces it lends to the bespoke flows. */
 export const strings = {
   // The frame.
-  stepOf: { ar: 'الخطوة {n} من {m}', en: 'Step {n} of {m}' },
   closeFlow: { ar: 'إغلاق الطلب', en: 'Close the request' },
   continue: { ar: 'متابعة', en: 'Continue' },
   backToReview: { ar: 'العودة إلى المراجعة', en: 'Back to review' },
@@ -53,6 +52,8 @@ export const strings = {
   copied: { ar: 'نُسخ الرقم المرجعي', en: 'Reference copied' },
   whatNext: { ar: 'ماذا يحدث الآن', en: 'What happens now' },
   whatNextHint: { ar: 'أول خطوات طلبك ومن يتولاها.', en: 'The first steps of your request and who holds them.' },
+  whatDone: { ar: 'ما جرى حتى الآن', en: 'What has happened so far' },
+  byItself: { ar: 'يُنجَز طلبك تلقائيًا، ونُعلمك حين يكتمل.', en: 'Your request is completed automatically. We will tell you when it is done.' },
   nextLabel: { ar: 'الخطوات التالية', en: 'Next steps' },
   track: { ar: 'تتبّع الطلب', en: 'Track request' },
   goHome: { ar: 'العودة إلى الرئيسية', en: 'Back to Home' },

@@ -229,7 +229,7 @@ function ZonePage({ zone }: { zone: Zone }) {
 /** The illustrative plot layout of a land zone, with the investor's own plots marked. */
 function PlotsSection({ zone, guest }: { zone: Zone; guest: boolean }) {
   const t = useT(strings);
-  const { lang, pick, fmt } = useLang();
+  const { pick, fmt } = useLang();
   const plots = useApp(selectPlots);
   const cells = useMemo(() => plotsFor(zone.code), [zone.code]);
   const own = useMemo(() => plots.filter((plot) => plot.zoneCode === zone.code).map((plot) => plot.id), [plots, zone.code]);
@@ -268,7 +268,7 @@ function PlotsSection({ zone, guest }: { zone: Zone; guest: boolean }) {
               ) : (
                 <p className={cx('type-body', styles.wideOnly)}>{t('plotPick')}</p>
               )}
-              {own.length > 0 ? <p className={cx('type-callout', styles.muted)}>{t('ownPlots', { plots: own.map((id) => fmt.ltr(id)).join(lang === 'ar' ? '، ' : ', ') })}</p> : null}
+              {own.length > 0 ? <p className={cx('type-callout', styles.muted)}>{t('ownPlots', { plots: own.map((id) => fmt.ltr(id)).join(t('listSep')) })}</p> : null}
             </Card>
           </div>
         </div>

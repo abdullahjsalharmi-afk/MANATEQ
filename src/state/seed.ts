@@ -14,6 +14,7 @@ import { leaseContractDoc } from '@/domain/documents';
 import { pathScale, stepDays } from '@/domain/simulation';
 import { checkEligibility, toEligibilityResult } from '@/domain/eligibility';
 import { plotsFor } from '@/domain/plots';
+import { DOT } from '@/domain/text';
 import type { AppState, Company, EligibilityResult, Invoice, Lease, Persona, Plot, RequestState, Settings, TeamMember, World } from '@/domain/types';
 import { currentStep, currentVisit, findStep, mainPath, waitsForInvestor, type Timing } from '@/domain/workflow';
 import { addPass, issueRentInvoice, settleInvoice } from './effects';
@@ -182,7 +183,7 @@ const demoName = (ar: string, en: string): L10n => ({ ar: `${ar} تجريبي`, 
 
 const SIGNATORY = { name: demoName('مستثمر', 'investor'), role: { ar: 'المالك والمفوَّض بالتوقيع', en: 'Owner and authorised signatory' } };
 
-const OWNER: TeamMember = { id: 'm1', name: SIGNATORY.name, role: { ar: 'المالك · كل الصلاحيات', en: 'Owner · full access' }, scope: 'owner', delegated: true };
+const OWNER: TeamMember = { id: 'm1', name: SIGNATORY.name, role: { ar: `المالك${DOT}كل الصلاحيات`, en: `Owner${DOT}full access` }, scope: 'owner', delegated: true };
 
 const TENANT_TEAM: TeamMember[] = [
   OWNER,
@@ -487,8 +488,8 @@ function withRecentNotifications(world: World, now: number, maintenanceId: strin
     kind: 'info',
     title: { ar: 'إعلان المنطقة: صيانة مجدولة لطريق داخلي', en: 'Zone announcement: planned maintenance on an internal road' },
     body: {
-      ar: 'مجمّع بركة العوامر اللوجستي · إغلاق جزئي يوم الجمعة من 6 إلى 10 صباحًا (إعلان توضيحي).',
-      en: 'Birkat Al Awamer Logistics Park · partial closure on Friday, 6 to 10 am (illustrative announcement).',
+      ar: `مجمّع بركة العوامر اللوجستي${DOT}إغلاق جزئي يوم الجمعة من 6 إلى 10 صباحًا (إعلان توضيحي).`,
+      en: `Birkat Al Awamer Logistics Park${DOT}partial closure on Friday, 6 to 10 am (illustrative announcement).`,
     },
     route: '/zones/BA',
   });

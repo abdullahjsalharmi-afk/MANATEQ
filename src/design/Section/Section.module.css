@@ -15,14 +15,18 @@
   margin-block-start: var(--s-5);
 }
 
+/* The quiet link sits beside the heading while both fit; when they do not (a long heading, the largest text
+   size) it moves under the heading and the hint, so the heading never breaks to make room for it. */
 .head {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--s-4);
+  gap: var(--s-1) var(--s-4);
 }
 
 .titles {
+  flex: 1 1 12em;
   min-width: 0;
 }
 

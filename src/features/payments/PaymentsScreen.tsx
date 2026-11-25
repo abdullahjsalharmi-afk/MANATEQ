@@ -2,12 +2,10 @@ import { CircleCheck, Receipt } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { Link } from '@/app/router';
-import { Button, Card, EmptyState, Grid, Icon, List, Money, Row, Screen, Section } from '@/design/core';
+import { Button, Card, EmptyState, Grid, Icon, keepWhole, List, Money, Row, Screen, Section } from '@/design/core';
 import { Skeleton } from '@/design/forms';
 import type { Invoice } from '@/domain/types';
 import { useNow } from '@/features/shared/useNow';
-import { unbroken } from '@/features/wallet/logic';
-import { Atom, CodedText } from '@/features/wallet/Unbroken';
 import { receiptRefFor, selectDues, selectInvoices, useApp, useCatalogueReady } from '@/state';
 import { DueText } from './InvoiceRow';
 import { groupByMonth, outstanding } from './logic';
@@ -75,7 +73,7 @@ export function PaymentsScreen() {
                   <p className={styles.summaryLine}>
                     {fmt.plural(dues.count, plurals.invoices)}
                     <span aria-hidden="true"> ·{'\u00A0'}</span>
-                    <span className="num">{t('nextDue', { date: unbroken(fmt.date(dues.next.dueAt)) })}</span>
+                    <span className="num">{t('nextDue', { date: fmt.date(dues.next.dueAt) })}</span>
                   </p>
                 </div>
                 <DueText invoice={dues.next} now={now} className={styles.summaryDue} />
@@ -139,10 +137,10 @@ function DueCard({ invoice, now, onPay, figure, as }: { invoice: Invoice; now: n
     <Card as={as} className={styles.invoiceCard}>
       <Link to={`/account/payments/${invoice.id}`} className={styles.invoiceLink}>
         <span className={styles.invoiceTitle}>
-          <CodedText text={pick(invoice.title)} />
+          {keepWhole(pick(invoice.title))}
         </span>
         <span className={styles.invoiceRef}>
-          <Atom code>{invoice.ref}</Atom>
+          <span className="ltr">{invoice.ref}</span>
         </span>
       </Link>
       <div className={styles.invoiceFoot}>
@@ -165,14 +163,12 @@ function StatementRow({ invoice }: { invoice: Invoice }) {
   const { pick, fmt } = useLang();
   return (
     <Row
-      title={<CodedText text={pick(invoice.title)} />}
+      title={pick(invoice.title)}
       subtitle={
         <>
+          <span className={styles.metaLine}>{fmt.date(invoice.paidAt ?? invoice.issuedAt)}</span>
           <span className={styles.metaLine}>
-            <Atom>{fmt.date(invoice.paidAt ?? invoice.issuedAt)}</Atom>
-          </span>
-          <span className={styles.metaLine}>
-            <Atom code>{receiptRefFor(invoice.ref)}</Atom>
+            <span className="ltr">{receiptRefFor(invoice.ref)}</span>
           </span>
         </>
       }

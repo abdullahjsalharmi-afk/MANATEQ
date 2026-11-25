@@ -97,32 +97,7 @@ export function holderName(holder: string, lang: Lang): string {
   return lang === 'ar' ? ar : en;
 }
 
-/** One piece of a display text: plain words, or a code ("BA-121", "RCP-2026-0049") that must stay whole. */
-export type TextPart = { code: false; text: string } | { code: true; text: string };
-
-const CODE = /[A-Z]{2,}[A-Z0-9]*(?:[-\u2011]\u2060?[A-Z0-9]+)+/g;
-const SEPARATOR = ' · ';
-
-/**
- * Splits a title such as "Rent, Q4 2026 · BA-121" into words and codes, so that a code is drawn
- * unbroken and left to right. The separator dot keeps to the part after it ("· BA-121"), so it never
- * hangs alone at the end of a line.
- */
-export function splitCodes(text: string): TextPart[] {
-  const parts: TextPart[] = [];
-  let last = 0;
-  const glued = (words: string) => words.split(SEPARATOR).join(' ·\u00A0');
-  for (const match of text.matchAll(CODE)) {
-    const at = match.index ?? 0;
-    if (at > last) parts.push({ code: false, text: glued(text.slice(last, at)) });
-    parts.push({ code: true, text: match[0] });
-    last = at + match[0].length;
-  }
-  if (last < text.length) parts.push({ code: false, text: glued(text.slice(last)) });
-  return parts;
-}
-
-/** A short value (a date, a time) whose words must not part on two lines: its spaces become no-break spaces. */
+/** A clock time whose words must not part on two lines («6:00 pm»): its spaces become no-break spaces (`fmt.date` is already whole). */
 export function unbroken(text: string): string {
   return text.replace(/\s/g, '\u00A0');
 }

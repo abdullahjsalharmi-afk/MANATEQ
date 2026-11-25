@@ -29,6 +29,9 @@ import {
   type TimelineItem,
 } from '@/design/signature';
 import { plotsFor } from '@/domain/plots';
+
+/** The plot grid sample: plots smaller than this do not fit the sample request, so they show as not selectable. */
+const UNFIT_BELOW_SQM = 2500;
 import { dayOf, timeLeft } from '@/domain/standard';
 
 /** Sample content of this gallery page. Everything here is illustrative. */
@@ -474,7 +477,7 @@ export function SignatureGallery() {
 
       <Section title="Plot grid">
         <Card>
-          <PlotGrid plots={plotsFor('BA')} selected={plot} onSelect={(cell) => setPlot(cell.id)} own={['BA-124']} />
+          <PlotGrid plots={plotsFor('BA')} selected={plot} onSelect={(cell) => setPlot(cell.id)} own={['BA-124']} isSelectable={(cell) => cell.areaSqm >= UNFIT_BELOW_SQM} />
         </Card>
       </Section>
 

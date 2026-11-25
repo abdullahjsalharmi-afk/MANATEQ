@@ -7,9 +7,9 @@ import styles from './Pill.module.css';
 /**
  * `gold` marks "verified / official"; the rest are states. The investor's turn («يحتاج إجراء») is `warn` with an
  * icon. A status pill is never interactive, so it never wears the accent (SPEC 3.1: the accent is for things you
- * can press): `accent` is kept only so older call sites compile, and it is drawn exactly as `warn`.
+ * can press or have selected: a pill button, a chosen chip, a toggle that is on). There is no `accent` tone.
  */
-export type Tone = 'neutral' | 'ok' | 'warn' | 'bad' | 'info' | 'gold' | /** @deprecated use `warn` */ 'accent';
+export type Tone = 'neutral' | 'ok' | 'warn' | 'bad' | 'info' | 'gold';
 
 export interface PillProps {
   children: ReactNode;
@@ -25,10 +25,9 @@ export interface PillProps {
 
 /** A small status label: 12 px text with a dot or an icon on a tint. `neutral` is a plain category label. */
 export function Pill({ children, tone = 'neutral', icon, dot, solid = false, className }: PillProps) {
-  const look = tone === 'accent' ? 'warn' : tone;
-  const showDot = dot ?? (!icon && !solid && look !== 'neutral');
+  const showDot = dot ?? (!icon && !solid && tone !== 'neutral');
   return (
-    <span className={cx(styles.pill, styles[look], solid && styles.solid, className)}>
+    <span className={cx(styles.pill, styles[tone], solid && styles.solid, className)}>
       {icon ? <Icon icon={icon} size={14} strokeWidth={2} /> : showDot ? <span className={styles.dot} aria-hidden="true" /> : null}
       <span>{children}</span>
     </span>

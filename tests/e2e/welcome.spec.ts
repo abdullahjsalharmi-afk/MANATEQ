@@ -13,7 +13,7 @@ test('a first visit signs in through the demo sheet and lands on Home', async ({
   const sheet = page.getByRole('dialog');
   await expect(sheet.getByText('دخول تجريبي')).toBeVisible();
   await expect(sheet.getByText('شركة النموذج للتجارة')).toBeVisible();
-  await sheet.getByRole('button', { name: /مستثمر جديد/ }).click();
+  await sheet.getByRole('radio', { name: /مستثمر جديد/ }).click();
   await sheet.getByRole('button', { name: 'دخول', exact: true }).click();
   await expect(sheet.getByRole('status')).toBeVisible();
 

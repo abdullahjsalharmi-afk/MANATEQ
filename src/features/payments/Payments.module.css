@@ -211,41 +211,11 @@
   margin-block: var(--s-4) var(--s-2);
 }
 
+/* The invoice's facts: the shared fact rows under a hairline. */
 .facts {
-  margin: var(--s-6) 0 0;
+  margin-block-start: var(--s-6);
   border-block-start: 1px solid var(--line-soft);
-}
-
-.fact {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-4);
-  padding-block: var(--s-3);
-  border-block-end: 1px solid var(--line-soft);
-}
-
-.fact:last-child {
-  border-block-end: 0;
-}
-
-.fact dt {
-  flex: none;
-  max-inline-size: 45%;
-  color: var(--ink-3);
-  font-size: var(--t-callout);
-  line-height: var(--lh-body);
-}
-
-/* The value is the information: 17 px ink with tabular figures; the label is the quiet part. */
-.fact dd {
-  min-inline-size: 0;
-  margin: 0;
-  text-align: end;
-  color: var(--ink);
-  font-size: var(--t-body);
-  line-height: var(--lh-body);
-  font-variant-numeric: tabular-nums;
+  text-align: start;
 }
 
 .center {

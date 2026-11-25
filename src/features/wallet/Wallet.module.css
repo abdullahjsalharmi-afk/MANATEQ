@@ -15,12 +15,7 @@
   margin-block-start: var(--s-6);
 }
 
-/* A code or a date that never breaks on two lines ("AW-116", "27 أغسطس 2026"). */
-.atom {
-  white-space: nowrap;
-}
-
-/* ── The wallet's grid ── */
+/* ── The wallet's grid (documents are DocCards; passes are cards of their own) ── */
 
 .year + .year {
   margin-block-start: var(--s-6);
@@ -35,7 +30,7 @@
   line-height: var(--lh-body);
 }
 
-.docTile {
+.passTile {
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
@@ -44,7 +39,7 @@
   text-decoration: none;
 }
 
-.docTileHead {
+.passTileHead {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -56,7 +51,7 @@
   color: var(--ink-2);
 }
 
-.docTileTitle {
+.passTileTitle {
   display: -webkit-box;
   overflow: hidden;
   -webkit-line-clamp: 2;
@@ -70,37 +65,11 @@
   text-wrap: pretty;
 }
 
-.docTileMeta {
+.passTileMeta {
   margin-block-start: auto;
   color: var(--ink-3);
   font-size: var(--t-callout);
   line-height: var(--lh-body);
-}
-
-/* A row's title, with the check-seal right after it. */
-.rowTitle {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 2px var(--s-2);
-}
-
-/* «موثّق»: a small gold check-seal and the word; gold marks what is verified and nothing else. */
-.seal {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--ink-2);
-  font-size: var(--t-callout);
-  font-weight: var(--w-regular);
-  line-height: var(--lh-body);
-  white-space: nowrap;
-}
-
-.seal > svg {
-  flex: none;
-  color: var(--gold);
 }
 
 .more,
@@ -240,44 +209,10 @@
   }
 }
 
+/* The facts of a verified document: the shared fact rows, across the result. */
 .facts {
-  display: grid;
-  gap: 0;
-  margin: 0;
-  text-align: start;
   inline-size: 100%;
-}
-
-.fact {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-4);
-  padding-block: var(--s-3);
-  border-block-end: 1px solid var(--line-soft);
-}
-
-.fact:last-child {
-  border-block-end: 0;
-}
-
-.fact dt {
-  flex: none;
-  max-inline-size: 45%;
-  color: var(--ink-3);
-  font-size: var(--t-callout);
-  line-height: var(--lh-body);
-}
-
-/* The value is the information: 17 px ink, as on the document itself. */
-.fact dd {
-  min-inline-size: 0;
-  margin: 0;
-  text-align: end;
-  font-size: var(--t-body);
-  line-height: var(--lh-body);
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
+  text-align: start;
 }
 
 .note {

@@ -38,7 +38,7 @@ export function RequestRing({ request, view, size = 'sm' }: RequestRingProps) {
     );
   }
   const holder = view?.holder;
-  if (!clock || !hasDayClock(request.serviceId, clock) || holder?.lane === 'inv') {
+  if (!clock || !hasDayClock(clock) || holder?.lane === 'inv') {
     const lane = holder?.lane ?? (request.status === 'needs_you' ? 'inv' : undefined);
     const label = lane === 'inv' ? t('ringWithYou') : holder ? words.phrase(holder) : t('ringNone');
     return (

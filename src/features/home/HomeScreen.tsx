@@ -27,7 +27,7 @@ import { HowTile, SolutionsSection, ZonesTile } from './Discover';
 import { DuesCard } from './DuesCard';
 import { HomeHero } from './HomeHero';
 import { JourneyCard } from './JourneyCard';
-import { greetingOf, invoiceOfStep } from './logic';
+import { greetingOf } from './logic';
 import { Shortcuts } from './Shortcuts';
 import styles from './Home.module.css';
 import { strings } from './strings';
@@ -51,7 +51,6 @@ export function HomeScreen() {
   const dues = useApp(selectDues);
   const unread = useApp(selectUnreadCount);
   const invoices = useApp(selectInvoices);
-  const checked = useApp((state) => state.world.eligibility !== null);
 
   // The invoice being paid stays on screen until the sheet closes, even once it is settled.
   const [paying, setPaying] = useState<Invoice | null>(null);
@@ -91,7 +90,7 @@ export function HomeScreen() {
 
   const requests = active.slice(0, REQUESTS_ON_HOME);
   // When the hero already pays the invoice due first, the dues card shows it without a second pill.
-  const heroInvoice = steps[0] && !guest ? invoiceOfStep(steps[0]) : null;
+  const heroInvoice = guest ? undefined : steps[0]?.invoiceId;
 
   return (
     <Screen title={greeting} subtitle={company ? pick(company.name) : undefined} large bleed width="grid" actions={actions}>
@@ -100,7 +99,7 @@ export function HomeScreen() {
           <Skeleton variant="block" height={420} label={t('loading')} />
         </Container>
       ) : (
-        <HomeHero persona={persona} steps={steps} station={station} now={now} checked={checked} onPay={(id) => pay(invoices.find((invoice) => invoice.id === id))} />
+        <HomeHero persona={persona} steps={steps} station={station} now={now} onPay={(id) => pay(invoices.find((invoice) => invoice.id === id))} />
       )}
 
       {tenant || requests.length > 0 ? (

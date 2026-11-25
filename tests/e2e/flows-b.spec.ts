@@ -52,9 +52,18 @@ test('the tenant issues a visitor pass for today and finds its QR in the wallet'
   const code = ((await qr.getAttribute('aria-label')) ?? '').replace('رمز تصريح الدخول', '').trim();
   expect(code).not.toEqual('');
 
-  await page.getByRole('link', { name: 'اعرضه في وثائقي' }).click();
+  // The confirmation shows the same start and end, date and time, as the wallet does for the same pass.
+  const validity = async () => ({
+    from: await main.locator('dt', { hasText: 'صالح من' }).first().locator('xpath=following-sibling::dd[1]').innerText(),
+    to: await main.locator('dt', { hasText: 'حتى' }).first().locator('xpath=following-sibling::dd[1]').innerText(),
+  });
+  const issued = await validity();
+  expect(issued.from).toMatch(/\d{4}،\s*\d{1,2}:\d{2}/);
+
+  await page.getByRole('link', { name: 'اعرضه في «وثائقي وتصاريحي»' }).click();
   await expect(page).toHaveURL(/#\/account\/wallet\/[^/]+$/);
   await expect(page.getByText(code).first()).toBeVisible();
+  expect(await validity()).toEqual(issued);
   await expect(page.locator('main svg[role="img"]').first()).toBeVisible();
   expect(real(errors)).toEqual([]);
 });

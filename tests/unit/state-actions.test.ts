@@ -54,6 +54,7 @@ import {
   selectDoc,
   selectPlots,
   selectRequest,
+  selectRequestsOfPlot,
   selectStation,
   selectThread,
   selectUnreadCount,
@@ -216,6 +217,12 @@ describe('the prospect journey, end to end', () => {
     expect(selectWaitingCount(getState())).toBe(1);
     expect(world().notifications.some((n) => n.kind === 'action' && n.route === `/requests/${offer.id}` && !n.read)).toBe(true);
     expect(world().notifications.some((n) => n.kind === 'done' && n.route === `/requests/${application}`)).toBe(true);
+    // Notifications name the request with its noun label, not the service's call to action.
+    const applied = world().notifications.find((n) => n.kind === 'done' && n.route === `/requests/${application}`);
+    expect(plain(applied?.title.en)).toMatch(/^Land application/);
+    expect(plain(applied?.title.ar)).toMatch(/^طلب أرض/);
+    const asked = world().notifications.find((n) => n.kind === 'action' && n.route === `/requests/${offer.id}`);
+    expect(plain(asked?.body.en)).not.toMatch(/^(Apply|Accept|Request)\b/);
     expect(world().plots).toEqual([]);
     expect(selectStation(getState())).toBe('join');
 
@@ -404,6 +411,22 @@ describe('a payment inside a request', () => {
     expect(selectJourneyOfPlot('AW-116')(getState())).not.toBe(first);
     markAllRead();
     expect(selectJourneyOfPlot('BA-121')(getState())).not.toBe(first);
+  });
+
+  it('gives the same list or summary for the same world, and a new one when the world changes', () => {
+    enterAs('tenant');
+    const state = getState();
+    const request = state.world.requests.find((candidate) => candidate.docIds.length > 0) as RequestState;
+    const plotId = request.plotId as string;
+    const reads = [selectThread(request.id), selectDocsOfRequest(request.id), selectRequestsOfPlot(plotId), selectDocsOfPlot(plotId), selectDues, selectPassesOfRequest(request.id)];
+    for (const read of reads) expect(read(getState())).toBe(read(state));
+    // A fresh selector (a screen builds one each render) still returns the remembered value.
+    expect(selectThread(request.id)(getState())).toBe(selectThread(request.id)(state));
+    expect(selectDocsOfRequest(request.id)(getState())).toBe(selectDocsOfRequest(request.id)(state));
+    expect(selectDocsOfRequest(request.id)(state).length).toBeGreaterThan(0);
+    markAllRead();
+    expect(selectDocsOfRequest(request.id)(getState())).not.toBe(selectDocsOfRequest(request.id)(state));
+    expect(selectDocsOfRequest(request.id)(getState())).toEqual(selectDocsOfRequest(request.id)(state));
   });
 });
 

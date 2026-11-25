@@ -1,13 +1,13 @@
 import { CircleAlert } from 'lucide-react';
 import { useLang, useT } from '@/app/i18n';
-import { getService } from '@/data/catalog';
+import { getService, requestLabelOf } from '@/data/catalog';
 import { Pill, Row } from '@/design/core';
 import type { RequestState } from '@/domain/types';
 import type { RequestView } from '@/state';
 import { hasDayClock } from './logic';
 import { RequestRing } from './RequestRing';
 import { strings } from './strings';
-import { useHolderWords, useRequestName, useRequestView } from './useRequestFacts';
+import { useHolderWords, useRequestView } from './useRequestFacts';
 
 export interface RequestRowProps {
   request: RequestState;
@@ -29,7 +29,7 @@ export function useRowSubtitle(): (request: RequestState, view: RequestView | un
     if (view.holder.lane === 'inv') return t('withYouAgo', { ago: fmt.relative(view.heldSince ?? request.updatedAt, now) });
     const where = words.phrase(view.holder);
     const { clock } = view;
-    if (hasDayClock(request.serviceId, clock)) return `${where} · ${t('dayOf', { n: fmt.num(clock.dayNumber), m: fmt.num(clock.targetDays ?? 0) })}`;
+    if (hasDayClock(clock)) return `${where} · ${t('dayOf', { n: fmt.num(clock.dayNumber), m: fmt.num(clock.targetDays ?? 0) })}`;
     if (view.expectedAt !== undefined && view.expectedAt - now > HOUR) return `${where} · ${t('expectedShort', { when: fmt.relative(view.expectedAt, now) })}`;
     return where;
   };
@@ -38,14 +38,14 @@ export function useRowSubtitle(): (request: RequestState, view: RequestView | un
 /** One request in a list: its name, who holds it now, the service-standard ring, a link to its page. */
 export function RequestRow({ request, now }: RequestRowProps) {
   const t = useT(strings);
+  const { pick } = useLang();
   const view = useRequestView(request, now);
   const subtitle = useRowSubtitle();
-  const name = useRequestName();
   const summary = getService(request.serviceId);
   return (
     <Row
       to={`/requests/${request.id}`}
-      title={name(request.serviceId, summary?.label) || request.ref}
+      title={(summary ? pick(requestLabelOf(summary)) : '') || request.ref}
       subtitle={subtitle(request, view, now)}
       leading={<RequestRing request={request} view={view} size="sm" />}
       eyebrow={

@@ -1,14 +1,13 @@
 import { CircleAlert, CircleCheck, Clock, FileQuestion, type LucideIcon } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { useParams } from '@/app/routes';
-import { Button, Card, EmptyState, List, Money, Pill, Screen, Section, type Tone } from '@/design/core';
+import { Button, Card, EmptyState, keepWhole, List, Money, Pill, Row, Screen, Section, type Tone } from '@/design/core';
 import { Skeleton } from '@/design/forms';
 import { getZone } from '@/data/catalog';
 import type { InvoiceStatus } from '@/domain/types';
 import { useNow } from '@/features/shared/useNow';
 import { DocRow } from '@/features/wallet/DocRow';
-import { Atom, CodedText } from '@/features/wallet/Unbroken';
 import { selectDoc, selectInvoice, selectLeases, selectPlots, selectRequest, useApp, useCatalogueReady } from '@/state';
 import { DueText } from './InvoiceRow';
 import { dueLine } from './logic';
@@ -79,32 +78,33 @@ export function InvoiceScreen() {
           </Pill>
         </header>
         <h2 id="invoice-title" className={styles.statementTitle}>
-          <CodedText text={pick(invoice.title)} />
+          {keepWhole(pick(invoice.title))}
         </h2>
         <p className={styles.statementAmount}>
           <Money amount={invoice.amount} size="display" />
         </p>
         <DueText invoice={invoice} now={now} />
 
-        <dl className={styles.facts}>
-          <Fact label={t('reference')} value={<Atom code>{invoice.ref}</Atom>} />
-          {lease ? <Fact label={t('lease')} value={<Atom code>{lease.ref}</Atom>} /> : null}
+        <List variant="plain" className={styles.facts}>
+          <Row fact title={t('reference')} trailing={<span className="ltr">{invoice.ref}</span>} />
+          {lease ? <Row fact title={t('lease')} trailing={<span className="ltr">{lease.ref}</span>} /> : null}
           {plot ? (
-            <Fact
-              label={t('plot')}
-              value={
-                <>
-                  <Atom code>{plot.number}</Atom>
+            <Row
+              fact
+              title={t('plot')}
+              trailing={
+                <span>
+                  <span className="ltr">{plot.number}</span>
                   {zone ? <> ·{'\u00A0'}{pick(zone.name)}</> : null}
-                </>
+                </span>
               }
             />
           ) : null}
-          {request ? <Fact label={t('request')} value={<Atom code>{request.ref}</Atom>} /> : null}
-          <Fact label={t('issued')} value={<Atom>{fmt.date(invoice.issuedAt)}</Atom>} />
-          <Fact label={t('dueDate')} value={<Atom>{fmt.date(invoice.dueAt)}</Atom>} />
-          {invoice.paidAt !== undefined ? <Fact label={t('paidDate')} value={<Atom>{fmt.date(invoice.paidAt)}</Atom>} /> : null}
-        </dl>
+          {request ? <Row fact title={t('request')} trailing={<span className="ltr">{request.ref}</span>} /> : null}
+          <Row fact title={t('issued')} trailing={fmt.date(invoice.issuedAt)} />
+          <Row fact title={t('dueDate')} trailing={fmt.date(invoice.dueAt)} />
+          {invoice.paidAt !== undefined ? <Row fact title={t('paidDate')} trailing={fmt.date(invoice.paidAt)} /> : null}
+        </List>
       </Card>
 
       {receipt ? (
@@ -126,14 +126,5 @@ export function InvoiceScreen() {
         onClose={() => setPaying(false)}
       />
     </Screen>
-  );
-}
-
-function Fact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className={styles.fact}>
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
   );
 }

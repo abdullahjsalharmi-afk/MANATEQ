@@ -1,10 +1,10 @@
 import { useCallback } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { peekServiceDetail } from '@/data/catalog';
-import type { L10n, ServiceDetail, ServiceId } from '@/data/types';
+import type { L10n, ServiceDetail } from '@/data/types';
 import type { Holder, RequestState } from '@/domain/types';
 import { requestView, selectSpeed, useApp, useCatalogueReady, type RequestView } from '@/state';
-import { entityNamesEn, requestNames, strings } from './strings';
+import { strings } from './strings';
 
 /**
  * The live view of one request (holder, clock, timeline, pending action), or undefined while the
@@ -25,48 +25,24 @@ export interface HolderWords {
   headline: (holder: Holder) => string;
 }
 
-/**
- * The entity behind a national platform's name: "نظام رخص البناء (وزارة البلدية)" → "وزارة البلدية".
- * Names without an entity in brackets are kept whole.
- */
-export function entityOf(name: string): string {
-  const match = /[(（]([^()（）]+)[)）]\s*$/.exec(name);
-  return match?.[1]?.trim() || name;
-}
-
-/** A name without its bracketed part: "الهيئة العامة للجمارك (النديب)" → "الهيئة العامة للجمارك". */
-const withoutBrackets = (name: string): string => name.replace(/\s*[(（][^()（）]+[)）]\s*$/, '').trim() || name;
+/** A platform's name without its bracketed part: "الهيئة العامة للجمارك (النديب)" → "الهيئة العامة للجمارك". */
+export const withoutBrackets = (name: string): string => name.replace(/\s*[(（][^()（）]+[)）]\s*$/, '').trim() || name;
 
 /**
- * Who a national step is with, the same in both languages. The Arabic platform names carry their
- * entity in brackets; the English ones do not, so a known entity is named from `entityNamesEn`, and a
- * bracket that is not an entity (a system's own name) is dropped.
+ * Who a national step is with, the same in both languages: the entity behind the platform when the state
+ * names one (`holder.entity`, "Ministry of Municipality" / "the Ministry of Municipality"), else the
+ * platform's own name without a bracketed system name.
  */
-export function nationalHolder(name: L10n, lang: 'ar' | 'en'): { headline: string; phrase: string } {
-  const bracket = entityOf(name.ar);
-  const known = bracket !== name.ar ? entityNamesEn[bracket] : undefined;
-  if (lang === 'ar') {
-    const entity = known ? bracket : withoutBrackets(name.ar);
-    return { headline: entity, phrase: entity };
-  }
-  if (known) return known;
-  const entity = withoutBrackets(name.en);
-  return { headline: entity, phrase: entity };
-}
-
-/** The name of a request: a noun («طلب أرض»), not the call to action that starts one («قدّم طلب أرض»). */
-export function useRequestName(): (serviceId: ServiceId, label: L10n | undefined) => string {
-  const { pick } = useLang();
-  return useCallback((serviceId, label) => {
-    const named = requestNames[serviceId];
-    return named ? pick(named) : label ? pick(label) : '';
-  }, [pick]);
+export function nationalHolder(holder: Pick<Holder, 'name' | 'entity'>, pick: (text: L10n) => string): { headline: string; phrase: string } {
+  if (holder.entity) return { headline: pick(holder.entity.name), phrase: pick(holder.entity.inText) };
+  const name = withoutBrackets(pick(holder.name));
+  return { headline: name, phrase: name };
 }
 
 /** Words for whoever holds a request now, in the voice of the requests feature. */
 export function useHolderWords(): HolderWords {
   const t = useT(strings);
-  const { lang } = useLang();
+  const { pick } = useLang();
   const phrase = useCallback(
     (holder: Holder): string => {
       switch (holder.lane) {
@@ -81,12 +57,12 @@ export function useHolderWords(): HolderWords {
         case 'field':
           return t('withField');
         case 'nat': {
-          const name = nationalHolder(holder.name, lang).phrase;
+          const name = nationalHolder(holder, pick).phrase;
           return name ? t('withEntity', { name }) : t('withGovernment');
         }
       }
     },
-    [t, lang],
+    [t, pick],
   );
   const headline = useCallback(
     (holder: Holder): string => {
@@ -102,10 +78,10 @@ export function useHolderWords(): HolderWords {
         case 'field':
           return t('holderField');
         case 'nat':
-          return nationalHolder(holder.name, lang).headline || t('holderGovernment');
+          return nationalHolder(holder, pick).headline || t('holderGovernment');
       }
     },
-    [t, lang],
+    [t, pick],
   );
   return { phrase, headline };
 }

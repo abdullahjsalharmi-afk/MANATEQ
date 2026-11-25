@@ -1,5 +1,3 @@
-import type { PluralForms } from '@/app/i18n';
-
 /** Words of the requests feature: the list, the request page and the action runner. */
 export const strings = {
   /* ── list ── */
@@ -155,59 +153,3 @@ export const strings = {
   paidWithOfferRef: { ar: 'سدّدت التأمين مع العرض (الإيصال {ref}). لا يُطلب منك سداده مرة أخرى.', en: 'You paid the deposit with the offer (receipt {ref}). You will not be asked to pay it again.' },
   receiptFiled: { ar: 'تم السداد. الإيصال {ref} في محفظتك.', en: 'Paid. Receipt {ref} is in your wallet.' },
 } as const;
-
-/** "5 أيام عمل" · "5 working days", for the service-standard clock (nominative: «المعيار يوما عمل»). */
-export const workingDays: PluralForms = {
-  ar: { one: 'يوم عمل واحد', two: 'يوما عمل', few: '{n} أيام عمل', many: '{n} يوم عمل', other: '{n} يوم عمل' },
-  en: { one: '{n} working day', other: '{n} working days' },
-};
-
-/** The same after a preposition («اكتمل في يومَي عمل»): the Arabic dual takes the genitive. */
-export const workingDaysAfter: PluralForms = {
-  ar: { one: 'يوم عمل واحد', two: 'يومَي عمل', few: '{n} أيام عمل', many: '{n} يوم عمل', other: '{n} يوم عمل' },
-  en: { one: '{n} working day', other: '{n} working days' },
-};
-
-/**
- * What a request is called once it exists: a noun, never the service's call to action («قدّم طلب أرض» is
- * the button that starts one; the request it starts is «طلب أرض»). Services named as nouns already keep
- * their label.
- */
-export const requestNames: Partial<Record<string, { ar: string; en: string }>> = {
-  A1: { ar: 'استفسار عن أرض أو مستودع', en: 'Land or warehouse enquiry' },
-  A2: { ar: 'فحص أهلية النشاط', en: 'Activity eligibility check' },
-  A3: { ar: 'ملف الشركة الموثّق', en: 'Verified company profile' },
-  A4: { ar: 'طلب أرض', en: 'Land application' },
-  A8: { ar: 'موعد تسليم القطعة', en: 'Plot handover appointment' },
-  B4: { ar: 'تغيير مساحة القطعة', en: 'Plot area change' },
-  B5: { ar: 'تغيير النشاط أو إضافته', en: 'Activity change' },
-  B6: { ar: 'تنازل أو تأجير من الباطن', en: 'Lease transfer or sublease' },
-  B7: { ar: 'إنهاء العقد وإعادة القطعة', en: 'Lease end and plot return' },
-  B8: { ar: 'كشف أو شهادة', en: 'Statement or certificate' },
-  C1: { ar: 'مراجعة التصميم', en: 'Design review' },
-  C5: { ar: 'طلب ألياف أو تغطية خلوية', en: 'Fibre or mobile coverage order' },
-  C6: { ar: 'تصريح تحضير الموقع', en: 'Mobilisation permit' },
-  C9: { ar: 'موافقة تجهيز أو توسعة', en: 'Fit-out or extension approval' },
-  D1: { ar: 'بلاغ عطل في المنطقة', en: 'Maintenance report' },
-  D2: { ar: 'تصريح دخول', en: 'Gate pass' },
-  D3: { ar: 'بلاغ طارئ', en: 'Emergency report' },
-  D5: { ar: 'إقرار بيئي', en: 'Environmental declaration' },
-  D7: { ar: 'تسجيل سكن العمال', en: 'Worker accommodation registration' },
-  E1: { ar: 'طلب مساعدة أو موعد', en: 'Help or appointment request' },
-  E2: { ar: 'خطاب أو شهادة عدم ممانعة', en: 'Letter or NOC' },
-  E3: { ar: 'إحالة إلى التمويل أو الحوافز', en: 'Financing or incentive referral' },
-  E4: { ar: 'بحث عن الأراضي والفرص', en: 'Plot and opportunity search' },
-  E6: { ar: 'شكوى أو ملاحظة', en: 'Complaint or feedback' },
-  F1: { ar: 'بحث عن مساحة تخزين', en: 'Warehouse space search' },
-  G1: { ar: 'تسجيل مورّد', en: 'Vendor registration' },
-};
-
-/**
- * English names of the entity behind a national platform, keyed by the Arabic entity in brackets
- * («نظام رخص البناء الإلكتروني (وزارة البلدية)»): the English platform names carry no brackets, so both
- * languages name the same entity.
- */
-export const entityNamesEn: Partial<Record<string, { headline: string; phrase: string }>> = {
-  'وزارة البلدية': { headline: 'Ministry of Municipality', phrase: 'the Ministry of Municipality' },
-  'وزارة التجارة والصناعة': { headline: 'Ministry of Commerce and Industry', phrase: 'the Ministry of Commerce and Industry' },
-};

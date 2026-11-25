@@ -15,16 +15,16 @@ export const settingsStrings = {
   size1: { ar: 'عادي', en: 'Default' },
   size2: { ar: 'كبير', en: 'Large' },
   size3: { ar: 'أكبر', en: 'Largest' },
-  preview: { ar: 'هكذا تقرأ طلباتك ومواعيدك في مناطق ون.', en: 'This is how your requests and appointments read in Manateq One.' },
+  preview: { ar: 'هكذا تقرأ طلباتك ومواعيدك في «مناطق ون».', en: 'This is how your requests and appointments read in Manateq One.' },
   previewLabel: { ar: 'معاينة', en: 'Preview' },
 
   notifications: { ar: 'الإشعارات', en: 'Notifications' },
   notify: { ar: 'إشعارات الطلبات والمستحقات', en: 'Request and payment notifications' },
   notifyHint: { ar: 'نخبرك حين يحتاج طلب إلى إجراء منك، وقبل موعد كل فاتورة.', en: 'We tell you when a request needs you, and before each invoice falls due.' },
   channelApp: { ar: 'التطبيق', en: 'In the app' },
-  channelAppLine: { ar: 'في مركز الإشعارات داخل مناطق ون', en: 'In the notifications centre of Manateq One' },
+  channelAppLine: { ar: 'في مركز الإشعارات داخل «مناطق ون»', en: 'In the notifications centre of Manateq One' },
   channelSms: { ar: 'الرسائل النصية', en: 'Text messages' },
-  channelSmsLine: { ar: 'إلى الرقم المسجّل في نظام التوثيق الوطني «توثيق»', en: 'To the number registered with the National Authentication System “Tawtheeq”' },
+  channelSmsLine: { ar: 'إلى الرقم المسجّل في نظام التوثيق الوطني «توثيق»', en: 'To the number registered with the National Authentication System (Tawtheeq)' },
   channelEmail: { ar: 'البريد الإلكتروني', en: 'Email' },
   channelEmailLine: { ar: 'إلى بريد الشركة المسجّل', en: 'To the company’s registered email' },
   on: { ar: 'مفعّل', en: 'On' },
@@ -113,7 +113,7 @@ export const supportStrings = {
   q5: { ar: 'ما البيانات التي يجلبها التطبيق؟', en: 'What data does the app fetch?' },
   a5: {
     ar: 'في الخدمة الفعلية: هويتك من نظام التوثيق الوطني «توثيق»، وبيانات شركتك من منصة تبادل البيانات الحكومية، وبيانات القطع من نظام المعلومات الجغرافية، بموافقتك وبقدر ما يحتاجه الطلب فقط. هذه النسخة التجريبية لا تجلب شيئًا: كل ما تراه بيانات توضيحية محفوظة على جهازك.',
-    en: 'In the real service: your identity from the National Authentication System “Tawtheeq”, your company data from the Government Data Exchange and plot data from the geographic information system, with your consent and only as much as a request needs. This prototype fetches nothing: everything you see is illustrative data kept on your device.',
+    en: 'In the real service: your identity from the National Authentication System (Tawtheeq), your company data from the Government Data Exchange and plot data from the geographic information system, with your consent and only as much as a request needs. This prototype fetches nothing: everything you see is illustrative data kept on your device.',
   },
 } as const;
 
@@ -123,7 +123,7 @@ export const aboutStrings = {
   headline: { ar: 'رفيق لرحلة واحدة.', en: 'A companion for one journey.' },
   tagline: { ar: 'من الانضمام إلى التشغيل.', en: 'From joining to operation.' },
   idea: {
-    ar: 'تعرف مناطق ون خطوة المستثمر التالية في كل وقت، فلا يبحث بين خمسين نموذجًا. تجمع خدمات مناطق في رحلة واحدة، وتبيّن عند مَن كل طلب ومتى ينتهي.',
+    ar: 'تعرف «مناطق ون» خطوة المستثمر التالية في كل وقت، فلا يبحث بين خمسين نموذجًا. تجمع خدمات مناطق في رحلة واحدة، وتبيّن عند مَن كل طلب ومتى ينتهي.',
     en: 'Manateq One always knows the investor’s next step, so nobody has to search through fifty forms. It gathers Manateq’s services into one journey and shows who holds each request and when it should finish.',
   },
 
@@ -136,7 +136,7 @@ export const aboutStrings = {
   rule3: { ar: 'الحالة ظاهرة دائمًا', en: 'Status is always visible' },
   rule3Text: { ar: 'كل طلب يبيّن عند مَن هو الآن، ومعيار خدمته، والوقت الذي مضى منه.', en: 'Every request shows who holds it now, its service standard and the time used so far.' },
   rule4: { ar: 'كل وثيقة قابلة للتحقق', en: 'Every document is verifiable' },
-  rule4Text: { ar: 'تُولَّد وتوقَّع إلكترونيًا وتحمل رمز تحقق، وتُحفظ في مكان واحد: «وثائقي».', en: 'Generated, e-signed and carrying a verification code, kept in one place: Documents.' },
+  rule4Text: { ar: 'تُولَّد وتوقَّع إلكترونيًا وتحمل رمز تحقق، وتُحفظ في مكان واحد: «وثائقي وتصاريحي».', en: 'Generated, e-signed and carrying a verification code, kept in one place: Documents and passes.' },
   rule5: { ar: 'الهدوء', en: 'Calm' },
   rule5Text: { ar: 'لون تمييز واحد، وخطوط رفيعة بدل الظلال، ومساحة واسعة، ولا زخرفة لا تفيد.', en: 'One accent colour, hairlines instead of shadows, generous space and no decoration that does not inform.' },
   rule6: { ar: 'الصدق', en: 'Honesty' },
@@ -145,7 +145,7 @@ export const aboutStrings = {
   simulated: { ar: 'ما الذي يُحاكى هنا', en: 'What is simulated here' },
   simulatedHint: { ar: 'هذه نسخة تجريبية للعرض، وليست الخدمة الرسمية لشركة مناطق.', en: 'This is a prototype for demonstration, not Manateq’s official service.' },
   simSignIn: { ar: 'الدخول', en: 'Sign-in' },
-  simSignInText: { ar: 'تختار ملفًا تجريبيًا بدل الدخول عبر نظام التوثيق الوطني «توثيق».', en: 'You choose a demo profile instead of signing in with the National Authentication System “Tawtheeq”.' },
+  simSignInText: { ar: 'تختار ملفًا تجريبيًا بدل الدخول عبر نظام التوثيق الوطني «توثيق».', en: 'You choose a demo profile instead of signing in with the National Authentication System (Tawtheeq).' },
   simData: { ar: 'البيانات الحكومية', en: 'Government data' },
   simDataText: { ar: 'بيانات الشركة والسجل من ملف تجريبي، لا من منصة تبادل البيانات الحكومية.', en: 'Company and registration data come from a demo profile, not the Government Data Exchange.' },
   simPay: { ar: 'الدفع', en: 'Payment' },

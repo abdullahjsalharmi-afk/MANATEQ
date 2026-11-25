@@ -20,7 +20,7 @@ import { useLang, useT } from '@/app/i18n';
 import { useParams } from '@/app/routes';
 import { getIntegration, getService, getSystem, reference } from '@/data/catalog';
 import type { ReceiveKind, ServiceDetail, ServiceSummary } from '@/data/types';
-import { standardFigure, standardHeadline } from '@/domain/standard';
+import { standardHeadline } from '@/domain/standard';
 import { useService } from '@/features/shared/useService';
 import { bespokeFlows, startRedirects } from '@/features/flows/registry';
 import { buildPages } from '@/features/start/paginate';
@@ -121,7 +121,7 @@ function ServicePage({ summary, detail, loading, failed }: ServicePageProps) {
             <span className={styles.promise}>{pick(summary.promise)}</span>
           </>
         }
-        actions={<HeroStandard summary={summary} />}
+        actions={<StandardBadge variant="hero" standard={summary.standard} fallback={heroWords(pick(summary.standard))} />}
         media={<Render name={renderOfDomain(summary.domain)} eager decorative />}
       />
 
@@ -171,39 +171,17 @@ function draftStepOf(id: string, detail: ServiceDetail | undefined, page: number
 }
 
 /**
- * The standard as the hero's figure: one large line ("3 أيام عمل", "فوري") with «استرشادي» in fine print. A standard
- * without a headline duration shows its first clause in its own words; the full sentence is in the card below.
+ * The hero's words for a standard with no headline duration: its first clause when it is short enough for the
+ * large figure, e.g. "تأكيد الاكتمال عند التقديم؛ إشعار …" → "تأكيد الاكتمال عند التقديم". A longer clause would fill
+ * the tile, so the hero then shows no figure. The full sentence stays in the card below either way.
  */
-function HeroStandard({ summary }: { summary: ServiceSummary }) {
-  const t = useT(strings);
-  const { lang, pick } = useLang();
-  const figure = standardFigure(summary.standard, lang);
-  const clause = figure ? null : firstClause(pick(summary.standard));
-  if (!figure && !clause) return null;
-  return (
-    <div className={styles.heroStandard}>
-      <p className={figure ? styles.heroFigure : styles.heroClause}>
-        <span className="visually-hidden">{t('standard')}: </span>
-        {figure ? (
-          <>
-            {figure.value !== null ? <span className="num">{figure.value} </span> : null}
-            {figure.words}
-          </>
-        ) : (
-          clause
-        )}
-      </p>
-      <p className={styles.heroFine}>
-        {t('standard')} · {t('indicative')}
-      </p>
-    </div>
-  );
+function heroWords(text: string): string | undefined {
+  const clause = (text.split(/[؛;]/)[0] ?? '').trim().replace(/[.،,]$/, '');
+  return clause && clause.split(/\s+/).length <= HERO_WORDS ? clause : undefined;
 }
 
-/** "تأكيد الاكتمال عند التقديم؛ إشعار …" → "تأكيد الاكتمال عند التقديم". */
-function firstClause(text: string): string {
-  return (text.split(/[؛;]/)[0] ?? '').trim().replace(/[.،,]$/, '');
-}
+/** The longest clause, in words, that the hero shows as its figure. */
+const HERO_WORDS = 4;
 
 function Details({ detail }: { detail: ServiceDetail }) {
   const t = useT(strings);

@@ -3,6 +3,7 @@
  * station, how they are searched (Arabic and English at once), where "start" leads, and the short list
  * of services the investor looked at recently.
  */
+import { buildTarget } from '@/app/router';
 import { resolveRoute } from '@/app/routes';
 import { domains, services as allServices } from '@/data/catalog';
 import type { Domain, DomainCode, L10n, ServiceId, ServiceSummary } from '@/data/types';
@@ -145,9 +146,9 @@ export function startTarget(id: ServiceId, persona: Persona): string {
   return persona === 'guest' ? signInThen(`/start/${id}`) : `/start/${id}`;
 }
 
-/** The welcome screen, asked to bring the guest back to `next` once signed in: "/welcome?next=%2Fstart%2FD1". */
+/** The welcome screen, asked to bring the guest back to `next` once signed in: "/welcome?next=%2Fstart%2FD1" (the same address the app shell builds for a deep link). */
 export function signInThen(next: string): string {
-  return `/welcome?next=${encodeURIComponent(next)}`;
+  return buildTarget('/welcome', { next });
 }
 
 /** Where an automatic service is followed, for the quiet link under its explanation. */

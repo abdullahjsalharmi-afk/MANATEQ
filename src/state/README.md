@@ -15,20 +15,24 @@ the actions below. All world text is bilingual `L10n` (read it with `pick()`); a
 - `RequestState`: `id`, `ref` ("MQ-2611-0042"), `serviceId`, `threadId` (A4 → A5 → A6 → A7 → A8 share one),
   `parentId?`, `createdAt`, `updatedAt`, `form`, `plotId?`, `zoneCode?`, `visits[]` (`{ step, enteredAt, doneAt?,
   outcome? }`), `current` (open step id or null), `status` ('active'|'needs_you'|'done'|'stopped'), `investorMs`,
-  `docIds[]`, `amount?`, `rating?`. `holdOf(request)` tells when a seeded step is held until.
+  `docIds[]`, `amount?`, `rating?`, `prepaidDocId?` (the receipt that already covers the open step's payment:
+  the deposit paid with the offer, A6, in the same thread; the step then asks for no payment).
+  `holdOf(request)` tells when a seeded step is held until.
 - A `Plot.id` and `Plot.number` are always a plot of its zone's layout (`plotsFor(zone)`, "BA-121").
-- `Pass.kind` is `'visitor' | 'worker' | 'vehicle'`.
+- `Pass.kind` is `'visitor' | 'worker' | 'vehicle'`; `Pass.requestId?` is the request that issued it (D2).
 
 ## Reading: selectors (`useApp(selectX)` or `useApp(selectX(id))`)
 
 | Selector | Returns |
 |---|---|
-| `selectNextStep` / `selectNextSteps` | `NextStep \| null` / `NextStep[]` most urgent first: `{ id, kind: 'request_action'\|'invoice'\|'start_service'\|'renewal', title, context, cta, route, urgency, dueAt? }` |
+| `selectNextStep` / `selectNextSteps` | `NextStep \| null` / `NextStep[]` most urgent first: `{ id, kind: 'request_action'\|'invoice'\|'start_service'\|'renewal', title, context, cta, route, urgency, dueAt?, invoiceId? }`. `invoiceId` is set on an invoice step, so the screen can open the payment sheet in place. A suggestion's `context` is the plot and the service's one-line `hint`. |
 | `selectJourney` / `selectJourneyOfPlot(id)` | `Journey { station, plotId \| null, stations: [{ key, name, state, items: [{ serviceId, state: 'done'\|'current'\|'upcoming', requestId?, canStart }] }] }` |
 | `selectStation` | `'join' \| 'contract' \| 'build' \| 'operate'` |
 | `selectActiveRequests` / `selectDoneRequests` | `RequestState[]` (waiting for the investor first / latest first) |
 | `selectRequest(id)` · `selectThread(id)` · `selectRequestsOfPlot(id)` | one request / its chain oldest first / a plot's requests |
 | `selectDocsOfRequest(id)` · `selectDeadline(id)` | `Doc[]` it issued / `number \| undefined` (renewal: lease end; offer: 14 days) |
+| `selectPassesOfRequest(id)` | `Pass[]` the request issued (D2), latest first |
+| `selectStepAmount(requestId: string \| undefined, action: Pick<StepAction, 'amount'> \| null \| undefined)` | `number \| undefined`: what the open step will charge (`request.amount`, else `amountFor`); undefined when it charges nothing (no action, or `request.prepaidDocId` is set) |
 | `selectWaitingCount` · `selectUnreadCount` | badge numbers |
 | `selectDues` | `{ total, count, overdue, next: Invoice \| null }` |
 | `selectInvoices` · `selectInvoice(id)` | outstanding first (soonest due), then paid (latest first) |
@@ -38,7 +42,10 @@ the actions below. All world text is bilingual `L10n` (read it with `pick()`); a
 | `selectPlots` · `selectPlot(id)` · `selectLeases` · `selectLeaseOfPlot(id)` | records as stored |
 | `selectAppointments` · `selectDraft(serviceId)` · `selectCompany` · `selectPersona` · `selectSpeed` | |
 
-Lists keep their identity between renders; do not build new arrays inside a selector you pass to `useApp`.
+Every selector that returns a list or an object gives the same value for the same world, even when
+`selectX(id)` is built afresh on each render (lists are kept per world and per id): a screen re-renders
+only when the world changes, and `useMemo` on a selected value holds. Do not build new arrays inside a
+selector you pass to `useApp`.
 
 ## Reading one request
 
@@ -50,15 +57,22 @@ const view = requestView(request, service, now, speed);   // RequestView
 ```
 
 `RequestView = { status, holder: Holder | null, currentStep, pendingAction: StepAction | null, clock, progress (0-1),
-timeline: TimelineEntry[], heldSince?, expectedAt?, finishedAt? }`. `Holder = { lane, name }`; the investor is "You",
-a national step is named after its platform. `TimelineEntry = { id, step, kind, title, text, lane, holderName,
+timeline: TimelineEntry[], heldSince?, expectedAt?, finishedAt?, focus }`. `Holder = { lane, name, entity? }`; the
+investor is "You", a national step is named after its platform, and `entity = { name, inText }` names the body
+behind it in both languages ("Ministry of Municipality" / "the Ministry of Municipality"). `holderOf(step) → Holder`.
+
+`view.focus: { step: WorkflowStep; holder: Holder; expectedAt?: number } | null` is the step a headline describes:
+the open step, or, while the open step is a decision or a step Manateq's systems run by themselves, the next step a
+person or an entity holds. Null when nothing human is left. Never put a step's raw text in a headline: use the
+action title, the holder or `expectedAt`; the book's wording belongs in the timeline. `TimelineEntry = { id, step, kind, title, text, lane, holderName,
 state: 'done'|'current'|'upcoming', time?, auto, outcome?, standard }`. `timelineRows(entries, lang, now)` gives
 `TimelineRow { id, title, text?, lane, holderName?, state, time?, auto, outcome?, standard? }` as display strings.
 
 `view.clock` is the service-standard clock (`StandardClock { usedDays, targetDays | null, ratio | null, dayNumber }`),
 in working days of the story: seeded requests carry calendar dates, live ones demo seconds, and the clock reads
-both correctly. Never rebuild it from timestamps. Time waiting for the investor never counts. `ratio` is null when
-the standard has no duration. `standardClockOf(request, service, now, speed)` gives the clock alone.
+both correctly. Never rebuild it from timestamps. Time waiting for the investor never counts. `targetDays` and
+`ratio` are null when the standard has no duration, or promises an update per event rather than a deadline (C2,
+C3): show the standard text, no ring and no "Day n of m". `standardClockOf(request, service, now, speed)` gives the clock alone.
 
 ### The action card
 
@@ -66,17 +80,23 @@ the standard has no duration. `standardClockOf(request, service, now, speed)` gi
 document?, docs?, options?, fields? }`. Atoms: accept, pay, sign, upload, choose, form, rate, reference, declare,
 schedule, acknowledge. When `options` exist, show the choice first, then only `stepTasks(serviceId, action, choice)`:
 
-- B2 step 3: `guarantee` → upload; `deposit` → pay (asks nothing more if the offer, A6, already took the deposit).
+`stepTasks(serviceId: ServiceId, action: Pick<StepAction, 'step' | 'flow'>, choice?: string, request?: Pick<RequestState, 'prepaidDocId'>): ActionAtom[]`
+(pass `request`: a prepaid step drops `pay`).
+
+- B2 step 3: `guarantee` → upload; `deposit` → pay (nothing to pay when the offer, A6, already took the deposit:
+  `request.prepaidDocId` names that receipt; show it with `selectDoc(request.prepaidDocId)`).
 - D6 step 5: `rectified` → upload; `appeal` / `extension` → form (reason).
 - B10 step 6: `paymentPlan` → choose only; `payNow` → pay (settles every unpaid invoice of the lease).
 
-The amount to show is `request.amount` (set as soon as the step opens).
+The amount to show is `useApp(selectStepAmount(request.id, action))`: exactly what the state will charge.
+`amountFor(world: World, request: RequestState, action: Pick<StepAction, 'amount'>): number` is the rule behind it.
 
 ## Changing: actions (all from `@/state`; each reads the clock once)
 
 | Action | What it does |
 |---|---|
 | `startRequest(serviceId, form?, { plotId?, zoneCode?, threadId?, parentId? }) → id` | Starts a service. `plotId` must be one of the investor's plots (or a `plot` field in `form`); for the land application (A4) it may be a plot of a zone's layout ("AW-117") with `zoneCode`. Anything else is ignored. Removes the service's draft. |
+| `completeStep(requestId: string, payload?: ActPayload) → StepResult` | `actOnRequest`, telling what it produced: `StepResult = { ok: boolean; receiptDocIds: string[] }` (oldest first). Run it when the payment sheet confirms, then show `selectDoc(receiptDocIds.at(-1))?.ref` ("RCP-2026-0101"): the receipt really filed. |
 | `actOnRequest(id, { choice?, form?, files?, rating? }) → boolean` | Completes the open investor step. `pay` files a paid invoice and receipt; `sign` / `accept` are recorded; `rate` takes 1-5 or `{ stars, comment? }`. Some choices steer: B4 `withdraw` stops the request; B7 `acceptCharge` skips the re-inspection; B10 and D6 choices decide the next decision. |
 | `fastForwardRequest(id)` | Demo control "تقديم الزمن": the open non-investor step finishes now. |
 | `cancelRequest(id)` | Withdraws an open request (status `stopped`). An application gives its plot back. |
@@ -90,6 +110,30 @@ The amount to show is `request.amount` (set as soon as the step opens).
 | `enterAs(persona)` · `signOut()` · `resetDemo()` | Seed a profile afresh / back to welcome / restart the profile at speed 1. |
 | `setSpeed(n)` · `setLang(l)` · `setTheme(t)` · `setTextSize(n)` · `setNotifications(on)` | Settings. |
 | `tick(now)` | Called once a second by `App.tsx`; nobody else calls it. |
+
+## Names, references and text the state writes
+
+- `receiptRefFor(invoiceRef: string): string` ("INV-2026-0051" → "RCP-2026-0051") is the one rule for a
+  receipt's reference (also from `@/state`). Never derive a receipt number from a request.
+- `requestLabelOf(service: Pick<ServiceSummary, 'label' | 'requestLabel'>): L10n` (`@/data/catalog`) is what a
+  request is called once it exists: a noun («طلب أرض» / "Land application"), never the call to action that starts it.
+  The state uses it in notifications and in the next step's context; screens use it for request rows and titles.
+  `ServiceSummary.requestLabel?` is set only where the label is a call to action. `ServiceSummary.hint?` is the
+  one-line suggestion text of the next-step card.
+- `Integration.entity?: { name: L10n; inText: L10n }` (`reference.json`) is the body behind a national platform.
+- `FieldDef.showIf?: { key: string; equals: string | boolean }`: the field is asked only while that answer has that
+  value; while hidden it is not asked, checked, reviewed or sent (E1 `preferredDate`).
+- `@/domain/text`: `keepWhole(text: string): string` keeps a code, an amount or a date on one line: a word joiner
+  (U+2060) after each real hyphen, the same rule as `keep()` / `ltr()` in `@/app/i18n` (never U+2011, which the
+  fonts lack), and no-break spaces. It is idempotent and only for display text, never for ids. `DOT` (no-break
+  space, `·`, space) is the list separator: the dot stays with the item before it, so no line starts with a dot.
+  Document titles, invoice titles, notifications and the next step are written with them, so their text carries
+  invisible joiners and no-break spaces: compare it as plain text in tests.
+- `@/domain/standard`: `durationText(value, unit, lang, options?: DurationOptions)` and
+  `standardHeadline(standard, lang, options?: DurationOptions)`; `DurationOptions = { afterPreposition?: boolean }`
+  gives the Arabic genitive dual after a preposition («في يومَي عمل»).
+- `leaseOfPlot(world: Pick<World, 'plots' | 'leases'>, plotId: string | undefined): Lease | undefined` lives in
+  `@/domain/plots`; `plotIdOfDoc(world: World, doc: Doc): string | undefined` (selectors) finds the plot a document is about.
 
 ## The demo clock
 
@@ -127,4 +171,5 @@ const id = startRequest('D1', { category: 'lighting', photo: { name: 'p.jpg' } }
 actOnRequest(id, { rating: { stars: 5, comment: 'شكرًا' } });
 actOnRequest(renewalId, { form: {} });                    // accept + sign + pay in one go after the sheets
 const receipt = payInvoice(dues.next!.id);                 // then navigate(`/account/wallet/${receipt}`)
+const { receiptDocIds } = completeStep(requestId, {});     // a pay step: show selectDoc(receiptDocIds.at(-1))?.ref
 ```

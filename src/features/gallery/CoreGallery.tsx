@@ -3,7 +3,7 @@
  * shell (global bar, frosted bar, tab bar, action bar, footer) and the layout primitives.
  * Open the sheet on load with `#/gallery?sheet=core`.
  */
-import { BadgeCheck, Bell, CircleAlert, Building2, CircleCheck, Clock, CreditCard, Download, FileText, House, LayoutGrid, ListChecks, MapPinned, CircleUserRound, Search, Share, TriangleAlert, Wrench } from 'lucide-react';
+import { BadgeCheck, Bell, CircleAlert, Building2, CircleCheck, Clock, CreditCard, Download, FileText, House, LayoutList, ListChecks, MapPinned, CircleUserRound, Search, Share, TriangleAlert, Wrench } from 'lucide-react';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { useQuery } from '@/app/routes';
@@ -85,7 +85,7 @@ const strings = {
   brandHeadline: { ar: 'وقّع عقد الإيجار', en: 'Sign the lease' },
   brandTagline: { ar: 'القطعة محجوزة لك حتى 30 نوفمبر.', en: 'The plot is held for you until 30 November.' },
   brandMore: { ar: 'و3 إجراءات أخرى', en: 'And 3 more actions' },
-  checkActivity: { ar: 'افحص أهلية نشاطك', en: 'Check your activity' },
+  checkActivity: { ar: 'افحص أهلية نشاطك', en: 'Check your eligibility' },
   seePlots: { ar: 'اعرض القطع', en: 'See the plots' },
   darkNote: { ar: 'كل مكوّن يُقرأ على الداكن: الرموز تتبدّل داخل البلاطة، واللون المميّز ذهبي.', en: 'Every component reads on dark: the tokens switch inside the tile, and the accent is gold.' },
 
@@ -294,7 +294,7 @@ export function CoreGallery() {
 
   const tabs: TabItem[] = [
     { key: 'home', to: '/gallery', label: t('tabHome'), icon: House },
-    { key: 'services', to: '/gallery', label: t('tabServices'), icon: LayoutGrid },
+    { key: 'services', to: '/gallery', label: t('tabServices'), icon: LayoutList },
     { key: 'requests', to: '/gallery', label: t('tabRequests'), icon: ListChecks, badge: 2 },
     { key: 'zones', to: '/gallery', label: t('tabZones'), icon: MapPinned },
     { key: 'account', to: '/gallery', label: t('tabAccount'), icon: CircleUserRound },
@@ -591,9 +591,9 @@ export function CoreGallery() {
             <Row leading={<Icon icon={FileText} />} eyebrow={fmt.ltr('MQ-2611-0042')} title={t('leaseCertificate')} subtitle={t('issuedToday')} trailing="PDF" />
           </List>
           <List>
-            <Row title={t('company')} trailing={t('companyValue')} />
-            <Row title={t('plot')} trailing={fmt.ltr('BA-214')} />
-            <Row title={t('dueDate')} trailing={t('dueDateValue')} to="/gallery" />
+            <Row fact title={t('company')} trailing={t('companyValue')} />
+            <Row fact title={t('plot')} trailing={fmt.ltr('BA-214')} />
+            <Row fact title={t('dueDate')} trailing={t('dueDateValue')} to="/gallery" />
           </List>
         </Section>
 

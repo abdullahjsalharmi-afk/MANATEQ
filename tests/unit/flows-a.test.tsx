@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { checkEligibility, UNLISTED_ACTIVITY } from '@/domain/eligibility';
 import { plotsFor } from '@/domain/plots';
 import type { Company } from '@/domain/types';
-import { decidedByActivity, factsOf, freePlots, groupBySector, POPULAR_ACTIVITIES, quickActivities, isValidArea, layoutAvailability, layoutForArea, resultKind } from '@/features/flows/eligibility/model';
+import { decidedByActivity, factsOf, fitsArea, freePlots, groupBySector, POPULAR_ACTIVITIES, quickActivities, isValidArea, layoutAvailability, layoutForArea, resultKind } from '@/features/flows/eligibility/model';
 import { choicesOf, choiceKey, defaultChoice, primaryOf } from '@/features/flows/eligibility/Result';
 import { activities } from '@/data/catalog';
 import {
@@ -38,10 +38,16 @@ describe('eligibility model', () => {
     expect(freePlots('WK', 100)).toEqual([]);
   });
 
-  it('draws plots that are too small as unavailable and keeps the layout whole', () => {
-    const layout = layoutForArea('AW', 5000);
-    expect(layout).toHaveLength(plotsFor('AW').length);
-    expect(layout.filter((plot) => plot.status === 'available').every((plot) => plot.areaSqm >= 5000)).toBe(true);
+  it('keeps plots that are too small available in the layout, for the map to dim, and draws applied-for plots as taken', () => {
+    const all = plotsFor('AW');
+    const small = all.find((plot) => plot.status === 'available' && plot.areaSqm < 5000)!;
+    const free = all.find((plot) => plot.status === 'available' && plot.id !== small.id)!;
+    const layout = layoutForArea('AW', new Set([free.id]));
+    expect(layout).toHaveLength(all.length);
+    expect(layout.find((plot) => plot.id === small.id)?.status).toBe('available');
+    expect(fitsArea(small, 5000)).toBe(false);
+    expect(layout.find((plot) => plot.id === free.id)?.status).toBe('allocated');
+    expect(layout.filter((plot) => plot.status === 'available' && fitsArea(plot, 5000)).every((plot) => plot.areaSqm >= 5000)).toBe(true);
   });
 
   it('accepts sensible areas only', () => {

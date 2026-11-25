@@ -132,10 +132,9 @@ const strings = {
   bannerBad: { ar: 'تعذّر إرسال الطلب. تحقّق من الاتصال ثم حاول مرة أخرى.', en: 'The request could not be sent. Check your connection and try again.' },
   bannerDemo: { ar: 'محاكاة: لن يُخصم أي مبلغ.', en: 'Simulation: nothing is charged.' },
   statZones: { ar: 'منطقة ومجمّعًا', en: 'Zones and parks' },
-  statArea: { ar: 'المساحة الإجمالية', en: 'Total area' },
-  statRate: { ar: 'نسبة التشغيل', en: 'Operational rate' },
+  statArea: { ar: 'مليون م² مساحة إجمالية', en: 'million m² in total' },
+  statRate: { ar: 'من الوحدات تعمل', en: 'of units operating' },
   statSource: { ar: 'المصدر: دليل الخدمات، الإصدار 4.1', en: 'Source: Service Guide, version 4.1' },
-  millionSqm: { ar: 'مليون م²', en: 'M m²' },
   rentDue: { ar: 'إيجار الربع الرابع', en: 'Q4 rent' },
   roleSignatory: { ar: 'المخوَّل بالتوقيع', en: 'Authorised signatory' },
   roleEngineer: { ar: 'مهندسة المشروع', en: 'Project engineer' },
@@ -405,7 +404,7 @@ export function FormsGallery() {
         <Card>
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 0.8fr) minmax(0, 1.5fr) minmax(0, 1fr)', gap: 12 }}>
             <Stat value={fmt.num(totals.zones)} label={t('statZones')} />
-            <Stat value={fmt.num(totals.totalSqm / 1_000_000, 1)} unit={t('millionSqm')} label={t('statArea')} />
+            <Stat value={fmt.num(totals.totalSqm / 1_000_000, 1)} label={t('statArea')} />
             <Stat value={fmt.pct(totals.operationalRatePct)} label={t('statRate')} />
           </div>
           <p style={{ marginBlockStart: 12, fontSize: 'var(--t-cap)', color: 'var(--ink-3)' }}>{t('statSource')}</p>

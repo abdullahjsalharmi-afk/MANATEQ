@@ -6,9 +6,9 @@ import { Button, Chip, ChipRow, Icon, Sheet, toast } from '@/design/core';
 import { Checkbox, FilePick, Lines, SignSheet, TextArea, TextField, type PickedFile, type SheetLine } from '@/design/forms';
 import type { FormValue, RequestState } from '@/domain/types';
 import { FormFields, validateFields, type FormErrors, type FormValues } from '@/features/shared/FormFields';
-import { actOnRequest, getState, selectCompany, selectDocs, selectPlots, selectThread, stepTasks, useApp, type ActPayload } from '@/state';
+import { completeStep, getState, selectCompany, selectDoc, selectPlots, selectStepAmount, stepTasks, useApp, type ActPayload } from '@/state';
 import styles from './ActionRunner.module.css';
-import { depositPaidWithOffer, newReceipts, offeredSlots, runnerTasks } from './logic';
+import { offeredSlots, runnerTasks } from './logic';
 import { StepPaySheet } from './StepPaySheet';
 import { strings } from './strings';
 
@@ -30,7 +30,7 @@ const FIVE = [1, 2, 3, 4, 5] as const;
  * Runs what a step asks of the investor, task by task, inside one sheet: accept, upload, choose,
  * form, rate, reference, declare, schedule, acknowledge. Payment and signature open their own
  * sheets (both are simulations and say so). After the last task the step is completed with
- * `actOnRequest`, and the request moves on.
+ * `completeStep`, and the request moves on.
  */
 export function ActionRunner({ request, service, action, open, onClose, deadline, onDone }: ActionRunnerProps) {
   const t = useT(strings);
@@ -38,8 +38,10 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
   const baseId = useId();
   const company = useApp(selectCompany);
   const plots = useApp(selectPlots);
-  const thread = useApp(selectThread(request.id));
-  const allDocs = useApp(selectDocs);
+  // The deposit already paid with the offer (A6) of the same thread: the step does not ask for it again.
+  const prepaidReceipt = useApp(selectDoc(request.prepaidDocId));
+  // The amount the state will charge for this step: the amount shown is the amount charged.
+  const amount = useApp(selectStepAmount(request.id, action));
 
   const [choice, setChoice] = useState<string | undefined>(undefined);
   const [index, setIndex] = useState(0);
@@ -75,24 +77,16 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
     paidReceipt.current = '';
   }, [open]);
 
-  // A deposit already paid with the offer is not asked for again: the step completes without a payment.
-  const prepaid = useMemo(() => depositPaidWithOffer(request, action, thread, allDocs), [request, action, thread, allDocs]);
-  const tasksOf = (picked: string | undefined) => {
-    const list = runnerTasks(action, picked, (option) => stepTasks(service.id, action, option));
-    return prepaid ? list.filter((task) => task !== 'pay') : list;
-  };
-  const tasks = useMemo(() => {
-    const list = runnerTasks(action, choice, (picked) => stepTasks(service.id, action, picked));
-    return prepaid ? list.filter((task) => task !== 'pay') : list;
-  }, [action, choice, service.id, prepaid]);
-  const choiceWasPaid = prepaid !== null && choice !== undefined && stepTasks(service.id, action, choice).includes('pay');
+  // With the request, `stepTasks` leaves out a payment already made earlier in the thread.
+  const tasksOf = (picked: string | undefined) => runnerTasks(action, picked, (option) => stepTasks(service.id, action, option, request));
+  const tasks = useMemo(() => runnerTasks(action, choice, (picked) => stepTasks(service.id, action, picked, request)), [action, choice, service.id, request]);
+  const prepaid = request.prepaidDocId !== undefined;
+  const choiceWasPaid = prepaid && choice !== undefined && stepTasks(service.id, action, choice).includes('pay');
   const current = tasks[Math.min(index, tasks.length - 1)];
   const last = index >= tasks.length - 1;
 
   const plot = plots.find((candidate) => candidate.id === request.plotId);
   const plotNumber = plot?.number ?? request.plotId;
-  // The amount the state fixed when the step opened: the amount shown is the amount charged.
-  const amount = request.amount;
   const docs = action.docs?.length ? action.docs.map((doc) => pick(doc)) : [t('uploadDefault')];
 
   const summary: SheetLine[] = [
@@ -106,7 +100,7 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
   /* ── finishing ── */
 
   /** Completes the step with what was collected. */
-  const act = (): boolean => {
+  const act = (): ReturnType<typeof completeStep> => {
     const payload: ActPayload = {};
     if (choice !== undefined) payload.choice = choice;
     const answers: Record<string, FormValue> = { ...form };
@@ -118,11 +112,11 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
       payload.files = docs.map((_, i) => files[i]).filter((file): file is PickedFile => Boolean(file)).map((file) => ({ name: file.name, ...(file.size !== undefined ? { size: file.size } : {}) }));
     }
     if (tasks.includes('rate')) payload.rating = comment.trim() ? { stars, comment: comment.trim() } : stars;
-    return actOnRequest(request.id, payload);
+    return completeStep(request.id, payload);
   };
 
   const submit = () => {
-    const ok = act();
+    const { ok } = act();
     onClose();
     if (ok) {
       toast(t('submitted'), { tone: 'ok' });
@@ -255,9 +249,9 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
                     ))}
                   </ChipRow>
                   {errors.choice ? <p className={styles.error} role="alert">{errors.choice}</p> : null}
-                  {choiceWasPaid && prepaid ? (
+                  {choiceWasPaid ? (
                     <p className={styles.note} role="status">
-                      {prepaid.receipt ? t('paidWithOfferRef', { ref: prepaid.receipt.ref }) : t('paidWithOffer')}
+                      {prepaidReceipt ? t('paidWithOfferRef', { ref: prepaidReceipt.ref }) : t('paidWithOffer')}
                     </p>
                   ) : null}
                 </div>
@@ -331,12 +325,10 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
         onPay={() => {
           // The payment is the last task of every step that asks for one: completing the step files the receipt.
           if (!last) return '';
-          const before = getState().world.requests.find((candidate) => candidate.id === request.id)?.docIds ?? [];
-          if (!act()) return null;
-          const world = getState().world;
-          const after = world.requests.find((candidate) => candidate.id === request.id)?.docIds ?? [];
-          const receipts = newReceipts(before, after, world.docs);
-          paidReceipt.current = receipts.map((doc) => doc.ref).join(' · ');
+          const { ok, receiptDocIds } = act();
+          if (!ok) return null;
+          const docs = getState().world.docs;
+          paidReceipt.current = receiptDocIds.map((id) => docs.find((doc) => doc.id === id)?.ref).filter((ref): ref is string => ref !== undefined).join(' · ');
           return paidReceipt.current;
         }}
         onFailed={() => {

@@ -25,10 +25,10 @@ export function NotificationsScreen() {
   const notifications = useApp(selectNotifications);
   const unread = useApp(selectUnreadCount);
   const groups = groupByDay(notifications, now);
-  const listRef = useRef<HTMLDivElement>(null);
 
   // The live line speaks only when the count changes on its own (a request moved); the investor's own
-  // "mark all" is confirmed by the toast alone, so it is never announced twice.
+  // "mark all" is confirmed by the toast alone, so it is announced once. Section moves the focus to the
+  // heading once the button has gone.
   const [announce, setAnnounce] = useState('');
   const lastUnread = useRef(unread);
   const ownChange = useRef(false);
@@ -37,12 +37,6 @@ export function NotificationsScreen() {
     lastUnread.current = unread;
     if (ownChange.current) {
       ownChange.current = false;
-      // The button went away with the last unread item: keep the keyboard on the list's first heading.
-      const heading = listRef.current?.querySelector<HTMLElement>('h2');
-      if (heading) {
-        heading.tabIndex = -1;
-        heading.focus();
-      }
       return;
     }
     setAnnounce(unread > 0 ? t('unreadCount', { n: unread }) : t('allRead'));
@@ -65,7 +59,7 @@ export function NotificationsScreen() {
       {notifications.length === 0 ? (
         <EmptyState icon={BellOff} title={t('emptyTitle')} body={t('emptyBody')} />
       ) : (
-        <div ref={listRef}>
+        <div>
           {groups.today.length > 0 ? <Group title={t('today')} items={groups.today} now={now} action={markAction} /> : null}
           {groups.earlier.length > 0 ? <Group title={t('earlier')} items={groups.earlier} now={now} action={groups.today.length > 0 ? undefined : markAction} /> : null}
         </div>

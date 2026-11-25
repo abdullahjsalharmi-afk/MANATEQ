@@ -5,19 +5,18 @@
  * alerted (from the workflow), gives the reference and three things to do now.
  */
 import { Check, Phone, ShieldCheck, Siren, Building2, type LucideIcon } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { useQuery } from '@/app/routes';
 import type { ServiceDetail } from '@/data/types';
-import { Button, Card, Chip, ChipRow, Container, Grid, Icon, List, Pill, Row, Screen, Section, cx } from '@/design/core';
-import { PhotoPick, TextField, type PickedPhoto } from '@/design/forms';
+import { Button, Card, CardChoiceGroup, Chip, ChipRow, Container, Grid, Icon, List, Pill, Row, Screen, Section, cx } from '@/design/core';
+import { PhotoPick, StepHead, TextField, type PickedPhoto } from '@/design/forms';
 import type { FormValue } from '@/domain/types';
 import { useService } from '@/features/shared/useService';
 import { selectPlots, selectRequest, startRequest, useApp } from '@/state';
-import { ConfirmationTile, FlowFailed, FlowLoading, leaveFlow, OptionCard, Question } from '../maintenance/parts/Parts';
+import { ConfirmationTile, FlowFailed, FlowLoading, leaveFlow, OptionCard } from '../maintenance/parts/Parts';
 import { initialPlotId, plotOptions } from '../maintenance/parts/plots';
 import { partsStrings } from '../maintenance/parts/strings';
-import { useChoiceGroup } from '../shared/Choice';
 import { alertedParties, incidentIcon, type AlertedParty } from './alerted';
 import styles from './IncidentFlow.module.css';
 import { strings } from './strings';
@@ -25,6 +24,9 @@ import { strings } from './strings';
 const HERE = 'here';
 const ELSEWHERE = 'elsewhere';
 const EMERGENCY_NUMBER = '999';
+const STEPS = 2;
+/** The keys with which the type group moves between its cards (see `CardChoiceGroup`). */
+const MOVE_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End']);
 
 export function IncidentFlow() {
   const t = useT(strings);
@@ -75,8 +77,9 @@ function IncidentSteps({ service, onSubmitted }: { service: ServiceDetail; onSub
     setType(value);
     setStep(2);
   };
-  // One tap chooses and moves on; the arrow keys only move between the types.
-  const typeChoice = useChoiceGroup({ keys: types.map((option) => option.value), value: type, onPick: choose, onMove: setType, label: t('types') });
+  // One tap (or Enter / Space) chooses and moves on; the arrow keys of the group only move between the types.
+  const moving = useRef(false);
+  const pickType = (value: string) => (moving.current ? setType(value) : choose(value));
 
   const send = () => {
     if (!type) return;
@@ -97,13 +100,23 @@ function IncidentSteps({ service, onSubmitted }: { service: ServiceDetail; onSub
           <p className={styles.lifeHint}>{t('lifeHint')}</p>
           <CallEmergency />
         </Card>
-        <div className={styles.types}>
-          <Question hint={t('whatHint')}>{t('whatQ')}</Question>
-          <Grid compact columns={4} {...typeChoice.group}>
-            {types.map((option) => (
-              <OptionCard key={option.value} size="lg" icon={incidentIcon(option.value)} label={pick(option)} item={typeChoice.item(option.value)} />
-            ))}
-          </Grid>
+        <div
+          className={styles.types}
+          onKeyDownCapture={(event) => {
+            moving.current = MOVE_KEYS.has(event.key);
+          }}
+          onKeyDown={() => {
+            moving.current = false;
+          }}
+        >
+          <StepHead current={1} total={STEPS} question={t('whatQ')} hint={t('whatHint')} />
+          <CardChoiceGroup label={t('types')}>
+            <Grid compact columns={4}>
+              {types.map((option) => (
+                <OptionCard key={option.value} size="lg" icon={incidentIcon(option.value)} label={pick(option)} selected={type === option.value} onClick={() => pickType(option.value)} />
+              ))}
+            </Grid>
+          </CardChoiceGroup>
         </div>
       </Screen>
     );
@@ -123,7 +136,7 @@ function IncidentSteps({ service, onSubmitted }: { service: ServiceDetail; onSub
         </Button>
       }
     >
-      <Question hint={t('whereHint')}>{t('whereQ')}</Question>
+      <StepHead current={2} total={STEPS} question={t('whereQ')} hint={t('whereHint')} />
       <ChipRow label={t('places')} wrap>
         <Chip selected={place === HERE} onClick={() => setPlace(HERE)}>
           {t('here')}

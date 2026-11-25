@@ -65,7 +65,8 @@ interface ChoiceProps<V extends string> {
 }
 
 /**
- * Radio tiles: native radios, so arrow keys, forms and screen readers behave as expected.
+ * Radio tiles: native radios, so arrow keys, forms and screen readers behave as expected, each with a visible
+ * radio mark at the start.
  * When the choice is missing the tiles stay calm: one message under the group is clearer than five red boxes.
  */
 function Tiles<V extends string>({ control, options, value, onChange, disabled }: ChoiceProps<V>) {
@@ -85,12 +86,13 @@ function Tiles<V extends string>({ control, options, value, onChange, disabled }
         return (
           <label key={option.value} className={cx(styles.tile, selected && styles.tileOn, disabled && styles.tileDisabled)}>
             <input type="radio" className={styles.radio} name={name} value={option.value} checked={selected} disabled={disabled} onChange={() => onChange(option.value)} />
+            {/* The radio mark says "choose one" before anything is chosen, so a tile never reads as a text field. */}
+            <span className={styles.mark} aria-hidden="true" />
             {option.icon ? <Icon icon={option.icon} size={22} className={styles.tileIcon} /> : null}
             <span className={styles.tileText}>
               <span className={styles.tileLabel}>{option.label}</span>
               {option.hint ? <span className={styles.tileHint}>{option.hint}</span> : null}
             </span>
-            <Icon icon={Check} size={18} strokeWidth={2.25} className={styles.tileCheck} />
           </label>
         );
       })}

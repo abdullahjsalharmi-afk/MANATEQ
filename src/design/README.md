@@ -70,7 +70,9 @@ surface you build yourself (`background: var(--tile-1)`).
   or `tone="danger"` on `secondary` / `quiet`. Sizes: `md` (default) · `sm` · `lg` (the rare hero pill).
   `block` is full width (420 px at most from 735 px). `loading` keeps the width. Pressed is a scale, never a colour.
 - `<IconButton icon label>`: 44 px target. `variant="soft"` (a circle) on imagery; `size="sm"` for a close circle.
-- `<Pill tone icon>` status · `<Segmented>` (`inline`, `size="sm"`) · `<Chip selected detail>` · `<ChipRow wrap>`.
+- `<Pill tone icon>` status (never the accent: that is for what you can press or have chosen) · `<Segmented>`
+  (the full column on phones, at most 420 px and start-aligned on wider screens; `inline` inside a row or a bar;
+  `size="sm"`) · `<Chip selected detail>` · `<ChipRow wrap>`. A screen never sets its own width for a segmented control.
 
 ## Example: a tab root with a hero tile and a card grid
 

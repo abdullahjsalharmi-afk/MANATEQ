@@ -22,40 +22,6 @@
   text-wrap: balance;
 }
 
-/* The standard as the hero's one large figure, «استرشادي» in fine print under it. */
-.heroStandard {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--s-1);
-}
-
-.heroFigure {
-  font-size: var(--t-display);
-  font-weight: var(--w-strong);
-  line-height: var(--lh-tight);
-  letter-spacing: var(--ls-display);
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-
-.heroClause {
-  max-width: 22em;
-  font-size: var(--t-heading);
-  font-weight: var(--w-strong);
-  line-height: var(--lh-heading);
-  letter-spacing: var(--ls-heading);
-  color: var(--ink);
-  text-wrap: balance;
-}
-
-.heroFine {
-  font-size: var(--t-foot);
-  line-height: var(--lh-foot);
-  letter-spacing: var(--ls-caption);
-  color: var(--ink-3);
-}
-
 /* "How this service starts": a glyph and three short paragraphs. */
 .starts {
   display: flex;

@@ -45,7 +45,7 @@ export const strings = {
   doneTagline: { ar: 'يُعرض الرمز عند البوابة.', en: 'Show the code at the gate.' },
   qrLabel: { ar: 'رمز تصريح الدخول {code}', en: 'Gate pass code {code}' },
   send: { ar: 'أرسِل التصريح', en: 'Send the pass' },
-  wallet: { ar: 'اعرضه في وثائقي', en: 'View in Documents' },
+  wallet: { ar: 'اعرضه في «وثائقي وتصاريحي»', en: 'View in Documents and passes' },
   another: { ar: 'تصريح آخر', en: 'Another pass' },
   copied: { ar: 'نُسخ التصريح. ألصقه في رسالة.', en: 'Pass copied. Paste it into a message.' },
   copyFailed: { ar: 'تعذّر النسخ. اعرض الرمز عند البوابة.', en: 'Could not copy. Show the code at the gate.' },

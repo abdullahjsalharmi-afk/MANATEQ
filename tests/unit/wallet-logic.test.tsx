@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Doc, Pass } from '@/domain/types';
-import { byYear, countByFilter, filterDocs, passMoment, splitCodes, unbroken, findByCode, holderName, isCodeShape, normalizeCode, passValidity, verifyRoute, verifyUrl } from '@/features/wallet/logic';
+import { byYear, countByFilter, filterDocs, passMoment, unbroken, findByCode, holderName, isCodeShape, normalizeCode, passValidity, verifyRoute, verifyUrl } from '@/features/wallet/logic';
 
 const doc = (id: string, kind: Doc['kind'], issuedAt: number, verifyCode = `TSD-${id.padEnd(4, 'X').slice(0, 4).toUpperCase()}-AAAA`): Doc => ({
   id,
@@ -73,15 +73,7 @@ describe('passes', () => {
 });
 
 describe('text that must not break', () => {
-  it('keeps codes whole and the separator dot with the part after it', () => {
-    expect(splitCodes('Rent, Q4 2026 · BA-121')).toEqual([
-      { code: false, text: 'Rent, Q4 2026 ·\u00A0' },
-      { code: true, text: 'BA-121' },
-    ]);
-    expect(splitCodes('إيصال RCP-2026-0049').map((part) => part.code)).toEqual([false, true]);
-    expect(splitCodes('No code here')).toEqual([{ code: false, text: 'No code here' }]);
-  });
-  it('turns the spaces of a date into no-break spaces', () => {
+  it('turns the spaces of a short value into no-break spaces', () => {
     expect(unbroken('13 Oct 2026')).toBe('13\u00A0Oct\u00A02026');
   });
   it('gives a pass moment its date and its time, each unbroken', () => {

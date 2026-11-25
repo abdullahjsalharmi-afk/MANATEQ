@@ -1,12 +1,11 @@
 import { BadgeCheck, SearchX } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
-import { Button, Icon, Sheet } from '@/design/core';
+import { Button, Icon, List, Row, Sheet } from '@/design/core';
 import type { Doc } from '@/domain/types';
 import { selectDocs, useApp } from '@/state';
 import { findByCode, verifyRoute } from './logic';
 import { strings } from './strings';
-import { Atom, CodedText } from './Unbroken';
 import styles from './Wallet.module.css';
 
 /** How long the simulated Tasdeeq check takes. */
@@ -87,30 +86,12 @@ export function VerifyResult({ doc, code, link = 'public' }: { doc: Doc | undefi
       <p className={styles.statusTitle} tabIndex={-1} data-verdict="">
         {t('validDoc')}
       </p>
-      <dl className={styles.facts}>
-        <div className={styles.fact}>
-          <dt>{t('title_')}</dt>
-          <dd>
-            <CodedText text={pick(doc.title)} />
-          </dd>
-        </div>
-        <div className={styles.fact}>
-          <dt>{t('reference')}</dt>
-          <dd>
-            <Atom code>{doc.ref}</Atom>
-          </dd>
-        </div>
-        <div className={styles.fact}>
-          <dt>{t('issuedOn')}</dt>
-          <dd>
-            <Atom>{fmt.date(doc.issuedAt)}</Atom>
-          </dd>
-        </div>
-        <div className={styles.fact}>
-          <dt>{t('vSignature')}</dt>
-          <dd>{t(doc.signed ? 'vSigned' : 'vUnsigned')}</dd>
-        </div>
-      </dl>
+      <List variant="plain" className={styles.facts}>
+        <Row fact title={t('title_')} trailing={pick(doc.title)} />
+        <Row fact title={t('reference')} trailing={<span className="ltr">{doc.ref}</span>} />
+        <Row fact title={t('issuedOn')} trailing={fmt.date(doc.issuedAt)} />
+        <Row fact title={t('vSignature')} trailing={t(doc.signed ? 'vSigned' : 'vUnsigned')} />
+      </List>
       {link === 'public' ? (
         <Button variant="quiet" size="sm" to={verifyRoute(code)}>
           {t('publicCheck')}

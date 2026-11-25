@@ -3,10 +3,11 @@ import { loadAllServiceDetails, peekServiceDetail } from '@/data/catalog';
 import type { ActionAtom, ServiceDetail } from '@/data/types';
 import { timingFor } from '@/domain/simulation';
 import type { RequestState } from '@/domain/types';
-import { depositPaidWithOffer, expectedChain, groupRequests, hasDayClock, newReceipts, offeredSlots, passOfRequest, placeInThread, runnerTasks } from '@/features/requests/logic';
-import { entityOf, nationalHolder } from '@/features/requests/useRequestFacts';
+import { expectedChain, groupRequests, hasDayClock, offeredSlots, placeInThread, runnerTasks } from '@/features/requests/logic';
+import { nationalHolder, withoutBrackets } from '@/features/requests/useRequestFacts';
 import { seedWorld } from '@/state/seed';
-import { actIn, startIn, tickWorld } from '@/state/sim';
+import { startIn, stepTasks, tickWorld } from '@/state/sim';
+import { holderOf } from '@/state/view';
 import type { Env } from '@/state/types';
 
 const NOW = new Date(2026, 10, 19, 9, 30).getTime();
@@ -78,24 +79,6 @@ describe('the action runner', () => {
     expect(new Date(slots[0] as number).getDay()).toBe(0);
   });
 
-  it('names the receipts a payment really filed, not one derived from the request', () => {
-    let tenant = seedWorld('tenant', NOW);
-    const renewal = tenant.requests.find((request) => request.serviceId === 'B3' && request.status === 'needs_you');
-    // The seeded renewal may still be replaying; tick it to its waiting step.
-    tenant = tickWorld(tenant, NOW + 1000, live);
-    const waiting = tenant.requests.find((request) => request.id === renewal?.id) as RequestState;
-    expect(waiting).toMatchObject({ status: 'needs_you' });
-    expect(waiting.amount).toBeGreaterThan(0);
-    const before = waiting.docIds;
-    tenant = actIn(tenant, waiting.id, { form: {} }, NOW + 2000, live);
-    const after = tenant.requests.find((request) => request.id === waiting.id)?.docIds ?? [];
-    const receipts = newReceipts(before, after, tenant.docs);
-    expect(receipts).toHaveLength(1);
-    const invoice = tenant.invoices.find((candidate) => candidate.receiptDocId === receipts[0]?.id);
-    expect(receipts[0]?.ref).toBe(invoice?.ref.replace(/^INV-/, 'RCP-'));
-    expect(receipts[0]?.ref).not.toContain(waiting.ref.replace(/^MQ-/, ''));
-  });
-
   it('knows a deposit paid with the offer and asks for no second payment', () => {
     let tenant = seedWorld('tenant', NOW);
     const earlier = tenant.requests.find((request) => request.serviceId === 'B2') as RequestState;
@@ -104,51 +87,44 @@ describe('the action runner', () => {
     const waiting = tenant.requests.find((request) => request.id === again.id) as RequestState;
     const action = (peekServiceDetail('B2') as ServiceDetail).actions.find((candidate) => candidate.step === 3);
     expect(action).toBeDefined();
-    const thread = tenant.requests.filter((request) => request.threadId === waiting.threadId);
-    const prepaid = action ? depositPaidWithOffer(waiting, action, thread, tenant.docs) : null;
-    expect(prepaid?.receipt?.ref).toMatch(/^RCP-/);
-    // A request that has its own amount pays it.
-    expect(action ? depositPaidWithOffer({ ...waiting, amount: 18_750 }, action, thread, tenant.docs) : 'x').toBeNull();
-    // Without an offer in the thread nothing was paid before.
-    expect(action ? depositPaidWithOffer(waiting, action, [waiting], tenant.docs) : 'x').toBeNull();
+    expect(waiting.prepaidDocId).toBeDefined();
+    expect(tenant.docs.find((doc) => doc.id === waiting.prepaidDocId)?.ref).toMatch(/^RCP-/);
+    // The runner asks for the choice, and choosing the deposit asks for nothing more.
+    const tasks = (choice: string | undefined) => (action ? runnerTasks(action, choice, (picked) => stepTasks('B2', action, picked, waiting)) : []);
+    expect(tasks('deposit')).toEqual(['choose']);
+    expect(tasks('guarantee')).toContain('upload');
   });
 });
 
 describe('the clock of a request', () => {
-  const clock = { ratio: 0.1, targetDays: 5 };
-  it('shows a day clock only for a duration that covers the whole request', () => {
-    expect(hasDayClock('C4', clock)).toBe(true);
-    expect(hasDayClock('C2', { ratio: 0.01, targetDays: 1 })).toBe(false);
-    expect(hasDayClock('D1', { ratio: null, targetDays: 0 })).toBe(false);
-    expect(hasDayClock('B3', { ratio: null, targetDays: null })).toBe(false);
-    expect(hasDayClock('A5', undefined)).toBe(false);
+  it('shows a day clock only for a standard with a duration', () => {
+    expect(hasDayClock({ ratio: 0.1, targetDays: 5 })).toBe(true);
+    expect(hasDayClock({ ratio: null, targetDays: 0 })).toBe(false);
+    expect(hasDayClock({ ratio: null, targetDays: null })).toBe(false);
+    expect(hasDayClock(undefined)).toBe(false);
   });
-});
 
-describe('issued passes', () => {
-  it('finds the pass a gate-pass request issued', () => {
-    const world = seedWorld('tenant', NOW);
-    const request = world.requests.find((candidate) => candidate.serviceId === 'D2' && candidate.status === 'done');
-    expect(request).toBeDefined();
-    const pass = request ? passOfRequest(request, world.passes) : undefined;
-    expect(pass?.kind).toBe('worker');
-    expect(passOfRequest({ ...(request as RequestState), serviceId: 'D1' }, world.passes)).toBeUndefined();
+  it('has no day clock for the building permit, whose standard is per Ministry event', () => {
+    const permit = peekServiceDetail('C2') as ServiceDetail;
+    expect(permit.standard.value).toBeNull();
   });
 });
 
 describe('holder words', () => {
-  it('names the entity behind a platform', () => {
-    expect(entityOf('نظام رخص البناء الإلكتروني (وزارة البلدية)')).toBe('وزارة البلدية');
-    expect(entityOf('Kahramaa')).toBe('Kahramaa');
-  });
+  const ar = (text: { ar: string }) => text.ar;
+  const en = (text: { en: string }) => text.en;
 
   it('names the same entity in both languages', () => {
-    const permits = { ar: 'نظام رخص البناء الإلكتروني (وزارة البلدية)', en: 'Ministry of Municipality permits' };
-    expect(nationalHolder(permits, 'ar')).toEqual({ headline: 'وزارة البلدية', phrase: 'وزارة البلدية' });
-    expect(nationalHolder(permits, 'en')).toEqual({ headline: 'Ministry of Municipality', phrase: 'the Ministry of Municipality' });
-    const customs = { ar: 'الهيئة العامة للجمارك (النديب)', en: 'Customs (Al Nadeeb)' };
-    expect(nationalHolder(customs, 'ar').headline).toBe('الهيئة العامة للجمارك');
-    expect(nationalHolder(customs, 'en').headline).toBe('Customs');
-    expect(nationalHolder({ ar: 'كهرماء', en: 'Kahramaa' }, 'en').phrase).toBe('Kahramaa');
+    const permits = holderOf({ lane: 'nat', enablers: ['I9'] });
+    expect(nationalHolder(permits, ar)).toEqual({ headline: 'وزارة البلدية', phrase: 'وزارة البلدية' });
+    expect(nationalHolder(permits, en)).toEqual({ headline: 'Ministry of Municipality', phrase: 'the Ministry of Municipality' });
+    const customs = holderOf({ lane: 'nat', enablers: ['I13'] });
+    expect(nationalHolder(customs, ar).headline).toBe('الهيئة العامة للجمارك');
+    expect(nationalHolder(customs, en).headline).toBe('General Authority of Customs');
+  });
+
+  it('falls back to the platform name without a bracketed system name', () => {
+    expect(nationalHolder({ name: { ar: 'منصة (س)', en: 'Platform (S)' } }, en)).toEqual({ headline: 'Platform', phrase: 'Platform' });
+    expect(withoutBrackets('Kahramaa')).toBe('Kahramaa');
   });
 });

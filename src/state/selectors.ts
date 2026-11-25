@@ -32,6 +32,22 @@ function perWorld<T>(derive: (world: World) => T): (world: World) => T {
   };
 }
 
+/**
+ * Remembers a value derived from a world and one key (a request id, a plot id) until the world, or what
+ * is known of the catalogue, changes: a selector built with it returns the same array or object for the
+ * same world and key, however many times a screen calls it.
+ */
+function perWorldBy<K, T>(derive: (world: World, key: K) => T): (world: World, key: K) => T {
+  const remembered = perWorld(() => new Map<K, T>());
+  return (world, key) => {
+    const values = remembered(world);
+    if (values.has(key)) return values.get(key) as T;
+    const value = derive(world, key);
+    values.set(key, value);
+    return value;
+  };
+}
+
 /** Shared empty lists, so "nothing" is always the same nothing. */
 const NO_REQUESTS: RequestState[] = [];
 const NO_DOCS: Doc[] = [];
@@ -86,18 +102,27 @@ export const selectRequest =
   (state) =>
     id === undefined ? undefined : state.world.requests.find((request) => request.id === id);
 
-/** The requests of one intent, oldest first: application → review → offer → contract → handover. */
+const threadOfRequest = perWorldBy((world, requestId: string): RequestState[] => {
+  const request = world.requests.find((candidate) => candidate.id === requestId);
+  return request ? threadOf(world, request) : NO_REQUESTS;
+});
+
+/** The requests of one intent, oldest first: application → review → offer → contract → handover. The same array for the same world. */
 export const selectThread =
   (requestId: string | undefined): Selector<RequestState[]> =>
-  (state) => {
-    const request = requestId === undefined ? undefined : state.world.requests.find((candidate) => candidate.id === requestId);
-    return request ? threadOf(state.world, request) : NO_REQUESTS;
-  };
+  (state) =>
+    requestId === undefined ? NO_REQUESTS : threadOfRequest(state.world, requestId);
 
+const requestsOfPlot = perWorldBy((world, plotId: string | undefined): RequestState[] => {
+  const found = world.requests.filter((request) => request.plotId === plotId).sort((a, b) => b.updatedAt - a.updatedAt);
+  return found.length ? found : NO_REQUESTS;
+});
+
+/** The requests about one plot, the most recently moved first. The same array for the same world. */
 export const selectRequestsOfPlot =
   (plotId: string | undefined): Selector<RequestState[]> =>
   (state) =>
-    state.world.requests.filter((request) => request.plotId === plotId).sort((a, b) => b.updatedAt - a.updatedAt);
+    requestsOfPlot(state.world, plotId);
 
 /** The date by which the investor must act on a waiting request, when there is one. */
 export const selectDeadline =
@@ -107,14 +132,17 @@ export const selectDeadline =
     return request ? deadlineOf(state.world, request) : undefined;
   };
 
-/** The documents a request has issued, in the order they were issued. */
+const docsOfRequest = perWorldBy((world, requestId: string): Doc[] => {
+  const request = world.requests.find((candidate) => candidate.id === requestId);
+  if (!request || !request.docIds.length) return NO_DOCS;
+  return request.docIds.map((id) => world.docs.find((doc) => doc.id === id)).filter((doc): doc is Doc => doc !== undefined);
+});
+
+/** The documents a request has issued, in the order they were issued. The same array for the same world. */
 export const selectDocsOfRequest =
   (requestId: string | undefined): Selector<Doc[]> =>
-  (state) => {
-    const request = requestId === undefined ? undefined : state.world.requests.find((candidate) => candidate.id === requestId);
-    if (!request || !request.docIds.length) return NO_DOCS;
-    return request.docIds.map((id) => state.world.docs.find((doc) => doc.id === id)).filter((doc): doc is Doc => doc !== undefined);
-  };
+  (state) =>
+    requestId === undefined ? NO_DOCS : docsOfRequest(state.world, requestId);
 
 /**
  * The amount the open step of a request charges, as the state will charge it: the amount fixed when the
@@ -147,13 +175,12 @@ export interface Dues {
   next: Invoice | null;
 }
 
-/** What the investor owes right now. */
-export const selectDues: Selector<Dues> = (state) => {
+const duesOf = perWorld((world): Dues => {
   let total = 0;
   let count = 0;
   let overdue = 0;
   let next: Invoice | null = null;
-  for (const invoice of state.world.invoices) {
+  for (const invoice of world.invoices) {
     if (invoice.status === 'paid') continue;
     total += invoice.amount;
     count++;
@@ -161,7 +188,10 @@ export const selectDues: Selector<Dues> = (state) => {
     if (!next || invoice.dueAt < next.dueAt) next = invoice;
   }
   return { total, count, overdue, next };
-};
+});
+
+/** What the investor owes right now. The same object for the same world. */
+export const selectDues: Selector<Dues> = (state) => duesOf(state.world);
 
 const invoicesOf = perWorld((world) =>
   // Outstanding first (the soonest due on top), then history, the latest first.
@@ -194,20 +224,13 @@ export const selectStation: Selector<StationKey> = (state) => stationOf(state.wo
 /** The four stations with their checklists, for the journey that still has the furthest to go. */
 export const selectJourney: Selector<Journey> = (state) => journeyOfWorld(state.world);
 
-const journeysOfPlots = perWorld(() => new Map<string, Journey>());
+const journeyOfPlot = perWorldBy((world, plotId: string) => journeyOf(world, plotId));
 
 /** The journey of one plot, remembered per world: the same object until the world changes. */
 export const selectJourneyOfPlot =
   (plotId: string): Selector<Journey> =>
-  (state) => {
-    const remembered = journeysOfPlots(state.world);
-    let journey = remembered.get(plotId);
-    if (!journey) {
-      journey = journeyOf(state.world, plotId);
-      remembered.set(plotId, journey);
-    }
-    return journey;
-  };
+  (state) =>
+    journeyOfPlot(state.world, plotId);
 
 /* ───────────────────────────── plots and leases ───────────────────────────── */
 
@@ -250,10 +273,16 @@ export function plotIdOfDoc(world: World, doc: Doc): string | undefined {
   return findLease(world, invoice?.leaseId)?.plotId;
 }
 
+const docsOfPlot = perWorldBy((world, plotId: string): Doc[] => {
+  const found = docsOf(world).filter((doc) => plotIdOfDoc(world, doc) === plotId);
+  return found.length ? found : NO_DOCS;
+});
+
+/** The documents about one plot, the latest first. The same array for the same world. */
 export const selectDocsOfPlot =
   (plotId: string | undefined): Selector<Doc[]> =>
   (state) =>
-    plotId === undefined ? NO_DOCS : docsOf(state.world).filter((doc) => plotIdOfDoc(state.world, doc) === plotId);
+    plotId === undefined ? NO_DOCS : docsOfPlot(state.world, plotId);
 
 const PASS_ORDER: Record<Pass['status'], number> = { active: 0, expired: 1, revoked: 2 };
 const passesOf = perWorld((world) => world.passes.slice().sort((a, b) => PASS_ORDER[a.status] - PASS_ORDER[b.status] || b.from - a.from));

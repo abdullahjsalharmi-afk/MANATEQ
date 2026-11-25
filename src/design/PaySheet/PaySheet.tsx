@@ -27,8 +27,16 @@ export interface PaySheetProps {
   lines: SheetLine[];
   /** The amount in Qatari riyals. */
   amount: number;
-  /** The receipt reference shown once the payment is done. */
-  reference: string;
+  /** The receipt reference shown once the payment is done. Leave it out when `onPay` returns it. */
+  reference?: string;
+  /**
+   * Files the payment the moment the simulated payment goes through, before the confirmation shows, and returns
+   * the reference of the receipt it really filed (or null when it could not: `onFailed` is called and nothing is
+   * confirmed). Use it when the receipt number is only known once the payment is made, as for a request step.
+   */
+  onPay?: () => string | null;
+  /** `onPay` could not file the payment. */
+  onFailed?: () => void;
   /** Called once, when the person leaves the confirmation. */
   onPaid: () => void;
   /**
@@ -43,7 +51,7 @@ export interface PaySheetProps {
  * It is a simulation and says so: there are no card or account fields and nothing is charged.
  * While the payment is "processing" the sheet cannot be dismissed.
  */
-export function PaySheet({ open, onClose, title, lines, amount, reference, onPaid, onViewReceipt }: PaySheetProps) {
+export function PaySheet({ open, onClose, title, lines, amount, reference, onPay, onFailed, onPaid, onViewReceipt }: PaySheetProps) {
   const t = useT(strings);
   const doneId = useId();
   const [phase, setPhase] = useState<PayPhase>('review');
@@ -52,6 +60,10 @@ export function PaySheet({ open, onClose, title, lines, amount, reference, onPai
   const contentRef = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const settled = useRef(false);
+  const [filed, setFiled] = useState<string | null>(null);
+  // The latest callbacks, read when the timer fires.
+  const latest = useRef({ onPay, onFailed });
+  latest.current = { onPay, onFailed };
 
   // Every opening starts from the review.
   useEffect(() => {
@@ -59,6 +71,7 @@ export function PaySheet({ open, onClose, title, lines, amount, reference, onPai
     settled.current = false;
     setPhase('review');
     setHold(undefined);
+    setFiled(null);
     return () => clearTimeout(timer.current);
   }, [open]);
 
@@ -71,7 +84,18 @@ export function PaySheet({ open, onClose, title, lines, amount, reference, onPai
     clearTimeout(timer.current);
     setHold(contentRef.current?.offsetHeight);
     setPhase('processing');
-    timer.current = setTimeout(() => setPhase('success'), PAY_MS);
+    timer.current = setTimeout(() => {
+      const file = latest.current.onPay;
+      if (file) {
+        const receipt = file();
+        if (receipt === null) {
+          latest.current.onFailed?.();
+          return;
+        }
+        setFiled(receipt);
+      }
+      setPhase('success');
+    }, PAY_MS);
   };
 
   // However the confirmation is left (the button, Escape, a swipe), the payment has happened.
@@ -101,7 +125,7 @@ export function PaySheet({ open, onClose, title, lines, amount, reference, onPai
     >
       <ReturnFocus />
       <div ref={contentRef}>
-        <PayContent phase={phase} lines={lines} amount={amount} reference={reference} method={method} onMethod={setMethod} minHeight={hold} />
+        <PayContent phase={phase} lines={lines} amount={amount} reference={filed ?? reference ?? ''} method={method} onMethod={setMethod} minHeight={hold} />
       </div>
       <span className="visually-hidden" role="status">
         {phase === 'processing' ? t('processing') : phase === 'success' ? t('paid') : ''}

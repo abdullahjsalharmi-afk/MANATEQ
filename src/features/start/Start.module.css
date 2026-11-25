@@ -1,50 +1,5 @@
 /* The "start a service" flow. Layout and a few text roles only; every component styles itself. */
 
-/* Page head: the step, the question, one line. */
-.head {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-  padding-block: var(--s-6) var(--s-8);
-}
-
-.step {
-  margin: 0;
-  font-size: var(--t-callout);
-  line-height: var(--lh-callout);
-  letter-spacing: var(--ls-caption);
-  color: var(--ink-3);
-}
-
-.heading {
-  margin: 0;
-  font-size: var(--t-title);
-  font-weight: var(--w-strong);
-  line-height: var(--lh-heading);
-  letter-spacing: var(--ls-heading);
-  color: var(--ink);
-  text-wrap: balance;
-}
-
-.heading:focus {
-  outline: none;
-}
-
-.heading:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-  border-radius: var(--r-tile);
-}
-
-.lead {
-  margin: 0;
-  font-size: var(--t-body);
-  line-height: var(--lh-body);
-  letter-spacing: var(--ls-body);
-  color: var(--ink-3);
-  text-wrap: pretty;
-}
-
 /* What we already know. */
 .known {
   margin-block-end: var(--s-2);
@@ -138,6 +93,13 @@
   font-size: var(--t-foot);
   line-height: var(--lh-foot);
   color: var(--ink-3);
+}
+
+.byItself {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--ink-2);
 }
 
 .homeLink {

@@ -5,7 +5,7 @@ import { Button, List, Render, Row, Sheet, Tile } from '@/design/core';
 import { NextStepCard } from '@/design/signature';
 import type { NextStep, Persona } from '@/domain/types';
 import type { StationKey } from '@/state';
-import { invoiceOfStep, STATION_RENDER, suggestedService } from './logic';
+import { STATION_RENDER } from './logic';
 import { strings } from './strings';
 
 export interface HomeHeroProps {
@@ -14,8 +14,6 @@ export interface HomeHeroProps {
   steps: NextStep[];
   station: StationKey;
   now: number;
-  /** Whether the investor has a saved eligibility check. A prospect without one is sent to the check first. */
-  checked: boolean;
   /** Pays an invoice here, in the payment sheet, when the next step is an invoice. */
   onPay: (invoiceId: string) => void;
 }
@@ -24,7 +22,7 @@ export interface HomeHeroProps {
  * The top of Home: the one thing to do next, on the maroon brand tile. More than one step: a quiet link
  * opens them all. Nothing waiting: a calm white tile. A guest is welcomed and sent to the eligibility check.
  */
-export function HomeHero({ persona, steps, station, now, checked, onPay }: HomeHeroProps) {
+export function HomeHero({ persona, steps, station, now, onPay }: HomeHeroProps) {
   const t = useT(strings);
   const { pick, fmt } = useLang();
   const [listOpen, setListOpen] = useState(false);
@@ -42,11 +40,6 @@ export function HomeHero({ persona, steps, station, now, checked, onPay }: HomeH
         render="plot"
       />
     );
-  }
-
-  // A prospect with nothing under way and no saved check starts where every journey starts: the eligibility check.
-  if (persona === 'prospect' && !checked && (!next || suggestedService(next) !== null)) {
-    return <NextStepCard tone="hero" eyebrow={t('nextEyebrow')} title={t('guestCta')} context={t('guestContext')} cta={{ label: t('checkCta'), to: '/eligibility' }} render="plot" />;
   }
 
   if (!next) {
@@ -68,10 +61,8 @@ export function HomeHero({ persona, steps, station, now, checked, onPay }: HomeH
     en: { one: t('moreFew'), other: t('moreFew') },
   };
 
-  // An invoice is paid here, in the same sheet as the dues card; a suggestion gets one short line, not the catalogue summary.
-  const invoiceId = invoiceOfStep(next);
-  const suggestion = suggestedService(next);
-  const context = suggestion === null ? pick(next.context) : t(suggestion === 'A4' && checked ? 'suggestLand' : 'suggestNext');
+  // An invoice is paid here, in the same sheet as the dues card.
+  const invoiceId = next.invoiceId;
 
   return (
     <>
@@ -79,7 +70,7 @@ export function HomeHero({ persona, steps, station, now, checked, onPay }: HomeH
         tone="hero"
         eyebrow={t('nextEyebrow')}
         title={pick(next.title)}
-        context={context}
+        context={pick(next.context)}
         due={next.dueAt !== undefined ? fmt.relative(next.dueAt, now) : undefined}
         cta={invoiceId ? { label: t('pay'), onClick: () => onPay(invoiceId) } : { label: pick(next.cta), to: next.route }}
         more={others > 0 ? { label: fmt.plural(others, moreForms), onClick: () => setListOpen(true) } : undefined}

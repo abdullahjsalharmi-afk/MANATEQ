@@ -3,6 +3,7 @@ import { useId } from 'react';
 import { Button } from '../Button/Button';
 import { cx } from '../cx';
 import { Icon } from '../Icon/Icon';
+import { keepWhole } from '../List/keepWhole';
 import { Render } from '../Render/Render';
 import type { RenderName } from '../Render/renders';
 import styles from './NextStepCard.module.css';
@@ -18,7 +19,7 @@ export interface NextStepCardProps {
   eyebrow?: string;
   /** Verb first: what to do, or, when nothing is needed, the good news. */
   title: string;
-  /** One line of context. */
+  /** One line of context (two at the largest text size; longer copy is cut with an ellipsis). Codes and dates in it never break. */
   context?: string;
   /** The deadline in a few words, e.g. "خلال 5 أيام". */
   due?: string;
@@ -43,7 +44,8 @@ export interface NextStepCardProps {
 
 /**
  * The investor's single next step: a verb-first title, one line of context with the deadline, one pill.
- * As the hero of Home it is the maroon brand tile with the render of the current station resting below the words.
+ * As the hero of Home it is the maroon brand tile with the render of the current station resting below the words,
+ * or beside them from 834 px, where the tile is wide enough for both.
  * When nothing is waiting it says so calmly.
  */
 export function NextStepCard({ eyebrow, title, context, due, cta, secondary, more, tone = 'action', render, level = 2, className }: NextStepCardProps) {
@@ -67,7 +69,7 @@ export function NextStepCard({ eyebrow, title, context, due, cta, secondary, mor
 
   if (hero) {
     return (
-      <section className={cx(styles.hero, className)} data-tone="brand" aria-labelledby={titleId}>
+      <section className={cx(styles.hero, render && styles.withRender, className)} data-tone="brand" aria-labelledby={titleId}>
         <div className={styles.heroInner}>
           {eyebrow || due ? (
             <p className={styles.heroEyebrow}>
@@ -79,7 +81,11 @@ export function NextStepCard({ eyebrow, title, context, due, cta, secondary, mor
           <Heading id={titleId} className={styles.heroTitle}>
             {title}
           </Heading>
-          {context ? <p className={styles.heroContext}>{context}</p> : null}
+          {context ? (
+            <p className={styles.heroContext}>
+              {keepWhole(context)}
+            </p>
+          ) : null}
           {cta || secondary ? (
             <div className={styles.heroActions}>
               {cta ? (
@@ -128,7 +134,7 @@ export function NextStepCard({ eyebrow, title, context, due, cta, secondary, mor
         <Heading id={titleId} className={styles.title}>
           {title}
         </Heading>
-        {context ? <p className={styles.context}>{context}</p> : null}
+        {context ? <p className={styles.context}>{keepWhole(context)}</p> : null}
         {cta || moreLink ? (
           <div className={styles.actions}>
             {cta ? (

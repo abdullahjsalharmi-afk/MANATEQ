@@ -45,7 +45,7 @@ export function JourneyCard({ journey, plotNumber }: JourneyCardProps) {
         />
       </Card>
       <Sheet open={shown !== undefined} onClose={() => setOpen(null)} title={shown ? pick(shown.name) : ''} description={t('stationSheetBody', { plot })}>
-        <JourneyRibbon label={t('journeyTitle')} stations={stations} size="expanded" onSelect={(key) => setOpen(key as StationKey)} className={styles.sheetRibbon} />
+        <JourneyRibbon label={t('journeyTitle')} stations={stations} size="expanded" selected={open ?? undefined} onSelect={(key) => setOpen(key as StationKey)} className={styles.sheetRibbon} />
         {shown ? (
           <List variant="plain" aria-label={pick(shown.name)}>
             {shown.items.map((item) => {

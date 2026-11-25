@@ -1,10 +1,12 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { keep } from '@/app/i18n';
 import { loadAllServiceDetails, peekServiceDetail, services } from '@/data/catalog';
 import type { ServiceDetail, ServiceId } from '@/data/types';
 import { buildChains, chainFrom, followers, oncePerPlot, startedBy, unlocks } from '@/domain/chains';
 import { DOC_REF_PREFIX, VERIFY_CODE_PATTERN, docSpecs, leaseContractDoc, receiptDoc, requestDocs, verifyCode, type DocFacts } from '@/domain/documents';
 import { STATIONS, STATION_KEYS, checklist, focusPlot, journeyOf, stationOf } from '@/domain/journey';
 import { collectNextSteps, deadlineOf, pendingAction, startRoute } from '@/domain/nextstep';
+import { DOT, keepWhole } from '@/domain/text';
 import type { Company, Invoice, Lease, Plot, PlotStatus, RequestState, World } from '@/domain/types';
 import { calendarTiming, emptyWorld, seedWorld } from '@/state/seed';
 import { startIn, tickWorld } from '@/state/sim';
@@ -360,5 +362,19 @@ describe('next steps', () => {
     const bare = collectNextSteps(tenant, () => undefined).find((s) => s.kind === 'renewal');
     expect(bare?.title).toEqual(detail('B3').label);
     expect(bare?.cta.en).toBe('Open request');
+  });
+});
+
+describe('text the state writes', () => {
+  it('keeps a code whole the way ltr() does: the real hyphen, then a word joiner', () => {
+    expect(keepWhole('AW-116')).toBe(keep('AW-116'));
+    expect(keepWhole('TSD-2026-7KX8')).toBe('TSD-\u20602026-\u20607KX8');
+    expect(keepWhole('AW-116')).not.toContain('\u2011');
+    // Applying it twice changes nothing, and spaces become no-break spaces.
+    expect(keepWhole(keepWhole('Plot AW-116'))).toBe('Plot\u00A0AW-\u2060116');
+  });
+
+  it('holds the list dot to the item before it, so a line never starts with a dot', () => {
+    expect(DOT).toBe('\u00A0· ');
   });
 });

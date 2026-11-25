@@ -1,7 +1,7 @@
 /**
  * Pure helpers of the requests feature: how the list groups a thread, how far along its chain a
- * request is, which tasks the action runner asks for, which receipts a payment filed and whether a
- * request has a day clock. No React, no store: everything here is unit-tested.
+ * request is, which tasks the action runner asks for and whether a request has a day clock. No React,
+ * no store: everything here is unit-tested.
  */
 import { chainFrom, unlocks } from '@/domain/chains';
 import type { ActionAtom, ServiceId, StepAction } from '@/data/types';
@@ -110,67 +110,12 @@ function dedupe(list: ActionAtom[]): ActionAtom[] {
   return list.filter((task, index) => list.indexOf(task) === index);
 }
 
-/** The receipt document of a payment, as the runner needs it to name the receipt. */
-export interface ReceiptLike {
-  id: string;
-  ref: string;
-  kind: string;
-}
-
 /**
- * The receipts a payment filed against a request: the receipt documents it holds now that it did not
- * hold before (`before` is the request's `docIds` just before the step was completed).
+ * Whether the request's clock is a real "day n of m" countdown worth a ring and a figure. A standard with
+ * no duration (the building permit's "within one working day of each Ministry event") has a null target.
  */
-export function newReceipts<D extends ReceiptLike>(before: readonly string[], after: readonly string[], docs: readonly D[]): D[] {
-  const added = after.filter((id) => !before.includes(id));
-  return added.map((id) => docs.find((doc) => doc.id === id)).filter((doc): doc is D => doc !== undefined && doc.kind === 'receipt');
-}
-
-/**
- * The deposit of a new contract (B2) was already taken with the offer (A6) of the same thread: the state
- * then fixes no amount for the step and files no second payment. Returns the receipt of that deposit
- * when it can be found (`thread` is every request of the thread, `docs` every document).
- */
-export function depositPaidWithOffer<D extends ReceiptLike & { requestId?: string }>(
-  request: Pick<RequestState, 'id' | 'amount'>,
-  action: Pick<StepAction, 'amount'>,
-  thread: readonly Pick<RequestState, 'id' | 'serviceId' | 'docIds'>[],
-  docs: readonly D[],
-): { receipt: D | undefined } | null {
-  if (action.amount?.basis !== 'deposit' || request.amount !== undefined) return null;
-  const offer = thread.find((other) => other.id !== request.id && other.serviceId === 'A6');
-  if (!offer) return null;
-  const receipt = docs.find((doc) => doc.kind === 'receipt' && offer.docIds.includes(doc.id));
-  return receipt ? { receipt } : null;
-}
-
-/**
- * Services whose published standard is a promise about each status update or a monitoring cycle (the
- * building permit: "status updated within one working day of each Ministry event"), not a duration for
- * the whole request. Their requests show no day clock: the holder and the expected time say when.
- */
-const PER_EVENT_STANDARDS: ReadonlySet<ServiceId> = new Set<ServiceId>(['C2', 'C3', 'E7', 'G3', 'G4']);
-
-/** Whether the request's clock is a real "day n of m" countdown worth a ring and a figure. */
-export function hasDayClock(serviceId: ServiceId, clock: { ratio: number | null; targetDays: number | null } | undefined): boolean {
-  if (!clock || clock.ratio === null || clock.targetDays === null || clock.targetDays <= 0) return false;
-  return !PER_EVENT_STANDARDS.has(serviceId);
-}
-
-/**
- * The gate pass a pass request (D2) issued, found by the holder and plot it was asked for. Passes do
- * not record their request, so this matches what the request asked for; undefined when nothing matches.
- */
-export function passOfRequest<P extends { holder: string; plotId: string; status: string }>(request: Pick<RequestState, 'serviceId' | 'plotId' | 'form' | 'status'>, passes: readonly P[]): P | undefined {
-  if (request.serviceId !== 'D2' || request.status !== 'done') return undefined;
-  const text = (value: unknown): string | undefined => (typeof value === 'string' && value.trim() ? value.trim() : undefined);
-  const visitor = request.form.visitor;
-  const visitorName = visitor !== null && typeof visitor === 'object' && 'name' in visitor ? text(visitor.name) : undefined;
-  const holder = text(request.form.holder) ?? visitorName ?? text(request.form.plate) ?? text(request.form.qid);
-  if (!holder) return undefined;
-  const plots = [request.plotId, text(request.form.plot)].filter((id): id is string => id !== undefined);
-  const matches = passes.filter((pass) => pass.holder === holder && (!plots.length || plots.includes(pass.plotId)));
-  return matches.find((pass) => pass.status === 'active') ?? matches[matches.length - 1];
+export function hasDayClock(clock: { ratio: number | null; targetDays: number | null } | undefined): boolean {
+  return clock !== undefined && clock.ratio !== null && clock.targetDays !== null && clock.targetDays > 0;
 }
 
 const HOUR = 3_600_000;

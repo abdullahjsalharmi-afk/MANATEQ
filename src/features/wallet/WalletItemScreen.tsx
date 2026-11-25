@@ -12,7 +12,6 @@ import { plotIdOfDoc, revokePass, selectDoc, selectPass, selectPlot, selectPlots
 import { canPrint, canShare } from './device';
 import { holderName, passMoment, passValidity, verifyUrl } from './logic';
 import { strings } from './strings';
-import { Atom } from './Unbroken';
 import { VerifySheet } from './VerifySheet';
 import styles from './Wallet.module.css';
 
@@ -116,11 +115,11 @@ function DocView({ doc }: { doc: Doc }) {
           </div>
 
           <List className={styles.asideList}>
-            <Row title={<Atom code>{doc.verifyCode}</Atom>} subtitle={t('copyCode')} trailing={<Icon icon={Copy} size={20} />} onClick={copy} chevron={false} />
+            <Row title={<span className="ltr">{doc.verifyCode}</span>} subtitle={t('copyCode')} trailing={<Icon icon={Copy} size={20} />} onClick={copy} chevron={false} />
             <Row title={pick(doc.issuer)} subtitle={t('issuer')} />
             <Row title={t(doc.signed ? 'signedYes' : 'signedNo')} subtitle={t('status')} />
-            {request ? <Row title={<Atom code>{request.ref}</Atom>} subtitle={t('fromRequest')} to={`/requests/${request.id}`} /> : null}
-            {plot ? <Row title={<Atom code>{plot.number}</Atom>} subtitle={t('plot')} to={`/account/plots/${plot.id}`} /> : null}
+            {request ? <Row title={<span className="ltr">{request.ref}</span>} subtitle={t('fromRequest')} to={`/requests/${request.id}`} /> : null}
+            {plot ? <Row title={<span className="ltr">{plot.number}</span>} subtitle={t('plot')} to={`/account/plots/${plot.id}`} /> : null}
           </List>
           {printable ? <p className={styles.fine}>{t('printNote')}</p> : null}
         </aside>

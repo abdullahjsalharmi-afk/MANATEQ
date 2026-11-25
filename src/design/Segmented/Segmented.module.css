@@ -1,9 +1,12 @@
 /* Segmented control: a sunken pill track, a pill thumb, 14 px labels. No shadow on the thumb.
    One width rule everywhere: the full column on phones, at most 420 px and start-aligned on wider screens
-   (the same cap as a block pill). `inline` is for a control that sits inside a row or a bar. */
+   (the same cap as a block pill). It holds in a block, a flex or a grid parent alike, so a screen never needs its
+   own width rule for it. `inline` is for a control that sits inside a row or a bar. */
 .segmented {
   position: relative;
+  inline-size: 100%;
   max-inline-size: 420px;
+  justify-self: start;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
@@ -13,6 +16,7 @@
 }
 
 .inline {
+  inline-size: auto;
   max-inline-size: none;
   display: inline-grid;
   grid-auto-columns: 1fr;

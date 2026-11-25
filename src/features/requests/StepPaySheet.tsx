@@ -86,7 +86,7 @@ export function StepPaySheet({ open, onClose, title, lines, amount, onPay, onFai
     <Sheet
       open={open}
       onClose={phase === 'success' ? finish : onClose}
-      title={title}
+      title={phase === 'success' ? t('paidTitle') : title}
       dismissible={phase !== 'processing'}
       closeLabel={closeLabel}
       footer={<PayFooter phase={phase} amount={amount} onPay={pay} onDone={finish} doneId={doneId} />}
