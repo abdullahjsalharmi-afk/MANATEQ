@@ -10,6 +10,10 @@ A screen is made of four things only: **tiles** (full-bleed, the big moment), **
 cards** on the parchment page, and the **sticky action bar** (the one action of a flow). The pulse of a page:
 hero tile → contained section → (a dark or white tile) → contained section. The shell adds the rest: the tab bar
 on phones; from 834 px the global bar and the footer. Never render those, nor the «نسخة تجريبية» capsule.
+From 834 px the global bar also carries search, the language switch and, for a signed-in visitor, the bell
+with its unread count: a screen that puts search or the bell in its own bar hides them from that width
+(`phoneOnly` on Home). The bar of a tab root is clear while its large title is in view and takes its frosted
+material once content scrolls under it.
 
 ## Screen
 
