@@ -51,6 +51,16 @@ export function interpolate(template: string, vars?: Vars): string {
   return template.replace(/\{(\w+)\}/g, (whole, key: string) => (key in vars ? String(vars[key]) : whole));
 }
 
+const MINUTE = 60_000;
+const HOUR = 3_600_000;
+const DAY = 86_400_000;
+/** The mean Gregorian month and year. */
+const MONTH = 30.436875 * DAY;
+const YEAR = 365.2425 * DAY;
+/** `relative()` counts in days up to this many days, then in months up to RELATIVE_MAX_MONTHS, then in years. */
+export const RELATIVE_MAX_DAYS = 60;
+export const RELATIVE_MAX_MONTHS = 24;
+
 export interface Formatters {
   /** 18,750 */
   num(n: number, maxFractionDigits?: number): string;
@@ -68,7 +78,7 @@ export interface Formatters {
   dayMonth(ms: number): string;
   /** 9:30 ص · 9:30 am */
   time(ms: number): string;
-  /** خلال 5 أيام · in 5 days · أمس · yesterday */
+  /** خلال 5 أيام · in 5 days · أمس · yesterday · in 15 months · 3 years ago (days up to 60, months up to 24, then years). */
   relative(ms: number, now: number): string;
   /** Chooses the plural form for `n` and fills `{n}`. */
   plural(n: number, forms: PluralForms): string;
@@ -85,6 +95,7 @@ export function makeFormatters(lang: Lang): Formatters {
   const dayMonthFmt = new Intl.DateTimeFormat(locale, { day: 'numeric', month: lang === 'ar' ? 'long' : 'short' });
   const timeFmt = new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit', hour12: true });
   const rel = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  const relNumeric = new Intl.RelativeTimeFormat(locale, { numeric: 'always' });
   const rules = new Intl.PluralRules(lang === 'ar' ? 'ar' : 'en');
 
   const num = (n: number, maxFractionDigits = 0): string =>
@@ -108,15 +119,17 @@ export function makeFormatters(lang: Lang): Formatters {
     relative: (ms, now) => {
       const diff = ms - now;
       const abs = Math.abs(diff);
-      const MIN = 60_000;
-      const HOUR = 3_600_000;
-      const DAY = 86_400_000;
-      if (abs < MIN) return rel.format(0, 'minute');
-      if (abs < HOUR) return rel.format(Math.round(diff / MIN), 'minute');
+      const sign = diff < 0 ? -1 : 1;
+      if (abs < MINUTE) return rel.format(0, 'minute');
+      if (abs < HOUR) return rel.format(Math.round(diff / MINUTE), 'minute');
       if (abs < DAY) return rel.format(Math.round(diff / HOUR), 'hour');
-      if (abs < 30 * DAY) return rel.format(Math.round(diff / DAY), 'day');
-      if (abs < 365 * DAY) return rel.format(Math.round(diff / (30 * DAY)), 'month');
-      return rel.format(Math.round(diff / (365 * DAY)), 'year');
+      // Words such as "tomorrow" and "yesterday" only for days; a longer span always carries its number, so a date
+      // 15 months away never reads "next year" (numeric: 'auto' would round 466 days to one year and say so).
+      const days = Math.round(abs / DAY);
+      if (days <= RELATIVE_MAX_DAYS) return rel.format(sign * days, 'day');
+      const months = Math.round(abs / MONTH);
+      if (months <= RELATIVE_MAX_MONTHS) return relNumeric.format(sign * months, 'month');
+      return relNumeric.format(sign * Math.round(abs / YEAR), 'year');
     },
     plural: (n, forms) => {
       const rule = rules.select(n);

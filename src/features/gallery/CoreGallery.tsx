@@ -849,7 +849,9 @@ export function CoreGallery() {
               ].map(([icon, label]) => (
                 <Card key={label} to="/gallery">
                   <Icon icon={icon} />
-                  <p style={{ ...cardTitle, marginBlockStart: 'var(--s-3)' }}>{label}</p>
+                  <p className="mq-words" style={{ ...cardTitle, marginBlockStart: 'var(--s-3)' }}>
+                    {label}
+                  </p>
                 </Card>
               ))}
             </Grid>

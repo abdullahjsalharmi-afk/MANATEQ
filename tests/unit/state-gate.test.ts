@@ -1,0 +1,347 @@
+/**
+ * Regression tests for the release gate's findings on the state layer (packet "state"). Each block names
+ * the finding it pins. They run the pure reducers on the seeded worlds, as the app does.
+ */
+import { beforeAll, describe, expect, it } from 'vitest';
+import { getService, loadAllServiceDetails, peekServiceDetail } from '@/data/catalog';
+import type { ServiceDetail, ServiceId } from '@/data/types';
+import { journeyOf } from '@/domain/journey';
+import { needsTenancy, plotsFor } from '@/domain/plots';
+import { timingFor } from '@/domain/simulation';
+import type { AppState, RequestState, World } from '@/domain/types';
+import { currentVisit, progress } from '@/domain/workflow';
+import { renewalTerms } from '@/state/effects';
+import { calendarTiming, emptyWorld, initialSettings, seedWorld, STATE_VERSION } from '@/state/seed';
+import { selectAppointments, selectHasPlots, selectPlotsFor, selectRenewalTerms, selectUnreadCount } from '@/state/selectors';
+import { actIn, cancelIn, fastForwardIn, payInvoiceIn, startIn, tickWorld } from '@/state/sim';
+import type { Env } from '@/state/types';
+import { requestView, standardClockOf } from '@/state/view';
+
+const plain = (text: string | undefined): string => (text ?? '').replace(/⁠/g, '').replace(/ /g, ' ');
+
+const DAY = 86_400_000;
+const NOW = new Date(2026, 10, 25, 9, 30).getTime();
+const live: Env = { detail: peekServiceDetail, timing: (service) => timingFor(service, 1) };
+const calendar: Env = { detail: peekServiceDetail, timing: calendarTiming };
+const detail = (id: ServiceId): ServiceDetail => peekServiceDetail(id) as ServiceDetail;
+const stateOf = (world: World): AppState => ({ version: STATE_VERSION, settings: initialSettings(), world, demo: { speed: 1 } });
+
+beforeAll(async () => {
+  await loadAllServiceDetails();
+});
+
+/** Moves a request on demo time until `stop` says so, acting for the investor with `answer` when it is asked. */
+function drive(world: World, id: string, from: number, stop: (request: RequestState) => boolean, answer: (request: RequestState) => Parameters<typeof actIn>[2] | null = () => ({})): { world: World; now: number } {
+  let next = world;
+  let now = from;
+  const read = () => next.requests.find((request) => request.id === id) as RequestState;
+  for (let i = 0; i < 600 && !stop(read()); i++) {
+    if (read().status === 'needs_you') {
+      const payload = answer(read());
+      if (payload === null) break;
+      next = actIn(next, id, payload, now, live);
+    } else next = fastForwardIn(next, id, now, live);
+    now += 1000;
+    next = tickWorld(next, now, live);
+  }
+  return { world: next, now };
+}
+
+const steps = (request: RequestState): number[] => request.visits.map((visit) => visit.step);
+
+describe('n=1 · B2: a paid deposit is recorded without bank verification', () => {
+  const run = (choice: string) => {
+    const started = startIn(seedWorld('tenant', NOW), { serviceId: 'B2', plotId: 'BA-121' }, NOW + 1000, live);
+    const { world } = drive(started.world, started.id, NOW + 2000, (request) => request.status === 'done' || request.status === 'stopped', (request) =>
+      request.current === 3 ? { choice, ...(choice === 'guarantee' ? { files: [{ name: 'g.pdf' }] } : {}) } : { files: [{ name: 'g.pdf' }] },
+    );
+    return world.requests.find((request) => request.id === started.id) as RequestState;
+  };
+
+  it('the deposit skips the reading and checking of a guarantee (steps 4 to 8) and goes on to the register', () => {
+    const request = run('deposit');
+    expect(request.status).toBe('done');
+    expect(steps(request)).toEqual([1, 2, 3, 9, 10, 11]);
+  });
+
+  it('the guarantee keeps the full verification route', () => {
+    const request = run('guarantee');
+    expect(request.status).toBe('done');
+    expect(steps(request)).toEqual(expect.arrayContaining([4, 5, 7, 8, 9]));
+  });
+
+  it('right after the deposit, the request is not with the banks', () => {
+    const started = startIn(seedWorld('tenant', NOW), { serviceId: 'B2', plotId: 'BA-121' }, NOW + 1000, live);
+    const { world, now } = drive(started.world, started.id, NOW + 2000, (request) => request.status === 'needs_you');
+    const after = actIn(world, started.id, { choice: 'deposit' }, now, live);
+    const request = after.requests.find((candidate) => candidate.id === started.id) as RequestState;
+    expect(request.current).toBe(9);
+    expect(requestView(request, detail('B2'), now, 1).timeline.filter((entry) => entry.state === 'upcoming').map((entry) => entry.step)).toEqual([10, 11]);
+  });
+});
+
+describe('n=15 · D1: a low rating reopens the request for the supervisor', () => {
+  const rated = (stars: number) => {
+    const started = startIn(seedWorld('tenant', NOW), { serviceId: 'D1', plotId: 'BA-121', form: { category: 'lighting', photo: { name: 'p.jpg' }, location: 'BA-121' } }, NOW + 1000, live);
+    const ready = drive(started.world, started.id, NOW + 2000, (request) => request.status === 'needs_you' && request.current === 11);
+    const world = actIn(ready.world, started.id, { rating: { stars, comment: 'still dark' } }, ready.now, live);
+    return { world, id: started.id, now: ready.now };
+  };
+
+  it.each([1, 2])('%i stars: not finished, back with the supervisor, the rating kept and the investor told', (stars) => {
+    const { world, id, now } = rated(stars);
+    const request = world.requests.find((candidate) => candidate.id === id) as RequestState;
+    expect(request.status).toBe('active');
+    expect(request.current).toBe(10);
+    expect(request.rating).toEqual({ stars, comment: 'still dark' });
+    expect(request.reopenedAt).toBe(now);
+    expect(request.reopenedRating).toEqual({ stars, comment: 'still dark' });
+    const told = world.notifications.filter((notification) => notification.subject?.requestId === id && notification.at === now && notification.kind === 'update');
+    expect(told.map((notification) => notification.title.en)).toContain('We reopened the report for the supervisor');
+    expect(`${told[0]?.title.ar}${told[0]?.body.ar}${told[0]?.body.en}`).not.toMatch(/—|تذكرة|حالة/);
+  });
+
+  it('then follows the workflow as written until the investor is asked to rate again, and a good rating closes it', () => {
+    const { world, id, now } = rated(1);
+    const again = drive(world, id, now + 1000, (request) => request.status === 'needs_you' && request.current === 11);
+    const reopened = again.world.requests.find((candidate) => candidate.id === id) as RequestState;
+    const visits = steps(reopened);
+    expect(visits.slice(visits.indexOf(10))).toEqual([10, 6, 7, 8, 9, 11]);
+    const closed = actIn(again.world, id, { rating: 4 }, again.now, live).requests.find((candidate) => candidate.id === id) as RequestState;
+    expect(closed.status).toBe('done');
+    expect(closed.rating).toEqual({ stars: 4 });
+    expect(closed.reopenedRating?.stars).toBe(1);
+  });
+
+  it('three stars or more finishes as before', () => {
+    const { world, id } = rated(3);
+    const request = world.requests.find((candidate) => candidate.id === id) as RequestState;
+    expect(request.status).toBe('done');
+    expect(request.reopenedAt).toBeUndefined();
+  });
+});
+
+describe('n=7 · a withdrawn request never reads its open step as done', () => {
+  const tenant = () => seedWorld('tenant', NOW);
+  const cancelOf = (serviceId: ServiceId) => {
+    const world = tenant();
+    const open = world.requests.find((request) => request.serviceId === serviceId && request.status === 'active') as RequestState;
+    const after = cancelIn(world, open.id, NOW + 60_000, live);
+    return { before: open, after: after.requests.find((request) => request.id === open.id) as RequestState };
+  };
+
+  it.each(['D1', 'C2'] as ServiceId[])('%s: the open step is stopped, not done', (serviceId) => {
+    const { before, after } = cancelOf(serviceId);
+    const last = after.visits.at(-1);
+    expect(after.status).toBe('stopped');
+    expect(last?.step).toBe(before.current);
+    expect(last?.doneAt).toBeUndefined();
+    expect(last?.stoppedAt).toBe(NOW + 60_000);
+    expect(currentVisit(after)).toBeUndefined();
+    const view = requestView(after, detail(serviceId), NOW + 120_000, 1);
+    expect(view.timeline.at(-1)).toMatchObject({ step: before.current, state: 'stopped', time: NOW + 60_000 });
+    expect(view.timeline.filter((entry) => entry.state === 'stopped')).toHaveLength(1);
+    expect(view.heldSince).toBeUndefined();
+    expect(view.finishedAt).toBe(NOW + 60_000);
+    expect(view.progress).toBeLessThan(1);
+  });
+
+  it('the standard clock stops when the request is withdrawn', () => {
+    const { after } = cancelOf('C2');
+    const service = detail('C2');
+    expect(standardClockOf(after, service, NOW + 10 * DAY, 1)).toEqual(standardClockOf(after, service, NOW + 60_001, 1));
+  });
+
+  it('a withdrawn request that waited for the investor keeps the wait off the clock', () => {
+    const world = tenant();
+    const renewal = world.requests.find((request) => request.serviceId === 'B3') as RequestState;
+    const after = cancelIn(world, renewal.id, NOW + 60_000, live).requests.find((request) => request.id === renewal.id) as RequestState;
+    expect(after.visits.at(-1)).toMatchObject({ step: renewal.current, stoppedAt: NOW + 60_000 });
+    expect(after.visits.at(-1)?.doneAt).toBeUndefined();
+    expect(progress(detail('B3').workflow, after)).toBeLessThan(1);
+  });
+});
+
+describe('n=8 · the journey after a withdrawal', () => {
+  it('the building permit is not "in progress" once withdrawn: nothing is open for it', () => {
+    const world = seedWorld('tenant', NOW);
+    const permit = world.requests.find((request) => request.serviceId === 'C2') as RequestState;
+    const before = journeyOf(world, 'AW-116').stations.find((station) => station.key === 'build')?.items.find((item) => item.serviceId === 'C2');
+    expect(before).toMatchObject({ state: 'current', open: true, requestId: permit.id });
+    expect(before?.stoppedRequestId).toBeUndefined();
+
+    const after = cancelIn(world, permit.id, NOW + 60_000, live);
+    const item = journeyOf(after, 'AW-116').stations.find((station) => station.key === 'build')?.items.find((candidate) => candidate.serviceId === 'C2');
+    expect(item?.open).toBe(false);
+    expect(item?.stoppedRequestId).toBe(permit.id);
+    expect(item?.requestId).toBeUndefined();
+    // The utilities request really is running.
+    const utilities = journeyOf(after, 'AW-116').stations.find((station) => station.key === 'build')?.items.find((candidate) => candidate.serviceId === 'C4');
+    expect(utilities).toMatchObject({ state: 'current', open: true });
+  });
+});
+
+describe('n=3 and n=6 · a "needs you" notification is settled once its ask is done', () => {
+  it('paying the invoice settles its reminder, adds a read "payment received" note and the bell drops', () => {
+    const world = seedWorld('tenant', NOW);
+    const reminder = world.notifications.find((notification) => notification.kind === 'action' && notification.subject?.invoiceId !== undefined);
+    expect(reminder).toBeDefined();
+    const invoiceId = reminder?.subject?.invoiceId as string;
+    const unread = selectUnreadCount(stateOf(world));
+    const paid = payInvoiceIn(world, invoiceId, NOW + 1000);
+    const settled = paid.world.notifications.find((notification) => notification.id === reminder?.id);
+    expect(settled).toMatchObject({ read: true, resolvedAt: NOW + 1000 });
+    expect(selectUnreadCount(stateOf(paid.world))).toBe(unread - 1);
+    const note = paid.world.notifications.at(-1);
+    expect(note).toMatchObject({ kind: 'done', route: `/account/wallet/${paid.docId}`, read: true, subject: { invoiceId } });
+    expect(plain(note?.title.en)).toBe('Payment received. The receipt is in Documents and passes');
+    expect(note?.title.ar).not.toMatch(/—/);
+  });
+
+  it('completing the renewal settles "accept the renewal offer and pay"', () => {
+    const world = seedWorld('tenant', NOW);
+    const renewal = world.requests.find((request) => request.serviceId === 'B3') as RequestState;
+    const ask = world.notifications.find((notification) => notification.kind === 'action' && notification.subject?.requestId === renewal.id);
+    expect(ask).toMatchObject({ read: false, subject: { step: renewal.current } });
+    const unread = selectUnreadCount(stateOf(world));
+    const after = actIn(world, renewal.id, { form: {} }, NOW + 1000, live);
+    expect(after.notifications.find((notification) => notification.id === ask?.id)).toMatchObject({ read: true, resolvedAt: NOW + 1000 });
+    expect(selectUnreadCount(stateOf(after))).toBeLessThan(unread);
+  });
+
+  it('withdrawing a request settles what it asked for', () => {
+    const world = seedWorld('tenant', NOW);
+    const renewal = world.requests.find((request) => request.serviceId === 'B3') as RequestState;
+    const after = cancelIn(world, renewal.id, NOW + 1000, live);
+    expect(after.notifications.filter((notification) => notification.subject?.requestId === renewal.id && notification.kind === 'action').every((notification) => notification.resolvedAt === NOW + 1000)).toBe(true);
+  });
+
+  it('every seeded "needs you" is linked to what it asks about', () => {
+    const world = seedWorld('tenant', NOW);
+    for (const notification of world.notifications.filter((candidate) => candidate.kind === 'action')) expect(notification.subject, plain(notification.title.en)).toBeDefined();
+    // Answered asks of the history are settled, not unread.
+    for (const notification of world.notifications.filter((candidate) => candidate.resolvedAt !== undefined)) expect(notification.read).toBe(true);
+  });
+});
+
+describe('n=14 · E1: asking for an appointment books one', () => {
+  const start = (form: Record<string, string | boolean>) => startIn(seedWorld('tenant', NOW), { serviceId: 'E1', form: { request: 'I need help with my permit', ...form } }, NOW + 1000, live);
+
+  it('books 10:00 on the preferred day, in person, linked to the request, and tells the investor', () => {
+    const { world, id } = start({ bookAppointment: true, preferredDate: '2026-11-29' });
+    const appointment = world.appointments.find((candidate) => candidate.requestId === id);
+    expect(appointment).toMatchObject({ at: new Date(2026, 10, 29, 10, 0).getTime(), channel: 'in_person', status: 'booked', topic: getService('E1')?.requestLabel });
+    expect(selectAppointments(stateOf(world))).toContain(appointment);
+    const note = world.notifications.at(-1);
+    expect(note).toMatchObject({ route: '/account/support', subject: { requestId: id } });
+    expect(plain(note?.title.en)).toBe('Your Business Services Center appointment is booked');
+    expect(plain(note?.body.en)).toContain('29 Nov 2026');
+  });
+
+  it('takes the channel the form names', () => {
+    const { world, id } = start({ bookAppointment: true, preferredDate: '2026-11-30', channel: 'video' });
+    expect(world.appointments.find((candidate) => candidate.requestId === id)?.channel).toBe('video');
+  });
+
+  it('books nothing without the toggle or without a day', () => {
+    expect(start({ bookAppointment: false, preferredDate: '2026-11-29' }).world.appointments.some((candidate) => candidate.requestId !== undefined)).toBe(false);
+    expect(start({ bookAppointment: true }).world.appointments.some((candidate) => candidate.requestId !== undefined)).toBe(false);
+  });
+
+  it('withdrawing the request cancels its appointment', () => {
+    const { world, id } = start({ bookAppointment: true, preferredDate: '2026-11-29' });
+    const after = cancelIn(world, id, NOW + 2000, live);
+    expect(after.appointments.find((candidate) => candidate.requestId === id)?.status).toBe('cancelled');
+  });
+});
+
+describe('n=0 · the handover started without a plot', () => {
+  /** A prospect whose contract is signed: one plot, leased and not handed over yet. */
+  const leasedProspect = (): World => {
+    const world = seedWorld('tenant', NOW);
+    return { ...world, plots: world.plots.map((plot) => (plot.id === 'AW-116' ? { ...plot, status: 'leased' as const } : plot)) };
+  };
+
+  it('plotsFor offers only leased plots not handed over for A8, every held plot otherwise', () => {
+    const world = leasedProspect();
+    expect(plotsFor(world, 'A8').map((plot) => plot.id)).toEqual(['AW-116']);
+    expect(plotsFor(world, 'B8').map((plot) => plot.id).sort()).toEqual(['AK-113', 'AW-116', 'BA-121']);
+    expect(plotsFor({ plots: [{ id: 'AW-1', number: 'AW-101', zoneCode: 'AW', areaSqm: 1, solution: 'logistics', status: 'reserved' }] }, 'B8')).toEqual([]);
+    expect(selectPlotsFor('A8')(stateOf(world))).toBe(selectPlotsFor('A8')(stateOf(world)));
+    // The layout of a zone is still there under the same name.
+    expect(plotsFor('BA')).toHaveLength(40);
+  });
+
+  it('takes the one plot that qualifies, so the handover marks it handed over', () => {
+    const started = startIn(leasedProspect(), { serviceId: 'A8', form: { slot: NOW + DAY } }, NOW + 1000, live);
+    expect(started.world.requests.find((request) => request.id === started.id)?.plotId).toBe('AW-116');
+    const { world } = drive(started.world, started.id, NOW + 2000, (request) => request.status === 'done');
+    expect(world.plots.find((plot) => plot.id === 'AW-116')?.status).toBe('handed_over');
+  });
+
+  it('leaves the plot unset when several qualify (the start flow asks) or none does', () => {
+    const tenant = seedWorld('tenant', NOW);
+    const several = startIn(tenant, { serviceId: 'B8', form: {} }, NOW + 1000, live);
+    expect(several.world.requests.find((request) => request.id === several.id)?.plotId).toBeUndefined();
+    const none = startIn(seedWorld('prospect', NOW), { serviceId: 'A8', form: {} }, NOW + 1000, live);
+    expect(none.world.requests.find((request) => request.id === none.id)?.plotId).toBeUndefined();
+  });
+});
+
+describe('n=21 · services that need a plot', () => {
+  it('needsTenancy says which services are only for a company that holds a plot', () => {
+    for (const id of ['A8', 'B7', 'B8', 'C1', 'C6', 'D1', 'D7', 'B3'] as ServiceId[]) expect(needsTenancy(getService(id) as NonNullable<ReturnType<typeof getService>>), id).toBe(true);
+    for (const id of ['A1', 'A2', 'A4', 'E1', 'E4', 'G1', 'D3'] as ServiceId[]) expect(needsTenancy(getService(id) as NonNullable<ReturnType<typeof getService>>), id).toBe(false);
+    // B6 is offered to prospects too, but its form requires a plot.
+    expect(needsTenancy(getService('B6') as NonNullable<ReturnType<typeof getService>>)).toBe(false);
+    expect(needsTenancy(detail('B6'))).toBe(true);
+  });
+
+  it('selectHasPlots tells a prospect from a tenant', () => {
+    expect(selectHasPlots(stateOf(seedWorld('prospect', NOW)))).toBe(false);
+    expect(selectHasPlots(stateOf(seedWorld('tenant', NOW)))).toBe(true);
+    expect(selectHasPlots(stateOf(emptyWorld('guest')))).toBe(false);
+  });
+});
+
+describe('n=10 · the renewal offer states its terms', () => {
+  it('gives the new end, the term, the rate and the first instalment, by the rule the renewal applies', () => {
+    const world = seedWorld('tenant', NOW);
+    const renewal = world.requests.find((request) => request.serviceId === 'B3') as RequestState;
+    const lease = world.leases.find((candidate) => candidate.plotId === 'AK-113');
+    const terms = selectRenewalTerms(renewal.id)(stateOf(world));
+    expect(terms).toMatchObject({ plotId: 'AK-113', years: 1, ratePerSqm: 10, annualRent: 50_000, firstInstalment: 50_000 });
+    expect(new Date(terms?.until ?? 0).getFullYear()).toBe(new Date(lease?.endsAt ?? 0).getFullYear() + 1);
+    expect(selectRenewalTerms(renewal.id)(stateOf(world))).toBe(terms);
+    expect(selectRenewalTerms(world.requests.find((request) => request.serviceId === 'C2')?.id)(stateOf(world))).toBeUndefined();
+
+    // Accepting, signing and paying: the lease then ends exactly where the offer said.
+    const { world: after } = drive(actIn(world, renewal.id, { form: {} }, NOW + 1000, calendar), renewal.id, NOW + 2000, (request) => request.status === 'done');
+    expect(after.leases.find((candidate) => candidate.plotId === 'AK-113')?.endsAt).toBe(terms?.until);
+    expect(renewalTerms(world, renewal)).toEqual(terms);
+  });
+});
+
+describe('n=12 · document wording', () => {
+  it('names the request with its noun and gives the issue date once', () => {
+    const world = seedWorld('tenant', NOW);
+    const noc = world.docs.find((doc) => doc.kind === 'noc');
+    const service = noc?.lines.find((line) => line.label.en === 'Service');
+    expect(service?.value).toEqual({ ar: 'مراجعة التصميم', en: 'Design review' });
+    expect(noc?.lines.some((line) => line.label.en === 'Issued on' || line.label.ar === 'تاريخ الإصدار')).toBe(false);
+  });
+});
+
+describe('n=13 · the seeded utilities request keeps to its standard', () => {
+  it('is expected within the days its standard has left, and its step date agrees', () => {
+    const world = seedWorld('tenant', NOW);
+    const utilities = world.requests.find((request) => request.serviceId === 'C4') as RequestState;
+    const view = requestView(utilities, detail('C4'), NOW, 1);
+    expect(view.clock).toMatchObject({ targetDays: 10, dayNumber: 8 });
+    const left = (view.clock.targetDays as number) - view.clock.usedDays;
+    const daysToGo = ((view.expectedAt as number) - NOW) / DAY;
+    expect(daysToGo).toBeGreaterThan(0);
+    expect(daysToGo).toBeLessThanOrEqual(left + 1e-9);
+    expect(view.timeline.find((entry) => entry.state === 'current')?.time).toBe(view.expectedAt);
+  });
+});

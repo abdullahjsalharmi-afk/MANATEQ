@@ -66,6 +66,25 @@ surface you build yourself (`background: var(--tile-1)`).
   (180 px, the same in every card). `tone="parchment"` for a card on a white tile; `'sunken'` for a quiet note.
 - `<List>` + `<Row title subtitle eyebrow leading trailing to onClick chevron wrap>`: rows in one card with inset
   dividers. `leading` is a plain `<Icon>` (never in a tinted shape). `variant="plain"` inside a sheet or a card.
+  The words (title and subtitle) never get narrower than `--row-measure` (6.5em, set on `List`) nor than their
+  longest word, date or code: when the `trailing` value does not fit beside them it wraps under them, at the inline
+  end; the chevron never wraps. Do not give a trailing value a fixed width or `white-space: nowrap` on its wrapper
+  (a pill, an amount or a date is kept whole already). A title breaks only between words.
+- `wrap` lets the subtitle run over as many lines as it needs (never clamped). It is on by default when the
+  subtitle is a string with a date, a time or a code in it (`hasWhole`); pass it when you build the subtitle
+  yourself (JSX) and it shows a date or a reference. Without it the subtitle is one line with an ellipsis.
+
+## Keeping text whole, and breaking it well
+
+The body has `overflow-wrap: anywhere` as a safety net against page overflow: it lets a flex or grid column shrink
+to one letter, so a layout that squeezes words splits them mid-word. Use these instead of fixing widths:
+
+| Need | Use |
+|---|---|
+| A code, date or time inside a string | `keepWhole(text)` / `<Whole>` (Row, Lines and DocCard apply it for you) |
+| A reference or code inside Arabic | `fmt.ltr(code)` or `<span className="ltr">` (left to right, never breaks) |
+| A date, an amount or a short value in the reading direction | `fmt.date` / `fmt.money` (no-break spaces) inside `<span className="nowrap">` |
+| A title in a narrow tile (a 2-column grid on phones) | `className="mq-words"`: breaks only between words; a word wider than the whole box is hyphenated where the language allows; its column never shrinks below the longest word |
 
 ## Buttons and choices
 
@@ -124,3 +143,10 @@ surface you build yourself (`background: var(--tile-1)`).
 - Radii: 0, `--r-tile`, `--r-control`, `--r-card`, `--r-pill`. Logical properties only, never left or right.
 - A render rests on a tile or heads a card: never boxed, cropped, tinted or rotated; one large one per screenful.
 - What you pin to the bottom must clear `var(--chrome-bottom)`; sticky tops use `var(--chrome-top)`.
+- The document's scroll padding already clears the pinned bars (top: `--chrome-top`; end: tab bar plus the action
+  bar's `--actionbar-h`), so `element.focus()` and `scrollIntoView()` bring a field into view above the action bar.
+  Do not add your own offsets for that.
+- Timeline states: `done` · `current` · `upcoming` · `skipped` · `stopped` (the step that was open when the request
+  was withdrawn: hollow neutral marker, muted words, "Stopped:" for screen readers, no time shown).
+- `fmt.relative` says tomorrow / yesterday only for days; then always a number: days up to 60, months up to 24,
+  then years ("in 15 months", never "next year").

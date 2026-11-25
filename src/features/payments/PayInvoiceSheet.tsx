@@ -7,6 +7,7 @@ import type { Invoice } from '@/domain/types';
 import { payInvoice, receiptRefFor } from '@/state';
 import { useDueText } from './InvoiceRow';
 import { dueLine } from './logic';
+import { paidToastText } from './paidToast';
 import { strings } from './strings';
 
 export interface PayInvoiceSheetProps {
@@ -47,7 +48,7 @@ export function PayInvoiceSheet({ invoice, now, onClose, onPaid }: PayInvoiceShe
         if (!invoice) return;
         const receipt = payInvoice(invoice.id);
         receiptId.current = receipt;
-        toast(t('paidToast'), { tone: 'ok' });
+        toast(paidToastText(t, fmt, receipt ? receiptRefFor(invoice.ref) : undefined), { tone: 'ok' });
         onPaid?.(receipt);
       }}
       // The confirmation's pill opens the receipt just filed (called after onPaid).

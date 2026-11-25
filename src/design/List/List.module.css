@@ -1,4 +1,6 @@
 .list {
+  /* The narrowest the words of a row may get beside a trailing value. */
+  --row-measure: 6.5em;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -79,11 +81,28 @@
   color: var(--ink);
 }
 
-.text {
+/* Title and subtitle, then the trailing value. They share one line while both fit whole; when they do not, the
+   trailing value wraps under the words, at the inline end, and the words keep the whole row. The words are never
+   squeezed beside the value: overflow-wrap: anywhere (base.css) would then split them mid-word. */
+.main {
   flex: 1;
   min-width: 0;
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-3);
+}
+
+/* The words take what the value leaves, but never less than a readable measure (--row-measure, about ten
+   letters) nor less than their longest word, date or code: when the value does not fit beside that, it wraps under
+   the words. Here a word breaks only when it is wider than the whole row (break-word, unlike the global
+   overflow-wrap: anywhere, keeps the longest word as the column's minimum; max-width caps that minimum at the row). */
+.text {
+  flex: 1 1 var(--row-measure);
+  max-width: 100%;
+  display: flex;
   flex-direction: column;
+  overflow-wrap: break-word;
 }
 
 .eyebrow {
@@ -102,6 +121,8 @@
 }
 
 .subtitle {
+  /* A one-line subtitle ends in an ellipsis: its length never widens the words' column. */
+  contain: inline-size;
   overflow: hidden;
   font-size: var(--t-callout);
   line-height: var(--lh-callout);
@@ -111,25 +132,35 @@
   white-space: nowrap;
 }
 
+/* A subtitle that wraps does so in full: never clamped, so a date or a reference is never cut. */
 .wrap {
-  display: -webkit-box;
+  contain: none;
+  overflow: visible;
   white-space: normal;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 
 .trailing {
-  flex: none;
+  flex: 0 1 auto;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  margin-inline-start: auto;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--s-2);
-  max-width: 60%;
   font-size: var(--t-body);
   line-height: var(--lh-body);
   letter-spacing: var(--ls-body);
   color: var(--ink-3);
+  text-align: end;
   font-variant-numeric: tabular-nums;
+}
+
+/* A trailing slot with nothing in it takes no room beside the words. */
+.trailing:empty,
+.trailing:has(> :only-child:empty) {
+  display: none;
 }
 
 .chevron {

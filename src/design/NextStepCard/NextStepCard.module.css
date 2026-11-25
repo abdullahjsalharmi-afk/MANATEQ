@@ -48,7 +48,10 @@
   text-wrap: balance;
 }
 
-/* 17 px on phones, so one line holds a title, a plot and an amount; 21 px once there is room. */
+/* 17 px on phones, 21 px once there is room. Below 834 px the context wraps (three lines at most), so the amount
+   to pay is never cut; from 834 px, where the render sits beside the words, it is one line (two at the largest
+   text size). The clamp is a guard so a long string never turns the brand tile into a paragraph (the copy itself
+   must stay short: see nextstep.ts). */
 .heroContext {
   max-width: 30em;
   margin-block-start: var(--s-3);
@@ -58,18 +61,23 @@
   letter-spacing: var(--ls-body);
   color: var(--ink-2);
   text-wrap: balance;
-  /* The context is one line of copy (two at the largest text size); the clamp is a guard so a long string never
-     turns the brand tile into a paragraph (the copy itself must stay short: see nextstep.ts). */
   display: -webkit-box;
   overflow: hidden;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
-:global(:root[data-text='3']) .heroContext {
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+@media (min-width: 834px) {
+  .heroContext {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+
+  :global(:root[data-text='3']) .heroContext {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
 }
 
 .heroActions {

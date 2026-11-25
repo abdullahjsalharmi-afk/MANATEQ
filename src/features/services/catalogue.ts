@@ -89,7 +89,8 @@ export function filterServices(list: readonly ServiceSummary[], filter: ServiceF
 
 /** A search over services that also forgives: when no service matches every word, it ranks services by how many words they match. */
 export interface ServiceSearch {
-  search(query: string): ServiceSummary[];
+  /** `forgive: false` keeps only the services that match every word (no ranking by how many words match). */
+  search(query: string, options?: { forgive?: boolean }): ServiceSummary[];
 }
 
 export function makeServiceSearch(list: readonly ServiceSummary[] = allServices): ServiceSearch {
@@ -97,9 +98,9 @@ export function makeServiceSearch(list: readonly ServiceSummary[] = allServices)
     list.map((service) => ({ item: service, fields: [service.label, service.name, service.summary, service.promise], keys: [service.id] })),
   );
   return {
-    search(query) {
+    search(query, { forgive = true } = {}) {
       const exact = index.search(query, list.length);
-      if (exact.length) return exact;
+      if (exact.length || !forgive) return exact;
       const words = query.split(/\s+/).filter((word) => tokens(word).some((token) => token.length >= 3));
       if (words.length < 2) return [];
       const hits = new Map<ServiceId, { service: ServiceSummary; count: number; rank: number }>();

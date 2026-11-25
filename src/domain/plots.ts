@@ -3,7 +3,8 @@
  * grid of plots that is invented but stable: the same zone always shows the same plots, statuses and
  * areas, on every device and in every session. It is always shown with an "illustrative" label.
  */
-import type { Lease, World } from './types';
+import type { FieldDef, ServiceId, ServiceSummary } from '@/data/types';
+import type { Lease, Plot, World } from './types';
 
 export type PlotCellStatus = 'available' | 'allocated' | 'reserved';
 
@@ -72,10 +73,45 @@ function build(zoneCode: string): PlotCell[] {
 const cache = new Map<string, PlotCell[]>();
 
 /**
- * The illustrative layout of a zone: 8 columns × 5 rows, row by row from the top-left corner.
- * Deterministic — the result depends only on the zone code.
+ * Two questions under one name:
+ *
+ * - `plotsFor(zoneCode)`: the illustrative layout of a zone, 8 columns × 5 rows, row by row from the
+ *   top-left corner. Deterministic: the result depends only on the zone code.
+ * - `plotsFor(world, serviceId)`: the investor's own plots a request of the service can be started for.
+ *   The handover (A8) only takes a plot that is leased and not handed over yet; every other service
+ *   takes any plot the company holds (a plot only reserved by a running application is not held yet).
+ *   Records as stored, in their order.
  */
-export function plotsFor(zoneCode: string): PlotCell[] {
+export function plotsFor(zoneCode: string): PlotCell[];
+export function plotsFor(world: Pick<World, 'plots'>, serviceId: ServiceId): Plot[];
+export function plotsFor(first: string | Pick<World, 'plots'>, serviceId?: ServiceId): PlotCell[] | Plot[] {
+  if (typeof first !== 'string') return plotsOfService(first, serviceId ?? '');
+  return layoutOf(first);
+}
+
+/** Which of the investor's plots a service can be started for (see `plotsFor`). */
+const PLOT_RULES: Partial<Record<ServiceId, (plot: Plot) => boolean>> = {
+  A8: (plot) => plot.status === 'leased',
+};
+
+const heldPlot = (plot: Plot): boolean => plot.status !== 'reserved';
+
+function plotsOfService(world: Pick<World, 'plots'>, serviceId: ServiceId): Plot[] {
+  const rule = PLOT_RULES[serviceId] ?? heldPlot;
+  return world.plots.filter(rule);
+}
+
+/**
+ * True when the service is only for a company that holds a plot: it is offered to tenants and not to
+ * prospects, or (when the full record is given) its form asks for a plot and the plot is required.
+ * Vendor-only or staff-only services are not about a plot.
+ */
+export function needsTenancy(service: Pick<ServiceSummary, 'audiences'> & { fields?: Pick<FieldDef, 'key' | 'type' | 'required'>[] }): boolean {
+  if (service.audiences.includes('tenant') && !service.audiences.includes('prospect')) return true;
+  return (service.fields ?? []).some((field) => (field.type === 'plot' || field.key === 'plot') && field.required === true);
+}
+
+function layoutOf(zoneCode: string): PlotCell[] {
   let cells = cache.get(zoneCode);
   if (!cells) {
     cells = build(zoneCode);

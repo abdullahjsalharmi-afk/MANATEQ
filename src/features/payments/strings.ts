@@ -32,7 +32,9 @@ export const strings = {
   payAmount: { ar: 'ادفع {amount}', en: 'Pay {amount}' },
   payLabel: { ar: 'ادفع {title}', en: 'Pay {title}' },
   sheetTitle: { ar: 'ادفع الفاتورة', en: 'Pay the invoice' },
-  paidToast: { ar: 'تم الدفع. حُفظ الإيصال في «وثائقي».', en: 'Paid. The receipt is saved in Documents.' },
+  /** The one toast after any payment (Home, payments, a request's step): the receipt by its reference when known. */
+  paidToast: { ar: 'تم الدفع. الإيصال {ref} في «وثائقي وتصاريحي».', en: 'Paid. Receipt {ref} is in Documents and passes.' },
+  paidToastPlain: { ar: 'تم الدفع. الإيصال في «وثائقي وتصاريحي».', en: 'Paid. The receipt is in Documents and passes.' },
   viewReceipt: { ar: 'عرض الإيصال', en: 'View receipt' },
 
   // Invoice page

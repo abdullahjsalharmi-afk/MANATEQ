@@ -12,7 +12,11 @@ import { dueAtOf } from './sim';
 import { text } from './strings';
 import { holdOf } from './types';
 
-export type TimelineState = 'done' | 'current' | 'upcoming';
+/**
+ * `stopped`: the step was open when the investor withdrew the request; it did not finish. Its `time` is
+ * when it was stopped.
+ */
+export type TimelineState = 'done' | 'current' | 'upcoming' | 'stopped';
 
 /** One row of a request's timeline: a step that happened, the step that is open, or a step to come. */
 export interface TimelineEntry {
@@ -26,7 +30,7 @@ export interface TimelineEntry {
   /** Who holds the step, in words: you, Manateq's staff, the field team, or the national entity by name. */
   holderName: L10n;
   state: TimelineState;
-  /** Done steps: when the step finished. The open step: when it is expected to finish, if a date is known. */
+  /** Done steps: when the step finished. A stopped step: when it was stopped. The open step: when it is expected to finish, if a date is known. */
   time?: number;
   /** The step runs without a person. */
   auto: boolean;
@@ -129,9 +133,11 @@ export function standardClockOf(request: RequestState, service: Pick<ServiceDeta
       usedDays += days;
       continue;
     }
-    const hold = holdOf(request);
+    // A step stopped by a withdrawal counts the share it had run when it was stopped, and no more.
+    const until = visit.stoppedAt ?? now;
+    const hold = visit.stoppedAt === undefined ? holdOf(request) : undefined;
     const expected = hold !== undefined ? hold - visit.enteredAt : timingFor(service, speed).duration(step);
-    const share = expected > 0 ? Math.max(0, Math.min(1, (now - visit.enteredAt) / expected)) : 1;
+    const share = expected > 0 ? Math.max(0, Math.min(1, (until - visit.enteredAt) / expected)) : 1;
     usedDays += days * share;
   }
   // Step shares are fractions of the standard: keep sums like 0.8 × 3 from drifting a hair past their value.
@@ -155,9 +161,11 @@ function timelineOf(request: RequestState, service: Pick<ServiceDetail, 'workflo
   request.visits.forEach((visit, index) => {
     const step = findStep(wf, visit.step);
     if (!step) return;
-    const open = visit.doneAt === undefined && request.current === visit.step;
-    const item = entry(step, `v${index}`, open ? 'current' : 'done');
+    const open = visit.doneAt === undefined && visit.stoppedAt === undefined && request.current === visit.step;
+    const stopped = visit.doneAt === undefined && visit.stoppedAt !== undefined;
+    const item = entry(step, `v${index}`, open ? 'current' : stopped ? 'stopped' : 'done');
     if (visit.doneAt !== undefined) item.time = visit.doneAt;
+    else if (stopped) item.time = visit.stoppedAt;
     else if (open && holdOf(request) !== undefined) item.time = holdOf(request);
     if (visit.outcome) item.outcome = visit.outcome;
     entries.push(item);
@@ -203,7 +211,7 @@ export function requestView(request: RequestState, service: ServiceDetail, now: 
     timeline: timelineOf(request, service),
     ...(open ? { heldSince: open.enteredAt } : {}),
     ...(expectedAt !== undefined ? { expectedAt } : {}),
-    ...(finished && last ? { finishedAt: last.doneAt ?? request.updatedAt } : {}),
+    ...(finished && last ? { finishedAt: last.doneAt ?? last.stoppedAt ?? request.updatedAt } : {}),
     focus: focusOf(request, service, step, expectedAt),
   };
 }

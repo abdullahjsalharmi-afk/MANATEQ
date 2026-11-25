@@ -14,10 +14,20 @@ the actions below. All world text is bilingual `L10n` (read it with `pick()`); a
   `drafts{serviceId → Draft}`, `eligibility | null`, `watchedZones[]`, `seq`.
 - `RequestState`: `id`, `ref` ("MQ-2611-0042"), `serviceId`, `threadId` (A4 → A5 → A6 → A7 → A8 share one),
   `parentId?`, `createdAt`, `updatedAt`, `form`, `plotId?`, `zoneCode?`, `visits[]` (`{ step, enteredAt, doneAt?,
-  outcome? }`), `current` (open step id or null), `status` ('active'|'needs_you'|'done'|'stopped'), `investorMs`,
+  stoppedAt?, outcome? }`), `current` (open step id or null), `status` ('active'|'needs_you'|'done'|'stopped'), `investorMs`,
   `docIds[]`, `amount?`, `rating?`, `prepaidDocId?` (the receipt that already covers the open step's payment:
-  the deposit paid with the offer, A6, in the same thread; the step then asks for no payment).
+  the deposit paid with the offer, A6, in the same thread; the step then asks for no payment),
+  `reopenedAt?` and `reopenedRating?` (a low rating reopened the request: when, and the rating that did it;
+  `rating` is always the latest rating given).
   `holdOf(request)` tells when a seeded step is held until.
+- `Visit.stoppedAt`: the request was withdrawn while this step was open. The step did not finish, so it has no
+  `doneAt`; it is never the open visit (`currentVisit`), never shown as done (timeline state `stopped`), and the
+  standard clock counts only the share it had run when it was stopped.
+- `AppNotification`: `{ id, at, kind, title, body, route?, read, subject?, resolvedAt? }`. `subject: { requestId?,
+  step?, invoiceId? }` is what it is about. A "needs you" notification (`kind: 'action'`) is settled (`resolvedAt`
+  set, and `read: true`) when the invoice it points to is paid, when the investor completes the step of its request,
+  or when that request finishes or is withdrawn. Show a settled one as done, not as asking.
+- `Appointment.requestId?`: the request it was booked with (E1 with «أريد حجز موعد»).
 - A `Plot.id` and `Plot.number` are always a plot of its zone's layout (`plotsFor(zone)`, "BA-121").
 - `Pass.kind` is `'visitor' | 'worker' | 'vehicle'`; `Pass.requestId?` is the request that issued it (D2).
 
@@ -26,20 +36,23 @@ the actions below. All world text is bilingual `L10n` (read it with `pick()`); a
 | Selector | Returns |
 |---|---|
 | `selectNextStep` / `selectNextSteps` | `NextStep \| null` / `NextStep[]` most urgent first: `{ id, kind: 'request_action'\|'invoice'\|'start_service'\|'renewal', title, context, cta, route, urgency, dueAt?, invoiceId? }`. `invoiceId` is set on an invoice step, so the screen can open the payment sheet in place. A suggestion's `context` is the plot and the service's one-line `hint`. |
-| `selectJourney` / `selectJourneyOfPlot(id)` | `Journey { station, plotId \| null, stations: [{ key, name, state, items: [{ serviceId, state: 'done'\|'current'\|'upcoming', requestId?, canStart }] }] }` |
+| `selectJourney` / `selectJourneyOfPlot(id)` | `Journey { station, plotId \| null, stations: [{ key, name, state, items: [{ serviceId, state: 'done'\|'current'\|'upcoming', open, requestId?, stoppedRequestId?, canStart }] }] }`. `open`: a request is open for the item now; in the station the investor stands in, the first item not done is `current` even when nothing is open (it means "next": label `current && !open` as next, not in progress). `stoppedRequestId`: the latest request for it was withdrawn and nothing newer exists. |
 | `selectStation` | `'join' \| 'contract' \| 'build' \| 'operate'` |
 | `selectActiveRequests` / `selectDoneRequests` | `RequestState[]` (waiting for the investor first / latest first) |
 | `selectRequest(id)` · `selectThread(id)` · `selectRequestsOfPlot(id)` | one request / its chain oldest first / a plot's requests |
 | `selectDocsOfRequest(id)` · `selectDeadline(id)` | `Doc[]` it issued / `number \| undefined` (renewal: lease end; offer: 14 days) |
 | `selectPassesOfRequest(id)` | `Pass[]` the request issued (D2), latest first |
 | `selectStepAmount(requestId: string \| undefined, action: Pick<StepAction, 'amount'> \| null \| undefined)` | `number \| undefined`: what the open step will charge (`request.amount`, else `amountFor`); undefined when it charges nothing (no action, or `request.prepaidDocId` is set) |
-| `selectWaitingCount` · `selectUnreadCount` | badge numbers |
+| `selectWaitingCount` · `selectUnreadCount` | badge numbers (a settled notification never counts as unread) |
 | `selectDues` | `{ total, count, overdue, next: Invoice \| null }` |
 | `selectInvoices` · `selectInvoice(id)` | outstanding first (soonest due), then paid (latest first) |
 | `selectDocs` · `selectDoc(id)` · `selectDocsOfPlot(id)` | wallet documents, latest first |
 | `selectPasses` · `selectPass(id)` | active first |
 | `selectNotifications` | latest first |
 | `selectPlots` · `selectPlot(id)` · `selectLeases` · `selectLeaseOfPlot(id)` | records as stored |
+| `selectPlotsFor(serviceId)` | `Plot[]`: the investor's plots a request of the service can be started for (`plotsFor(world, serviceId)`): A8 only plots `leased` and not handed over; any other service every plot held (not `reserved`). Same array per world. |
+| `selectHasPlots` | `boolean`: the company holds at least one plot (a plot only reserved by a running application does not count) |
+| `selectRenewalTerms(requestId)` | `RenewalTerms \| undefined` for a B3 request: `{ plotId, until, years, ratePerSqm, annualRent, firstInstalment }`, by the rule the renewal applies when it finishes (one more term of the solution's length, the lease's own rate; no incentive is modelled). Same object per world. |
 | `selectAppointments` · `selectDraft(serviceId)` · `selectCompany` · `selectPersona` · `selectSpeed` | |
 
 Every selector that returns a list or an object gives the same value for the same world, even when
@@ -65,7 +78,8 @@ behind it in both languages ("Ministry of Municipality" / "the Ministry of Munic
 the open step, or, while the open step is a decision or a step Manateq's systems run by themselves, the next step a
 person or an entity holds. Null when nothing human is left. Never put a step's raw text in a headline: use the
 action title, the holder or `expectedAt`; the book's wording belongs in the timeline. `TimelineEntry = { id, step, kind, title, text, lane, holderName,
-state: 'done'|'current'|'upcoming', time?, auto, outcome?, standard }`. `timelineRows(entries, lang, now)` gives
+state: 'done'|'current'|'upcoming'|'stopped', time?, auto, outcome?, standard }` (`stopped`: the step that was open when
+the investor withdrew; its `time` is when it was stopped). `timelineRows(entries, lang, now)` gives
 `TimelineRow { id, title, text?, lane, holderName?, state, time?, auto, outcome?, standard? }` as display strings.
 
 `view.clock` is the service-standard clock (`StandardClock { usedDays, targetDays | null, ratio | null, dayNumber }`),
@@ -88,6 +102,11 @@ schedule, acknowledge. When `options` exist, show the choice first, then only `s
 - D6 step 5: `rectified` → upload; `appeal` / `extension` → form (reason).
 - B10 step 6: `paymentPlan` → choose only; `payNow` → pay (settles every unpaid invoice of the lease).
 
+Where the step's own text says so, an option or a rating goes on at another step (`steeredMoves(serviceId, step)`
+lists them): B2 step 3 `deposit` goes on to step 9 («a paid deposit is recorded without bank verification»: no
+guarantee reading or bank check); D1 step 11 with 1 or 2 stars goes on to step 10, «Supervisor re-dispatches»,
+then the workflow runs as written until the investor is asked to rate again; 3 stars or more finishes it.
+
 The amount to show is `useApp(selectStepAmount(request.id, action))`: exactly what the state will charge.
 `amountFor(world: World, request: RequestState, action: Pick<StepAction, 'amount'>): number` is the rule behind it.
 
@@ -95,12 +114,12 @@ The amount to show is `useApp(selectStepAmount(request.id, action))`: exactly wh
 
 | Action | What it does |
 |---|---|
-| `startRequest(serviceId, form?, { plotId?, zoneCode?, threadId?, parentId? }) → id` | Starts a service. `plotId` must be one of the investor's plots (or a `plot` field in `form`); for the land application (A4) it may be a plot of a zone's layout ("AW-117") with `zoneCode`. Anything else is ignored. Removes the service's draft. |
+| `startRequest(serviceId, form?, { plotId?, zoneCode?, threadId?, parentId? }) → id` | Starts a service. `plotId` must be one of the investor's plots (or a `plot` field in `form`); for the land application (A4) it may be a plot of a zone's layout ("AW-117") with `zoneCode`. Anything else is ignored. A service that `needsTenancy`, started with no plot while exactly one plot qualifies (`plotsFor(world, serviceId)`), takes that plot; with several, ask the investor. E1 with `bookAppointment: true` and `preferredDate` books an appointment at 10:00 that day (`form.channel` or in person), linked by `requestId`, and notifies. Removes the service's draft. |
 | `completeStep(requestId: string, payload?: ActPayload) → StepResult` | `actOnRequest`, telling what it produced: `StepResult = { ok: boolean; receiptDocIds: string[] }` (oldest first). Run it when the payment sheet confirms, then show `selectDoc(receiptDocIds.at(-1))?.ref` ("RCP-2026-0101"): the receipt really filed. |
-| `actOnRequest(id, { choice?, form?, files?, rating? }) → boolean` | Completes the open investor step. `pay` files a paid invoice and receipt; `sign` / `accept` are recorded; `rate` takes 1-5 or `{ stars, comment? }`. Some choices steer: B4 `withdraw` stops the request; B7 `acceptCharge` skips the re-inspection; B10 and D6 choices decide the next decision. |
+| `actOnRequest(id, { choice?, form?, files?, rating? }) → boolean` | Completes the open investor step and settles the notifications that asked for it. `pay` files a paid invoice and receipt; `sign` / `accept` are recorded; `rate` takes 1-5 or `{ stars, comment? }`. Some choices steer: B2 `deposit` skips the guarantee checks; B4 `withdraw` stops the request; B7 `acceptCharge` skips the re-inspection; B10 and D6 choices decide the next decision. A D1 rating of 1-2 stars reopens the report (`reopenedAt`, `reopenedRating`, a notification). |
 | `fastForwardRequest(id)` | Demo control "تقديم الزمن": the open non-investor step finishes now. |
-| `cancelRequest(id)` | Withdraws an open request (status `stopped`). An application gives its plot back. |
-| `payInvoice(id) → receiptDocId \| null` | Demo payment; files the receipt in the wallet. |
+| `cancelRequest(id)` | Withdraws an open request (status `stopped`); the open step gets `stoppedAt`, not `doneAt`. Its asks are settled, an appointment booked with it is cancelled, and an application gives its plot back. |
+| `payInvoice(id) → receiptDocId \| null` | Demo payment; files the receipt in the wallet, settles the reminders to pay it, and adds a read «استلمنا سدادك» / "Payment received" notification that opens the receipt (`/account/wallet/<receiptDocId>`). |
 | `issuePass({ kind, holder, idOrPlate?, company?, plotId, from, to }) → id` · `revokePass(id)` | Wallet passes. |
 | `bookAppointment({ at, topic, channel: 'in_person'\|'video'\|'phone' }) → id` · `cancelAppointment(id)` | BSC visits. |
 | `markRead(id)` · `markAllRead()` | Notifications. |
@@ -132,6 +151,13 @@ The amount to show is `useApp(selectStepAmount(request.id, action))`: exactly wh
 - `@/domain/standard`: `durationText(value, unit, lang, options?: DurationOptions)` and
   `standardHeadline(standard, lang, options?: DurationOptions)`; `DurationOptions = { afterPreposition?: boolean }`
   gives the Arabic genitive dual after a preposition («في يومَي عمل»).
+- `@/domain/plots` (also from `@/state`): `plotsFor(zoneCode): PlotCell[]` is a zone's layout;
+  `plotsFor(world, serviceId): Plot[]` the investor's plots the service can be started for (see `selectPlotsFor`);
+  `needsTenancy(service: Pick<ServiceSummary, 'audiences'> & { fields? }): boolean` is true when the service is only
+  for a company that holds a plot (offered to tenants and not to prospects, or, given the full record, its form
+  requires a plot). Use it with `selectHasPlots` to stop offering Start to a company with no plot.
+- Documents a request issues name it with `requestLabelOf` in their «الخدمة» / "Service" line and carry no issue-date
+  line: the issue date is `doc.issuedAt`, shown once by the screen.
 - `leaseOfPlot(world: Pick<World, 'plots' | 'leases'>, plotId: string | undefined): Lease | undefined` lives in
   `@/domain/plots`; `plotIdOfDoc(world: World, doc: Doc): string | undefined` (selectors) finds the plot a document is about.
 
@@ -156,7 +182,8 @@ The amount to show is `useApp(selectStepAmount(request.id, action))`: exactly wh
   check (logistics, 5,000 m², targeted in BA, AW, JS, AS); next step is the land application (A4).
 - **tenant** «شركة المثال للصناعات» / "Example Industries Co.": BA-121 (logistics 10,000 m², operating, rent
   due in 5 days), AW-116 (logistics 5,000 m², building: permit C2 held at the Ministry, utilities C4 at Kahramaa),
-  AK-113 (open yard 5,000 m², renewal B3 waiting to be accepted, signed and paid), a street-light report (D1) with
+  AK-113 (open yard 5,000 m², renewal B3 waiting to be accepted, signed and paid), the Kahramaa request at day 8 of
+  10 and expected within the 2 days left, a street-light report (D1) with
   the field team, an active worker pass and an expired visitor pass, one appointment in two days.
 
 Demo links: `?demo=tenant|prospect|guest`, `?reset=1`, `?lang=ar|en`, `?theme=light|dark|auto`, `?text=0..3`,

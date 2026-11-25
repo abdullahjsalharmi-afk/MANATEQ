@@ -13,7 +13,7 @@ import type { EligibilityAlternative, EligibilityInput, EligibilityMatch, Eligib
 import { Button, Card, Chip, Container, Grid, Icon, List, Pill, Row, Section, Tile, cx, type Tone } from '@/design/core';
 import { DemoPill } from '@/design/forms';
 import { QatarMap } from '@/design/signature';
-import { factsOf, firstZoneWithPlots, resultKind, type Fact, type ResultKind } from './model';
+import { factsOf, firstZoneWithPlots, hasFreePlot, resultKind, type Fact, type ResultKind } from './model';
 import { plotsFree, strings, zonesFit } from './strings';
 import styles from './Flow.module.css';
 
@@ -38,7 +38,8 @@ export function defaultChoice(outcome: EligibilityOutcome): string | null {
     const match = options.find((option) => option.zone.code === zone);
     return match ? choiceKey(match) : null;
   }
-  return options[0] ? choiceKey(options[0]) : null;
+  const first = options.find(hasFreePlot) ?? options[0];
+  return first ? choiceKey(first) : null;
 }
 
 export type PrimaryKind = 'apply' | 'signIn' | 'review' | 'bsc' | 'referral' | 'follow' | 'recheck';
@@ -71,7 +72,8 @@ export function primaryOf(outcome: EligibilityOutcome, ctx: { persona: Persona; 
       if (guest) return { kind: 'signIn', label: 'signInToApply', ...base };
       return outcome.next === 'F1' ? { kind: 'referral', label: 'referral', ...base } : { kind: 'apply', label: 'apply', ...base };
     case 'noPlots':
-      if (!option) return guest ? { kind: 'signIn', label: 'signInToApply', ...base } : { kind: 'follow', label: 'followPlots', ...base };
+      // Apply only where the chosen option has room; otherwise follow the availability.
+      if (!option || !hasFreePlot(option)) return guest ? { kind: 'signIn', label: 'signInToApply', ...base } : { kind: 'follow', label: 'followPlots', ...base };
       return guest ? { kind: 'signIn', label: 'signInToApply', ...base } : { kind: 'apply', label: 'apply', ...base };
     case 'elsewhere':
       return option ? { kind: 'recheck', label: 'recheck', ...base } : { kind: 'bsc', label: 'askBsc', ...base };
@@ -100,14 +102,15 @@ export function plotsText(n: number, fmt: LangValue['fmt'], none: string): strin
 }
 
 /** One line under the verdict: how many zones fit, or what to do next. */
-function taglineOf(kind: ResultKind, choices: number, fmt: LangValue['fmt'], t: (key: Key) => string): string {
+function taglineOf(kind: ResultKind, options: readonly EligibilityOption[], fmt: LangValue['fmt'], t: (key: Key) => string): string {
+  const choices = options.length;
   switch (kind) {
     case 'eligible':
       return fmt.plural(choices, zonesFit);
     case 'elsewhere':
       return choices ? t('tagElsewhere') : t('tagNotTargeted');
     case 'noPlots':
-      return choices ? t('tagElsewhere') : t('tagFollow');
+      return options.some(hasFreePlot) ? t('tagElsewhere') : t('tagFollow');
     case 'review':
       return t('tagReview');
     case 'notTargeted':
@@ -153,7 +156,7 @@ export function EligibilityResultView({ input, outcome, persona, chosen, onChoos
             {t(verdict.head)}
           </span>
         }
-        tagline={taglineOf(kind, options.length, fmt, t)}
+        tagline={taglineOf(kind, options, fmt, t)}
       >
         <p className={cx('type-body', styles.reason)}>{pick(outcome.reason)}</p>
         {facts.length ? (
@@ -172,7 +175,7 @@ export function EligibilityResultView({ input, outcome, persona, chosen, onChoos
 
       <Container width="grid">
         {options.length ? (
-          <Section title={t(isAlternatives ? 'alternatives' : 'matches')} hint={t(isAlternatives ? 'alternativesHint' : 'matchesHint')}>
+          <Section title={t(isAlternatives ? 'alternatives' : 'matches')} hint={t(!isAlternatives ? 'matchesHint' : options.some(hasFreePlot) ? 'alternativesHint' : 'alternativesNoRoom')}>
             <div className={styles.matchLayout}>
               <Card className={styles.mapCard}>
                 <QatarMap

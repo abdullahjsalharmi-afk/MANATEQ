@@ -33,8 +33,10 @@ html {
   --chrome-bottom: 0px; /* the tab bar (phones, tabbed screens only) */
   --footer-safe: var(--safe-bottom); /* the home indicator, when nothing else covers it */
 
-  scroll-padding-top: calc(var(--chrome-top) + var(--s-3));
-  scroll-padding-bottom: calc(var(--chrome-bottom) + var(--s-6));
+  /* Anything focused or scrolled into view clears the pinned bars: the frosted bar (and global bar) on top; the
+     sticky action bar (its height published by Screen as --actionbar-h) and the tab bar at the end. */
+  scroll-padding-block-start: calc(var(--chrome-top) + var(--s-3));
+  scroll-padding-block-end: calc(var(--chrome-bottom) + var(--actionbar-h, 0px) + var(--s-6));
 }
 
 html[data-chrome='tabs'] {
@@ -238,6 +240,21 @@ input[type='search']::-webkit-search-cancel-button {
 .ltr {
   direction: ltr;
   unicode-bidi: isolate;
+  white-space: nowrap;
+}
+
+/* Text that breaks only between words. A single word wider than its whole box is hyphenated at a syllable where
+   the language allows it, instead of being split at any letter; and, unlike the global overflow-wrap: anywhere,
+   it does not let a flex or grid column shrink below its longest word. */
+.mq-words {
+  overflow-wrap: break-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+/* A value that never breaks: an amount, a date, a short code inside a sentence. Same as .ltr without the
+   direction change (for text in the reading direction, e.g. an Arabic date). */
+.nowrap {
   white-space: nowrap;
 }
 

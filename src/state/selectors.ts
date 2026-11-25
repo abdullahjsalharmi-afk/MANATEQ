@@ -6,12 +6,13 @@
  * worked out once per world and remembered.
  */
 import { peekServiceDetail } from '@/data/catalog';
-import type { StepAction } from '@/data/types';
+import type { ServiceId, StepAction } from '@/data/types';
 import { journeyOf, stationOf, type Journey, type StationKey } from '@/domain/journey';
 import { collectNextSteps, deadlineOf } from '@/domain/nextstep';
+import { plotsFor } from '@/domain/plots';
 import type { AppNotification, AppState, Appointment, Company, Doc, Draft, Invoice, Lease, NextStep, Pass, Persona, Plot, RequestState, TeamMember, World } from '@/domain/types';
 import { isCatalogueReady } from './catalogue';
-import { amountFor } from './effects';
+import { amountFor, renewalTerms, type RenewalTerms } from './effects';
 import { findLease, isFinished, threadOf } from './world';
 
 export { requestView, standardClockOf, holderOf, holderNameOf, timelineRows, type RequestView, type TimelineEntry, type TimelineRow, type TimelineState } from './view';
@@ -207,7 +208,8 @@ export const selectInvoice =
 
 /* ───────────────────────────── notifications ───────────────────────────── */
 
-export const selectUnreadCount: Selector<number> = (state) => state.world.notifications.reduce((count, notification) => count + (notification.read ? 0 : 1), 0);
+/** Notifications not read yet; a settled one (`resolvedAt`) never counts. */
+export const selectUnreadCount: Selector<number> = (state) => state.world.notifications.reduce((count, notification) => count + (notification.read || notification.resolvedAt !== undefined ? 0 : 1), 0);
 
 const notificationsOf = perWorld((world) => world.notifications.slice().sort((a, b) => b.at - a.at));
 
@@ -242,6 +244,36 @@ export const selectPlot =
     id === undefined ? undefined : state.world.plots.find((plot) => plot.id === id);
 
 export const selectLeases: Selector<Lease[]> = (state) => state.world.leases;
+
+const plotsOfService = perWorldBy((world, serviceId: ServiceId): Plot[] => plotsFor(world, serviceId));
+
+/**
+ * The investor's plots a request of the service can be started for (`plotsFor(world, serviceId)`): for
+ * the handover (A8) the leased plots not handed over yet, otherwise every plot the company holds. The
+ * same array for the same world.
+ */
+export const selectPlotsFor =
+  (serviceId: ServiceId): Selector<Plot[]> =>
+  (state) =>
+    plotsOfService(state.world, serviceId);
+
+/** True when the company holds at least one plot (a plot only reserved by a running application does not count). */
+export const selectHasPlots: Selector<boolean> = (state) => state.world.plots.some((plot) => plot.status !== 'reserved');
+
+const renewalTermsOf = perWorldBy((world, requestId: string): RenewalTerms | undefined => {
+  const request = world.requests.find((candidate) => candidate.id === requestId);
+  return request ? renewalTerms(world, request) : undefined;
+});
+
+/**
+ * What the renewal offer of a lease renewal request (B3) means for its plot: `{ plotId, until, years,
+ * ratePerSqm, annualRent, firstInstalment }`, by the rule the renewal applies when it finishes. Undefined
+ * for any other request. The same object for the same world.
+ */
+export const selectRenewalTerms =
+  (requestId: string | undefined): Selector<RenewalTerms | undefined> =>
+  (state) =>
+    requestId === undefined ? undefined : renewalTermsOf(state.world, requestId);
 
 /** The lease of a plot, once it is signed. */
 export const selectLeaseOfPlot =

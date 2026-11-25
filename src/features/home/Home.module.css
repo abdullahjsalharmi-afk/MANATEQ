@@ -73,6 +73,34 @@
 }
 
 /* Shortcuts */
+/*
+ * Shortcuts: titles break between words only, so a column is never narrower than the longest word with the
+ * card's padding. Columns are at least --sc-min wide (in em, so it grows with the text size): two side by side
+ * on a phone when they fit, one column when they do not, at most four on wide screens.
+ */
+[data-columns].shortcuts {
+  --sc-gap: var(--s-3);
+  --sc-min: 9em; /* "appointment" at 600 weight is about 6.2em, plus 2 × 21 px of card padding */
+  gap: var(--sc-gap);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, max(var(--sc-min), (100% - 3 * var(--sc-gap)) / 4)), 1fr));
+}
+
+[data-columns].shortcuts:lang(ar) {
+  --sc-min: 7em; /* the longest Arabic word of a title is about 4em */
+}
+
+@media (min-width: 735px) {
+  [data-columns].shortcuts {
+    --sc-gap: var(--s-5);
+  }
+}
+
+@media (min-width: 1069px) {
+  [data-columns].shortcuts {
+    --sc-gap: var(--s-6);
+  }
+}
+
 .shortcut {
   display: flex;
   flex-direction: column;

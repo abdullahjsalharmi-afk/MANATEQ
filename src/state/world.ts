@@ -66,6 +66,23 @@ export function notify(world: World, input: Omit<AppNotification, 'id' | 'read'>
   return { ...next.world, notifications: [...next.world.notifications, { ...input, id: next.id, read: false }] };
 }
 
+/**
+ * Settles the "needs you" notifications whose ask is answered (`match` says which): they get
+ * `resolvedAt` and are read. Returns the same world when none is open.
+ */
+export function resolveNotifications(world: World, match: (notification: AppNotification) => boolean, at: number): World {
+  const settles = (notification: AppNotification): boolean => notification.kind === 'action' && notification.resolvedAt === undefined && match(notification);
+  if (!world.notifications.some(settles)) return world;
+  return { ...world, notifications: world.notifications.map((notification) => (settles(notification) ? { ...notification, read: true, resolvedAt: at } : notification)) };
+}
+
+/** The "needs you" notifications about a request: its open asks are settled. */
+export const resolveRequestAsks = (world: World, requestId: string, at: number): World => resolveNotifications(world, (notification) => notification.subject?.requestId === requestId || notification.route === `/requests/${requestId}`, at);
+
+/** The "needs you" notifications about an invoice: settled once it is paid. */
+export const resolveInvoiceAsks = (world: World, invoiceId: string, at: number): World =>
+  resolveNotifications(world, (notification) => notification.subject?.invoiceId === invoiceId || notification.route === `/account/payments/${invoiceId}`, at);
+
 /** Every request of the same intent, oldest first. */
 export function threadOf(world: World, request: RequestState): RequestState[] {
   return world.requests.filter((other) => other.threadId === request.threadId).sort((a, b) => a.createdAt - b.createdAt);

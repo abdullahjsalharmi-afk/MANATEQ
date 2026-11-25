@@ -108,10 +108,13 @@ describe('D2 pass', () => {
   });
 
   it('asks each type only for what it needs', () => {
-    const empty = { name: '', qid: '', plate: '', company: '' };
+    const empty = { name: '', qid: '', plate: '', company: '', phone: '' };
     expect(missingDetails('worker', empty)).toEqual(['name', 'qid']);
     expect(missingDetails('vehicle', { ...empty, name: 'Ali' })).toEqual(['plate']);
-    expect(missingDetails('visitor', { ...empty, name: 'Sara' })).toEqual([]);
+    // A visitor receives the pass by message: the mobile number is asked (gate n=19).
+    expect(missingDetails('visitor', { ...empty, name: 'Sara' })).toEqual(['phone']);
+    expect(missingDetails('visitor', { ...empty, name: 'Sara', phone: '12' })).toEqual(['phone']);
+    expect(missingDetails('visitor', { ...empty, name: 'Sara', phone: '+974 5512 3456' })).toEqual([]);
     expect(idOrPlateOf('vehicle', { ...empty, plate: ' 12345 q ' })).toBe('12345 Q');
     expect(idOrPlateOf('visitor', { ...empty, qid: '1' })).toBeUndefined();
   });

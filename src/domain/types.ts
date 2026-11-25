@@ -75,6 +75,11 @@ export interface Visit {
   step: number;
   enteredAt: number;
   doneAt?: number;
+  /**
+   * The request was withdrawn while this step was open: when it was stopped. The step did not finish, so
+   * `doneAt` stays empty; a stopped visit is never the open one (`currentVisit`).
+   */
+  stoppedAt?: number;
   /** Gate outcome; on an investor step that loops back, "no" means the investor declined the loop and went on. */
   outcome?: 'yes' | 'no';
 }
@@ -115,7 +120,14 @@ export interface RequestState {
    * the receipt that covers it. The step asks for no payment.
    */
   prepaidDocId?: string;
+  /** The investor's latest rating of the outcome (stars 1-5 and an optional comment). */
   rating?: { stars: number; comment?: string };
+  /**
+   * A low rating reopened the request (D1 step 11: "a low rating reopens the request for the supervisor"):
+   * when it was reopened, and the rating that reopened it. `rating` keeps the latest rating given.
+   */
+  reopenedAt?: number;
+  reopenedRating?: { stars: number; comment?: string };
 }
 
 export type InvoiceStatus = 'due' | 'overdue' | 'paid';
@@ -185,6 +197,20 @@ export interface AppNotification {
   /** Hash route to open, e.g. "/requests/r3". */
   route?: string;
   read: boolean;
+  /** What the notification is about, so it can be settled when that is done. */
+  subject?: NotificationSubject;
+  /**
+   * A "needs you" notification whose ask was answered: the invoice was paid, the step completed, or the
+   * request finished or was withdrawn. Settled notifications are also `read`.
+   */
+  resolvedAt?: number;
+}
+
+/** The record a notification is about: a request (and the step it asked for) or an invoice. */
+export interface NotificationSubject {
+  requestId?: string;
+  step?: number;
+  invoiceId?: string;
 }
 
 export interface Appointment {
@@ -193,6 +219,8 @@ export interface Appointment {
   topic: L10n;
   channel: 'in_person' | 'video' | 'phone';
   status: 'booked' | 'done' | 'cancelled';
+  /** The request the appointment was booked with (E1 with "book an appointment"). */
+  requestId?: string;
 }
 
 /** A started-but-unsent request form. */

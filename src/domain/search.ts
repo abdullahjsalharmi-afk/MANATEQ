@@ -26,11 +26,31 @@ function stem(token: string): string {
   return t;
 }
 
+/**
+ * The Arabic article as it is written in English place names: "Al Wakra", "El Khor", and its assimilated forms
+ * before a sun letter ("Ad Dawhah", "Ar Rayyan", "As Salwa", "Ash Shamal", "At Taawun", "Az Zubarah"). Like «ال»
+ * in Arabic, it is ignored, so "Wakra", "Al Wakra" and "Al-Wakra" are one name.
+ */
+const LATIN_ARTICLES = new Set(['al', 'el', 'ad', 'ar', 'as', 'ash', 'at', 'az', 'adh', 'ath', 'an']);
+
+/**
+ * One English transliteration of an Arabic word, whatever the spelling: a final «ة» or «ه» is written with or
+ * without an "h" ("Wakrah" / "Wakra", "Dohah" / "Doha"), so a final h after a vowel is dropped.
+ */
+function latin(token: string): string {
+  if (!/^[a-z]+$/.test(token)) return token;
+  if (token.length >= 4 && /[aeiou]h$/.test(token)) return token.slice(0, -1);
+  return token;
+}
+
 export function tokens(text: string): string[] {
-  return normalise(text)
+  const all = normalise(text)
     .split(' ')
     .filter(Boolean)
-    .map(stem);
+    .map((token) => latin(stem(token)));
+  // Articles count only when nothing else was written ("al" alone still searches).
+  const words = all.filter((token) => !LATIN_ARTICLES.has(token));
+  return words.length ? words : all;
 }
 
 export interface SearchDoc<T> {

@@ -254,10 +254,14 @@
   padding: 0;
 }
 
+/* The name and its pill share a line while both fit; otherwise the pill wraps under the name, at the inline end.
+   The name is never squeezed narrower than its longest word ("Government", "management"). */
 .platform {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  overflow-wrap: break-word;
   gap: var(--s-3);
   min-height: 44px;
   padding-block: var(--s-2);
@@ -271,8 +275,13 @@
   border-block-start: 1px solid var(--line-soft);
 }
 
+.platform > :first-child {
+  flex: 1 1 10em;
+}
+
 .platform > :last-child {
   flex: none;
+  margin-inline-start: auto;
 }
 
 .phase {
@@ -298,4 +307,9 @@
 
 .disclosures :global(ul) {
   min-width: 0;
+}
+
+/* A pair left with one section (a service with nothing to receive): it takes the whole width. */
+.pair > div:only-child {
+  grid-column: 1 / -1;
 }

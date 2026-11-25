@@ -53,3 +53,32 @@ test('the public verification page works for a guest, with a found and an unknow
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
   await expect(page.getByText('No document has this code')).toBeVisible({ timeout: 4000 });
 });
+
+test('a pass that starts later reads as upcoming on its page, with its start date (n=16)', async ({ page }) => {
+  const errors = watchErrors(page);
+  await openApp(page, { route: '/start/D2', lang: 'en' });
+  await page.getByText('Worker', { exact: false }).first().click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByLabel(/Worker’s name/).fill('Demo Worker');
+  await page.getByLabel(/QID number/).fill('28763400001');
+  await page.getByText('BA-121').first().click();
+  await page.getByText('Other dates').click();
+  const dates = page.getByRole('main').locator('input[type=date]');
+  const day = (offset: number) => {
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    return date;
+  };
+  const iso = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  const from = day(6);
+  await dates.nth(0).fill(iso(from));
+  await dates.nth(1).fill(iso(day(15)));
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: /Issue/ }).click();
+  await page.getByRole('link', { name: /Documents and passes/ }).click();
+  await expect(page).toHaveURL(/#\/account\/wallet\//);
+  await expect(page.getByRole('main').getByText(/Upcoming/).first()).toBeVisible();
+  const shown = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(from);
+  await expect(page.getByRole('main').getByText(`Starts on ${shown}`)).toBeVisible();
+  expect(errors).toEqual([]);
+});

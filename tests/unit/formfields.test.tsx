@@ -68,9 +68,10 @@ describe('validateFields: required', () => {
     expect(validateFields([question], {}, 'ar', { plots }).what).toBe('اكتب إجابتك');
   });
 
-  it('lets optional fields be empty and waives a plot when the investor has none', () => {
+  it('lets optional fields be empty, and never waives a required plot (gate n=21)', () => {
     const optional = { ...FIELDS.text, required: false };
-    expect(validateFields([optional, FIELDS.plot], {}, 'en', { plots: [] })).toEqual({});
+    expect(validateFields([optional], {}, 'en', { plots: [] })).toEqual({});
+    expect(validateFields([optional, FIELDS.plot], {}, 'en', { plots: [] })).toEqual({ plot: 'Choose the plot' });
   });
 
   it('accepts complete answers of every type', () => {

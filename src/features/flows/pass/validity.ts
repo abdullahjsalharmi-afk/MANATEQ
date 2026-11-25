@@ -51,9 +51,19 @@ export interface PassDetails {
   plate: string;
   /** Company (visitor, optional). */
   company: string;
+  /** The visitor's mobile number, where the pass would be sent (visitor, required). */
+  phone: string;
 }
 
-export type DetailError = 'name' | 'qid' | 'plate';
+export type DetailError = 'name' | 'qid' | 'plate' | 'phone';
+
+/** A mobile number as typed: digits with optional spaces, dashes, brackets and a leading +, 8 to 15 digits. */
+export function isPhone(text: string): boolean {
+  const value = text.trim();
+  if (!/^\+?[\d\s()-]+$/.test(value)) return false;
+  const digits = value.replace(/\D/g, '').length;
+  return digits >= 8 && digits <= 15;
+}
 
 /** The details a pass type cannot do without that are missing. */
 export function missingDetails(kind: PassKind, details: PassDetails): DetailError[] {
@@ -61,6 +71,7 @@ export function missingDetails(kind: PassKind, details: PassDetails): DetailErro
   if (!details.name.trim()) missing.push('name');
   if (kind === 'worker' && !details.qid.trim()) missing.push('qid');
   if (kind === 'vehicle' && !details.plate.trim()) missing.push('plate');
+  if (kind === 'visitor' && !isPhone(details.phone)) missing.push('phone');
   return missing;
 }
 

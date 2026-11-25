@@ -10,7 +10,12 @@ export interface ServiceRowProps {
   service: ServiceSummary;
 }
 
-/** One service in a list: plain label, official name, standard chip; a quiet "automatic" tag when the investor cannot start it, a «مسودة» tag when a draft is kept. */
+/**
+ * One service in a list: plain label, official name, then the standard chip on its own line under them, with a
+ * quiet "automatic" tag when the investor cannot start it and a «مسودة» tag when a draft is kept. The words take
+ * the whole row (the chips never sit beside them, so they are never squeezed), and the official name wraps in
+ * full instead of ending in an ellipsis.
+ */
 export function ServiceRow({ service }: ServiceRowProps) {
   const t = useT(strings);
   const { pick } = useLang();
@@ -19,13 +24,16 @@ export function ServiceRow({ service }: ServiceRowProps) {
     <Row
       to={`/services/${service.id}`}
       title={pick(service.label)}
-      subtitle={pick(service.name)}
-      trailing={
-        <span className={styles.trailing}>
-          {draft && service.startable ? <Pill>{t('draft')}</Pill> : null}
-          <StandardBadge standard={service.standard} variant="compact" />
-          {service.startable ? null : <Pill>{t('automatic')}</Pill>}
-        </span>
+      wrap
+      subtitle={
+        <>
+          <span className={styles.name}>{pick(service.name)}</span>
+          <span className={styles.chips}>
+            {draft && service.startable ? <Pill>{t('draft')}</Pill> : null}
+            <StandardBadge standard={service.standard} variant="compact" />
+            {service.startable ? null : <Pill>{t('automatic')}</Pill>}
+          </span>
+        </>
       }
     />
   );

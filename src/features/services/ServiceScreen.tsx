@@ -27,6 +27,7 @@ import { buildPages } from '@/features/start/paginate';
 import { selectDraft, selectPersona, useApp } from '@/state';
 import type { AppState } from '@/domain/types';
 import { FOLLOW_ROUTE, followOf, rememberService, renderOfDomain, startTarget } from './catalogue';
+import { PLOT_GATE_ACTION, usePlotGate } from './plotGate';
 import { ServiceRow } from './ServiceRow';
 import { strings } from './strings';
 import styles from './ServiceScreen.module.css';
@@ -86,9 +87,15 @@ function ServicePage({ summary, detail, loading, failed }: ServicePageProps) {
   const follow = followOf(summary.id);
   const followLink = persona === 'guest' ? undefined : own ? { to: `/requests/${own.id}`, label: t('followRequest') } : follow ? { to: FOLLOW_ROUTE[follow], label: t(`follow_${follow}`) } : undefined;
 
+  // A plot service and no plot it could be for: no «ابدأ», but the one way there and a line saying why.
+  const gate = usePlotGate(summary, detail);
   // A draft kept with «متابعة لاحقًا» turns «ابدأ» into «أكمل طلبك» and says where the investor stopped.
-  const resumable = summary.startable && persona !== 'guest' && draft !== undefined;
-  const footer = summary.startable ? (
+  const resumable = summary.startable && persona !== 'guest' && draft !== undefined && !gate;
+  const footer = gate ? (
+    <Button block to={PLOT_GATE_ACTION[gate.kind].to(gate)}>
+      {t(PLOT_GATE_ACTION[gate.kind].label)}
+    </Button>
+  ) : summary.startable ? (
     <Button block to={startTarget(summary.id, persona)}>
       {resumable ? t('continueDraft') : t('start')}
     </Button>
@@ -98,15 +105,17 @@ function ServicePage({ summary, detail, loading, failed }: ServicePageProps) {
     </Button>
   ) : undefined;
   const draftStep = resumable && draft ? draftStepOf(summary.id, detail, draft.page) : null;
-  const footerContext = resumable
-    ? draftStep
-      ? t('draftContextStep', { n: draftStep.n, m: draftStep.m })
-      : t('draftContext')
-    : summary.startable
-      ? headline
-        ? t('standardContext', { value: headline })
-        : undefined
-      : t('automaticContext');
+  const footerContext = gate
+    ? t(gate.kind === 'plots' ? 'needsPlotNoneContext' : 'needsPlotContext')
+    : resumable
+      ? draftStep
+        ? t('draftContextStep', { n: draftStep.n, m: draftStep.m })
+        : t('draftContext')
+      : summary.startable
+        ? headline
+          ? t('standardContext', { value: headline })
+          : undefined
+        : t('automaticContext');
 
   return (
     <Screen title={pick(summary.label)} nav="back" backTo="/services" navLabel={t('back')} bleed footer={footer} footerContext={footer ? footerContext : undefined}>
@@ -226,20 +235,23 @@ function Details({ detail }: { detail: ServiceDetail }) {
       </div>
 
       <div className={styles.pair}>
-        <div>
-          <Section title={t('receives')}>
-            <Card pad="none">
-              <ul className={styles.items}>
-                {detail.receives.map((item, index) => (
-                  <li key={index} className={styles.item}>
-                    <Icon icon={RECEIVE_ICON[item.kind]} size={20} className={styles.itemIcon} label={t(`receiveKind_${item.kind}`)} />
-                    <span>{pick(item)}</span>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          </Section>
-        </div>
+        {/* F2, F3 and G4 give the investor nothing to keep: the section is left out rather than shown empty. */}
+        {detail.receives.length ? (
+          <div>
+            <Section title={t('receives')}>
+              <Card pad="none">
+                <ul className={styles.items}>
+                  {detail.receives.map((item, index) => (
+                    <li key={index} className={styles.item}>
+                      <Icon icon={RECEIVE_ICON[item.kind]} size={20} className={styles.itemIcon} label={t(`receiveKind_${item.kind}`)} />
+                      <span>{pick(item)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </Section>
+          </div>
+        ) : null}
         <div>
           <Section title={t('steps')}>
             <Card pad="none">

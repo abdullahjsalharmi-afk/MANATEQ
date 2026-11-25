@@ -1,23 +1,23 @@
-import { Check, CircleAlert, Copy, SearchX, TriangleAlert } from 'lucide-react';
+import { Check, CircleAlert, Copy, SearchX, Star, TriangleAlert } from 'lucide-react';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { useParams } from '@/app/routes';
 import { requestLabelOf } from '@/data/catalog';
 import type { ServiceDetail, StepAction } from '@/data/types';
-import { Button, Card, Container, EmptyState, List, Pill, Screen, Section, Sheet, Skeleton, Tile, toast } from '@/design/core';
+import { Button, Card, Container, EmptyState, Icon, List, Pill, Screen, Section, Sheet, Skeleton, Tile, toast } from '@/design/core';
 import { Timeline } from '@/design/signature';
 import { durationText } from '@/domain/standard';
 import type { RequestState } from '@/domain/types';
 import { useNow } from '@/features/shared/useNow';
 import { useService } from '@/features/shared/useService';
 import { DocRow, PassRow } from '@/features/wallet';
-import { cancelRequest, fastForwardRequest, selectDeadline, selectDocsOfRequest, selectPassesOfRequest, selectRequest, selectThread, timelineRows, useApp, type RequestView } from '@/state';
+import { cancelRequest, fastForwardRequest, selectDeadline, selectDocsOfRequest, selectPassesOfRequest, selectRenewalTerms, selectRequest, selectThread, timelineRows, useApp, type RequestView } from '@/state';
 import type { Doc, Pass } from '@/domain/types';
 import { ActionRunner } from './ActionRunner';
 import { RequestRing } from './RequestRing';
 import { RequestRow } from './RequestRow';
 import styles from './RequestScreen.module.css';
-import { hasDayClock } from './logic';
+import { hasDayClock, ratingFacts } from './logic';
 import { strings } from './strings';
 import { nationalHolder, useHolderWords, useRequestView, withoutBrackets } from './useRequestFacts';
 
@@ -87,6 +87,7 @@ function RequestPage({ request, service, title }: { request: RequestState; servi
   const passes = useApp(selectPassesOfRequest(request.id));
   const thread = useApp(selectThread(request.id));
   const deadline = useApp(selectDeadline(request.id));
+  const terms = useApp(selectRenewalTerms(request.id));
   // The action being run stays mounted until its sheets close, even once the step it completes has moved on.
   const [running, setRunning] = useState<StepAction | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -100,6 +101,7 @@ function RequestPage({ request, service, title }: { request: RequestState; servi
   const rows = timelineRows(view.timeline, lang, now).map((row) => (row.state === 'current' && view.holder?.lane !== 'inv' ? { ...row, text: undefined } : row));
   const action = view.pendingAction;
   const open = request.status === 'active' || request.status === 'needs_you';
+  const ratings = ratingFacts(request, undefined, action);
 
   const copy = async () => {
     try {
@@ -143,7 +145,8 @@ function RequestPage({ request, service, title }: { request: RequestState; servi
                 <Section title={t('actionEyebrow')}>
                   <Card className={styles.action}>
                     <h3 className="type-heading">{pick(action.title)}</h3>
-                    <p className={styles.text}>{pick(action.detail)}</p>
+                    <p className={styles.text}>{terms && action.flow.includes('accept') ? t('renewIntro') : pick(action.detail)}</p>
+                    {ratings.askAgain && request.reopenedRating ? <p className={styles.text}>{t('rateAgain', { n: request.reopenedRating.stars })}</p> : null}
                     <div className={styles.actionCta}>
                       <Button onClick={() => setRunning(action)}>{pick(action.cta)}</Button>
                     </div>
@@ -165,6 +168,12 @@ function RequestPage({ request, service, title }: { request: RequestState; servi
             <div className={styles.partClock}>
               <ClockCard request={request} view={view} service={service} />
             </div>
+
+            {ratings.rating ? (
+              <div className={styles.partRating}>
+                <RatingCard rating={ratings.rating} note={ratings.ratingNote} earlierStars={request.reopenedRating?.stars} />
+              </div>
+            ) : null}
 
             {docs.length || pass ? (
               <div className={styles.partDocs}>
@@ -355,6 +364,10 @@ function HolderTile({ request, view, now, deadline, docs, pass, headlineId, copy
     }
   }
 
+  // A low rating reopened the request: say so above the rest while it is open again.
+  const reopened = ratingFacts(request, view.focus && view.focus.holder.lane !== 'inv' ? view.focus.holder.lane : holder?.lane, view.pendingAction).reopened;
+  if (reopened) body = reopened === 'reopenedSupervisor' ? t(reopened) : body ? `${t(reopened)} ${body}` : t(reopened);
+
   return (
     <Tile
       tone="light"
@@ -437,6 +450,28 @@ function ClockCard({ request, view, service }: { request: RequestState; view: Re
         <p className={`type-callout ${styles.standard}`}>{pick(service.standard)}</p>
         <Pill tone="neutral">{t('indicative')}</Pill>
         {target !== null && open ? <p className={`type-callout ${styles.quiet}`}>{t('clockPause')}</p> : null}
+      </Card>
+    </Section>
+  );
+}
+
+/** The rating the investor gave, and, when a rating reopened the request, which one did. */
+function RatingCard({ rating, note, earlierStars }: { rating: { stars: number; comment?: string }; note: 'ratingReopenedThis' | 'ratingReopenedEarlier' | undefined; earlierStars: number | undefined }) {
+  const t = useT(strings);
+  const { fmt } = useLang();
+  return (
+    <Section title={t('ratingTitle')}>
+      <Card className={styles.clockPlain}>
+        <p className={styles.figure}>
+          <span className={styles.stars} aria-hidden="true">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Icon key={n} icon={Star} size={18} strokeWidth={1.5} className={n <= rating.stars ? styles.starOn : styles.starOff} />
+            ))}
+          </span>
+          <span>{t('ratingStars', { n: fmt.num(rating.stars) })}</span>
+        </p>
+        {rating.comment ? <p className={`type-callout ${styles.standard}`}>{rating.comment}</p> : null}
+        {note ? <p className={`type-callout ${styles.quiet}`}>{note === 'ratingReopenedEarlier' ? t(note, { n: fmt.num(earlierStars ?? 0) }) : t(note)}</p> : null}
       </Card>
     </Section>
   );

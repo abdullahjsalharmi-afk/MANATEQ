@@ -25,6 +25,8 @@ export function dots(...parts: (L10n | string | undefined)[]): L10n {
 /** An amount and a date, each kept on one line. */
 export const moneyText = (amount: number): L10n => ({ ar: keepWhole(AR.money(amount)), en: keepWhole(EN.money(amount)) });
 export const dateText = (at: number): L10n => ({ ar: keepWhole(AR.date(at)), en: keepWhole(EN.date(at)) });
+/** A date and a clock time, e.g. «29 نوفمبر 2026، 10:00 ص» / "29 Nov 2026, 10:00 am". */
+export const dateTimeText = (at: number): L10n => ({ ar: `${keepWhole(AR.date(at))}، ${keepWhole(AR.time(at))}`, en: `${keepWhole(EN.date(at))}, ${keepWhole(EN.time(at))}` });
 
 const QUARTER_AR = ['الأول', 'الثاني', 'الثالث', 'الرابع'] as const;
 
@@ -44,6 +46,10 @@ export const text = {
   invoiceDueSoon: { ar: 'فاتورة يقترب موعد استحقاقها', en: 'An invoice is due soon' },
   dueOn: { ar: 'تستحق في {date}', en: 'Due on {date}' },
   payment: { ar: 'سداد', en: 'Payment' },
+  paymentReceived: { ar: 'استلمنا سدادك، والإيصال في «وثائقي وتصاريحي»', en: 'Payment received. The receipt is in Documents and passes' },
+  reopened: { ar: 'أعدنا فتح البلاغ ليراجعه المشرف', en: 'We reopened the report for the supervisor' },
+  reopenedBody: { ar: 'تقييمك {stars} من 5؛ سيعيد المشرف إرسال أمر العمل ثم نطلب تقييمك مرة أخرى', en: 'You rated it {stars} out of 5. The supervisor will send the work order again, then we will ask for your rating once more' },
+  appointmentBooked: { ar: 'حجزنا موعدك في مركز خدمات الأعمال', en: 'Your Business Services Center appointment is booked' },
   yes: { ar: 'نعم', en: 'Yes' },
   no: { ar: 'لا', en: 'No' },
   you: { ar: 'أنت', en: 'You' },

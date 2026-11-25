@@ -16,6 +16,7 @@ import { matchesReference, readRecent, serviceSearch, startTarget } from '@/feat
 import { DocRow, PassRow } from '@/features/wallet';
 import { ZoneRow } from '@/features/zones';
 import { selectDocs, selectInvoices, selectPasses, selectPersona, selectPlots, useApp } from '@/state';
+import { makeZoneNamer } from './rank';
 import { keywords, resultsCount, strings } from './strings';
 import styles from './SearchScreen.module.css';
 
@@ -25,6 +26,8 @@ const INTENTS = ['intentPay', 'intentPass', 'intentMaintenance', 'intentCertific
 const SERVICE_LIMIT = 8;
 
 const zoneIndex = buildIndex<Zone>(zones.map((zone) => ({ item: zone, fields: [zone.name, zone.typeLabel, zone.operator], keys: [zone.code] })));
+
+const zoneNamer = makeZoneNamer(zones);
 
 const selectRequests = (state: AppState) => state.world.requests;
 
@@ -75,8 +78,16 @@ export function SearchScreen() {
   const [recent] = useState(() => readRecent().map(getService).filter((s): s is ServiceSummary => s !== undefined));
 
   const trimmed = query.trim();
-  const foundServices = useMemo(() => (trimmed ? serviceSearch().search(trimmed) : []), [trimmed]);
-  const foundZones = useMemo(() => (trimmed ? zoneIndex.search(trimmed, 6) : []), [trimmed]);
+  // A query that names a zone shows that zone first, and only the services that match all of it: services that
+  // share one word with the name («أبا» in «أبا صليل») are not results for a place.
+  const namedZones = useMemo(() => (trimmed ? zoneNamer.named(trimmed) : []), [trimmed]);
+  const zoneFirst = namedZones.length > 0;
+  const foundServices = useMemo(() => (trimmed ? serviceSearch().search(trimmed, { forgive: !zoneFirst }) : []), [trimmed, zoneFirst]);
+  const foundZones = useMemo(() => {
+    if (!trimmed) return [];
+    const found = zoneIndex.search(trimmed, 6);
+    return [...namedZones, ...found.filter((zone) => !namedZones.includes(zone))].slice(0, 6);
+  }, [trimmed, namedZones]);
   const foundRequests = useMemo(() => {
     if (!trimmed || persona === 'guest') return [];
     const ids = new Set(foundServices.slice(0, SERVICE_LIMIT).map((service) => service.id));
@@ -98,6 +109,16 @@ export function SearchScreen() {
 
   const shownServices = foundServices.slice(0, SERVICE_LIMIT);
   const total = foundInvoices.length + foundPlots.length + foundRequests.length + foundDocs.length + foundPasses.length + shownServices.length + foundZones.length;
+
+  const zonesSection = foundZones.length ? (
+    <Section title={t('zones')}>
+      <List aria-label={t('zones')}>
+        {foundZones.map((zone) => (
+          <ZoneRow key={zone.code} zone={zone} />
+        ))}
+      </List>
+    </Section>
+  ) : null;
 
   return (
     <Screen title={t('title')} nav="back" backTo="/services" navLabel={t('back')} bleed>
@@ -140,6 +161,7 @@ export function SearchScreen() {
           <EmptyState icon={SearchX} title={t('noResults', { q: trimmed })} body={t('noResultsBody')} action={<Button to={startTarget('E1', persona)}>{t('getHelp')}</Button>} />
         ) : (
           <>
+            {zoneFirst ? zonesSection : null}
             {foundInvoices.length ? (
               <Section title={t('payments')}>
                 <List aria-label={t('payments')}>
@@ -196,15 +218,7 @@ export function SearchScreen() {
                 </List>
               </Section>
             ) : null}
-            {foundZones.length ? (
-              <Section title={t('zones')}>
-                <List aria-label={t('zones')}>
-                  {foundZones.map((zone) => (
-                    <ZoneRow key={zone.code} zone={zone} />
-                  ))}
-                </List>
-              </Section>
-            ) : null}
+            {zoneFirst ? null : zonesSection}
           </>
         )}
       </Container>

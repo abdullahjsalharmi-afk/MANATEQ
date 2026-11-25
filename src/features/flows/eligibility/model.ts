@@ -5,7 +5,7 @@
  */
 import { getActivity, getZone, solutions, zones } from '@/data/catalog';
 import type { Activity, L10n, Lang, SolutionKey, Zone } from '@/data/types';
-import type { Availability, EligibilityOutcome } from '@/domain/eligibility';
+import type { Availability, EligibilityOption, EligibilityOutcome } from '@/domain/eligibility';
 import { plotsFor, type PlotCell } from '@/domain/plots';
 import type { RenderName } from '@/design/core';
 
@@ -121,7 +121,15 @@ export function resultKind(outcome: EligibilityOutcome): ResultKind {
   if (outcome.verdict === 'review') return 'review';
   if (outcome.verdict === 'not_targeted') return 'notTargeted';
   if (outcome.eligible) return 'eligible';
-  return outcome.obstacle === 'plots' ? 'noPlots' : 'elsewhere';
+  if (outcome.obstacle === 'plots') return 'noPlots';
+  // Another option is only worth offering when one of them has a free plot of the size (or the operator
+  // reports availability): when none has, the activity is targeted but no plot of this size is free now.
+  return outcome.alternatives.length > 0 && !outcome.alternatives.some(hasFreePlot) ? 'noPlots' : 'elsewhere';
+}
+
+/** True when an option may have room: a free plot of the size, or availability the operator reports (`null`). */
+export function hasFreePlot(option: Pick<EligibilityOption, 'plotHint'>): boolean {
+  return option.plotHint === null || option.plotHint > 0;
 }
 
 /** One short fact under the verdict: what the rules found, with a yes or a no (never colour alone). */
@@ -147,4 +155,9 @@ export function factsOf(outcome: EligibilityOutcome, solution: SolutionKey): Fac
 export function firstZoneWithPlots(outcome: EligibilityOutcome): string | undefined {
   const withPlots = outcome.matches.find((match) => match.plotHint === null || match.plotHint > 0);
   return (withPlots ?? outcome.matches[0])?.zone.code;
+}
+
+/** An unlisted activity is described in a few words at least (the same floor as a required text answer). */
+export function isUnlistedDescribed(text: string): boolean {
+  return text.trim().length >= 3;
 }

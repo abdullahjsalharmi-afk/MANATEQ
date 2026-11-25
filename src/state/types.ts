@@ -74,4 +74,6 @@ export interface AppointmentInput {
   at: number;
   topic: L10n;
   channel: Appointment['channel'];
+  /** The request the appointment is booked with, when there is one. */
+  requestId?: string;
 }

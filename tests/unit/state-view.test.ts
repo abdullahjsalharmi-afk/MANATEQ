@@ -222,7 +222,11 @@ describe('the view of a request', () => {
     const stopped = withdrawn.requests.find((request) => request.serviceId === 'B3') as RequestState;
     const stoppedView = requestView(stopped, detail('B3'), NOW + 2000, 1);
     expect(stoppedView).toMatchObject({ status: 'stopped', holder: null, pendingAction: null });
-    expect(stoppedView.timeline.every((item) => item.state === 'done')).toBe(true);
+    // Only what happened: the steps behind it are done, and the step that was open when the investor
+    // withdrew is stopped, never done (gate finding n=7).
+    expect(stoppedView.timeline.slice(0, -1).every((item) => item.state === 'done')).toBe(true);
+    expect(stoppedView.timeline.at(-1)).toMatchObject({ step: stopped.visits.at(-1)?.step, state: 'stopped', time: NOW + 1000 });
+    expect(stoppedView.timeline).toHaveLength(stopped.visits.length);
   });
 
   it('shows a request that could not start yet as received by the app, with its whole path ahead', () => {

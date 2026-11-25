@@ -1,12 +1,13 @@
-import { CircleCheck, Copy } from 'lucide-react';
+import { CalendarCheck, CircleCheck, Copy } from 'lucide-react';
 import { useMemo, useRef } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { navigate } from '@/app/router';
-import { getService, peekServiceDetail } from '@/data/catalog';
-import { Button, Card, Container, Icon, Screen, Section, Tile, toast } from '@/design/core';
+import { getService, peekServiceDetail, requestLabelOf } from '@/data/catalog';
+import { Button, Card, Container, Icon, List, Row, Screen, Section, Tile, toast } from '@/design/core';
 import { Skeleton } from '@/design/forms';
 import { Timeline } from '@/design/signature';
-import { requestView, selectRequest, selectSpeed, timelineRows, useApp, type RequestView, type TimelineEntry } from '@/state';
+import { requestView, selectAppointments, selectRequest, selectSpeed, timelineRows, useApp, type RequestView, type TimelineEntry } from '@/state';
+import type { Appointment } from '@/domain/types';
 import { useCatalogueReady } from '@/state/catalogue';
 import { useNow } from '@/features/shared/useNow';
 import styles from './Start.module.css';
@@ -32,23 +33,39 @@ export function nextPersonSteps(view: Pick<RequestView, 'focus' | 'timeline'>, c
   return [...new Set(view.timeline.slice(from).filter(isPersonStep).map((entry) => entry.step))].slice(0, count);
 }
 
+/** The appointment booked with a request (E1 with «أريد حجز موعد»), when it is still booked. */
+export function appointmentOf(appointments: readonly Appointment[], requestId: string): Appointment | undefined {
+  return appointments.find((appointment) => appointment.requestId === requestId && appointment.status === 'booked');
+}
+
+const CHANNEL: Record<Appointment['channel'], 'channelInPerson' | 'channelVideo' | 'channelPhone'> = {
+  in_person: 'channelInPerson',
+  video: 'channelVideo',
+  phone: 'channelPhone',
+};
+
 export interface SubmittedStateProps {
   /** The request just started (`startRequest` → id). */
   requestId: string;
   /** How many of the next steps to show. Default 3. */
   steps?: number;
+  /** The headline of the tile. Default «تم استلام طلبك». */
+  headline?: string;
+  /** The line under it. Default: the request's name (`requestLabelOf`). */
+  tagline?: string;
 }
 
 /**
  * "تم الاستلام": the confirmation every flow ends on. A white tile with the accent check, the reference in a
  * pearl capsule (tap to copy), the next steps of the real workflow with who holds them, and "تتبّع الطلب".
  */
-export function SubmittedState({ requestId, steps = 3 }: SubmittedStateProps) {
+export function SubmittedState({ requestId, steps = 3, headline, tagline }: SubmittedStateProps) {
   const t = useT(strings);
   const lang = useLang();
   const { pick } = lang;
   const request = useApp(useMemo(() => selectRequest(requestId), [requestId]));
   const speed = useApp(selectSpeed);
+  const appointment = appointmentOf(useApp(selectAppointments), requestId);
   // Re-renders when the workflows arrive, so the next steps can be read.
   const ready = useCatalogueReady();
   const now = useNow(1000);
@@ -103,8 +120,8 @@ export function SubmittedState({ requestId, steps = 3 }: SubmittedStateProps) {
       <Tile
         tone="light"
         lead={<Icon icon={CircleCheck} size={44} strokeWidth={1.5} className={styles.check} />}
-        headline={t('submittedHeadline')}
-        tagline={summary ? pick(summary.label) : undefined}
+        headline={headline ?? t('submittedHeadline')}
+        tagline={tagline ?? (summary ? pick(requestLabelOf(summary)) : undefined)}
       >
         {ref ? (
           <div className={styles.refBlock}>
@@ -118,6 +135,23 @@ export function SubmittedState({ requestId, steps = 3 }: SubmittedStateProps) {
         ) : null}
       </Tile>
       <Container width="form">
+        {appointment ? (
+          <Section title={t('appointmentTitle')}>
+            <List aria-label={t('appointmentTitle')}>
+              <Row
+                leading={<Icon icon={CalendarCheck} size={20} />}
+                title={t('appointmentWhen', { date: lang.fmt.date(appointment.at), time: lang.fmt.time(appointment.at) })}
+                subtitle={t('appointmentWhere', { channel: t(CHANNEL[appointment.channel]) })}
+                wrap
+              />
+            </List>
+            <div className={styles.homeLink}>
+              <Button variant="quiet" to="/account/support">
+                {t('appointmentOpen')}
+              </Button>
+            </div>
+          </Section>
+        ) : null}
         <Section title={allDone ? t('whatDone') : t('whatNext')} hint={next?.length === 0 ? undefined : t('whatNextHint')}>
           <Card>
             {!next ? (

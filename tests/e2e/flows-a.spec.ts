@@ -4,7 +4,8 @@ import { openApp, watchErrors } from './helpers';
 /** Journey 1: from the eligibility check to a submitted land application, as a new investor. */
 test('a new investor checks eligibility, applies for a plot and lands on the request', async ({ page }) => {
   const errors = watchErrors(page);
-  await openApp(page, { route: '/eligibility', demo: 'prospect', lang: 'en' });
+  // A slow clock, so the confirmation and the request page are read at the same step.
+  await openApp(page, { route: '/eligibility', demo: 'prospect', lang: 'en', speed: 1 });
 
   // 1 · the activity
   // The common activities come first; the whole register is in a sheet.
@@ -55,9 +56,18 @@ test('a new investor checks eligibility, applies for a plot and lands on the req
 
   await expect(page.getByRole('heading', { name: 'Your application is in.' })).toBeVisible();
   // The reference keeps a word joiner after each hyphen, so it never breaks across lines.
-  await expect(page.getByText(/MQ-\u2060?\d{4}-\u2060?\d{4}/)).toBeVisible();
-  await page.getByRole('button', { name: 'Track the request', exact: true }).click();
+  await expect(page.getByText(/MQ-\u2060?\d{4}-\u2060?\d{4}/).first()).toBeVisible();
+  // What happens now is read from the request (gate n=2): the step it names first is the one the request
+  // page shows as current, not a fixed "evaluation by the rules".
+  const first = page.getByRole('list', { name: 'Next steps' }).getByRole('listitem').first();
+  await expect(first).toBeVisible();
+  await expect(page.locator('main')).not.toContainText('Evaluation by the rules');
+  // The title line starts with its state for screen readers ("Current step: …").
+  const step = (await first.locator('p').first().innerText()).replace(/^[^:]+:\s*/, '').trim();
+  expect(step).not.toEqual('');
+  await page.getByRole('button', { name: 'Track request', exact: true }).click();
   await expect(page).toHaveURL(/#\/requests\/r\d+/);
+  await expect(page.locator('main')).toContainText(step);
   expect(errors).toEqual([]);
 });
 
@@ -90,4 +100,32 @@ test('Continue without a plot brings the message into view', async ({ page }) =>
   const message = page.getByText('Choose a free plot on the layout.');
   await expect(message).toBeInViewport();
   await expect(message).toBeFocused();
+});
+
+test('no "another option" when no alternative has a free plot of the size (gate n=4)', async ({ page }) => {
+  await openApp(page, { route: '/eligibility?activity=ACT-101', demo: 'prospect', lang: 'en' });
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('radio', { name: /Commercial solutions/ }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('spinbutton', { name: /Area needed/ }).or(page.getByRole('textbox', { name: /Area needed/ })).first().fill('45000');
+  await page.getByRole('button', { name: 'Check eligibility', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Your activity is targeted, but no plot of this size is free now.' })).toBeVisible();
+  await expect(page.getByText('Eligible with another option.')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Follow plot availability' })).toBeVisible();
+});
+
+test('an unlisted activity is described before it is sent for review (gate n=5)', async ({ page }) => {
+  await openApp(page, { route: '/eligibility', demo: 'prospect', lang: 'en' });
+  await page.getByRole('button', { name: /My activity is not listed/ }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  const field = page.getByRole('textbox', { name: /Describe your activity/ });
+  await expect(page.getByText('Describe your activity so the planning team can review it.')).toBeVisible();
+  await expect(field).toBeFocused();
+  await field.fill('Assembly of small drones');
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('button', { name: 'Check eligibility', exact: true }).click();
+  await expect(page.getByText('An unlisted activity: Assembly of small drones')).toBeVisible();
+  await page.getByRole('button', { name: 'Send for review' }).click();
+  await expect(page).toHaveURL(/#\/requests\/r\d+/);
 });

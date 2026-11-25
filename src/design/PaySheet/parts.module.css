@@ -12,11 +12,14 @@
   border-radius: 0;
 }
 
+/* The label and the value share a line while both fit whole; otherwise the value wraps under the label at the
+   inline end, so neither is squeezed until overflow-wrap: anywhere splits an amount or a word. */
 .line {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--s-4);
+  gap: var(--s-1) var(--s-4);
   min-height: 44px;
   padding-block: 11px;
 }
@@ -26,8 +29,9 @@
 }
 
 .lineLabel {
-  flex: none;
-  max-width: 50%;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
   font-size: var(--t-callout);
   line-height: 1.43;
   letter-spacing: var(--ls-caption);
@@ -35,8 +39,11 @@
 }
 
 .lineValue {
+  flex: 1 0 auto;
   min-width: 0;
+  max-width: 100%;
   margin: 0;
+  margin-inline-start: auto;
   font-size: var(--t-callout);
   font-weight: 400;
   line-height: 1.43;

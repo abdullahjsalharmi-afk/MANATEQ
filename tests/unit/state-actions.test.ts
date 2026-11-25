@@ -287,7 +287,13 @@ describe('the prospect journey, end to end', () => {
     const done = world().notifications.filter((n) => n.kind === 'done').map((n) => n.route);
     for (const id of [application, review.id, offer.id, contract.id, handover]) expect(done).toContain(`/requests/${id}`);
     expect(world().notifications.filter((n) => n.kind === 'action').length).toBeGreaterThanOrEqual(2);
-    expect(selectUnreadCount(getState())).toBe(world().notifications.length);
+    // Every "needs you" of the way was answered, so it is settled and no longer counts as unread (gate n=3).
+    const answered = (n: { subject?: { requestId?: string } }) => n.subject?.requestId !== undefined && byId(n.subject.requestId).status !== 'needs_you';
+    const asks = world().notifications.filter((n) => n.kind === 'action' && answered(n));
+    expect(asks.length).toBeGreaterThanOrEqual(2);
+    expect(asks.every((n) => n.resolvedAt !== undefined && n.read)).toBe(true);
+    expect(selectUnreadCount(getState())).toBe(world().notifications.filter((n) => !n.read).length);
+    expect(selectUnreadCount(getState())).toBe(world().notifications.length - asks.length);
 
     // Handed over, not yet building: the design submission is the next step of the journey.
     expect(selectStation(getState())).toBe('contract');

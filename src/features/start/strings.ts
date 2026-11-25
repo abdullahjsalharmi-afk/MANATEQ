@@ -15,6 +15,7 @@ export const strings = {
   signatory: { ar: 'المفوّض بالتوقيع', en: 'Authorised signatory' },
   activity: { ar: 'النشاط', en: 'Activity' },
   plot: { ar: 'القطعة', en: 'Plot' },
+  plotHelp: { ar: 'القطعة التي يخصها هذا الطلب.', en: 'The plot this request is for.' },
   zone: { ar: 'المنطقة', en: 'Zone' },
   fetchedTitle: { ar: 'نجلبها عنك', en: 'We fetch for you' },
   companyLabel: { ar: 'شركتك', en: 'Your company' },
@@ -57,6 +58,16 @@ export const strings = {
   nextLabel: { ar: 'الخطوات التالية', en: 'Next steps' },
   track: { ar: 'تتبّع الطلب', en: 'Track request' },
   goHome: { ar: 'العودة إلى الرئيسية', en: 'Back to Home' },
+  appointmentTitle: { ar: 'موعدك', en: 'Your appointment' },
+  appointmentWhen: { ar: '{date}، الساعة {time}', en: '{date}, {time}' },
+  appointmentWhere: {
+    ar: '{channel}. تجده في «الدعم» ضمن «مواعيدك القادمة»، ويمكنك إلغاؤه من هناك.',
+    en: '{channel}. It is listed under Support, in Your upcoming appointments, where you can cancel it.',
+  },
+  appointmentOpen: { ar: 'اعرض مواعيدك', en: 'View your appointments' },
+  channelInPerson: { ar: 'في مركز خدمات الأعمال', en: 'At the Business Services Center' },
+  channelVideo: { ar: 'بالفيديو', en: 'By video' },
+  channelPhone: { ar: 'بالهاتف', en: 'By phone' },
   simulated: { ar: 'في هذه النسخة التجريبية تتقدم الخطوات تلقائيًا للعرض.', en: 'In this prototype the steps move forward by themselves, for demonstration.' },
 
   // Leaving.
@@ -72,6 +83,22 @@ export const strings = {
   browse: { ar: 'تصفّح الخدمات', en: 'Browse services' },
   notStartableTitle: { ar: 'تبدأ هذه الخدمة دون طلب منك', en: 'This service starts without a request' },
   openService: { ar: 'اعرض صفحة الخدمة', en: 'View the service' },
+
+  // A service for a leased plot, opened by a company that holds none.
+  needsPlotTitle: { ar: 'تُفتح هذه الخدمة بعد استئجار قطعة', en: 'This service opens once you lease a plot' },
+  needsPlotBody: {
+    ar: 'تُطلب لقطعة تستأجرها شركتك، ولا قطعة مسجلة لشركتك بعد.',
+    en: 'It is requested for a plot your company leases, and no plot is registered to your company yet.',
+  },
+  needsPlotNoneTitle: { ar: 'لا قطعة تحتاج هذه الخدمة الآن', en: 'None of your plots needs this service now' },
+  needsPlotNoneBody: {
+    ar: 'تُطلب لقطعة في مرحلة معيّنة من رحلتها، وقطعك تجاوزت هذه المرحلة.',
+    en: 'It is requested for a plot at one stage of its journey, and your plots are past that stage.',
+  },
+  trackLand: { ar: 'تابِع طلب الأرض', en: 'Follow your land application' },
+  applyLand: { ar: 'قدّم على أرض', en: 'Apply for land' },
+  checkFirst: { ar: 'افحص أهلية نشاطك', en: 'Check your eligibility' },
+  viewPlots: { ar: 'اعرض قطعك', en: 'View your plots' },
   failedTitle: { ar: 'تعذّر تحميل الخدمة', en: 'The service could not be loaded' },
   failedBody: { ar: 'تحقق من الاتصال ثم حاول مرة أخرى.', en: 'Check your connection, then try again.' },
   tryAgain: { ar: 'حاول مرة أخرى', en: 'Try again' },

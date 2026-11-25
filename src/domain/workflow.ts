@@ -103,7 +103,8 @@ export function currentStep(wf: Workflow, req: RequestState): WorkflowStep | und
 
 export function currentVisit(req: RequestState): Visit | undefined {
   const last = req.visits[req.visits.length - 1];
-  return last && last.doneAt === undefined ? last : undefined;
+  // A visit stopped by a withdrawal did not finish, but it is not open either.
+  return last && last.doneAt === undefined && last.stoppedAt === undefined ? last : undefined;
 }
 
 /** Which lane holds the request right now, or null when it is finished. */
@@ -120,12 +121,15 @@ export function progress(wf: Workflow, req: RequestState): number {
   const path = mainPath(wf);
   if (path.length < 2) return 0;
   let best = 0;
+  let stopped = -1;
   for (const visit of req.visits) {
     const index = path.indexOf(visit.step);
-    if (index > best) best = index;
+    // A step stopped by a withdrawal was reached, not done.
+    if (visit.stoppedAt !== undefined && visit.doneAt === undefined) stopped = Math.max(stopped, index);
+    else if (index > best) best = index;
   }
   // The open step counts as "reached", not "done".
-  const reached = req.current !== null && path.indexOf(req.current) === best ? best - 0.5 : best;
+  const reached = stopped > best ? stopped - 0.5 : req.current !== null && path.indexOf(req.current) === best ? best - 0.5 : best;
   return Math.max(0, Math.min(1, reached / (path.length - 1)));
 }
 
@@ -213,9 +217,12 @@ export function advance(input: RequestState, wf: Workflow, now: number, timing: 
 
 /**
  * How the investor completes a step: the usual way ("yes"), declining a correction loop so the request
- * carries on forward ("no", only meaningful on a step that loops back), or withdrawing the request there.
+ * carries on forward ("no", only meaningful on a step that loops back), withdrawing the request there,
+ * or going on at a given step where the step's own text says so (`{ to }`: B2 "a paid deposit is
+ * recorded without bank verification" goes on to the register; D1 "a low rating reopens the request
+ * for the supervisor" goes back to the supervisor).
  */
-export type InvestorRoute = Outcome | 'withdraw';
+export type InvestorRoute = Outcome | 'withdraw' | { to: number };
 
 /** The investor completes the step that was waiting for them. */
 export function act(input: RequestState, wf: Workflow, now: number, timing: Timing, route: InvestorRoute = 'yes'): { req: RequestState; events: EngineEvent[] } {
@@ -240,7 +247,7 @@ export function act(input: RequestState, wf: Workflow, now: number, timing: Timi
   const outcome: Outcome = route === 'no' && step.back !== undefined ? 'no' : 'yes';
   if (outcome === 'no') visit.outcome = 'no';
 
-  const nextId = successor(wf, step, outcome);
+  const nextId = typeof route === 'object' ? route.to : successor(wf, step, outcome);
   if (nextId === null || !findStep(wf, nextId)) {
     req.current = null;
     req.status = 'done';
@@ -272,7 +279,7 @@ export function serviceClockMs(req: RequestState, now: number): number {
   const first = req.visits[0];
   if (!first) return 0;
   const last = req.visits[req.visits.length - 1] as Visit;
-  const end = req.current === null ? (last.doneAt ?? last.enteredAt) : now;
+  const end = req.current === null ? (last.doneAt ?? last.stoppedAt ?? last.enteredAt) : now;
   let investorOpen = 0;
   if (req.status === 'needs_you' && last.doneAt === undefined) investorOpen = Math.max(0, now - last.enteredAt);
   return Math.max(0, end - first.enteredAt - req.investorMs - investorOpen);

@@ -49,3 +49,55 @@ test('a guest is invited to sign in', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Demo sign-in' }).first()).toBeVisible();
   await expect(page.getByRole('link', { name: /Settings/ })).toBeVisible();
 });
+
+test('About shows each simulation disclosure in full, never clamped (n=32)', async ({ page }) => {
+  for (const [lang, width] of [['en', 390], ['ar', 320]] as const) {
+    await page.setViewportSize({ width, height: 900 });
+    await openApp(page, { route: '/account/about', lang, theme: 'dark' });
+    const section = page.locator('section').filter({ has: page.getByRole('heading', { name: lang === 'en' ? 'What is simulated here' : 'ما الذي يُحاكى هنا' }) });
+    await expect(section.getByText(lang === 'en' ? /National Authentication System \(Tawtheeq\)\.$/ : /توثيق/).first()).toBeVisible();
+    const clipped = await section.evaluate((root) =>
+      [...root.querySelectorAll('li span, li p')]
+        .filter((el) => el.scrollHeight > el.clientHeight + 1 || getComputedStyle(el).webkitLineClamp !== 'none' || (getComputedStyle(el).textOverflow === 'ellipsis' && getComputedStyle(el).overflow !== 'visible'))
+        .map((el) => el.textContent),
+    );
+    expect(clipped).toEqual([]);
+  }
+});
+
+test('dates and references in plot and payment rows stay whole at 320 px and the largest text (n=26, n=30)', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  const whole = (pattern: string) =>
+    page.getByRole('main').evaluate((main, source) => {
+      const found: { text: string; lines: number; clipped: boolean }[] = [];
+      const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT);
+      const rx = new RegExp(source, 'g');
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const text = node.textContent ?? '';
+        for (const match of text.matchAll(rx)) {
+          const range = document.createRange();
+          range.setStart(node, match.index ?? 0);
+          range.setEnd(node, (match.index ?? 0) + match[0].length);
+          const rects = [...range.getClientRects()].filter((rect) => rect.width > 0);
+          const parent = (node.parentElement as HTMLElement).getBoundingClientRect();
+          const box = range.getBoundingClientRect();
+          found.push({ text: match[0], lines: new Set(rects.map((rect) => Math.round(rect.top))).size, clipped: box.left < parent.left - 1 || box.right > parent.right + 1 });
+        }
+      }
+      return found;
+    }, pattern);
+
+  for (const lang of ['ar', 'en'] as const) {
+    for (const text of [0, 3] as const) {
+      await openApp(page, { route: '/account/plots/BA-121', lang, text });
+      const dates = await whole(lang === 'ar' ? '\\d{1,2}[\\s\\u2060]+[\\u0621-\\u064A]+[\\s\\u2060]+\\d{4}' : '\\d{1,2}[\\s\\u2060]+[A-Z][a-z]{2}[\\s\\u2060]+\\d{4}');
+      expect(dates.length).toBeGreaterThan(0);
+      for (const date of dates) expect(date, `${lang} ${text} ${date.text}`).toMatchObject({ lines: 1, clipped: false });
+
+      await openApp(page, { route: '/account/payments', lang, text });
+      const refs = await whole('RCP[\\u2060-]+\\d{4}[\\u2060-]+\\d{4}');
+      expect(refs.length).toBeGreaterThan(0);
+      for (const ref of refs) expect(ref, `${lang} ${text} ${ref.text}`).toMatchObject({ lines: 1, clipped: false });
+    }
+  }
+});

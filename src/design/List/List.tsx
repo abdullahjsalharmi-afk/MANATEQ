@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Link } from '@/app/router';
 import { cx } from '../cx';
 import { Icon } from '../Icon/Icon';
-import { keepWhole } from './keepWhole';
+import { hasWhole, keepWhole } from './keepWhole';
 import styles from './List.module.css';
 
 export interface ListProps {
@@ -37,7 +37,11 @@ export interface RowProps {
   onClick?: () => void;
   /** Force or hide the chevron. Defaults to shown for links. */
   chevron?: boolean;
-  /** Allow the subtitle to wrap to two lines instead of truncating. */
+  /**
+   * The subtitle wraps over as many lines as it needs instead of ending in an ellipsis on one line. Defaults to on
+   * when the subtitle is a string with a date, a time or a code in it (see keepWhole); pass it for a subtitle you
+   * build yourself that shows one.
+   */
   wrap?: boolean;
   /**
    * A fact of a fact sheet («رقم العقد: LC-2021-0318»): the title is the label (14 px, --ink-3) and the trailing
@@ -49,19 +53,27 @@ export interface RowProps {
   'aria-label'?: string;
 }
 
-/** One row of a list: leading · title and subtitle · trailing value · chevron. The divider starts where the text starts. */
-export function Row({ title, subtitle, leading, trailing, eyebrow, to, onClick, chevron, wrap = false, fact = false, className, ...rest }: RowProps) {
+/**
+ * One row of a list: leading · title and subtitle · trailing value · chevron. The divider starts where the text starts.
+ * The trailing value sits beside the words while both fit whole; otherwise it wraps under them at the inline end.
+ * The chevron never wraps.
+ */
+export function Row({ title, subtitle, leading, trailing, eyebrow, to, onClick, chevron, wrap, fact = false, className, ...rest }: RowProps) {
   const showChevron = chevron ?? to !== undefined;
+  // A subtitle that carries a date, a time or a code wraps in full: an ellipsis must never cut a reference.
+  const wrapSubtitle = wrap ?? hasWhole(subtitle);
   const body = (
     <>
       {leading ? <span className={styles.leading}>{leading}</span> : null}
       <span className={styles.body}>
-        <span className={styles.text}>
-          {eyebrow ? <span className={styles.eyebrow}>{eyebrow}</span> : null}
-          <span className={styles.title}>{keepWhole(title)}</span>
-          {subtitle ? <span className={cx(styles.subtitle, wrap && styles.wrap)}>{keepWhole(subtitle)}</span> : null}
+        <span className={styles.main}>
+          <span className={styles.text}>
+            {eyebrow ? <span className={styles.eyebrow}>{eyebrow}</span> : null}
+            <span className={styles.title}>{keepWhole(title)}</span>
+            {subtitle ? <span className={cx(styles.subtitle, wrapSubtitle && styles.wrap)}>{keepWhole(subtitle)}</span> : null}
+          </span>
+          {trailing ? <span className={styles.trailing}>{keepWhole(trailing)}</span> : null}
         </span>
-        {trailing ? <span className={styles.trailing}>{keepWhole(trailing)}</span> : null}
         {/* The chevron points forward: to the left in Arabic, to the right in English. */}
         {showChevron ? <Icon icon={ChevronRight} size={16} strokeWidth={2} flip className={styles.chevron} /> : null}
       </span>

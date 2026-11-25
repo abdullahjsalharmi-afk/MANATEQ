@@ -15,6 +15,13 @@ test('the investor accepts, signs and pays the renewal, and the request moves on
   await page.getByRole('button', { name: 'Accept and renew' }).click();
   const sheet = page.getByRole('dialog');
   await expect(sheet.getByText('Step 1 of 3')).toBeVisible();
+  // What is agreed (n=10): the new end date and term, the rate and yearly rent, and no incentive that does not exist.
+  await expect(sheet.getByText('Renewed lease ends on')).toBeVisible();
+  await expect(sheet.getByText('5 Mar 2028')).toBeVisible();
+  await expect(sheet.getByText('Renewal term')).toBeVisible();
+  await expect(sheet.getByText(/per m² a year/)).toBeVisible();
+  await expect(sheet.getByText('Yearly rent')).toBeVisible();
+  await expect(sheet.getByText(/incentive/i)).toHaveCount(0);
   await sheet.getByRole('button', { name: 'I agree' }).click();
 
   // Signature (a simulation).
@@ -33,7 +40,8 @@ test('the investor accepts, signs and pays the renewal, and the request moves on
   const ref = (await receipt.textContent())?.trim() ?? '';
   await pay.getByRole('button', { name: 'Done' }).click();
 
-  await expect(page.getByText(`Paid. Receipt ${ref} is in your wallet.`)).toBeVisible();
+  // The same words as every other payment (n=11).
+  await expect(page.getByText(new RegExp(`^Paid\\. Receipt\\W*${ref.replace(/-/g, '\\W+')}\\W* is in Documents and passes\\.$`))).toBeVisible();
   await expect(page.getByRole('main').getByText(ref).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Waiting for you' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Accept and renew' })).toHaveCount(0);
@@ -67,4 +75,53 @@ test('the list switches to completed requests and groups a thread', async ({ pag
   await openApp(page, { route: '/requests', lang: 'ar' });
   await page.getByRole('radio', { name: /مكتملة/ }).or(page.getByRole('tab', { name: /مكتملة/ })).or(page.getByRole('button', { name: /مكتملة/ })).first().click();
   await expect(page.getByText(/جزء من: طلب أرض/)).toBeVisible();
+});
+
+test('a withdrawn fault report shows its open step as stopped, never as done (n=7)', async ({ page }) => {
+  const errors = watchErrors(page);
+  await openApp(page, { route: '/requests/r94', lang: 'en' });
+  await page.getByRole('button', { name: 'Cancel the request' }).first().click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Cancel the request' }).click();
+  await expect(page.getByRole('heading', { name: 'Request closed' })).toBeVisible();
+  const timeline = page.getByRole('main');
+  await expect(timeline.getByText('The request stopped at this step')).toBeVisible();
+  // The crew never fixed it: nothing says the repair step was done.
+  const rows = await timeline.locator('li').allInnerTexts();
+  const repair = rows.filter((text) => text.includes('Crew fixes'));
+  expect(repair.length).toBeGreaterThan(0);
+  for (const text of repair) expect(text).not.toMatch(/^Done:/m);
+  expect(errors).toEqual([]);
+});
+
+test('a low rating reopens the fault report, the page says so and asks again (n=15)', async ({ page }) => {
+  const errors = watchErrors(page);
+  await openApp(page, { route: '/start/D1', lang: 'en' });
+  await page.getByText('Street lighting', { exact: true }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByText('BA-121').first().click();
+  await page.getByRole('button', { name: /sample photo/i }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: /Send/ }).last().click();
+  await page.getByRole('link', { name: /Track/ }).first().click();
+
+  const rateNow = page.getByRole('button', { name: 'Rate now' });
+  const forward = page.getByRole('button', { name: /Move time forward/ });
+  for (let i = 0; i < 20 && !(await rateNow.isVisible()); i++) {
+    if (await forward.isVisible()) await forward.click();
+    await page.waitForTimeout(500);
+  }
+  await rateNow.click();
+  const sheet = page.getByRole('dialog');
+  await sheet.getByRole('radio').first().check({ force: true });
+  await sheet.locator('textarea').fill('Still dark');
+  await sheet.getByRole('button', { name: 'Submit' }).click();
+
+  // Not complete: the rating is shown, with what it did.
+  await expect(page.getByRole('heading', { name: 'Request complete' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Your rating' })).toBeVisible();
+  await expect(page.getByText('1 of 5')).toBeVisible();
+  await expect(page.getByText('This rating reopened the report for the supervisor.')).toBeVisible();
+  // The workflow comes back to the rating step and asks again.
+  await expect(page.getByText(/Rate the fix again; your earlier rating was 1 of 5\./)).toBeVisible({ timeout: 15_000 });
+  expect(errors).toEqual([]);
 });

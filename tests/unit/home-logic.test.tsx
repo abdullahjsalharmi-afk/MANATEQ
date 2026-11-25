@@ -21,9 +21,9 @@ describe('home logic', () => {
   });
 
   it('sends a journey item to its request, its start or its page', () => {
-    expect(itemRoute({ serviceId: 'C2', state: 'current', requestId: 'r95', canStart: false })).toBe('/requests/r95');
-    expect(itemRoute({ serviceId: 'A4', state: 'current', canStart: true })).toBe('/start/A4');
-    expect(itemRoute({ serviceId: 'C8', state: 'upcoming', canStart: false })).toBe('/services/C8');
+    expect(itemRoute({ serviceId: 'C2', state: 'current', open: true, requestId: 'r95', canStart: false })).toBe('/requests/r95');
+    expect(itemRoute({ serviceId: 'A4', state: 'current', open: false, canStart: true })).toBe('/start/A4');
+    expect(itemRoute({ serviceId: 'C8', state: 'upcoming', open: false, canStart: false })).toBe('/services/C8');
   });
 });
 

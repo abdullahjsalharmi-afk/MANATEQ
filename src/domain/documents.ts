@@ -8,6 +8,7 @@
  * wallet title and the document kind of each are curated below, in the same order.
  */
 import { langTools, ltr } from '@/app/i18n';
+import { requestLabelOf } from '@/data/catalog';
 import type { L10n, Receives, ServiceDetail, ServiceId } from '@/data/types';
 import type { Company, Doc, DocKind, DocLine, Invoice, Lease, Plot, RequestState } from './types';
 import { DOT, keepWhole } from './text';
@@ -198,7 +199,6 @@ const LABEL = {
   validUntil: { ar: 'سارٍ حتى', en: 'Valid until' },
   service: { ar: 'الخدمة', en: 'Service' },
   request: { ar: 'رقم الطلب', en: 'Request number' },
-  issuedOn: { ar: 'تاريخ الإصدار', en: 'Issued on' },
   amount: { ar: 'المبلغ', en: 'Amount' },
   invoice: { ar: 'الفاتورة', en: 'Invoice' },
   paidOn: { ar: 'تاريخ السداد', en: 'Paid on' },
@@ -299,7 +299,7 @@ export function receiptDoc(seed: DocSeed, invoice: Invoice, facts: DocFacts, at:
  */
 export function requestDocs(
   request: Pick<RequestState, 'id' | 'ref' | 'serviceId' | 'form'>,
-  service: DocSource & Pick<ServiceDetail, 'label'>,
+  service: DocSource & Pick<ServiceDetail, 'label' | 'requestLabel'>,
   facts: DocFacts,
   at: number,
   allocate: (spec: DocSpec) => DocSeed,
@@ -318,7 +318,9 @@ export function requestDocs(
     } else if (item.kind === 'certificate' && facts.lease) {
       lines.push(line(LABEL.lease, code(facts.lease.ref)), line(LABEL.validUntil, date(facts.lease.endsAt)));
     }
-    lines.push(line(LABEL.service, service.label), line(LABEL.request, code(request.ref)), line(LABEL.issuedOn, date(at)));
+    // The request is named with its noun («مراجعة التصميم»), never the call to action that starts it. The
+    // issue date is the document's own (`issuedAt`), shown once by the screen, not repeated as a line.
+    lines.push(line(LABEL.service, requestLabelOf(service)), line(LABEL.request, code(request.ref)));
     if (item.signed) lines.push(signatureLine());
 
     return {

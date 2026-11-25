@@ -25,7 +25,7 @@ import type { ActPayload, Env, PendingWorld } from './types';
 import { DAY, HOUR, MINUTE, PAYMENT_TERM_MS, addDocs, addYears, annualRentOf, docFacts, findRequest, isFinished, isOpen, notify, periodRentOf, rateOf, startOfDay } from './world';
 
 /** Bump when the saved shape changes; older saves are discarded on load. */
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;
 
 export function initialSettings(): Settings {
   return { lang: 'ar', theme: 'auto', textSize: 1, onboarded: false, notifications: true };
@@ -327,6 +327,9 @@ function nationalStep(service: ServiceDetail | undefined, integration: string): 
   return (named[named.length - 1] ?? usual[0])?.id;
 }
 
+/** Working days of the utilities standard (C4, 10 days) left when the demo opens: its capacity check took 8. */
+const UTILITIES_LEFT_DAYS = 2;
+
 /** The last seven weeks, replayed: a third plot from application to building, and the daily business of the other two. */
 function tenantHistory(base: World, now: number): World {
   const tale = story(base, calendarEnv, now);
@@ -374,9 +377,12 @@ function tenantHistory(base: World, now: number): World {
   }
   const handedOverAt = tale.doneAt(handover);
 
-  // The utilities request opened by itself at handover; the consultant applied to Kahramaa and recorded the references.
+  // The utilities request opened by itself at handover; the consultant applied to Kahramaa and recorded the
+  // references. Manateq's capacity check used 8 of the 10 working days of the standard, so Kahramaa's
+  // synchronisation is expected within the 2 days left: the headline, the step's date and the standard
+  // card tell the same story.
   const utilities = tale.follower(handover, 'C4');
-  tale.park(utilities, (step) => step.lane === 'nat', now + 9 * DAY, ago(38, 10, 0), { form: { reference: 'KM-DEMO-0116', designLoad: 850 } });
+  tale.park(utilities, (step) => step.lane === 'nat', now + UTILITIES_LEFT_DAYS * DAY, ago(38, 10, 0), { form: { reference: 'KM-DEMO-0116', designLoad: 850 } });
 
   // A certificate for the bank, for the plot in operation.
   const certificate = tale.start({ serviceId: 'B8', plotId: BA_PLOT, form: { docType: 'toWhomItMayConcern', plot: BA_PLOT } }, ago(40, 13, 15));
@@ -459,7 +465,7 @@ function notifyRead(world: World, input: Parameters<typeof notify>[1]): World {
  * unless it still asks for something), plus what arrived in the last days.
  */
 function withRecentNotifications(world: World, now: number, maintenanceId: string | undefined): World {
-  const recent = world.notifications.filter((notification) => notification.at >= now - 30 * DAY).map((notification) => ({ ...notification, read: notification.kind !== 'action' }));
+  const recent = world.notifications.filter((notification) => notification.at >= now - 30 * DAY).map((notification) => ({ ...notification, read: notification.kind !== 'action' || notification.resolvedAt !== undefined }));
   let next: World = { ...world, notifications: recent };
   const maintenance = maintenanceId === undefined ? undefined : findRequest(next, maintenanceId);
   const invoice = next.invoices.find((candidate) => candidate.status === 'due');
@@ -481,6 +487,7 @@ function withRecentNotifications(world: World, now: number, maintenanceId: strin
       title: { ar: 'استلمنا بلاغك وأُرسل أمر العمل إلى الفريق الميداني', en: 'We received your report and sent the work order to the field team' },
       body: dots({ ar: 'عطل في الإنارة', en: 'Street lighting issue' }, BA_PLOT),
       route: `/requests/${maintenance.id}`,
+      subject: { requestId: maintenance.id },
     });
   }
   next = notify(next, {
@@ -500,6 +507,7 @@ function withRecentNotifications(world: World, now: number, maintenanceId: strin
       title: text.invoiceDueSoon,
       body: dots(invoice.title, moneyText(invoice.amount), fill(text.dueOn, { date: dateText(invoice.dueAt) })),
       route: `/account/payments/${invoice.id}`,
+      subject: { invoiceId: invoice.id },
     });
   }
   return next;

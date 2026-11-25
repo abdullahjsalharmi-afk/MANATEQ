@@ -11,12 +11,12 @@ import type { ActionAtom, ServiceDetail, ServiceId, StepAction } from '@/data/ty
 import { followers, oncePerPlot } from '@/domain/chains';
 import { requestDocs } from '@/domain/documents';
 import type { Appointment, Doc, FormValue, RequestState, Visit, World } from '@/domain/types';
-import { getZone, requestLabelOf } from '@/data/catalog';
-import { findPlot } from '@/domain/plots';
+import { getService, getZone, requestLabelOf } from '@/data/catalog';
+import { findPlot, needsTenancy, plotsFor } from '@/domain/plots';
 import { act, advance, begin, currentStep, currentVisit, findStep, isTerminal, mainPath, waitsForInvestor, type EngineEvent, type InvestorRoute, type Outcome, type Timing } from '@/domain/workflow';
-import { addPass, atomEffects, recordPayload, settleInvoice, whenFinished, whenStarted, whenStopped, whenWaiting, type EffectContext } from './effects';
+import { addPass, atomEffects, recordPayload, settleInvoice, toTime, whenFinished, whenStarted, whenStopped, whenWaiting, type EffectContext } from './effects';
 import { allocate, docRef, requestRef } from './refs';
-import { dateText, dots, fill, moneyText, text } from './strings';
+import { dateText, dateTimeText, dots, fill, moneyText, text } from './strings';
 import { holdOf, type ActPayload, type AppointmentInput, type Env, type PassInput, type SimRequest, type StartOptions } from './types';
 import {
   DAY,
@@ -33,6 +33,7 @@ import {
   patchLease,
   patchRequest,
   putRequest,
+  resolveRequestAsks,
 } from './world';
 
 export interface StartInput extends StartOptions {
@@ -108,6 +109,8 @@ interface ChoiceEffect {
   gate?: { step: number; outcome: Outcome };
   /** The tasks of the step that apply with this option; the others are skipped. */
   tasks?: ActionAtom[];
+  /** Go on at this step, where the step's own text says this option skips the steps in between. */
+  to?: number;
 }
 
 /**
@@ -115,8 +118,10 @@ interface ChoiceEffect {
  * listed take the usual path and every task of their step.
  */
 const CHOICES: Partial<Record<ServiceId, Record<number, Record<string, ChoiceEffect>>>> = {
-  // "Uploads the guarantee issued by the bank, or pays the deposit online".
-  B2: { 3: { guarantee: { tasks: ['choose', 'upload'] }, deposit: { tasks: ['choose', 'pay'] } } },
+  // "Uploads the guarantee issued by the bank, or pays the deposit online; a paid deposit is recorded
+  // without bank verification": the deposit skips the reading and checking of a guarantee (steps 4 to 8)
+  // and goes on to step 9, "Register links guarantee to contract".
+  B2: { 3: { guarantee: { tasks: ['choose', 'upload'] }, deposit: { tasks: ['choose', 'pay'], to: 9 } } },
   // "Redraws in line with the options" returns to step 1; the investor may instead withdraw the request.
   B4: { 4: { withdraw: { route: 'withdraw' } } },
   // Accepting the charge closes the inspection loop and goes on to the settlement.
@@ -133,6 +138,35 @@ const CHOICES: Partial<Record<ServiceId, Record<number, Record<string, ChoiceEff
     },
   },
 };
+
+/**
+ * Ratings that change the course of a request, as the step says. D1 step 11: "a low rating reopens the
+ * request for the supervisor": one or two stars go on at step 10, "Supervisor re-dispatches", and the
+ * workflow then runs as written until the investor is asked to rate again.
+ */
+const LOW_RATING: Partial<Record<ServiceId, { step: number; atMost: number; to: number }>> = {
+  D1: { step: 11, atMost: 2, to: 10 },
+};
+
+const starsOf = (rating: ActPayload['rating']): number | undefined => (rating === undefined ? undefined : Math.max(1, Math.min(5, Math.round(typeof rating === 'number' ? rating : rating.stars))));
+
+/** The step a low rating sends the request back to, or undefined when the rating does not reopen it. */
+function reopenedBy(serviceId: ServiceId, step: number, rating: ActPayload['rating']): number | undefined {
+  const rule = LOW_RATING[serviceId];
+  const stars = starsOf(rating);
+  return rule && rule.step === step && stars !== undefined && stars <= rule.atMost ? rule.to : undefined;
+}
+
+/**
+ * The steps an investor step may go on to besides its usual successor, because an option or a rating
+ * says so (B2 step 3 → 9, D1 step 11 → 10). For checks that a request's walk is one the engine allows.
+ */
+export function steeredMoves(serviceId: ServiceId, step: number): number[] {
+  const moves = Object.values(CHOICES[serviceId]?.[step] ?? {}).flatMap((effect) => (effect.to !== undefined ? [effect.to] : []));
+  const low = LOW_RATING[serviceId];
+  if (low && low.step === step) moves.push(low.to);
+  return moves;
+}
 
 const choiceEffect = (serviceId: ServiceId, step: number, choice: string | undefined): ChoiceEffect | undefined => (choice === undefined ? undefined : CHOICES[serviceId]?.[step]?.[choice]);
 
@@ -178,6 +212,7 @@ function finish(world: World, ctx: EffectContext, env: Env, now: number): World 
     title: dots(requestLabelOf(ctx.service), plotNumberOf(next, request)),
     body: end && isTerminal(end) ? end.label : ctx.service.output,
     route: `/requests/${request.id}`,
+    subject: { requestId: request.id },
   });
 
   for (const follower of followers(ctx.service.id)) {
@@ -207,10 +242,13 @@ function settle(world: World, id: string, events: EngineEvent[], env: Env, now: 
         title: action?.title ?? text.needsYou,
         body: dots(requestLabelOf(service), plotNumberOf(next, request)),
         route: `/requests/${id}`,
+        subject: { requestId: id, step: event.step },
       });
     } else if (event.type === 'finished') {
+      next = resolveRequestAsks(next, id, event.at);
       next = finish(next, ctx, env, now);
     } else if (event.type === 'stopped') {
+      next = resolveRequestAsks(next, id, event.at);
       next = whenStopped[service.id]?.(next, ctx) ?? next;
       const reason = findStep(service.workflow, event.step);
       next = notify(next, {
@@ -219,6 +257,7 @@ function settle(world: World, id: string, events: EngineEvent[], env: Env, now: 
         title: dots(requestLabelOf(service), plotNumberOf(next, request)),
         body: reason?.label ?? service.output,
         route: `/requests/${id}`,
+        subject: { requestId: id },
       });
     }
   }
@@ -316,14 +355,20 @@ const APPLICATION: ReadonlySet<ServiceId> = new Set<ServiceId>(['A4', 'A5', 'A6'
  * zone's layout ("AW-117"). Anything else is left out, so a request never points at a plot that does
  * not exist.
  */
-function placeOf(world: World, input: StartInput, form: Record<string, FormValue>): { plotId?: string; zoneCode?: string } {
+function placeOf(world: World, input: StartInput, form: Record<string, FormValue>, service: Parameters<typeof needsTenancy>[0] | undefined): { plotId?: string; zoneCode?: string } {
   const application = APPLICATION.has(input.serviceId);
   // A plot that is only reserved (its application still running) is not yet the investor's to use.
   const own = (id: string | undefined) => {
     const plot = findPlotRecord(world, id);
     return plot && (application || plot.status !== 'reserved') ? plot.id : undefined;
   };
-  const named = input.plotId ?? (typeof form.plot === 'string' ? form.plot : undefined);
+  let named = input.plotId ?? (typeof form.plot === 'string' && form.plot !== '' ? form.plot : undefined);
+  // A service only for a plot holder, started without naming a plot: when exactly one plot qualifies
+  // (the one leased plot awaiting its handover, the only plot held), the request is about that plot.
+  if (named === undefined && !application && service && needsTenancy(service)) {
+    const fits = plotsFor(world, input.serviceId);
+    if (fits.length === 1) named = fits[0]?.id;
+  }
   let plotId = own(named);
   const zoneOfPlot = findPlotRecord(world, plotId)?.zoneCode;
   if (plotId === undefined && named !== undefined && application) {
@@ -352,7 +397,7 @@ const ANSWERED_GATES: Partial<Record<ServiceId, (form: Record<string, FormValue>
 export function startIn(world: World, input: StartInput, at: number, env: Env, now: number = at): { world: World; id: string } {
   const slot = allocate(world, 'r');
   const form = { ...(input.form ?? {}) };
-  const { plotId, zoneCode } = placeOf(world, input, form);
+  const { plotId, zoneCode } = placeOf(world, input, form, env.detail(input.serviceId) ?? getService(input.serviceId));
   const decisions = { ...(ANSWERED_GATES[input.serviceId]?.(form) ?? {}), ...(input.decisions ?? {}) };
   const queued: RequestState = {
     id: slot.id,
@@ -372,7 +417,38 @@ export function startIn(world: World, input: StartInput, at: number, env: Env, n
     investorMs: 0,
     docIds: [],
   };
-  return { world: run(putRequest(slot.world, queued), slot.id, env, now), id: slot.id };
+  const booked = withBookedAppointment(putRequest(slot.world, queued), queued, at);
+  return { world: run(booked, slot.id, env, now), id: slot.id };
+}
+
+/** The opening hour of an appointment booked with a request for a preferred day. */
+const APPOINTMENT_HOUR = 10;
+const CHANNELS: ReadonlySet<Appointment['channel']> = new Set<Appointment['channel']>(['in_person', 'video', 'phone']);
+
+/**
+ * E1 "raises a request or books an appointment": a request that asks for an appointment on a preferred
+ * day books it at 10:00 that day (in person unless the form names another channel), linked to the
+ * request, and tells the investor. Done where requests are started, so every way in books it.
+ */
+function withBookedAppointment(world: World, request: RequestState, at: number): World {
+  if (request.serviceId !== 'E1' || request.form.bookAppointment !== true) return world;
+  const day = toTime(request.form.preferredDate);
+  if (day === undefined) return world;
+  const when = new Date(day);
+  when.setHours(APPOINTMENT_HOUR, 0, 0, 0);
+  const asked = request.form.channel;
+  const channel = typeof asked === 'string' && CHANNELS.has(asked as Appointment['channel']) ? (asked as Appointment['channel']) : 'in_person';
+  const summary = getService(request.serviceId);
+  const topic = summary ? requestLabelOf(summary) : { ar: request.ref, en: request.ref };
+  const booked = bookAppointmentIn(world, { at: when.getTime(), topic, channel, requestId: request.id });
+  return notify(booked.world, {
+    at,
+    kind: 'info',
+    title: text.appointmentBooked,
+    body: dots(topic, dateTimeText(when.getTime())),
+    route: '/account/support',
+    subject: { requestId: request.id },
+  });
 }
 
 /**
@@ -388,17 +464,33 @@ export function actIn(world: World, id: string, payload: ActPayload, now: number
   const stepId = request.current;
   const action = service.actions.find((candidate) => candidate.step === stepId);
   const steer = choiceEffect(service.id, stepId, payload.choice);
+  const reopenAt = reopenedBy(service.id, stepId, payload.rating);
 
-  let next = recordPayload(world, id, stepId, payload);
+  // The investor answered what the request asked of them.
+  let next = resolveRequestAsks(world, id, now);
+  next = recordPayload(next, id, stepId, payload);
   if (action) {
     for (const atom of stepTasks(service.id, action, payload.choice, request)) next = atomEffects[atom]?.(next, { id, service, at: now, action, payload }) ?? next;
   }
   const ready = findRequest(next, id);
   if (!ready) return next;
   const gate = steer?.gate;
-  const steered: RequestState = gate ? { ...ready, decisions: { ...(ready.decisions ?? {}), [gate.step]: gate.outcome } } : ready;
-  const result = act(steered, service.workflow, now, env.timing(service), steer?.route ?? 'yes');
-  next = settle(putRequest(next, result.req), id, result.events, env, now);
+  let steered: RequestState = gate ? { ...ready, decisions: { ...(ready.decisions ?? {}), [gate.step]: gate.outcome } } : ready;
+  if (reopenAt !== undefined && ready.rating) steered = { ...steered, reopenedAt: now, reopenedRating: ready.rating };
+  const to = steer?.to ?? reopenAt;
+  const result = act(steered, service.workflow, now, env.timing(service), to !== undefined ? { to } : (steer?.route ?? 'yes'));
+  next = putRequest(next, result.req);
+  if (reopenAt !== undefined) {
+    next = notify(next, {
+      at: now,
+      kind: 'update',
+      title: text.reopened,
+      body: dots(fill(text.reopenedBody, { stars: starsOf(payload.rating) ?? 1 }), plotNumberOf(next, result.req)),
+      route: `/requests/${id}`,
+      subject: { requestId: id },
+    });
+  }
+  next = settle(next, id, result.events, env, now);
   return run(next, id, env, now);
 }
 
@@ -420,14 +512,19 @@ export function cancelIn(world: World, id: string, now: number, env: Env): World
   const open = currentVisit(request);
   const service = env.detail(request.serviceId);
   const openStep = service ? currentStep(service.workflow, request) : undefined;
-  // The open step closes at the moment of withdrawal; a decision that was not taken yet is left out.
+  // The open step is stopped at the moment of withdrawal: it did not finish, so it is never shown as
+  // done. A decision that was not taken yet is left out.
   const visits: Visit[] =
     open && openStep?.kind === 'gate'
       ? request.visits.slice(0, last)
-      : request.visits.map((visit, index) => (index === last && visit.doneAt === undefined ? { ...visit, doneAt: Math.max(now, visit.enteredAt) } : visit));
+      : request.visits.map((visit, index) => (index === last && visit.doneAt === undefined ? { ...visit, stoppedAt: Math.max(now, visit.enteredAt) } : visit));
   const waited = request.status === 'needs_you' && open ? Math.max(0, now - open.enteredAt) : 0;
   const closed: RequestState = { ...released(request), visits, current: null, status: 'stopped', updatedAt: now, investorMs: request.investorMs + waited };
-  const next = putRequest(world, closed);
+  let next = resolveRequestAsks(putRequest(world, closed), id, now);
+  // An appointment booked with the request is not kept for a request that was withdrawn.
+  if (next.appointments.some((appointment) => appointment.requestId === id && appointment.status === 'booked')) {
+    next = { ...next, appointments: next.appointments.map((appointment) => (appointment.requestId === id && appointment.status === 'booked' ? { ...appointment, status: 'cancelled' } : appointment)) };
+  }
   return service ? (whenStopped[service.id]?.(next, { id, service, at: now }) ?? next) : next;
 }
 
@@ -455,8 +552,24 @@ export function resumeIn(world: World, now: number, env: Env): World {
 
 /* ───────────────────────────── invoices, passes, appointments ───────────────────────────── */
 
+/**
+ * The investor pays an invoice: it is settled with its receipt, the reminders to pay it are settled, and
+ * a short note (already read: the investor just did it) opens the receipt in the wallet.
+ */
 export function payInvoiceIn(world: World, invoiceId: string, now: number): { world: World; docId: string | null } {
-  return settleInvoice(world, invoiceId, now);
+  const invoice = world.invoices.find((candidate) => candidate.id === invoiceId);
+  const paid = settleInvoice(world, invoiceId, now);
+  if (!invoice || paid.docId === null) return paid;
+  const noted = notify(paid.world, {
+    at: now,
+    kind: 'done',
+    title: text.paymentReceived,
+    body: dots(invoice.title, moneyText(invoice.amount)),
+    route: `/account/wallet/${paid.docId}`,
+    subject: { invoiceId },
+  });
+  const last = noted.notifications.length - 1;
+  return { world: { ...noted, notifications: noted.notifications.map((notification, index) => (index === last ? { ...notification, read: true } : notification)) }, docId: paid.docId };
 }
 
 export function issuePassIn(world: World, input: PassInput, now: number): { world: World; id: string } {
@@ -470,7 +583,7 @@ export function revokePassIn(world: World, id: string): World {
 
 export function bookAppointmentIn(world: World, input: AppointmentInput): { world: World; id: string } {
   const slot = allocate(world, 'ap');
-  const appointment: Appointment = { id: slot.id, at: input.at, topic: input.topic, channel: input.channel, status: 'booked' };
+  const appointment: Appointment = { id: slot.id, at: input.at, topic: input.topic, channel: input.channel, status: 'booked', ...(input.requestId !== undefined ? { requestId: input.requestId } : {}) };
   return { world: { ...slot.world, appointments: [...slot.world.appointments, appointment] }, id: slot.id };
 }
 
@@ -497,6 +610,7 @@ function calendar(world: World, now: number, env: Env): World {
       title: text.invoiceOverdue,
       body: dots(invoice.title, moneyText(invoice.amount), fill(text.dueOn, { date: dateText(invoice.dueAt) })),
       route: `/account/payments/${invoice.id}`,
+      subject: { invoiceId: invoice.id },
     });
   }
 

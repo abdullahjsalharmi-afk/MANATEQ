@@ -6,6 +6,8 @@
 import { chainFrom, unlocks } from '@/domain/chains';
 import type { ActionAtom, ServiceId, StepAction } from '@/data/types';
 import type { RequestState } from '@/domain/types';
+import type { Formatters } from '@/app/i18n';
+import type { RenewalTerms } from '@/state';
 
 /* ───────────────────────────── the list ───────────────────────────── */
 
@@ -137,4 +139,71 @@ export function offeredSlots(now: number): number[] {
     slots.push(day.getTime() + hours * HOUR);
   }
   return slots;
+}
+
+/* ───────────────────────────── the renewal offer ───────────────────────────── */
+
+/** The plural forms of a lease term in years. */
+export const yearsCount = {
+  ar: { one: 'سنة واحدة', two: 'سنتان', few: '{n} سنوات', many: '{n} سنة', other: '{n} سنة' },
+  en: { one: '{n} year', other: '{n} years' },
+};
+
+export type RenewalWord = 'renewUntil' | 'renewTerm' | 'renewRate' | 'renewRateValue' | 'renewRent' | 'renewFirst';
+
+export interface TextLine {
+  label: string;
+  value: string;
+}
+
+/**
+ * What the investor agrees to when accepting a lease renewal (B3), from `selectRenewalTerms`: the new end date
+ * and the term, the rate per square metre and the yearly rent, and the first instalment (left out when the
+ * payment line of the sheet already shows it). No incentive is modelled, so none is named.
+ */
+export function renewalLines(terms: RenewalTerms, fmt: Pick<Formatters, 'date' | 'money' | 'plural'>, t: (key: RenewalWord, vars?: Record<string, string>) => string, withInstalment: boolean): TextLine[] {
+  return [
+    { label: t('renewUntil'), value: fmt.date(terms.until) },
+    { label: t('renewTerm'), value: fmt.plural(terms.years, yearsCount) },
+    { label: t('renewRate'), value: t('renewRateValue', { amount: fmt.money(terms.ratePerSqm) }) },
+    { label: t('renewRent'), value: fmt.money(terms.annualRent) },
+    ...(withInstalment ? [{ label: t('renewFirst'), value: fmt.money(terms.firstInstalment) }] : []),
+  ];
+}
+
+/* ───────────────────────────── a rating that reopened the request ───────────────────────────── */
+
+export interface RatingFacts {
+  /** The line the tile adds while the request is open again after a low rating. */
+  reopened: 'reopenedSupervisor' | 'reopened' | undefined;
+  /** The rating to show on the page (the latest one given), if any. */
+  rating: { stars: number; comment?: string } | undefined;
+  /** How the shown rating relates to the reopening: it did it, or an earlier rating did. */
+  ratingNote: 'ratingReopenedThis' | 'ratingReopenedEarlier' | undefined;
+  /** The open step asks for a rating again, after a rating reopened the request. */
+  askAgain: boolean;
+}
+
+/**
+ * What the request page says about ratings: a low rating (D1, 1 or 2 stars) reopens the report for the
+ * supervisor. While it is open again the tile says so (and, while the supervisor holds it, names them);
+ * the rating the investor gave is shown; when the workflow comes back to the rating step it asks again.
+ */
+export function ratingFacts(
+  request: Pick<RequestState, 'status' | 'rating' | 'reopenedAt' | 'reopenedRating'>,
+  holderLane: string | undefined,
+  action: Pick<StepAction, 'flow'> | null,
+): RatingFacts {
+  const open = request.status === 'active' || request.status === 'needs_you';
+  const reopenedOnce = request.reopenedAt !== undefined;
+  const askAgain = open && reopenedOnce && action !== null && action.flow.includes('rate');
+  let reopened: RatingFacts['reopened'];
+  if (open && reopenedOnce && !askAgain) reopened = holderLane === 'staff' ? 'reopenedSupervisor' : 'reopened';
+  const rating = request.rating;
+  let ratingNote: RatingFacts['ratingNote'];
+  if (rating && request.reopenedRating) {
+    const same = rating.stars === request.reopenedRating.stars && (rating.comment ?? '') === (request.reopenedRating.comment ?? '');
+    ratingNote = same ? 'ratingReopenedThis' : 'ratingReopenedEarlier';
+  }
+  return { reopened, rating, ratingNote, askAgain };
 }

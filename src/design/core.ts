@@ -9,7 +9,7 @@ export { Button, IconButton, type ButtonProps, type IconButtonProps, type Button
 export { Card, CardChoiceGroup, type CardProps, type CardChoiceGroupProps } from './Card/Card';
 export { Section, type SectionProps } from './Section/Section';
 export { List, Row, type ListProps, type RowProps } from './List/List';
-export { keepWhole, Whole } from './List/keepWhole';
+export { hasWhole, keepWhole, Whole } from './List/keepWhole';
 export { Pill, type PillProps, type Tone } from './Pill/Pill';
 export { Segmented, Chip, ChipRow, type SegmentedProps, type SegmentedOption, type ChipProps, type ChipRowProps } from './Segmented/Segmented';
 export { Screen, type ScreenProps } from './Screen/Screen';

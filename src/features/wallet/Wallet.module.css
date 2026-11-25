@@ -145,6 +145,12 @@
   margin-block-start: var(--s-5);
 }
 
+.upcoming {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 var(--s-4);
+}
+
 .hint {
   display: flex;
   align-items: center;

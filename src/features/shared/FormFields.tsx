@@ -43,8 +43,11 @@ export interface FormFieldsProps {
   values: FormValues;
   onChange: (key: string, value: FormValue) => void;
   errors?: FormErrors;
-  /** Hints for pickers: restrict plot/zone choices or preselect values. */
-  context?: { zoneCode?: string; plotId?: string };
+  /**
+   * Hints for pickers: restrict plot/zone choices or preselect values. `plots` is the investor's plots a
+   * request of the service can be started for (`selectPlotsFor(serviceId)`); without it every plot is offered.
+   */
+  context?: { zoneCode?: string; plotId?: string; plots?: readonly Plot[] };
   /** Give every control this id prefix (avoids clashes when two forms are on screen). */
   idPrefix?: string;
 }
@@ -165,8 +168,12 @@ function requiredMessage(field: FieldDef, lang: Lang): string {
 // ── Validation ─────────────────────────────────────────────────────────────
 
 export interface ValidateContext {
-  /** The investor's plots. Defaults to the plots in the store. A required plot field is not enforced when there are none. */
-  plots?: Plot[];
+  /**
+   * The plots a plot answer may name (`selectPlotsFor(serviceId)`). Defaults to the plots in the store. A
+   * required plot field is always required: a service that needs a plot is not offered to a company with
+   * none (the start screen explains it instead), so an empty list never waives it.
+   */
+  plots?: readonly Plot[];
   /** "Now" for the date checks. */
   now?: number;
 }
@@ -185,11 +192,15 @@ export function validateFields(fields: FieldDef[], values: FormValues, lang: Lan
     if (!isFieldShown(field, values)) continue;
     const value = values[field.key];
     if (!hasValue(field, value)) {
-      const waived = field.type === 'plot' && plots.length === 0;
-      if (field.required && !waived) errors[field.key] = requiredMessage(field, lang);
+      if (field.required) errors[field.key] = requiredMessage(field, lang);
       continue;
     }
     switch (field.type) {
+      case 'plot': {
+        // Only one of the plots offered: a plot from an old draft or a link that no longer qualifies is asked again.
+        if (!plots.some((plot) => plot.id === asText(value))) errors[field.key] = requiredMessage(field, lang);
+        break;
+      }
       case 'number':
       case 'area':
       case 'amount': {
@@ -280,7 +291,7 @@ export function describeValue(field: FieldDef, value: FormValue | undefined, lan
 // ── Prefill ────────────────────────────────────────────────────────────────
 
 export interface PrefillSource {
-  plots?: Plot[];
+  plots?: readonly Plot[];
   plotId?: string;
   zoneCode?: string;
   activity?: string;
@@ -310,7 +321,8 @@ export function prefillValues(fields: FieldDef[], source: PrefillSource, current
 // ── The renderer ───────────────────────────────────────────────────────────
 
 export function FormFields({ fields, values, onChange, errors = {}, context, idPrefix = 'f' }: FormFieldsProps) {
-  const allPlots = useApp(selectPlots);
+  const storePlots = useApp(selectPlots);
+  const allPlots = context?.plots ?? storePlots;
   const plots = useMemo(() => {
     if (!context?.zoneCode) return allPlots;
     const inZone = allPlots.filter((p) => p.zoneCode === context.zoneCode);
@@ -342,7 +354,7 @@ interface ControlProps {
   error?: string;
   onChange: (value: FormValue) => void;
   id: string;
-  plots: Plot[];
+  plots: readonly Plot[];
 }
 
 function FieldControl({ field, value, error, onChange, id, plots }: ControlProps) {

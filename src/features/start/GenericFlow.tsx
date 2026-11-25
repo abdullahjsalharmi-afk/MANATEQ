@@ -4,12 +4,12 @@ import { useLang, useT } from '@/app/i18n';
 import { back } from '@/app/router';
 import { useQuery } from '@/app/routes';
 import type { FieldDef, ReceiveKind, ServiceDetail } from '@/data/types';
-import type { Company, FormValue } from '@/domain/types';
+import type { Company, FormValue, Plot } from '@/domain/types';
 import { Button, Card, Icon, List, Pill, Row, Section } from '@/design/core';
 import { Checkbox } from '@/design/forms';
 import { FetchedList } from '@/design/signature';
 import { FormFields, describeValue, hasValue, prefillValues, shownFields, validateFields, type FormErrors, type FormValues } from '@/features/shared/FormFields';
-import { clearDraft, getState, saveDraft, selectDraft, selectPlots, startRequest, useApp } from '@/state';
+import { clearDraft, getState, needsTenancy, plotsFor, saveDraft, selectDraft, selectPlots, selectPlotsFor, startRequest, useApp } from '@/state';
 import { FlowPage } from './FlowPage';
 import { KnownCard, useFetchedItems } from './KnownCard';
 import { LeaveSheet } from './LeaveSheet';
@@ -34,6 +34,36 @@ export interface GenericFlowProps {
   company: Company;
 }
 
+/** The key of the plot question the flow adds when a service needs a plot, has no plot field and the investor holds several. */
+export const ASKED_PLOT_KEY = 'plot';
+
+/**
+ * Which plot the request is for, when the service's own fields do not ask (A8 «احجز موعد التسليم»): the plot
+ * of the link when it qualifies, else the only plot that qualifies. `ask` is true when the investor must
+ * choose among several. A service that needs no plot keeps the plot of the link, if it is one of theirs.
+ */
+export function plotOfFlow(
+  service: Pick<ServiceDetail, 'audiences' | 'fields'>,
+  candidates: readonly Plot[],
+  allPlots: readonly Plot[],
+  linked: string | undefined,
+): { known?: Plot; ask: boolean } {
+  const hasField = service.fields.some((field) => field.type === 'plot');
+  if (!needsTenancy(service)) return { known: allPlots.find((plot) => plot.id === linked), ask: false };
+  const fromLink = candidates.find((plot) => plot.id === linked || plot.number === linked);
+  if (hasField) return { known: fromLink, ask: false };
+  if (fromLink) return { known: fromLink, ask: false };
+  if (candidates.length === 1) return { known: candidates[0], ask: false };
+  return { ask: candidates.length > 1 };
+}
+
+/** The flow's fields: the service's own, with a required plot question first when the flow has to ask for the plot. */
+export function flowFieldsOf(fields: FieldDef[], ask: boolean): FieldDef[] {
+  if (!ask) return fields;
+  const question: FieldDef = { key: ASKED_PLOT_KEY, type: 'plot', label: strings.plot, required: true, help: strings.plotHelp };
+  return [question, ...fields];
+}
+
 /** Where closing the flow leads when there is no screen to go back to. */
 function fallbackOf(from: string | undefined, serviceId: string): string {
   return from && from.startsWith('/') ? from : `/services/${serviceId}`;
@@ -48,15 +78,18 @@ export function GenericFlow({ service, company }: GenericFlowProps) {
   const { lang, pick } = useLang();
   const query = useQuery();
   const plots = useApp(selectPlots);
+  const candidates = useApp(useMemo(() => selectPlotsFor(service.id), [service.id]));
   const draft = useApp(useMemo(() => selectDraft(service.id), [service.id]));
-  const fields = service.fields;
+  // The plot is read once, when the flow opens: a plot that changes state meanwhile does not reshape the pages.
+  const [plotPlan] = useState(() => plotOfFlow(service, candidates, plots, query.plot));
+  const fields = useMemo(() => flowFieldsOf(service.fields, plotPlan.ask), [service.fields, plotPlan.ask]);
   const pages = useMemo(() => buildPages(fields), [fields]);
   const last = reviewIndex(pages);
 
   // The answers start from the saved draft, then the link (plot, zone, activity), then the only plot.
   const [values, setValues] = useState<FormValues>(() => {
     const saved = getState().world.drafts[service.id];
-    return prefillValues(fields, { plots: getState().world.plots, plotId: query.plot, zoneCode: query.zone, activity: query.activity }, saved?.form ?? {});
+    return prefillValues(fields, { plots: plotsFor(getState().world, service.id), plotId: query.plot, zoneCode: query.zone, activity: query.activity }, saved?.form ?? {});
   });
   const [index, setIndex] = useState(() => {
     const saved = getState().world.drafts[service.id];
@@ -75,7 +108,8 @@ export function GenericFlow({ service, company }: GenericFlowProps) {
   const page: FlowPageDef = pages[index] ?? { kind: 'review' };
   const pageFields = page.kind === 'details' || page.kind === 'documents' ? page.fields : [];
   const fetchedItems = useFetchedItems(service.fetched);
-  const contextPlot = plots.find((p) => p.id === (query.plot ?? ''));
+  const contextPlot = plotPlan.known;
+  const check = (list: FieldDef[], answers: FormValues) => validateFields(list, answers, lang, { plots: candidates });
 
   if (submittedId) return <SubmittedState requestId={submittedId} />;
 
@@ -89,7 +123,7 @@ export function GenericFlow({ service, company }: GenericFlowProps) {
     const next = { ...values, [key]: value };
     setValues(next);
     saveDraft(service.id, next, index);
-    if (tried.has(index)) setErrors(validateFields(pageFields, next, lang));
+    if (tried.has(index)) setErrors(check(pageFields, next));
   };
 
   const leave = () => back(fallbackOf(query.from, service.id));
@@ -102,16 +136,21 @@ export function GenericFlow({ service, company }: GenericFlowProps) {
     }
   };
 
-  const focusField = (key: string) => {
+  // Brings a field (or the consent) into the middle of the view, clear of the action bar, and moves the keyboard to it.
+  const reveal = (id: string, fallback?: string) => {
     window.setTimeout(() => {
-      const el = document.getElementById(`f-${key}`) ?? document.getElementById(`f-${key}-name`);
-      el?.focus();
+      const el = document.getElementById(id) ?? (fallback ? document.getElementById(fallback) : null);
+      if (!el) return;
+      const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+      (el.closest('[data-reveal]') ?? el).scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+      el.focus({ preventScroll: true });
     }, 60);
   };
+  const focusField = (key: string) => reveal(`f-${key}`, `f-${key}-name`);
 
   const onContinue = () => {
     if (page.kind === 'details' || page.kind === 'documents') {
-      const found = validateFields(pageFields, values, lang);
+      const found = check(pageFields, values);
       setTried((s) => new Set(s).add(index));
       setErrors(found);
       const first = pageFields.find((field) => found[field.key]);
@@ -138,7 +177,7 @@ export function GenericFlow({ service, company }: GenericFlowProps) {
 
   const submit = () => {
     if (sending.current) return;
-    const all = validateFields(fields, values, lang);
+    const all = check(fields, values);
     const firstBad = fields.find((field) => all[field.key]);
     if (firstBad) {
       const target = pageOfField(pages, firstBad.key);
@@ -151,7 +190,7 @@ export function GenericFlow({ service, company }: GenericFlowProps) {
     }
     if (!consent) {
       setConsentError(t('consentError'));
-      document.getElementById('start-consent')?.focus();
+      reveal('start-consent');
       return;
     }
     sending.current = true;
@@ -160,7 +199,8 @@ export function GenericFlow({ service, company }: GenericFlowProps) {
     for (const field of shownFields(fields, values)) if (hasValue(field, values[field.key])) form[field.key] = values[field.key] ?? null;
     const plotField = fields.find((field) => field.type === 'plot');
     const zoneField = fields.find((field) => field.type === 'zone');
-    const plotId = (plotField && typeof form[plotField.key] === 'string' ? (form[plotField.key] as string) : undefined) ?? (contextPlot ? contextPlot.id : undefined);
+    // The plot the request is for: the answer to a plot question, else the plot the flow already knows.
+    const plotId = (plotField && typeof form[plotField.key] === 'string' ? (form[plotField.key] as string) : undefined) ?? contextPlot?.id;
     const zoneCode = (zoneField && typeof form[zoneField.key] === 'string' ? (form[zoneField.key] as string) : undefined) ?? query.zone ?? plots.find((p) => p.id === plotId)?.zoneCode;
     const id = startRequest(service.id, form, { plotId, zoneCode });
     clearDraft(service.id);
@@ -255,7 +295,7 @@ export function GenericFlow({ service, company }: GenericFlowProps) {
             </Pill>
           </Card>
         </Section>
-        <div className={styles.consent}>
+        <div className={styles.consent} data-reveal>
           <Checkbox
             id="start-consent"
             label={t('consent')}
@@ -292,7 +332,7 @@ export function GenericFlow({ service, company }: GenericFlowProps) {
       <p className="visually-hidden" role="alert">
         {alert}
       </p>
-      <FormFields fields={pageFields} values={values} onChange={onChange} errors={tried.has(index) ? errors : {}} context={{ plotId: query.plot, zoneCode: query.zone }} />
+      <FormFields fields={pageFields} values={values} onChange={onChange} errors={tried.has(index) ? errors : {}} context={{ plotId: query.plot, zoneCode: query.zone, plots: candidates }} />
       {sheet}
     </FlowPage>
   );

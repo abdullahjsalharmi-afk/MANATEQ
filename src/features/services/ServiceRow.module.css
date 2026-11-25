@@ -1,8 +1,30 @@
-/* The standard chip and, for automatic services, the quiet tag under it, aligned to the inline end. */
-.trailing {
+/* The official name: wraps between words over as many lines as it needs, never cut to a few letters. */
+.name {
+  display: block;
+  overflow-wrap: break-word;
+}
+
+/* The standard chip and the quiet tags: their own line under the words, wrapping onto a second line when the
+   row is too narrow for them side by side. A chip wider than the whole row wraps its own words. */
+.chips {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--s-1);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+  margin-block-start: var(--s-1);
+}
+
+.chips:empty {
+  display: none;
+}
+
+/* A chip wider than the whole row (320 px at the largest text size) breaks between its figure and «استرشادي»,
+   never inside the figure. */
+.chips > span {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.chips > span > span {
   white-space: nowrap;
 }

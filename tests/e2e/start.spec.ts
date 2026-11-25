@@ -85,3 +85,56 @@ test('a guest is asked to sign in, and an automatic service explains itself', as
   await expect(page.getByRole('heading', { name: 'This service starts without a request' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'View the service' })).toBeVisible();
 });
+
+test('a company with no plot is told a plot service opens once it leases one (gate n=21)', async ({ page }) => {
+  for (const id of ['B7', 'A8', 'D1']) {
+    await openApp(page, { route: `/start/${id}`, demo: 'prospect', lang: 'en' });
+    await expect(page.getByRole('heading', { name: 'This service opens once you lease a plot' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'We already know you' })).toHaveCount(0);
+    // The prospect has a saved eligibility check: the way forward is the land application.
+    await expect(page.getByRole('link', { name: 'Apply for land' })).toHaveAttribute('href', /#\/start\/A4$/);
+    await expect(page.getByRole('link', { name: 'View the service' })).toHaveAttribute('href', new RegExp(`#/services/${id}$`));
+  }
+  // A tenant whose plots are all past the handover is not offered a handover either.
+  await openApp(page, { route: '/start/A8', lang: 'en' });
+  await expect(page.getByRole('heading', { name: 'None of your plots needs this service now' })).toBeVisible();
+});
+
+test('a refused send brings the consent into view above the action bar (gate n=22)', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openApp(page, { route: '/start/A3', lang: 'en' });
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.locator('main input').first().fill('Sara Ali');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Send request' }).click();
+  const message = page.getByText('Confirm the information to send the request');
+  await expect(message).toBeVisible();
+  await expect(page.locator('#start-consent')).toBeFocused();
+  // Both sit above the frosted action bar, not behind it.
+  await expect
+    .poll(async () => {
+      const bar = await page.getByRole('button', { name: 'Send request' }).boundingBox();
+      const box = await message.boundingBox();
+      return bar && box ? box.y + box.height <= bar.y : false;
+    })
+    .toBe(true);
+});
+
+test('the received screen names the request and the E1 appointment it booked (gate n=14, n=18)', async ({ page }) => {
+  await openApp(page, { route: '/start/E1', lang: 'ar' });
+  await page.getByRole('button', { name: 'متابعة' }).click();
+  await page.getByRole('textbox', { name: /كيف نساعدك/ }).fill('أحتاج مساعدة في الفواتير');
+  await page.getByText('أريد حجز موعد').click();
+  await page.locator('main input[type=date]').fill('2026-11-29');
+  await page.getByRole('button', { name: 'متابعة' }).click();
+  await page.getByRole('checkbox').check({ force: true });
+  await page.getByRole('button', { name: 'أرسِل الطلب' }).click();
+  await expect(page.getByRole('heading', { name: 'تم استلام طلبك' })).toBeVisible();
+  // The request's noun, as in Requests, not the call to action that starts it.
+  await expect(page.getByText('طلب مساعدة أو موعد', { exact: true })).toBeVisible();
+  await expect(page.getByText('اطلب مساعدة أو احجز موعدًا')).toHaveCount(0);
+  await expect(page.getByText(/29[\s\u00a0\u2060]+نوفمبر[\s\u00a0\u2060]+2026،[\s\u00a0]+الساعة[\s\u00a0]+10:00/)).toBeVisible();
+  await expect(page.getByText(/تجده في «الدعم» ضمن «مواعيدك القادمة»/)).toBeVisible();
+  await page.getByRole('link', { name: 'اعرض مواعيدك' }).click();
+  await expect(page).toHaveURL(/#\/account\/support$/);
+});

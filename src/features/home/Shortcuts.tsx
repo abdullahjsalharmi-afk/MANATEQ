@@ -18,12 +18,12 @@ export function Shortcuts() {
   const t = useT(strings);
   return (
     <Section title={t('shortcutsTitle')}>
-      <Grid as="ul" columns={4} compact>
+      <Grid as="ul" columns={4} compact className={styles.shortcuts}>
         {SHORTCUTS.map((shortcut) => (
           <Card as="li" key={shortcut.to} to={shortcut.to} className={styles.shortcut}>
             <Icon icon={shortcut.icon} size={22} className={styles.shortcutIcon} />
-            <h3 className={styles.shortcutTitle}>{t(shortcut.title)}</h3>
-            <p className={styles.shortcutSub}>{t(shortcut.sub)}</p>
+            <h3 className={`mq-words ${styles.shortcutTitle}`}>{t(shortcut.title)}</h3>
+            <p className={`mq-words ${styles.shortcutSub}`}>{t(shortcut.sub)}</p>
           </Card>
         ))}
       </Grid>

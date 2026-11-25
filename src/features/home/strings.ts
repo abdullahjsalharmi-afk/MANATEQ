@@ -38,7 +38,11 @@ export const strings = {
   stationLater: { ar: 'لاحقًا', en: 'Later' },
   itemDone: { ar: 'تم', en: 'Done' },
   itemCurrent: { ar: 'جارٍ الآن', en: 'In progress' },
+  itemNext: { ar: 'التالي', en: 'Next' },
+  itemClosed: { ar: 'أُغلق الطلب السابق', en: 'The earlier request was closed' },
   itemStart: { ar: 'يمكنك البدء الآن', en: 'You can start now' },
+  itemStartAgain: { ar: 'يمكنك البدء من جديد', en: 'You can start again' },
+  itemClosedLink: { ar: 'اعرض الطلب المغلق', en: 'View the closed request' },
   itemUpcoming: { ar: 'لم يبدأ بعد', en: 'Not started yet' },
   stationSheetBody: { ar: 'القطعة {plot}', en: 'Plot {plot}' },
 
@@ -57,7 +61,6 @@ export const strings = {
   lineInvoice: { ar: 'الفاتورة', en: 'Invoice' },
   lineFor: { ar: 'البيان', en: 'For' },
   lineDue: { ar: 'تاريخ الاستحقاق', en: 'Due date' },
-  paid: { ar: 'تم الدفع. الإيصال في «وثائقي».', en: 'Paid. The receipt is in Documents.' },
   viewReceipt: { ar: 'اعرض', en: 'View' },
   invoicesLink: { ar: 'الفواتير', en: 'Invoices' },
 
@@ -68,7 +71,7 @@ export const strings = {
   scPass: { ar: 'تصريح دخول', en: 'Gate pass' },
   scPassSub: { ar: 'لزائر أو عامل أو مركبة', en: 'For a visitor, worker or vehicle' },
   scStatement: { ar: 'كشف حساب أو شهادة', en: 'Statement or certificate' },
-  scStatementSub: { ar: 'يصل إلى «وثائقي»', en: 'Delivered to Documents' },
+  scStatementSub: { ar: 'يصل إلى «وثائقي وتصاريحي»', en: 'Delivered to Documents and passes' },
   scHelp: { ar: 'مساعدة أو موعد', en: 'Help or an appointment' },
   scHelpSub: { ar: 'مركز خدمات الأعمال', en: 'Business Services Center' },
 

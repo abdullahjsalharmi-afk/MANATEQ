@@ -8,7 +8,11 @@ import { Icon } from '../Icon/Icon';
 import { strings } from './strings';
 import styles from './Timeline.module.css';
 
-export type TimelineState = 'done' | 'current' | 'upcoming' | 'skipped';
+/**
+ * `stopped`: the step that was open when the investor withdrew the request. It never finished: a neutral hollow
+ * marker, muted words, and no time shown as a completion.
+ */
+export type TimelineState = 'done' | 'current' | 'upcoming' | 'skipped' | 'stopped';
 
 export interface TimelineItem {
   id: string | number;
@@ -21,7 +25,7 @@ export interface TimelineItem {
   /** The entity's own name when the step names one, e.g. "وزارة البلدية". */
   holderName?: string;
   state: TimelineState;
-  /** Done steps: when the step finished. Current and upcoming steps: when it is expected. Already formatted. */
+  /** Done steps: when the step finished. Current and upcoming steps: when it is expected. Already formatted. Never shown for a stopped step. */
   time?: string;
   /** The step runs without a person. */
   auto?: boolean;
@@ -64,7 +68,7 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
   let pastEnd = currentIndex;
   if (pastEnd < 0) {
     pastEnd = 0;
-    while (pastEnd < items.length && (items[pastEnd]?.state === 'done' || items[pastEnd]?.state === 'skipped')) pastEnd++;
+    while (pastEnd < items.length && isPast(items[pastEnd]?.state)) pastEnd++;
   }
   const afterStart = currentIndex >= 0 ? currentIndex + 1 : pastEnd;
   const pastCount = pastEnd;
@@ -114,7 +118,7 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
           const isCurrent = item.state === 'current';
           const automatic = Boolean(item.auto) || item.lane === 'eng';
           const who = item.lane === 'eng' ? null : holder(item.lane, item.holderName, 'by');
-          const when = item.state === 'done' || item.state === 'skipped' ? item.time : (item.time ?? item.standard);
+          const when = item.state === 'stopped' ? undefined : item.state === 'done' || item.state === 'skipped' ? item.time : (item.time ?? item.standard);
           return (
             <li key={item.id} className={cx(styles.item, styles[item.state])} aria-current={isCurrent ? 'step' : undefined} data-state={item.state} data-past={index < pastEnd || undefined}>
               <span className={styles.dot} aria-hidden="true" />
@@ -148,9 +152,14 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
                     <span className="visually-hidden">{t(item.state)}: </span>
                     {item.title}
                   </p>
-                  {automatic || who || when || item.state === 'skipped' ? (
+                  {automatic || who || when || item.state === 'skipped' || item.state === 'stopped' ? (
                     <p className={styles.meta}>
                       {item.state === 'skipped' ? <span className={styles.part}>{t('skipped')} </span> : null}
+                      {item.state === 'stopped' ? (
+                        <span className={styles.part} aria-hidden="true">
+                          {t('stoppedHere')}{' '}
+                        </span>
+                      ) : null}
                       {automatic ? (
                         <span className={cx(styles.part, styles.auto)}>
                           <Icon icon={Zap} size={12} strokeWidth={2.25} />
@@ -182,6 +191,11 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
       ) : null}
     </div>
   );
+}
+
+/** Finished, not needed or stopped: a step behind the request. */
+function isPast(state: TimelineState | undefined): boolean {
+  return state === 'done' || state === 'skipped' || state === 'stopped';
 }
 
 function Outcome({ text }: { text: string }) {

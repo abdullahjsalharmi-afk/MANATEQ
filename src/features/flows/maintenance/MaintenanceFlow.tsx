@@ -8,7 +8,6 @@ import { Map as MapGlyph, MapPin } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { useQuery } from '@/app/routes';
-import { getService } from '@/data/catalog';
 import type { FieldDef, ServiceDetail } from '@/data/types';
 import { Button, Card, CardChoiceGroup, Container, Grid, List, Pill, Row, Screen, Section } from '@/design/core';
 import { PhotoPick, StepHead, Stepper, TextArea, TextField, useStepLabel, type PickedPhoto } from '@/design/forms';
@@ -195,7 +194,6 @@ function MaintenanceSubmitted({ service, requestId, onAnother }: { service: Serv
   const request = useApp(selector);
   const stage = request ? trackStage(service.workflow, request) : 'received';
   const states = stageStates(stage);
-  const summary = getService('D1');
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -224,7 +222,7 @@ function MaintenanceSubmitted({ service, requestId, onAnother }: { service: Serv
         </Section>
         <Section title={t('standard')}>
           <List>
-            <Row title={pick(service.workflow.standard) || pick(summary?.standard)} trailing={<Pill>{tp('indicative')}</Pill>} wrap />
+            <Row title={pick(service.standard)} trailing={<Pill>{tp('indicative')}</Pill>} wrap />
           </List>
         </Section>
         <div className={styles.after}>

@@ -19,6 +19,15 @@ const WHOLE = new RegExp(
   'gu',
 );
 
+/** True when `text` is a string with a code, a date or a time in it. */
+export function hasWhole(text: ReactNode): boolean {
+  if (typeof text !== 'string') return false;
+  WHOLE.lastIndex = 0;
+  const found = WHOLE.test(text);
+  WHOLE.lastIndex = 0;
+  return found;
+}
+
 /** Wraps every code, date and time in `text` in a no-wrap span. Anything that is not a string is returned as it is. */
 export function keepWhole(text: ReactNode): ReactNode {
   if (typeof text !== 'string') return text;

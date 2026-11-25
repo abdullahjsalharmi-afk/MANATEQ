@@ -151,6 +151,8 @@ const ANNUAL_RENT = 75_000;
 
 const stack: CSSProperties = { display: 'grid', gap: 12, minWidth: 0 };
 const cluster: CSSProperties = { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 };
+/** Figures side by side while each keeps its width; a figure that does not fit moves to the next line whole. */
+const figures: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 10em), 1fr))', gap: 12 };
 
 function Caption({ children }: { children: ReactNode }) {
   return <p style={{ fontSize: 'var(--t-foot)', fontWeight: 400, color: 'var(--ink-3)', marginBlockEnd: -4 }}>{children}</p>;
@@ -402,7 +404,7 @@ export function FormsGallery() {
 
       <Section title="Figures, people and honesty marks">
         <Card>
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 0.8fr) minmax(0, 1.5fr) minmax(0, 1fr)', gap: 12 }}>
+          <div style={figures}>
             <Stat value={fmt.num(totals.zones)} label={t('statZones')} />
             <Stat value={fmt.num(totals.totalSqm / 1_000_000, 1)} label={t('statArea')} />
             <Stat value={fmt.pct(totals.operationalRatePct)} label={t('statRate')} />
@@ -472,7 +474,7 @@ export function FormsGallery() {
             {t('bannerWarn')}
           </Banner>
           <Skeleton count={2} />
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 }}>
+          <div style={figures}>
             <Stat value={fmt.num(totals.zones)} label={t('statZones')} />
             <Stat value={<Money amount={QUARTER_RENT} />} label={t('rentDue')} />
           </div>

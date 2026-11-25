@@ -5,6 +5,7 @@ import { navigate } from '@/app/router';
 import { Container, IconButton, List, Screen, Section, Skeleton, toast } from '@/design/core';
 import { PaySheet, type SheetLine } from '@/design/forms';
 import type { Invoice } from '@/domain/types';
+import { paidStrings, paidToastText } from '@/features/payments/paidToast';
 import { RequestRow } from '@/features/requests';
 import { useNow } from '@/features/shared/useNow';
 import {
@@ -37,6 +38,7 @@ const REQUESTS_ON_HOME = 3;
 /** Home answers one question: what is my next step? Then the journey, open requests, dues and shortcuts. */
 export function HomeScreen() {
   const t = useT(strings);
+  const paidT = useT(paidStrings);
   const { pick, fmt } = useLang();
   const now = useNow();
   const ready = useCatalogueReady();
@@ -87,7 +89,7 @@ export function HomeScreen() {
   const onPaid = () => {
     if (!paying) return;
     const receipt = payInvoice(paying.id);
-    toast(t('paid'), { tone: 'ok', action: receipt ? { label: t('viewReceipt'), onClick: () => navigate(`/account/wallet/${receipt}`) } : undefined });
+    toast(paidToastText(paidT, fmt, receipt ? receiptRefFor(paying.ref) : undefined), { tone: 'ok', action: receipt ? { label: t('viewReceipt'), onClick: () => navigate(`/account/wallet/${receipt}`) } : undefined });
   };
 
   const pay = (invoice: Invoice | null | undefined) => {

@@ -230,7 +230,7 @@ function IncidentSubmitted({ service, requestId, type }: { service: ServiceDetai
             ))}
           </List>
           <p className={styles.fine}>
-            {t('standard', { v: pick(service.workflow.standard) })} · {tp('indicative')}
+            {t('standard', { v: pick(service.standard) })} · {tp('indicative')}
           </p>
         </Section>
         <div className={styles.worse}>

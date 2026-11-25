@@ -47,6 +47,10 @@
   line-height: 1.47;
   letter-spacing: var(--ls-body);
   text-align: start;
+  /* A placeholder (or a query) wider than the field ends in an ellipsis, never a hard cut. */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   appearance: none;
   -webkit-appearance: none;
 }
@@ -57,6 +61,9 @@
 }
 
 .input::placeholder {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: var(--ink-3);
   opacity: 1;
 }

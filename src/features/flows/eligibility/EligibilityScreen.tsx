@@ -13,9 +13,9 @@ import { getActivity, getSolution, getZone, solutions } from '@/data/catalog';
 import type { SolutionKey } from '@/data/types';
 import { checkEligibility, estimateAnnualRent, searchActivities, toEligibilityResult, UNLISTED_ACTIVITY, type EligibilityInput } from '@/domain/eligibility';
 import { Button, Card, CardChoiceGroup, Chip, ChipRow, Icon, Render, Screen, Sheet, cx, toast } from '@/design/core';
-import { EmptyState, NumberField, SearchField, Skeleton, StepHead, Stepper, useStepLabel } from '@/design/forms';
+import { EmptyState, NumberField, SearchField, Skeleton, StepHead, Stepper, TextArea, useStepLabel } from '@/design/forms';
 import { saveEligibility, selectCompany, selectPersona, startRequest, useApp } from '@/state';
-import { AREA_PICKS, DEFAULT_AREA, decidedByActivity, groupBySector, isValidArea, layoutAvailability, quickActivities, SOLUTION_ORDER, SOLUTION_RENDER, zonesOffering } from './model';
+import { AREA_PICKS, DEFAULT_AREA, decidedByActivity, groupBySector, isUnlistedDescribed, isValidArea, layoutAvailability, quickActivities, SOLUTION_ORDER, SOLUTION_RENDER, zonesOffering } from './model';
 import { EligibilityResultView, primaryOf, type Primary } from './Result';
 import { FinePrint, revealFirstError, StepError, useStepFocus } from './parts';
 import { useTakenPlots } from './useTakenPlots';
@@ -55,6 +55,8 @@ export function EligibilityScreen() {
   const [tried, setTried] = useState(false);
   const [chosen, setChosen] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // "My activity is not listed": what the activity is, in the investor's words, for the planning team.
+  const [unlisted, setUnlisted] = useState('');
   const timer = useRef<number | undefined>(undefined);
   const headRef = useStepFocus(phase);
   const stepLabel = useStepLabel();
@@ -62,7 +64,10 @@ export function EligibilityScreen() {
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const activity = activityCode ? getActivity(activityCode) : undefined;
-  const activityName = activityCode === UNLISTED_ACTIVITY ? t('unlistedName') : activity ? pick(activity.name) : '';
+  const isUnlisted = activityCode === UNLISTED_ACTIVITY;
+  const described = unlisted.trim();
+  const describedEnough = isUnlistedDescribed(described);
+  const activityName = isUnlisted ? (described ? t('unlistedNamed', { text: described }) : t('unlistedName')) : activity ? pick(activity.name) : '';
   const licensed = company ? getActivity(company.activityCode) : undefined;
 
   const input = useMemo<EligibilityInput | null>(
@@ -95,6 +100,11 @@ export function EligibilityScreen() {
   };
 
   const next = () => {
+    if (phase === 1 && isUnlisted && !describedEnough) {
+      setTried(true);
+      revealFirstError();
+      return;
+    }
     if (phase === 1 && activityCode) {
       // A non-targeted activity is decided by the activity alone: no solution or area to ask for.
       if (decidedByActivity(activityCode)) {
@@ -135,8 +145,26 @@ export function EligibilityScreen() {
           navigate('/welcome');
           break;
         case 'review': {
+          // The planning team reviews what the investor described: never send an unlisted activity without it.
+          if (input.activityCode === UNLISTED_ACTIVITY && !describedEnough) {
+            goTo(1);
+            setTried(true);
+            revealFirstError();
+            break;
+          }
           setBusy(true);
-          const id = startRequest('A2', { activity: input.activityCode, solution: input.solution, area: input.areaSqm, zone: input.zoneCode ?? null, verdict: 'review' }, input.zoneCode ? { zoneCode: input.zoneCode } : {});
+          const id = startRequest(
+            'A2',
+            {
+              activity: input.activityCode,
+              ...(input.activityCode === UNLISTED_ACTIVITY ? { activityDescription: described } : {}),
+              solution: input.solution,
+              area: input.areaSqm,
+              zone: input.zoneCode ?? null,
+              verdict: 'review',
+            },
+            input.zoneCode ? { zoneCode: input.zoneCode } : {},
+          );
           toast(t('sentForReview'), { tone: 'ok' });
           navigate(`/requests/${id}`, { replace: true });
           break;
@@ -263,6 +291,20 @@ export function EligibilityScreen() {
           ) : null}
           <ActivityPicker value={activityCode} onChange={setActivityCode} search={search} onSearch={setSearch} skip={licensed && !search.trim() ? licensed.code : undefined} lang={lang} />
           {tried && !activityCode ? <StepError>{t('needActivity')}</StepError> : null}
+          {isUnlisted ? (
+            <div className={styles.block}>
+              <TextArea
+                id="elig-unlisted"
+                label={t('describeActivity')}
+                hint={t('describeActivityHint')}
+                value={unlisted}
+                onChange={setUnlisted}
+                maxLength={280}
+                required
+                error={tried && !describedEnough ? t('describeActivityMissing') : undefined}
+              />
+            </div>
+          ) : null}
         </>
       ) : step === 2 ? (
         <>

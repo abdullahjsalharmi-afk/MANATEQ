@@ -6,10 +6,12 @@ import { Button, Chip, ChipRow, Icon, Sheet, toast } from '@/design/core';
 import { Checkbox, FilePick, Lines, SignSheet, TextArea, TextField, type PickedFile, type SheetLine } from '@/design/forms';
 import type { FormValue, RequestState } from '@/domain/types';
 import { FormFields, validateFields, type FormErrors, type FormValues } from '@/features/shared/FormFields';
-import { completeStep, getState, selectCompany, selectDoc, selectPlots, selectStepAmount, stepTasks, useApp, type ActPayload } from '@/state';
+import { requestLabelOf } from '@/data/catalog';
+import { completeStep, getState, selectCompany, selectDoc, selectPlots, selectRenewalTerms, selectStepAmount, stepTasks, useApp, type ActPayload } from '@/state';
 import styles from './ActionRunner.module.css';
-import { offeredSlots, runnerTasks } from './logic';
+import { offeredSlots, renewalLines, runnerTasks } from './logic';
 import { StepPaySheet } from './StepPaySheet';
+import { paidStrings, paidToastText } from '@/features/payments/paidToast';
 import { strings } from './strings';
 
 export interface ActionRunnerProps {
@@ -34,6 +36,7 @@ const FIVE = [1, 2, 3, 4, 5] as const;
  */
 export function ActionRunner({ request, service, action, open, onClose, deadline, onDone }: ActionRunnerProps) {
   const t = useT(strings);
+  const paidT = useT(paidStrings);
   const { pick, fmt, lang } = useLang();
   const baseId = useId();
   const company = useApp(selectCompany);
@@ -42,6 +45,8 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
   const prepaidReceipt = useApp(selectDoc(request.prepaidDocId));
   // The amount the state will charge for this step: the amount shown is the amount charged.
   const amount = useApp(selectStepAmount(request.id, action));
+  // A lease renewal (B3): what accepting agrees to.
+  const terms = useApp(selectRenewalTerms(request.id));
 
   const [choice, setChoice] = useState<string | undefined>(undefined);
   const [index, setIndex] = useState(0);
@@ -89,11 +94,13 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
   const plotNumber = plot?.number ?? request.plotId;
   const docs = action.docs?.length ? action.docs.map((doc) => pick(doc)) : [t('uploadDefault')];
 
+  const payLine = tasks.includes('pay') && amount !== undefined;
   const summary: SheetLine[] = [
-    { label: t('service'), value: pick(service.label) },
+    { label: t('service'), value: pick(requestLabelOf(service)) },
     { label: t('reference'), value: <span className="ltr">{request.ref}</span> },
     ...(plotNumber ? [{ label: t('plot'), value: <span className="ltr">{plotNumber}</span> }] : []),
-    ...(tasks.includes('pay') && amount !== undefined ? [{ label: pick(action.amount?.label) || t('amount'), value: fmt.money(amount) }] : []),
+    ...(terms ? renewalLines(terms, fmt, t, !payLine) : []),
+    ...(payLine ? [{ label: pick(action.amount?.label) || t('amount'), value: fmt.money(amount) }] : []),
     ...(tasks.includes('sign') && action.document ? [{ label: t('document'), value: pick(action.document) }] : []),
   ];
 
@@ -217,7 +224,7 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
             </div>
           ) : (
             <>
-              {index === 0 || current === 'acknowledge' ? <p className={styles.text}>{pick(action.detail)}</p> : null}
+              {index === 0 || current === 'acknowledge' ? <p className={styles.text}>{terms && current === 'accept' ? t('renewIntro') : pick(action.detail)}</p> : null}
 
               {current === 'accept' ? <Lines lines={summary} /> : null}
 
@@ -318,7 +325,7 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
         amount={amount ?? 0}
         closeLabel={t('close')}
         lines={[
-          { label: t('service'), value: pick(service.label) },
+          { label: t('service'), value: pick(requestLabelOf(service)) },
           { label: t('reference'), value: <span className="ltr">{request.ref}</span> },
           ...(plotNumber ? [{ label: t('plot'), value: <span className="ltr">{plotNumber}</span> }] : []),
         ]}
@@ -342,7 +349,7 @@ export function ActionRunner({ request, service, action, open, onClose, deadline
             return;
           }
           onClose();
-          toast(paidReceipt.current ? t('receiptFiled', { ref: paidReceipt.current }) : t('submitted'), { tone: 'ok' });
+          toast(paidToastText(paidT, fmt, paidReceipt.current || undefined), { tone: 'ok' });
           onDone?.();
         }}
       />

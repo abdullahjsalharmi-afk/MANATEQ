@@ -34,6 +34,7 @@ import {
   periodRentOf,
   plotFacts,
   rateOf,
+  resolveInvoiceAsks,
   startOfDay,
 } from './world';
 
@@ -114,6 +115,7 @@ export function issueRentInvoice(world: World, lease: Lease, plot: Plot, at: num
     title: text.invoiceIssued,
     body: dots(invoice.title, moneyText(invoice.amount), fill(text.dueOn, { date: dateText(invoice.dueAt) })),
     route: `/account/payments/${invoice.id}`,
+    subject: { invoiceId: invoice.id },
   });
 }
 
@@ -155,12 +157,48 @@ const beginBuilding: Effect = (world, ctx) => {
 /** C8: the building is activated for operations. */
 const startOperating: Effect = (world, ctx) => raisePlot(world, plotOf(world, ctx.id), 'operating');
 
+/** What the renewal offer of a lease renewal request (B3) means for its plot. */
+export interface RenewalTerms {
+  plotId: string;
+  /** The new last day of the lease (ms since epoch): one more term after the current end. */
+  until: number;
+  /** The length of the new term, in years (the solution's published term). */
+  years: number;
+  /** QAR per m² per year: the rate of the lease, which the renewal keeps. */
+  ratePerSqm: number;
+  annualRent: number;
+  /** What the offer step asks to pay now: the first billing period of the renewed lease. */
+  firstInstalment: number;
+}
+
+/**
+ * The terms a renewal request (B3) offers, by the same rule `renewLease` applies when it finishes: the
+ * lease runs one more term of the solution's published length at its current rate. Undefined when the
+ * request is not a renewal or its plot has no lease. No incentive is modelled.
+ */
+export function renewalTerms(world: World, request: RequestState): RenewalTerms | undefined {
+  if (request.serviceId !== 'B3') return undefined;
+  const plot = findPlotRecord(world, request.plotId);
+  const lease = findLease(world, plot?.leaseId);
+  if (!plot || !lease) return undefined;
+  const years = leaseYears(plot.solution);
+  return {
+    plotId: plot.id,
+    until: addYears(lease.endsAt + DAY, years) - DAY,
+    years,
+    ratePerSqm: lease.ratePerSqmYear,
+    annualRent: lease.annualRent,
+    firstInstalment: request.amount ?? periodRentOf(plot.solution, lease.annualRent),
+  };
+}
+
 /** B3: the addendum is countersigned, so the lease runs for another term. */
 const renewLease: Effect = (world, ctx) => {
-  const plot = findPlotRecord(world, plotOf(world, ctx.id));
-  const lease = findLease(world, plot?.leaseId);
-  if (!plot || !lease) return world;
-  return patchLease(world, lease.id, { endsAt: addYears(lease.endsAt + DAY, leaseYears(plot.solution)) - DAY, status: 'active' });
+  const request = findRequest(world, ctx.id);
+  const terms = request ? renewalTerms(world, request) : undefined;
+  const lease = leaseOfPlot(world, terms?.plotId);
+  if (!terms || !lease) return world;
+  return patchLease(world, lease.id, { endsAt: terms.until, status: 'active' });
 };
 
 /** B7: the clearance certificate closes the lease. */
@@ -300,6 +338,8 @@ export function settleInvoice(world: World, invoiceId: string, at: number, sourc
   const receipt = receiptDoc({ id: slot.id, ref: receiptRefFor(invoice.ref) }, paid, docFacts(slot.world, plotId), at, source);
   let next = patchInvoice(slot.world, invoice.id, paid);
   next = addDocs(next, [receipt]);
+  // A reminder to pay this invoice has been answered.
+  next = resolveInvoiceAsks(next, invoice.id, at);
   return { world: next, docId: slot.id };
 }
 

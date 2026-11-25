@@ -13,5 +13,6 @@ export const strings = {
   kindAction: { ar: 'مطلوب منك', en: 'Needs you' },
   kindUpdate: { ar: 'تحديث', en: 'Update' },
   kindDone: { ar: 'مكتمل', en: 'Complete' },
+  kindSettled: { ar: 'تم', en: 'Done' },
   kindInfo: { ar: 'للعلم', en: 'For your information' },
 } as const;

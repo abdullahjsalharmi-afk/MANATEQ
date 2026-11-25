@@ -5,6 +5,7 @@ import type { ServiceSummary } from '@/data/types';
 import { useMemo } from 'react';
 import { useApp, selectDraft, selectPersona } from '@/state';
 import { startTarget } from './catalogue';
+import { usePlotGate } from './plotGate';
 import { strings } from './strings';
 import styles from './ServiceCard.module.css';
 
@@ -23,6 +24,8 @@ export function ServiceCard({ service, tone = 'plain' }: ServiceCardProps) {
   const { pick } = useLang();
   const persona = useApp(selectPersona);
   const draft = useApp(useMemo(() => selectDraft(service.id), [service.id]));
+  // A plot service and no plot it could be for: no «ابدأ» on the card; its page says why and offers the way there.
+  const gate = usePlotGate(service);
   return (
     <Card as="li" tone={tone} className={styles.card}>
       <h3 className={styles.title}>
@@ -34,9 +37,11 @@ export function ServiceCard({ service, tone = 'plain' }: ServiceCardProps) {
       <div className={styles.foot}>
         <span className={styles.tags}>
           <StandardBadge standard={service.standard} variant="compact" />
-          {draft && service.startable ? <Pill>{t('draft')}</Pill> : null}
+          {draft && service.startable && !gate ? <Pill>{t('draft')}</Pill> : null}
         </span>
-        {service.startable ? (
+        {gate ? (
+          <Pill>{t('needsPlotTag')}</Pill>
+        ) : service.startable ? (
           <Button variant="quiet" size="sm" to={startTarget(service.id, persona)} className={styles.start} aria-label={`${t('start')}: ${pick(service.label)}`}>
             {t('start')}
           </Button>

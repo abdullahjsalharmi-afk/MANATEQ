@@ -80,3 +80,97 @@ test('search finds services, zones and the investor own requests, and helps when
   await expect(page.getByRole('link', { name: 'اطلب مساعدة' })).toHaveAttribute('href', /start\/E1/);
   expect(errors).toEqual([]);
 });
+
+test('search reads common English spellings and puts a named zone first (gate n=20)', async ({ page }) => {
+  const errors = watchErrors(page);
+  await openApp(page, { route: '/search', lang: 'en' });
+  await page.getByRole('searchbox').fill('Al Wakrah');
+  await expect(page.locator('main a[href="#/zones/AW"]')).toBeVisible();
+  await expect(page.locator('main a[href="#/account/plots/AW-116"]')).toBeVisible();
+
+  await page.getByRole('searchbox').fill('al-wakrah');
+  await expect(page.locator('main a[href="#/zones/AW"]')).toBeVisible();
+
+  await openApp(page, { route: '/search', lang: 'ar' });
+  await page.getByRole('searchbox').fill('أبا صليل');
+  await expect(page.locator('main a[href="#/zones/AS"]')).toBeVisible();
+  // The zone is the first result, and services that share one word with its name are not listed.
+  const first = await page.locator('main a[href^="#/"]').first().getAttribute('href');
+  expect(first).toBe('#/zones/AS');
+  await expect(page.getByRole('heading', { name: 'خدمات' })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('a plot service offers the way to a plot, not Start, to a company without one (gate n=21)', async ({ page }) => {
+  const errors = watchErrors(page);
+  await openApp(page, { route: '/services/B7', demo: 'prospect', lang: 'en' });
+  await expect(page.getByText('This service opens once you lease a plot')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Start', exact: true })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Apply for land' }).click();
+  await expect(page).toHaveURL(/#\/start\/A4/);
+
+  // A service open to prospects keeps its Start; a tenant with a plot keeps Start on B7.
+  await openApp(page, { route: '/services/A2', demo: 'prospect', lang: 'en' });
+  await expect(page.getByRole('link', { name: 'Start', exact: true })).toBeVisible();
+  await openApp(page, { route: '/services/B7', lang: 'en' });
+  await expect(page.getByRole('link', { name: 'Start', exact: true })).toBeVisible();
+
+  // The catalogue card of A8 carries no Start for the prospect.
+  await openApp(page, { route: '/services', demo: 'prospect', lang: 'en' });
+  const card = page.locator('li').filter({ has: page.locator('h3 a[href="#/services/A8"]') });
+  await expect(card.getByText('Once you lease a plot')).toBeVisible();
+  await expect(card.getByRole('link', { name: /^Start/ })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('a service with nothing to receive leaves the section out (gate n=23)', async ({ page }) => {
+  await openApp(page, { route: '/services/F2', lang: 'en' });
+  await expect(page.getByRole('heading', { name: 'Steps' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'What you receive' })).toHaveCount(0);
+  await openApp(page, { route: '/services/D1', lang: 'en' });
+  await expect(page.getByRole('heading', { name: 'What you receive' })).toBeVisible();
+});
+
+for (const { width, lang, theme, text } of [
+  { width: 320, lang: 'en', theme: 'light', text: 1 },
+  { width: 320, lang: 'ar', theme: 'dark', text: 3 },
+  { width: 390, lang: 'en', theme: 'dark', text: 3 },
+  { width: 430, lang: 'en', theme: 'light', text: 1 },
+] as const) {
+  test(`service rows keep whole words and clear the chevron at ${width} px, ${lang}, ${theme}, text ${text} (gate n=24, n=25)`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await openApp(page, { route: '/services?view=all', lang, theme, text });
+    await expect(page.locator('main li > a[href^="#/services/"]').first()).toBeVisible();
+    const problems = await page.evaluate(() => {
+      const out: string[] = [];
+      for (const row of document.querySelectorAll<HTMLAnchorElement>('main li > a[href^="#/services/"]')) {
+        const chevron = [...row.querySelectorAll('svg')].pop();
+        if (!chevron) continue;
+        const c = chevron.getBoundingClientRect();
+        const box = row.getBoundingClientRect();
+        for (const el of row.querySelectorAll('span')) {
+          if (el.contains(chevron) || el.closest('.visually-hidden')) continue;
+          const r = el.getBoundingClientRect();
+          if (!r.width) continue;
+          const overlaps = Math.min(r.right, c.right) - Math.max(r.left, c.left) > 0.5 && Math.min(r.bottom, c.bottom) - Math.max(r.top, c.top) > 0.5;
+          if (overlaps) out.push(`${row.getAttribute('href')} overlaps the chevron`);
+          if (r.right > box.right + 0.5 || r.left < box.left - 0.5) out.push(`${row.getAttribute('href')} leaves the row`);
+        }
+        // No word of the title or the official name is split across two lines (a hyphen may break "e-signature").
+        const walker = document.createTreeWalker(row, NodeFilter.SHOW_TEXT);
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          if (node.parentElement?.closest('.visually-hidden')) continue;
+          for (const match of (node.textContent ?? '').matchAll(/[^\s-]+/g)) {
+            const range = document.createRange();
+            range.setStart(node, match.index ?? 0);
+            range.setEnd(node, (match.index ?? 0) + match[0].length);
+            const lines = new Set([...range.getClientRects()].map((rect) => Math.round(rect.top)));
+            if (lines.size > 1) out.push(`${row.getAttribute('href')} splits "${match[0]}"`);
+          }
+        }
+      }
+      return [...new Set(out)];
+    });
+    expect(problems).toEqual([]);
+  });
+}

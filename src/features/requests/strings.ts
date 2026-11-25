@@ -130,6 +130,14 @@ export const strings = {
   needFile: { ar: 'أرفق هذه الوثيقة للمتابعة.', en: 'Attach this document to continue.' },
   chooseLabel: { ar: 'الخيارات', en: 'Options' },
   needChoice: { ar: 'اختر خيارًا للمتابعة.', en: 'Choose an option to continue.' },
+  /* a low rating reopened the request */
+  reopenedSupervisor: { ar: 'أعدنا فتح البلاغ بعد تقييمك، وهو الآن لدى المشرف ليراجعه.', en: 'We reopened the report after your rating. It is now with the supervisor.' },
+  reopened: { ar: 'أعدنا فتح البلاغ بعد تقييمك.', en: 'We reopened the report after your rating.' },
+  ratingTitle: { ar: 'تقييمك', en: 'Your rating' },
+  ratingStars: { ar: '{n} من 5', en: '{n} of 5' },
+  ratingReopenedThis: { ar: 'أعاد هذا التقييم فتح البلاغ ليراجعه المشرف.', en: 'This rating reopened the report for the supervisor.' },
+  ratingReopenedEarlier: { ar: 'أعاد تقييمك السابق ({n} من 5) فتح البلاغ ليراجعه المشرف.', en: 'Your earlier rating ({n} of 5) reopened the report for the supervisor.' },
+  rateAgain: { ar: 'عاد الفريق إلى العطل بعد تقييمك. قيّم الإصلاح من جديد؛ تقييمك السابق كان {n} من 5.', en: 'The team came back to the fault after your rating. Rate the fix again; your earlier rating was {n} of 5.' },
   rateQuestion: { ar: 'كيف كانت الخدمة؟', en: 'How was the service?' },
   stars: { ar: 'التقييم', en: 'Rating' },
   star: { ar: '{n} من 5', en: '{n} of 5' },
@@ -151,5 +159,16 @@ export const strings = {
   receiptRef: { ar: 'إيصال {ref}', en: 'Receipt {ref}' },
   paidWithOffer: { ar: 'سدّدت التأمين مع العرض. لا يُطلب منك سداده مرة أخرى.', en: 'You paid the deposit with the offer. You will not be asked to pay it again.' },
   paidWithOfferRef: { ar: 'سدّدت التأمين مع العرض (الإيصال {ref}). لا يُطلب منك سداده مرة أخرى.', en: 'You paid the deposit with the offer (receipt {ref}). You will not be asked to pay it again.' },
-  receiptFiled: { ar: 'تم السداد. الإيصال {ref} في محفظتك.', en: 'Paid. Receipt {ref} is in your wallet.' },
+
+  /* the renewal offer (B3): what is agreed */
+  renewIntro: {
+    ar: 'راجع المدة والسعر أدناه. قبولك يوقّع ملحق التجديد إلكترونيًا، ثم تسدّد القسط الأول قبل انتهاء العقد.',
+    en: 'Review the term and rate below. Accepting signs the renewal addendum electronically, then you pay the first instalment before the lease ends.',
+  },
+  renewUntil: { ar: 'ينتهي العقد المجدّد في', en: 'Renewed lease ends on' },
+  renewTerm: { ar: 'مدة التجديد', en: 'Renewal term' },
+  renewRate: { ar: 'السعر', en: 'Rate' },
+  renewRateValue: { ar: '{amount} للمتر المربع سنويًا', en: '{amount} per m² a year' },
+  renewRent: { ar: 'الإيجار السنوي', en: 'Yearly rent' },
+  renewFirst: { ar: 'القسط الأول', en: 'First instalment' },
 } as const;

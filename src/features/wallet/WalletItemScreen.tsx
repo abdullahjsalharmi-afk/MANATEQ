@@ -2,7 +2,7 @@ import { Copy, FileQuestion, Printer, Share2, ShieldCheck, SunMedium } from 'luc
 import { useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { useParams } from '@/app/routes';
-import { Button, EmptyState, Icon, List, Row, Screen, Sheet, toast } from '@/design/core';
+import { Button, EmptyState, Icon, List, Pill, Row, Screen, Sheet, toast } from '@/design/core';
 import { QR, Skeleton } from '@/design/forms';
 import { DocCard, PassCard } from '@/design/signature';
 import { getZone } from '@/data/catalog';
@@ -10,7 +10,8 @@ import type { Doc, Pass } from '@/domain/types';
 import { useNow } from '@/features/shared/useNow';
 import { plotIdOfDoc, revokePass, selectDoc, selectPass, selectPlot, selectPlots, selectRequest, useApp, useCatalogueReady } from '@/state';
 import { canPrint, canShare } from './device';
-import { holderName, passMoment, passValidity, verifyUrl } from './logic';
+import { useValidityLine } from './DocRow';
+import { holderName, passCardState, passMoment, passValidity, verifyUrl } from './logic';
 import { strings } from './strings';
 import { VerifySheet } from './VerifySheet';
 import styles from './Wallet.module.css';
@@ -141,6 +142,8 @@ function PassView({ pass }: { pass: Pass }) {
   const zone = zoneCode === undefined ? undefined : getZone(zoneCode);
   const validity = passValidity(pass, now);
   const live = validity.state === 'valid' || validity.state === 'upcoming';
+  const card = passCardState(validity);
+  const line = useValidityLine(pass, now);
   const holder = holderName(pass.holder, lang);
 
   const revoke = () => {
@@ -152,6 +155,16 @@ function PassView({ pass }: { pass: Pass }) {
   return (
     <Screen title={t('passTitle')} nav="back" backTo="/account/wallet?tab=passes" width="form">
       <div className={styles.passWrap}>
+        {card.upcomingFrom !== undefined ? (
+          <p className={styles.upcoming}>
+            <Pill tone={line.pill.tone} icon={line.pill.icon}>
+              {line.pill.label}
+              <span aria-hidden="true"> · </span>
+              <span className="visually-hidden">, </span>
+              {line.text}
+            </Pill>
+          </p>
+        ) : null}
         <PassCard
           kind={pass.kind}
           holder={holder}
@@ -161,7 +174,7 @@ function PassView({ pass }: { pass: Pass }) {
           plot={plot?.number ?? pass.plotId}
           validFrom={passMoment(pass.from, fmt, lang)}
           validTo={passMoment(pass.to, fmt, lang)}
-          status={live ? 'active' : pass.status === 'revoked' ? 'revoked' : 'expired'}
+          status={card.status}
           code={pass.code}
           qr={<QR value={pass.code} size={200} label={t('qrPass', { holder })} />}
         />

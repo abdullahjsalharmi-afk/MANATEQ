@@ -1,21 +1,19 @@
 import { CloudOff, SearchX } from 'lucide-react';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useMemo } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { navigate } from '@/app/router';
 import { useParams, useQuery } from '@/app/routes';
-import { Button, Card, EmptyState, Screen, type RenderName } from '@/design/core';
+import { Button, Card, EmptyState, Screen } from '@/design/core';
 import { Skeleton } from '@/design/forms';
-import type { DomainCode } from '@/data/types';
+import { getService } from '@/data/catalog';
 import { bespokeFlows, startRedirects } from '@/features/flows/registry';
 import { signInThen } from '@/features/services/catalogue';
 import { useService } from '@/features/shared/useService';
-import { selectCompany, selectPersona, useApp } from '@/state';
+import { needsTenancy, selectCompany, selectPersona, selectPlotsFor, useApp } from '@/state';
 import { GenericFlow } from './GenericFlow';
+import { DOMAIN_RENDER, NeedsPlot } from './NeedsPlot';
 import styles from './Start.module.css';
 import { strings } from './strings';
-
-/** SPEC 3.5: the render of each service domain. */
-const DOMAIN_RENDER: Record<DomainCode, RenderName> = { A: 'zone', B: 'plot', C: 'construction', D: 'utilities', E: 'services', F: 'units', G: 'gate' };
 
 /**
  * `#/start/:id`: starts a service. A purpose-built flow when the service has one, a dedicated screen when it
@@ -29,6 +27,8 @@ export function StartScreen() {
   const redirect = startRedirects[id];
   const Bespoke = bespokeFlows[id];
   const guest = persona === 'guest' || !company;
+  const candidates = useApp(useMemo(() => selectPlotsFor(id), [id]));
+  const summary = getService(id);
 
   useEffect(() => {
     if (guest) {
@@ -45,6 +45,8 @@ export function StartScreen() {
   }, [guest, redirect]);
 
   if (guest || redirect) return <StartLoading />;
+  // A service for a leased plot never runs for a company without one it could be for (D1, D2 …).
+  if (Bespoke && summary && needsTenancy(summary) && candidates.length === 0) return <NeedsPlot service={summary} />;
   if (Bespoke) {
     return (
       <Suspense fallback={<StartLoading />}>
@@ -59,6 +61,7 @@ function GenericStart({ id }: { id: string }) {
   const t = useT(strings);
   const { pick } = useLang();
   const company = useApp(selectCompany);
+  const candidates = useApp(useMemo(() => selectPlotsFor(id), [id]));
   const { summary, detail, loading, failed } = useService(id);
 
   if (!summary) {
@@ -91,6 +94,8 @@ function GenericStart({ id }: { id: string }) {
   }
 
   if (loading || !detail || !company) return <StartLoading title={pick(summary.label)} />;
+  // The full record decides (B6 asks for a plot it requires although prospects may see it).
+  if (needsTenancy(detail) && candidates.length === 0) return <NeedsPlot service={summary} />;
   return <GenericFlow key={id} service={detail} company={company} />;
 }
 

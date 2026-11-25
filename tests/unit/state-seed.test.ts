@@ -8,7 +8,7 @@ import { timingFor } from '@/domain/simulation';
 import type { Persona, RequestState, World } from '@/domain/types';
 import { act, advance, findStep, firstStep, isTerminal, successor, waitsForInvestor, type Timing } from '@/domain/workflow';
 import { STATE_VERSION, calendarTiming, emptyWorld, initialSettings, initialState, seedIsPartial, seedWorld } from '@/state/seed';
-import { actIn, cancelIn, fastForwardIn, payInvoiceIn, startIn, tickWorld } from '@/state/sim';
+import { actIn, cancelIn, fastForwardIn, payInvoiceIn, startIn, steeredMoves, tickWorld } from '@/state/sim';
 import { holdOf, type Env } from '@/state/types';
 
 /** Display text keeps codes and amounts whole with invisible joiners and no-break spaces; compare it as plain text. */
@@ -55,7 +55,9 @@ function expectEngineState(request: RequestState, now: number): void {
     const next = request.visits[index + 1];
     if (next) {
       expect(visit.doneAt, `${label}: a visit in the middle is still open`).toBeDefined();
-      expect(next.step, `${label}: ${visit.step} → ${next.step} is not a move the workflow allows`).toBe(successor(wf, step, visit.outcome ?? 'yes'));
+      // The usual successor, or where the step's own text sends an option or a rating (B2 deposit, D1 low rating).
+      const allowed = [successor(wf, step, visit.outcome ?? 'yes'), ...(waitsForInvestor(step) ? steeredMoves(request.serviceId, step.id) : [])];
+      expect(allowed, `${label}: ${visit.step} → ${next.step} is not a move the workflow allows`).toContain(next.step);
       expect(next.enteredAt, label).toBe(visit.doneAt);
     }
     if (visit.doneAt !== undefined) {
@@ -64,6 +66,14 @@ function expectEngineState(request: RequestState, now: number): void {
       if (waitsForInvestor(step)) investorMs += visit.doneAt - visit.enteredAt;
       if (step.kind === 'gate') expect(visit.outcome, `${label}: a decision without an outcome`).toBeDefined();
     }
+    if (visit.stoppedAt !== undefined) {
+      // Only the step that was open when the request was withdrawn is stopped, and it never reads as done.
+      expect(visit.doneAt, `${label}: a stopped step is also done`).toBeUndefined();
+      expect(index, `${label}: a stopped step in the middle`).toBe(request.visits.length - 1);
+      expect(request.status, `${label}: a stopped step in a request that was not withdrawn`).toBe('stopped');
+      expect(visit.stoppedAt, label).toBeGreaterThanOrEqual(visit.enteredAt);
+      if (waitsForInvestor(step)) investorMs += visit.stoppedAt - visit.enteredAt;
+    }
   });
   expect(request.investorMs, `${label}: investor time`).toBe(investorMs);
 
@@ -71,7 +81,8 @@ function expectEngineState(request: RequestState, now: number): void {
   const lastStep = last ? findStep(wf, last.step) : undefined;
   if (request.status === 'done' || request.status === 'stopped') {
     expect(request.current, label).toBeNull();
-    expect(last?.doneAt, label).toBeDefined();
+    // The last step finished, or (withdrawn) it was stopped while open.
+    expect(last?.doneAt ?? last?.stoppedAt, label).toBeDefined();
     // A finished request ended on an end of its workflow; a withdrawn one stopped wherever it stood.
     if (request.status === 'done') expect(lastStep?.kind, `${label} is done but did not reach an end`).toBe('end');
     else if (lastStep && isTerminal(lastStep)) expect(lastStep.kind, label).toBe('stop');
@@ -189,7 +200,8 @@ function expectValidWorld(world: World, now: number): void {
     bilingual(doc.issuer, `issuer of ${doc.ref}`);
     expect(doc.verifyCode).toMatch(VERIFY_CODE_PATTERN);
     expect(doc.issuedAt).toBeLessThanOrEqual(now);
-    expect(doc.lines.length).toBeGreaterThan(2);
+    // The service and the request number at least; the issue date is the document's own, not a line.
+    expect(doc.lines.length).toBeGreaterThanOrEqual(2);
     for (const line of doc.lines) {
       bilingual(line.label, `a line of ${doc.ref}`);
       bilingual(line.value, `a line of ${doc.ref}`);

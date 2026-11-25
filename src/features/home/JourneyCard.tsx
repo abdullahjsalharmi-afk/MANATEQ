@@ -1,11 +1,12 @@
-import { Circle, CircleCheck, CircleDot } from 'lucide-react';
+import { Circle, CircleCheck, CircleDashed, CircleDot, CircleX } from 'lucide-react';
 import { useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { Card, Icon, List, Row, Section, Sheet } from '@/design/core';
 import { JourneyRibbon, type JourneyStation as RibbonStation } from '@/design/signature';
-import { getService } from '@/data/catalog';
+import { getService, requestLabelOf } from '@/data/catalog';
 import type { Journey, JourneyItem, StationKey } from '@/state';
-import { itemRoute } from './logic';
+import { DOT } from '@/domain/text';
+import { itemRoute, itemWords } from './logic';
 import styles from './Home.module.css';
 import { strings } from './strings';
 
@@ -15,7 +16,13 @@ export interface JourneyCardProps {
   plotNumber: string;
 }
 
-const ITEM_ICON = { done: CircleCheck, current: CircleDot, upcoming: Circle } as const;
+/** In progress (a request is open) has the filled dot; "next" with nothing open a dashed ring. */
+function itemIcon(item: JourneyItem) {
+  if (item.state === 'done') return { icon: CircleCheck, className: styles.itemDone };
+  if (item.open) return { icon: CircleDot, className: styles.itemCurrent };
+  if (item.state === 'current') return { icon: CircleDashed, className: styles.itemCurrent };
+  return { icon: Circle, className: styles.itemUpcoming };
+}
 
 /** The journey of the plot furthest behind, as a ribbon in a card. A station opens its checklist. */
 export function JourneyCard({ journey, plotNumber }: JourneyCardProps) {
@@ -27,12 +34,6 @@ export function JourneyCard({ journey, plotNumber }: JourneyCardProps) {
   const current = journey.stations.find((station) => station.key === journey.station);
   const shown = journey.stations.find((station) => station.key === open);
   const plot = fmt.ltr(plotNumber);
-
-  const itemText = (item: JourneyItem): string => {
-    if (item.state === 'done') return t('itemDone');
-    if (item.state === 'current') return t('itemCurrent');
-    return item.canStart ? t('itemStart') : t('itemUpcoming');
-  };
 
   return (
     <Section title={t('journeyTitle')} hint={t('journeyHint')}>
@@ -48,17 +49,30 @@ export function JourneyCard({ journey, plotNumber }: JourneyCardProps) {
         <JourneyRibbon label={t('journeyTitle')} stations={stations} size="expanded" selected={open ?? undefined} onSelect={(key) => setOpen(key as StationKey)} className={styles.sheetRibbon} />
         {shown ? (
           <List variant="plain" aria-label={pick(shown.name)}>
-            {shown.items.map((item) => {
+            {shown.items.flatMap((item) => {
               const service = getService(item.serviceId);
-              return (
+              const words = itemWords(item);
+              const icon = itemIcon(item);
+              const rows = [
                 <Row
                   key={item.serviceId}
                   to={itemRoute(item)}
-                  leading={<Icon icon={ITEM_ICON[item.state]} size={22} className={item.state === 'current' ? styles.itemCurrent : item.state === 'done' ? styles.itemDone : styles.itemUpcoming} />}
-                  title={service ? pick(service.label) : item.serviceId}
-                  subtitle={itemText(item)}
-                />
-              );
+                  leading={<Icon icon={icon.icon} size={22} className={icon.className} />}
+                  title={service ? pick(words.name === 'noun' ? requestLabelOf(service) : service.label) : item.serviceId}
+                  subtitle={words.status.map((word) => t(word)).join(DOT)}
+                />,
+              ];
+              if (words.closedLink) {
+                rows.push(
+                  <Row
+                    key={`${item.serviceId}-closed`}
+                    to={words.closedLink}
+                    leading={<Icon icon={CircleX} size={22} className={styles.itemUpcoming} />}
+                    title={t('itemClosedLink')}
+                  />,
+                );
+              }
+              return rows;
             })}
           </List>
         ) : null}

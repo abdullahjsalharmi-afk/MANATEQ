@@ -13,7 +13,7 @@ import { timingFor } from '@/domain/simulation';
 import type { FormValue, RequestState, World } from '@/domain/types';
 import { findStep, firstStep, isTerminal, successor, waitsForInvestor } from '@/domain/workflow';
 import { seedWorld } from '@/state/seed';
-import { actIn, fastForwardIn, startIn, stepTasks, tickWorld } from '@/state/sim';
+import { actIn, fastForwardIn, startIn, steeredMoves, stepTasks, tickWorld } from '@/state/sim';
 import type { Env } from '@/state/types';
 
 const NOW = new Date(2026, 10, 19, 9, 30).getTime();
@@ -132,7 +132,8 @@ describe('every service, walked to its end', () => {
             const step = findStep(wf, visit.step);
             expect(step, `${service.id}: step ${visit.step} does not exist`).toBeDefined();
             const next = request.visits[index + 1];
-            if (step && next) expect(next.step, `${service.id}: ${visit.step} → ${next.step}`).toBe(successor(wf, step, visit.outcome ?? 'yes'));
+            // The usual successor, or where the step's own text sends an option or a rating (B2 deposit → 9).
+            if (step && next) expect([successor(wf, step, visit.outcome ?? 'yes'), ...(waitsForInvestor(step) ? steeredMoves(service.id, step.id) : [])], `${service.id}: ${visit.step} → ${next.step}`).toContain(next.step);
           });
           const last = findStep(wf, request.visits[request.visits.length - 1]?.step ?? -1);
           if (request.status === 'done') expect(last?.kind, `${service.id} is done away from an end`).toBe('end');

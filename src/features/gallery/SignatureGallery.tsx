@@ -113,6 +113,11 @@ const demo = {
   fiveDays: { ar: '5 أيام عمل', en: '5 working days' },
   contractsTeam: { ar: 'فريق العقود', en: 'Contracts team' },
 
+  // timeline: a fault report the investor withdrew while the crew had it
+  w1: { ar: 'أبلغت عن العطل', en: 'You reported the fault' },
+  w2: { ar: 'فرز البلاغ وإسناده إلى الفريق الميداني', en: 'The report is triaged and assigned to the field team' },
+  w3: { ar: 'يصلح الفريق العطل ويغلقه بصورة وقائمة تحقق', en: 'The crew fixes the fault and closes it with a photo and a checklist' },
+
   // fetched
   f1: { ar: 'اسم الشركة ورقم السجل التجاري', en: 'Company name and commercial registration number' },
   f2: { ar: 'المفوّض بالتوقيع وصفته', en: 'The authorised signatory and their role' },
@@ -204,6 +209,12 @@ export function SignatureGallery() {
     { id: 4, title: t('c4'), text: t('c4Text'), lane: 'inv', state: 'current', time: t('c4Time') },
     { id: 5, title: t('c5'), lane: 'staff', state: 'upcoming', standard: t('oneDay') },
     { id: 6, title: t('c6'), lane: 'field', state: 'upcoming', standard: t('fiveDays') },
+  ];
+
+  const withdrawnSteps: TimelineItem[] = [
+    { id: 1, title: t('w1'), lane: 'inv', state: 'done', time: stamp(T0) },
+    { id: 2, title: t('w2'), lane: 'staff', state: 'done', time: stamp(T0 + 60_000) },
+    { id: 3, title: t('w3'), lane: 'field', state: 'stopped', time: stamp(T0 + 120_000) },
   ];
 
   const source = (id: string) => {
@@ -374,6 +385,11 @@ export function SignatureGallery() {
       <Section title="Timeline" hint="Lease contract · waiting for the investor · every step">
         <Card>
           <Timeline items={leaseSteps} />
+        </Card>
+      </Section>
+      <Section title="Timeline" hint="Fault report · withdrawn while the crew had it · stopped step">
+        <Card>
+          <Timeline items={withdrawnSteps} />
         </Card>
       </Section>
 

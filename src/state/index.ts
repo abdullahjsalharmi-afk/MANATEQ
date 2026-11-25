@@ -47,7 +47,8 @@ export { appStore, getState, useApp, resetEverything, STORAGE_KEY } from './stor
 export { applyBootParams, loadCatalogue } from './boot';
 export { isCatalogueReady, useCatalogueReady } from './catalogue';
 export { receiptRefFor } from './refs';
-export { amountFor } from './effects';
+export { amountFor, renewalTerms, type RenewalTerms } from './effects';
+export { needsTenancy, plotsFor } from '@/domain/plots';
 export { stepTasks } from './sim';
 export { STATE_VERSION, seedWorld } from './seed';
 export { holdOf, type ActPayload, type AppointmentInput, type FileValue, type PassInput, type StartOptions } from './types';

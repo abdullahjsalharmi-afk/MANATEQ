@@ -86,9 +86,18 @@ const APPLICATION = new Set<ServiceId>(['A4', 'A5', 'A6', 'A7']);
 
 export interface JourneyItem {
   serviceId: ServiceId;
+  /**
+   * done / current / upcoming. In the station the investor stands in, the first item not done is
+   * `current` even with nothing open for it: it is what comes next. Read `open` to tell "in progress"
+   * (`current && open`) from "next" (`current && !open`).
+   */
   state: ItemState;
+  /** A request is open for this item now (moving, or waiting for the investor). */
+  open: boolean;
   /** The request behind the state: the open one, or the latest finished one. */
   requestId?: string;
+  /** The latest request for this item was withdrawn or closed without its outcome, and nothing newer exists. */
+  stoppedRequestId?: string;
   /** The investor can start this service now. */
   canStart: boolean;
 }
@@ -178,7 +187,9 @@ export function journeyOf(world: World, plotId?: string): Journey {
       }
 
       const requestId = (open ?? done)?.id;
-      return { serviceId: item.serviceId, state, ...(requestId ? { requestId } : {}), canStart: false };
+      const newest = latest(item.serviceId, () => true);
+      const stoppedRequestId = newest?.status === 'stopped' ? newest.id : undefined;
+      return { serviceId: item.serviceId, state, open: open !== undefined, ...(requestId ? { requestId } : {}), ...(stoppedRequestId ? { stoppedRequestId } : {}), canStart: false };
     });
 
     // In the station the investor stands in, the first thing not yet done is what comes next.
