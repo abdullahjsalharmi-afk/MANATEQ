@@ -7,6 +7,7 @@ import { findStep } from '@/domain/workflow';
 import {
   actOnRequest,
   bookAppointment,
+  completeStep,
   cancelAppointment,
   cancelRequest,
   clearDraft,
@@ -46,7 +47,11 @@ import {
   selectNextSteps,
   selectNotifications,
   selectPasses,
+  selectPassesOfRequest,
   selectPlot,
+  selectJourneyOfPlot,
+  selectStepAmount,
+  selectDoc,
   selectPlots,
   selectRequest,
   selectStation,
@@ -374,6 +379,34 @@ describe('invoices', () => {
   });
 });
 
+describe('a payment inside a request', () => {
+  it('shows the amount it charges and tells which receipt it filed', () => {
+    enterAs('tenant');
+    const renewal = requestOf('B3') as RequestState;
+    const action = actionOf(renewal);
+    const amount = selectStepAmount(renewal.id, action)(getState());
+    expect(amount).toBe(50_000);
+    const result = completeStep(renewal.id, answers(renewal));
+    expect(result.ok).toBe(true);
+    expect(result.receiptDocIds).toHaveLength(1);
+    const receipt = selectDoc(result.receiptDocIds[0])(getState());
+    const invoice = world().invoices.find((candidate) => candidate.requestId === renewal.id);
+    // The number shown after paying is the receipt in the wallet.
+    expect(receipt).toMatchObject({ kind: 'receipt', requestId: renewal.id, ref: invoice?.ref.replace(/^INV-/, 'RCP-') });
+    expect(invoice?.amount).toBe(amount);
+    expect(completeStep(renewal.id, answers(renewal))).toEqual({ ok: false, receiptDocIds: [] });
+  });
+
+  it('remembers the journey of a plot until the world changes', () => {
+    enterAs('tenant');
+    const first = selectJourneyOfPlot('BA-121')(getState());
+    expect(selectJourneyOfPlot('BA-121')(getState())).toBe(first);
+    expect(selectJourneyOfPlot('AW-116')(getState())).not.toBe(first);
+    markAllRead();
+    expect(selectJourneyOfPlot('BA-121')(getState())).not.toBe(first);
+  });
+});
+
 describe('the tenant’s renewal', () => {
   it('is accepted, signed and paid, and the lease runs for another year', () => {
     enterAs('tenant');
@@ -540,7 +573,8 @@ describe('gate passes', () => {
     playUntil(() => byId(request).status === 'done', 120);
     expect(world().passes).toHaveLength(before + 1);
     const pass = world().passes[world().passes.length - 1];
-    expect(pass).toMatchObject({ kind: 'visitor', holder: 'Demo guest', plotId: 'AW-116', status: 'active' });
+    expect(pass).toMatchObject({ kind: 'visitor', holder: 'Demo guest', plotId: 'AW-116', status: 'active', requestId: request });
+    expect(selectPassesOfRequest(request)(getState())).toEqual([pass]);
     expect(pass?.from).toBe(new Date(2026, 10, 20).getTime());
     expect(pass?.to).toBe(new Date(2026, 10, 21).getTime() - 1);
     tick(Date.now() + 5000);

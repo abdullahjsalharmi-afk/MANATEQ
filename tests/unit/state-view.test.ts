@@ -191,7 +191,9 @@ describe('the view of a request', () => {
           visits: [{ step: step.id, enteredAt: NOW - 1000 }], current: step.id, status: 'active', investorMs: 0, docIds: [],
         };
         const focus = requestView(request, service, NOW, 1).focus;
-        if (focus) expect(['gate', 'auto', 'end', 'stop'], `${service.id} step ${step.id}`).not.toContain(focus.step.kind);
+        if (!focus) continue;
+        expect(['gate', 'end', 'stop'], `${service.id} step ${step.id}`).not.toContain(focus.step.kind);
+        if (focus.step.kind === 'auto') expect(focus.step.lane, `${service.id} step ${step.id}`).toBe('nat');
       }
     }
   });

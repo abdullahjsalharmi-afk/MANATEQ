@@ -324,12 +324,12 @@ export function FormsGallery() {
         {payPhases.map((phase) => (
           <div key={phase} style={stack}>
             <Caption>{phase}</Caption>
-            <SheetFrame title={t('payTitle')} footer={<PayFooter phase={phase} amount={QUARTER_RENT} />}>
+            <SheetFrame title={t('payTitle')} footer={<PayFooter phase={phase} amount={QUARTER_RENT} onViewReceipt={phase === 'success' ? () => undefined : undefined} />}>
               <PayContent phase={phase} lines={payLines} amount={QUARTER_RENT} reference="RCT-2611-0046" method={method} onMethod={setMethod} />
             </SheetFrame>
           </div>
         ))}
-        <PaySheet open={payOpen} onClose={() => setPayOpen(false)} title={t('payTitle')} lines={payLines} amount={QUARTER_RENT} reference="RCT-2611-0046" onPaid={() => toast(t('paidToast'))} />
+        <PaySheet open={payOpen} onClose={() => setPayOpen(false)} title={t('payTitle')} lines={payLines} amount={QUARTER_RENT} reference="RCT-2611-0046" onPaid={() => toast(t('paidToast'))} onViewReceipt={() => undefined} />
       </Section>
 
       <Section title="Signature sheet">

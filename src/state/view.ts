@@ -89,8 +89,11 @@ export function holderOf(step: Pick<WorkflowStep, 'lane' | 'enablers'>): Holder 
   return { lane: step.lane, name: holderNameOf(step), ...(entity ? { entity } : {}) };
 }
 
-/** A decision, or a step that runs by itself: not something to put in a headline. */
-const passesByItself = (step: WorkflowStep): boolean => step.kind === 'gate' || step.kind === 'auto';
+/**
+ * A decision, or a step Manateq's own systems run by themselves in a moment: not something to put in a
+ * headline. A national platform's step stays: an entity outside Manateq has the request.
+ */
+const passesByItself = (step: WorkflowStep): boolean => step.kind === 'gate' || (step.kind === 'auto' && step.lane !== 'nat');
 
 /** The step a request's headline describes (see `RequestView.focus`). */
 function focusOf(request: RequestState, service: Pick<ServiceDetail, 'workflow'>, open: WorkflowStep | null, expectedAt: number | undefined): RequestView['focus'] {

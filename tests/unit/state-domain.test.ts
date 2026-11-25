@@ -268,6 +268,9 @@ describe('next steps', () => {
       expect(steps).toHaveLength(1);
       expect(steps[0]).toMatchObject({ kind: 'start_service', route: '/eligibility' });
       expect(steps[0]?.title).toEqual(detail('A2').label);
+      // One short line of its own, never the catalogue summary.
+      expect(steps[0]?.context).toEqual(detail('A2').hint);
+      expect(steps[0]?.context).not.toEqual(detail('A2').summary);
     }
   });
 
@@ -295,6 +298,9 @@ describe('next steps', () => {
     const [invoice, renewal] = steps;
     expect(invoice?.dueAt).toBe(NOW + 5 * DAY);
     expect(invoice?.route).toMatch(/^\/account\/payments\//);
+    // The hero pays the invoice in place, with the one word used for paying everywhere.
+    expect(invoice?.invoiceId).toBe(tenant.invoices.find((candidate) => candidate.status !== 'paid')?.id);
+    expect(invoice?.cta).toEqual({ ar: 'ادفع', en: 'Pay' });
     expect(plain(invoice?.context.en)).toContain('QAR 37,500');
     expect(plain(invoice?.context.ar)).toContain('37,500 ر.ق');
     const yard = tenant.leases.find((l) => l.plotId === 'AK-113');
