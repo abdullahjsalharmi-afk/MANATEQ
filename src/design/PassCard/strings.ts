@@ -9,8 +9,10 @@ export const strings = {
   validFrom: { ar: 'صالح من', en: 'Valid from' },
   validTo: { ar: 'حتى', en: 'Until' },
   active: { ar: 'سارٍ', en: 'Active' },
+  upcoming: { ar: 'قادم', en: 'Upcoming' },
   expired: { ar: 'منتهٍ', en: 'Expired' },
   revoked: { ar: 'ملغى', en: 'Revoked' },
   showAtGate: { ar: 'أبرِز هذا الرمز عند البوابة', en: 'Show this code at the gate' },
+  showFrom: { ar: 'أبرِز هذا الرمز عند البوابة من {from}', en: 'Show this code at the gate from {from}' },
   notValid: { ar: 'هذا التصريح لم يعد صالحًا للدخول', en: 'This pass no longer opens the gate' },
 } as const;

@@ -6,7 +6,7 @@ import { Button, Card, EmptyState, Grid, Icon, keepWhole, List, Money, Row, Scre
 import { Skeleton } from '@/design/forms';
 import type { Invoice } from '@/domain/types';
 import { useNow } from '@/features/shared/useNow';
-import { receiptRefFor, selectDues, selectInvoices, useApp, useCatalogueReady } from '@/state';
+import { receiptRefFor, selectDues, selectHasPlots, selectInvoices, useApp, useCatalogueReady } from '@/state';
 import { DueText } from './InvoiceRow';
 import { groupByMonth, outstanding } from './logic';
 import { PayInvoiceSheet } from './PayInvoiceSheet';
@@ -23,6 +23,7 @@ export function PaymentsScreen() {
   const ready = useCatalogueReady();
   const invoices = useApp(selectInvoices);
   const dues = useApp(selectDues);
+  const hasPlots = useApp(selectHasPlots);
   const now = useNow(60_000);
   const [paying, setPaying] = useState<Invoice | null>(null);
 
@@ -100,7 +101,8 @@ export function PaymentsScreen() {
         )}
       </div>
 
-      <Section title={t('statement')} action={{ label: t('issue'), to: '/start/B8' }}>
+      {/* A statement of account is issued for a plot: a company that has not leased one yet is not offered it. */}
+      <Section title={t('statement')} action={hasPlots ? { label: t('issue'), to: '/start/B8' } : undefined}>
         {months.length === 0 ? (
           <EmptyState compact icon={Receipt} title={t('noHistory')} body={t('noHistoryBody')} level={3} />
         ) : (

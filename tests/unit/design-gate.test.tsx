@@ -1,6 +1,7 @@
 // Regression tests for the release-gate findings of the design packet: relative time (n=9), the stopped
 // timeline step (n=7), list rows that never crush their words (n=25-28, 30), the hero context (n=29),
-// the search placeholder (n=33) and the scroll padding that clears the pinned bars (n=22).
+// the search placeholder (n=33), the scroll padding that clears the pinned bars (n=22) and the pass card
+// of a pass that starts later (n=16).
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -10,7 +11,7 @@ import { LangProvider, makeFormatters } from '@/app/i18n';
 import type { Lang } from '@/data/types';
 import { List, Row } from '@/design/core';
 import { hasWhole } from '@/design/List/keepWhole';
-import { Timeline, type TimelineItem } from '@/design/signature';
+import { PassCard, Timeline, type TimelineItem } from '@/design/signature';
 
 const DAY = 86_400_000;
 const NOW = Date.UTC(2026, 10, 25, 9, 0);
@@ -202,5 +203,36 @@ describe('scroll padding (n=22)', () => {
     const html = rule(source, 'html');
     expect(html).toMatch(/scroll-padding-block-end: calc\(var\(--chrome-bottom\) \+ var\(--actionbar-h, 0px\)/);
     expect(html).toMatch(/scroll-padding-block-start: calc\(var\(--chrome-top\)/);
+  });
+});
+
+describe('the pass card of a pass that starts later (n=16)', () => {
+  const card = (status: 'active' | 'upcoming' | 'expired' | 'revoked', lang: Lang) =>
+    still(<PassCard kind="worker" holder="Demo Worker" zone="Birkat Al Awamer" plot="BA-121" validFrom="1 Dec 2026, 12:00 am" validTo="10 Dec 2026, 11:59 pm" status={status} code="MQP-1" />, lang);
+
+  it('says upcoming in its badge, never active, and when the code starts to open the gate', () => {
+    const en = card('upcoming', 'en');
+    expect(en.querySelector('article')?.getAttribute('data-status')).toBe('upcoming');
+    expect(en.textContent).toContain('Upcoming');
+    expect(en.textContent).not.toContain('Active');
+    expect(en.textContent?.replace(/\u00a0/g, ' ')).toContain('Show this code at the gate from 1 Dec 2026, 12:00 am');
+    expect(en.textContent).not.toContain('no longer opens the gate');
+    const ar = card('upcoming', 'ar');
+    expect(ar.textContent).toContain('قادم');
+    expect(ar.textContent).not.toContain('سارٍ');
+  });
+
+  it('is not drawn as spent: only a pass that is over is muted', () => {
+    const spent = (status: 'active' | 'upcoming' | 'expired' | 'revoked') => /spent/.test(card(status, 'en').querySelector('article')?.className ?? '');
+    expect(spent('upcoming')).toBe(false);
+    expect(spent('active')).toBe(false);
+    expect(spent('expired')).toBe(true);
+    expect(spent('revoked')).toBe(true);
+  });
+
+  it('keeps the wording of the other states', () => {
+    expect(card('active', 'en').textContent).toContain('Show this code at the gate');
+    expect(card('active', 'en').textContent).not.toContain('gate from');
+    expect(card('expired', 'en').textContent).toContain('This pass no longer opens the gate');
   });
 });

@@ -3,8 +3,9 @@
  * the finding it pins. They run the pure reducers on the seeded worlds, as the app does.
  */
 import { beforeAll, describe, expect, it } from 'vitest';
-import { getService, loadAllServiceDetails, peekServiceDetail } from '@/data/catalog';
+import { getService, loadAllServiceDetails, peekServiceDetail, services } from '@/data/catalog';
 import type { ServiceDetail, ServiceId } from '@/data/types';
+import { withdrawable } from '@/domain/chains';
 import { journeyOf } from '@/domain/journey';
 import { needsTenancy, plotsFor } from '@/domain/plots';
 import { timingFor } from '@/domain/simulation';
@@ -12,7 +13,7 @@ import type { AppState, RequestState, World } from '@/domain/types';
 import { currentVisit, progress } from '@/domain/workflow';
 import { renewalTerms } from '@/state/effects';
 import { calendarTiming, emptyWorld, initialSettings, seedWorld, STATE_VERSION } from '@/state/seed';
-import { selectAppointments, selectHasPlots, selectPlotsFor, selectRenewalTerms, selectUnreadCount } from '@/state/selectors';
+import { selectAppointments, selectCanWithdraw, selectHasPlots, selectPlotsFor, selectRenewalTerms, selectUnreadCount } from '@/state/selectors';
 import { actIn, cancelIn, fastForwardIn, payInvoiceIn, startIn, tickWorld } from '@/state/sim';
 import type { Env } from '@/state/types';
 import { requestView, standardClockOf } from '@/state/view';
@@ -121,6 +122,54 @@ describe('n=15 · D1: a low rating reopens the request for the supervisor', () =
   });
 });
 
+describe('n=15, the same rule in the other two rating steps · E1 and E6: a low rating reopens the request for the supervisor', () => {
+  // E1 step 9 and E6 step 10 say it as D1 step 11 does: "a low rating reopens the case for the BSC supervisor".
+  const cases = [
+    { serviceId: 'E1' as ServiceId, rateAt: 9, backTo: 5, title: 'We reopened your request for the Business Services Center supervisor' },
+    { serviceId: 'E6' as ServiceId, rateAt: 10, backTo: 6, title: 'We reopened your complaint for the Business Services Center supervisor' },
+  ];
+  const rated = (serviceId: ServiceId, rateAt: number, stars: number) => {
+    const started = startIn(seedWorld('tenant', NOW), { serviceId, form: { subject: 'demo', details: 'demo' } }, NOW + 1000, live);
+    const ready = drive(started.world, started.id, NOW + 2000, (request) => request.status === 'needs_you' && request.current === rateAt);
+    const world = actIn(ready.world, started.id, { rating: { stars } }, ready.now, live);
+    return { world, id: started.id, now: ready.now };
+  };
+
+  it.each(cases)('$serviceId: one star sends it back to the staff step, keeps the rating and tells the investor', ({ serviceId, rateAt, backTo, title }) => {
+    const { world, id, now } = rated(serviceId, rateAt, 1);
+    const request = world.requests.find((candidate) => candidate.id === id) as RequestState;
+    expect(request.status).toBe('active');
+    expect(request.current).toBe(backTo);
+    expect(detail(serviceId).workflow.steps.find((step) => step.id === backTo)?.lane).toBe('staff');
+    expect(request.reopenedRating).toEqual({ stars: 1 });
+    const told = world.notifications.filter((notification) => notification.subject?.requestId === id && notification.at === now && notification.kind === 'update');
+    expect(told.map((notification) => notification.title.en)).toContain(title);
+    expect(`${told[0]?.title.ar}${told[0]?.body.ar}${told[0]?.title.en}${told[0]?.body.en}`).not.toMatch(/—|تذكرة|حالة|\bcase\b|ticket/);
+  });
+
+  it.each(cases)('$serviceId: it then runs as written until the rating is asked again, and a good rating closes it', ({ serviceId, rateAt, backTo }) => {
+    const { world, id, now } = rated(serviceId, rateAt, 2);
+    const again = drive(world, id, now + 1000, (request) => request.status === 'needs_you' && request.current === rateAt);
+    const reopened = again.world.requests.find((candidate) => candidate.id === id) as RequestState;
+    const visits = steps(reopened);
+    const after = visits.slice(visits.lastIndexOf(backTo));
+    expect(after[0]).toBe(backTo);
+    expect(after[after.length - 1]).toBe(rateAt);
+    const closed = actIn(again.world, id, { rating: 5 }, again.now, live);
+    const done = drive(closed, id, again.now + 1000, (request) => request.status === 'done' || request.status === 'stopped').world.requests.find((candidate) => candidate.id === id) as RequestState;
+    expect(done.status).toBe('done');
+    expect(done.rating).toEqual({ stars: 5 });
+    expect(done.reopenedRating?.stars).toBe(2);
+  });
+
+  it.each(cases)('$serviceId: three stars finishes as before', ({ serviceId, rateAt }) => {
+    const { world, id, now } = rated(serviceId, rateAt, 3);
+    const done = drive(world, id, now + 1000, (request) => request.status === 'done' || request.status === 'stopped').world.requests.find((candidate) => candidate.id === id) as RequestState;
+    expect(done.status).toBe('done');
+    expect(done.reopenedAt).toBeUndefined();
+  });
+});
+
 describe('n=7 · a withdrawn request never reads its open step as done', () => {
   const tenant = () => seedWorld('tenant', NOW);
   const cancelOf = (serviceId: ServiceId) => {
@@ -178,6 +227,36 @@ describe('n=8 · the journey after a withdrawal', () => {
     // The utilities request really is running.
     const utilities = journeyOf(after, 'AW-116').stations.find((station) => station.key === 'build')?.items.find((candidate) => candidate.serviceId === 'C4');
     expect(utilities).toMatchObject({ state: 'current', open: true });
+  });
+});
+
+describe('n=8, at its root · the investor withdraws only an application of their own', () => {
+  it('a service the investor starts can be withdrawn, and so can the stages of a land application', () => {
+    for (const id of ['A4', 'A5', 'A6', 'A7', 'A8', 'C1', 'D1', 'D2', 'E1', 'B8'] as ServiceId[]) expect([id, withdrawable(id)]).toEqual([id, true]);
+  });
+
+  it('a request Manateq starts cannot, nor one that follows from several services', () => {
+    // Invoices, renewal, collections, the ministry permit, inspections, notices; then the deposit and the utilities connection.
+    for (const id of ['B1', 'B3', 'B10', 'C2', 'C3', 'C7', 'C8', 'D4', 'D6', 'B2', 'C4'] as ServiceId[]) expect([id, withdrawable(id)]).toEqual([id, false]);
+  });
+
+  it('every service that can be withdrawn can be asked for again', () => {
+    for (const service of services) {
+      if (!withdrawable(service.id)) continue;
+      let at = service;
+      while (at.triggeredBy.kind !== 'investor') at = getService((at.triggeredBy.after as ServiceId[])[0] as ServiceId) as typeof service;
+      expect(at.triggeredBy.kind).toBe('investor');
+    }
+  });
+
+  it('the seeded tenant: the fault report yes; the renewal, the building permit and the utilities request no; nothing once it is closed', () => {
+    const world = seedWorld('tenant', NOW);
+    const of = (serviceId: ServiceId) => world.requests.find((request) => request.serviceId === serviceId && request.status !== 'done') as RequestState;
+    expect(selectCanWithdraw(of('D1').id)(stateOf(world))).toBe(true);
+    for (const id of ['B3', 'C2', 'C4'] as ServiceId[]) expect([id, selectCanWithdraw(of(id).id)(stateOf(world))]).toEqual([id, false]);
+    const closed = cancelIn(world, of('D1').id, NOW + 1000, live);
+    expect(selectCanWithdraw(of('D1').id)(stateOf(closed))).toBe(false);
+    expect(selectCanWithdraw(undefined)(stateOf(world))).toBe(false);
   });
 });
 

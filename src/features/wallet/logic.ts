@@ -83,14 +83,13 @@ export function passValidity(pass: Pass, now: number): PassValidity {
 }
 
 /**
- * The badge a pass card can carry today (`PassCard` knows active, expired and revoked), and the start date when
- * the pass is upcoming: the screen then says «قادم · يبدأ في …» / "Upcoming · Starts on …" beside the card,
- * exactly as the passes list does. A pass that starts later is never called valid in words.
+ * The badge of a pass card, by the same rule as the passes list: a pass that starts on a later day is
+ * `upcoming` (with its start date), never active.
  */
-export function passCardState(validity: PassValidity): { status: Pass['status']; upcomingFrom?: number } {
+export function passCardState(validity: PassValidity): { status: Pass['status'] | 'upcoming'; upcomingFrom?: number } {
   switch (validity.state) {
     case 'upcoming':
-      return { status: 'active', upcomingFrom: validity.from };
+      return { status: 'upcoming', upcomingFrom: validity.from };
     case 'valid':
       return { status: 'active' };
     case 'expired':

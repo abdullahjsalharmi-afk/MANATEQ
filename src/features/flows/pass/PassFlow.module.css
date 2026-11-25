@@ -50,10 +50,3 @@
   gap: var(--s-3);
   text-align: center;
 }
-
-/* The upcoming badge above a pass that starts on a later day. */
-.upcoming {
-  display: flex;
-  justify-content: center;
-  margin-block: var(--s-4) 0;
-}

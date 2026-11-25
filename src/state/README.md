@@ -104,8 +104,10 @@ schedule, acknowledge. When `options` exist, show the choice first, then only `s
 
 Where the step's own text says so, an option or a rating goes on at another step (`steeredMoves(serviceId, step)`
 lists them): B2 step 3 `deposit` goes on to step 9 («a paid deposit is recorded without bank verification»: no
-guarantee reading or bank check); D1 step 11 with 1 or 2 stars goes on to step 10, «Supervisor re-dispatches»,
-then the workflow runs as written until the investor is asked to rate again; 3 stars or more finishes it.
+guarantee reading or bank check). The three rating steps say «a low rating reopens the request for the
+supervisor»: with 1 or 2 stars D1 step 11 goes on to step 10, «Supervisor re-dispatches», E1 step 9 goes back
+to step 5 (the Business Services Center handles it) and E6 step 10 to step 6 (the owner investigates); the
+workflow then runs as written until the investor is asked to rate again. 3 stars or more finishes it.
 
 The amount to show is `useApp(selectStepAmount(request.id, action))`: exactly what the state will charge.
 `amountFor(world: World, request: RequestState, action: Pick<StepAction, 'amount'>): number` is the rule behind it.
@@ -118,7 +120,7 @@ The amount to show is `useApp(selectStepAmount(request.id, action))`: exactly wh
 | `completeStep(requestId: string, payload?: ActPayload) → StepResult` | `actOnRequest`, telling what it produced: `StepResult = { ok: boolean; receiptDocIds: string[] }` (oldest first). Run it when the payment sheet confirms, then show `selectDoc(receiptDocIds.at(-1))?.ref` ("RCP-2026-0101"): the receipt really filed. |
 | `actOnRequest(id, { choice?, form?, files?, rating? }) → boolean` | Completes the open investor step and settles the notifications that asked for it. `pay` files a paid invoice and receipt; `sign` / `accept` are recorded; `rate` takes 1-5 or `{ stars, comment? }`. Some choices steer: B2 `deposit` skips the guarantee checks; B4 `withdraw` stops the request; B7 `acceptCharge` skips the re-inspection; B10 and D6 choices decide the next decision. A D1 rating of 1-2 stars reopens the report (`reopenedAt`, `reopenedRating`, a notification). |
 | `fastForwardRequest(id)` | Demo control "تقديم الزمن": the open non-investor step finishes now. |
-| `cancelRequest(id)` | Withdraws an open request (status `stopped`); the open step gets `stoppedAt`, not `doneAt`. Its asks are settled, an appointment booked with it is cancelled, and an application gives its plot back. |
+| `cancelRequest(id)` | The investor withdraws an open request (status `stopped`); the open step gets `stoppedAt`, not `doneAt`. Its asks are settled, an appointment booked with it is cancelled, and an application gives its plot back. Only an application of their own can be withdrawn: a service the investor starts, and the stages of a land application that follow it (`withdrawable(serviceId)` in `@/domain/chains`). For a request Manateq started (an invoice, a renewal, an inspection, a notice, the tracking of a ministry permit) it does nothing. Offer it only when `useApp(selectCanWithdraw(request.id))` is true. |
 | `payInvoice(id) → receiptDocId \| null` | Demo payment; files the receipt in the wallet, settles the reminders to pay it, and adds a read «استلمنا سدادك» / "Payment received" notification that opens the receipt (`/account/wallet/<receiptDocId>`). |
 | `issuePass({ kind, holder, idOrPlate?, company?, plotId, from, to }) → id` · `revokePass(id)` | Wallet passes. |
 | `bookAppointment({ at, topic, channel: 'in_person'\|'video'\|'phone' }) → id` · `cancelAppointment(id)` | BSC visits. |

@@ -7,6 +7,7 @@
  */
 import { peekServiceDetail } from '@/data/catalog';
 import type { ServiceId, StepAction } from '@/data/types';
+import { withdrawable } from '@/domain/chains';
 import { journeyOf, stationOf, type Journey, type StationKey } from '@/domain/journey';
 import { collectNextSteps, deadlineOf } from '@/domain/nextstep';
 import { plotsFor } from '@/domain/plots';
@@ -113,6 +114,17 @@ export const selectThread =
   (requestId: string | undefined): Selector<RequestState[]> =>
   (state) =>
     requestId === undefined ? NO_REQUESTS : threadOfRequest(state.world, requestId);
+
+/**
+ * Whether the investor may withdraw this request now: it is still open, and it is an application of their
+ * own (see `withdrawable`). A request Manateq started is never offered for withdrawal.
+ */
+export const selectCanWithdraw =
+  (requestId: string | undefined): Selector<boolean> =>
+  (state) => {
+    const request = requestId === undefined ? undefined : state.world.requests.find((candidate) => candidate.id === requestId);
+    return request !== undefined && !isFinished(request) && withdrawable(request.serviceId);
+  };
 
 const requestsOfPlot = perWorldBy((world, plotId: string | undefined): RequestState[] => {
   const found = world.requests.filter((request) => request.plotId === plotId).sort((a, b) => b.updatedAt - a.updatedAt);

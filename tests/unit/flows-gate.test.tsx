@@ -9,7 +9,7 @@ import { getService, loadAllServiceDetails, peekServiceDetail, requestLabelOf } 
 import type { FieldDef, ServiceDetail, ServiceId } from '@/data/types';
 import { checkEligibility } from '@/domain/eligibility';
 import { timingFor } from '@/domain/simulation';
-import type { Appointment, Plot, RequestState, World } from '@/domain/types';
+import type { Appointment, Pass, Plot, RequestState, World } from '@/domain/types';
 import { seedWorld } from '@/state/seed';
 import { actIn, fastForwardIn, startIn, tickWorld } from '@/state/sim';
 import type { Env } from '@/state/types';
@@ -21,6 +21,7 @@ import { appointmentOf } from '@/features/start/SubmittedState';
 import { hasFreePlot, isUnlistedDescribed, layoutAvailability, resultKind } from '@/features/flows/eligibility/model';
 import { choicesOf, defaultChoice, primaryOf } from '@/features/flows/eligibility/Result';
 import { isPhone, missingDetails } from '@/features/flows/pass/validity';
+import { passCardState, passValidity } from '@/features/wallet/logic';
 import { strings as startStrings } from '@/features/start/strings';
 import { strings as passStrings } from '@/features/flows/pass/strings';
 import { strings as eligibilityStrings } from '@/features/flows/eligibility/strings';
@@ -225,6 +226,11 @@ describe('n=16 · a pass that starts later is upcoming on its confirmation', () 
     expect(flow).toMatch(/passCardState\(passValidity\(pass, now\)\)/);
     expect(flow).toMatch(/status=\{state\.status\}/);
     expect(flow).not.toMatch(/status=\{pass\.status\}/);
-    expect(passStrings.upcoming.ar).toBe('قادم · يبدأ في {date}');
+  });
+
+  it('the card carries the state itself: upcoming, never active, with the day it starts', () => {
+    const later = passCardState(passValidity({ status: 'active', from: NOW + 6 * DAY, to: NOW + 15 * DAY } as Pass, NOW));
+    expect(later).toEqual({ status: 'upcoming', upcomingFrom: NOW + 6 * DAY });
+    expect(passStrings.doneTaglineUpcoming.ar).toMatch(/يبدأ سريانه في \{date\}/);
   });
 });

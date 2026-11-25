@@ -123,8 +123,9 @@ export interface RequestState {
   /** The investor's latest rating of the outcome (stars 1-5 and an optional comment). */
   rating?: { stars: number; comment?: string };
   /**
-   * A low rating reopened the request (D1 step 11: "a low rating reopens the request for the supervisor"):
-   * when it was reopened, and the rating that reopened it. `rating` keeps the latest rating given.
+   * A low rating reopened the request, as its rating step says (D1 step 11, E1 step 9, E6 step 10: "a low
+   * rating reopens the request for the supervisor"): when it was reopened, and the rating that reopened it.
+   * `rating` keeps the latest rating given.
    */
   reopenedAt?: number;
   reopenedRating?: { stars: number; comment?: string };

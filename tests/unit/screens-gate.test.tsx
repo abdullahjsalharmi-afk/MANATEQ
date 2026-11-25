@@ -169,7 +169,11 @@ describe('n=16 · a pass that starts later is upcoming, with its start date', ()
     const pass = { status: 'active', from: NOW + 6 * DAY, to: NOW + 15 * DAY } as Pass;
     const state = passCardState(passValidity(pass, NOW));
     expect(state.upcomingFrom).toBe(NOW + 6 * DAY);
-    expect(passCardState(passValidity({ ...pass, from: NOW - DAY }, NOW)).upcomingFrom).toBeUndefined();
+    // The card's own badge says it: a pass that starts later is never drawn as active.
+    expect(state.status).toBe('upcoming');
+    const started = passCardState(passValidity({ ...pass, from: NOW - DAY }, NOW));
+    expect(started.upcomingFrom).toBeUndefined();
+    expect(started.status).toBe('active');
   });
 });
 

@@ -11,13 +11,13 @@ import type { RequestState } from '@/domain/types';
 import { useNow } from '@/features/shared/useNow';
 import { useService } from '@/features/shared/useService';
 import { DocRow, PassRow } from '@/features/wallet';
-import { cancelRequest, fastForwardRequest, selectDeadline, selectDocsOfRequest, selectPassesOfRequest, selectRenewalTerms, selectRequest, selectThread, timelineRows, useApp, type RequestView } from '@/state';
+import { cancelRequest, fastForwardRequest, selectCanWithdraw, selectDeadline, selectDocsOfRequest, selectPassesOfRequest, selectRenewalTerms, selectRequest, selectThread, timelineRows, useApp, type RequestView } from '@/state';
 import type { Doc, Pass } from '@/domain/types';
 import { ActionRunner } from './ActionRunner';
 import { RequestRing } from './RequestRing';
 import { RequestRow } from './RequestRow';
 import styles from './RequestScreen.module.css';
-import { hasDayClock, ratingFacts } from './logic';
+import { hasDayClock, ratingFacts, reopenedWhat } from './logic';
 import { strings } from './strings';
 import { nationalHolder, useHolderWords, useRequestView, withoutBrackets } from './useRequestFacts';
 
@@ -88,6 +88,8 @@ function RequestPage({ request, service, title }: { request: RequestState; servi
   const thread = useApp(selectThread(request.id));
   const deadline = useApp(selectDeadline(request.id));
   const terms = useApp(selectRenewalTerms(request.id));
+  // Only an application of the investor's own can be withdrawn; a request Manateq started cannot.
+  const canWithdraw = useApp(selectCanWithdraw(request.id));
   // The action being run stays mounted until its sheets close, even once the step it completes has moved on.
   const [running, setRunning] = useState<StepAction | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -146,7 +148,7 @@ function RequestPage({ request, service, title }: { request: RequestState; servi
                   <Card className={styles.action}>
                     <h3 className="type-heading">{pick(action.title)}</h3>
                     <p className={styles.text}>{terms && action.flow.includes('accept') ? t('renewIntro') : pick(action.detail)}</p>
-                    {ratings.askAgain && request.reopenedRating ? <p className={styles.text}>{t('rateAgain', { n: request.reopenedRating.stars })}</p> : null}
+                    {ratings.askAgain && request.reopenedRating ? <p className={styles.text}>{t(request.serviceId === 'D1' ? 'rateAgain' : 'rateAgainHandling', { n: lang.fmt.num(request.reopenedRating.stars) })}</p> : null}
                     <div className={styles.actionCta}>
                       <Button onClick={() => setRunning(action)}>{pick(action.cta)}</Button>
                     </div>
@@ -171,7 +173,7 @@ function RequestPage({ request, service, title }: { request: RequestState; servi
 
             {ratings.rating ? (
               <div className={styles.partRating}>
-                <RatingCard rating={ratings.rating} note={ratings.ratingNote} earlierStars={request.reopenedRating?.stars} />
+                <RatingCard rating={ratings.rating} note={ratings.ratingNote} earlierStars={request.reopenedRating?.stars} what={t(reopenedWhat(request.serviceId))} />
               </div>
             ) : null}
 
@@ -204,16 +206,18 @@ function RequestPage({ request, service, title }: { request: RequestState; servi
 
         <footer className={styles.demo} aria-label={t('demo')}>
           <p className={`type-foot ${styles.quiet}`}>{open ? t('demoNote') : t('demoNoteDone')}</p>
-          {open ? (
+          {open && (request.status === 'active' || canWithdraw) ? (
             <div className={styles.demoActions}>
               {request.status === 'active' ? (
                 <Button variant="quiet" size="sm" onClick={fastForward}>
                   {t('fastForward')}
                 </Button>
               ) : null}
-              <Button variant="quiet" tone="danger" size="sm" onClick={() => setConfirmCancel(true)}>
-                {t('cancel')}
-              </Button>
+              {canWithdraw ? (
+                <Button variant="quiet" tone="danger" size="sm" onClick={() => setConfirmCancel(true)}>
+                  {t('cancel')}
+                </Button>
+              ) : null}
             </div>
           ) : null}
         </footer>
@@ -366,7 +370,10 @@ function HolderTile({ request, view, now, deadline, docs, pass, headlineId, copy
 
   // A low rating reopened the request: say so above the rest while it is open again.
   const reopened = ratingFacts(request, view.focus && view.focus.holder.lane !== 'inv' ? view.focus.holder.lane : holder?.lane, view.pendingAction).reopened;
-  if (reopened) body = reopened === 'reopenedSupervisor' ? t(reopened) : body ? `${t(reopened)} ${body}` : t(reopened);
+  if (reopened) {
+    const line = t(reopened, { what: t(reopenedWhat(request.serviceId)) });
+    body = reopened === 'reopenedSupervisor' || !body ? line : `${line} ${body}`;
+  }
 
   return (
     <Tile
@@ -456,7 +463,7 @@ function ClockCard({ request, view, service }: { request: RequestState; view: Re
 }
 
 /** The rating the investor gave, and, when a rating reopened the request, which one did. */
-function RatingCard({ rating, note, earlierStars }: { rating: { stars: number; comment?: string }; note: 'ratingReopenedThis' | 'ratingReopenedEarlier' | undefined; earlierStars: number | undefined }) {
+function RatingCard({ rating, note, earlierStars, what }: { rating: { stars: number; comment?: string }; note: 'ratingReopenedThis' | 'ratingReopenedEarlier' | undefined; earlierStars: number | undefined; what: string }) {
   const t = useT(strings);
   const { fmt } = useLang();
   return (
@@ -471,7 +478,7 @@ function RatingCard({ rating, note, earlierStars }: { rating: { stars: number; c
           <span>{t('ratingStars', { n: fmt.num(rating.stars) })}</span>
         </p>
         {rating.comment ? <p className={`type-callout ${styles.standard}`}>{rating.comment}</p> : null}
-        {note ? <p className={`type-callout ${styles.quiet}`}>{note === 'ratingReopenedEarlier' ? t(note, { n: fmt.num(earlierStars ?? 0) }) : t(note)}</p> : null}
+        {note ? <p className={`type-callout ${styles.quiet}`}>{note === 'ratingReopenedEarlier' ? t(note, { n: fmt.num(earlierStars ?? 0), what }) : t(note, { what })}</p> : null}
       </Card>
     </Section>
   );

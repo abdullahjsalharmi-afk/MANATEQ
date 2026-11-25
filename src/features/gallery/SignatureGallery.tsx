@@ -477,6 +477,7 @@ export function SignatureGallery() {
           code="MQP-4821-KD"
           qr={<QR value="MQP-4821-KD" size={132} label={t('qrPass')} />}
         />
+        <PassCard kind="vehicle" holder={t('visitor')} idOrPlate="123456" zone={zoneName} plot="BA-117" validFrom={from} validTo={until} status="upcoming" code="MQP-4835-VH" qr={<QR value="MQP-4835-VH" size={132} label={t('qrPass')} />} />
         <PassCard kind="visitor" holder={t('visitor')} zone={zoneName} plot="BA-117" validFrom={from} validTo={until} status="expired" code="MQP-4790-VS" qr={<QR value="MQP-4790-VS" size={132} label={t('qrPass')} />} />
       </Section>
 

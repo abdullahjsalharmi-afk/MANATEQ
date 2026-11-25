@@ -133,12 +133,20 @@
   font-size: var(--t-callout);
 }
 
+/* The figure and the pay pill share a line; when they do not both fit (the largest text on the narrowest
+   phone) the pill wraps under the figure, at the inline end, instead of being squeezed. */
 .invoiceFoot {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: var(--s-4);
+  gap: var(--s-3) var(--s-4);
   margin-block-start: auto;
+}
+
+.invoiceFoot > :last-child {
+  flex: none;
+  margin-inline-start: auto;
 }
 
 .invoiceAmount {

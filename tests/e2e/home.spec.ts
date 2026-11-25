@@ -68,24 +68,23 @@ test('guest Home welcomes and leads to the eligibility check', async ({ page }) 
   expect(errors).toEqual([]);
 });
 
-test('the Build checklist says a withdrawn permit request was closed, and links to it (n=8)', async ({ page }) => {
+test('a request Manateq started cannot be cancelled, and the Build checklist tells running from finished (n=8)', async ({ page }) => {
   const errors = watchErrors(page);
+  // The building permit follows from the ministry, not from a request of the investor: there is nothing to withdraw.
   await openApp(page, { route: '/requests/r95', lang: 'en' });
-  await page.getByRole('button', { name: 'Cancel the request' }).first().click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Cancel the request' }).click();
-  await expect(page.getByRole('heading', { name: 'Request closed' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Move time forward (demo)' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Cancel the request' })).toHaveCount(0);
+  // The investor's own fault report can be withdrawn.
+  await page.evaluate(() => (window.location.hash = '#/requests/r94'));
+  await expect(page.getByRole('button', { name: 'Cancel the request' })).toBeVisible();
 
   await page.evaluate(() => (window.location.hash = '#/'));
   await page.getByRole('main').getByRole('button', { name: /Build/ }).first().click();
   const station = page.getByRole('dialog', { name: 'Build' });
-  const permit = station.getByRole('link', { name: /building permit/i });
-  await expect(permit).toContainText('The earlier request was closed');
-  await expect(permit).not.toContainText('In progress');
-  // The one really running stays in progress; finished requests are named, not asked for.
+  // What is running reads in progress; what is finished is named, not asked for.
+  await expect(station.getByRole('link', { name: /building permit/i })).toContainText('In progress');
   await expect(station.getByRole('link', { name: /power and water/i })).toContainText('In progress');
   await expect(station.getByRole('link', { name: /^Design review/ })).toContainText('Done');
-  await permit.click();
-  await expect(page).toHaveURL(/#\/requests\/r95/);
   expect(errors).toEqual([]);
 });
 

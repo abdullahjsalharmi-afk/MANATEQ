@@ -140,26 +140,31 @@ const CHOICES: Partial<Record<ServiceId, Record<number, Record<string, ChoiceEff
 };
 
 /**
- * Ratings that change the course of a request, as the step says. D1 step 11: "a low rating reopens the
- * request for the supervisor": one or two stars go on at step 10, "Supervisor re-dispatches", and the
- * workflow then runs as written until the investor is asked to rate again.
+ * Ratings that change the course of a request, as the step says: "a low rating reopens the request for the
+ * supervisor" (D1 step 11), "a low rating reopens the case for the BSC supervisor" (E1 step 9, E6 step 10).
+ * One or two stars send the request back to the step where that side takes it up again, and the workflow
+ * then runs as written until the investor is asked to rate again:
+ * D1 → step 10, "Supervisor re-dispatches"; E1 → step 5, where the Business Services Center handles the
+ * request; E6 → step 6, where the owner investigates.
  */
-const LOW_RATING: Partial<Record<ServiceId, { step: number; atMost: number; to: number }>> = {
-  D1: { step: 11, atMost: 2, to: 10 },
+const LOW_RATING: Partial<Record<ServiceId, { step: number; atMost: number; to: number; title: 'reopened' | 'reopenedRequest' | 'reopenedComplaint'; body: 'reopenedBody' | 'reopenedHandlingBody' }>> = {
+  D1: { step: 11, atMost: 2, to: 10, title: 'reopened', body: 'reopenedBody' },
+  E1: { step: 9, atMost: 2, to: 5, title: 'reopenedRequest', body: 'reopenedHandlingBody' },
+  E6: { step: 10, atMost: 2, to: 6, title: 'reopenedComplaint', body: 'reopenedHandlingBody' },
 };
 
 const starsOf = (rating: ActPayload['rating']): number | undefined => (rating === undefined ? undefined : Math.max(1, Math.min(5, Math.round(typeof rating === 'number' ? rating : rating.stars))));
 
-/** The step a low rating sends the request back to, or undefined when the rating does not reopen it. */
-function reopenedBy(serviceId: ServiceId, step: number, rating: ActPayload['rating']): number | undefined {
+/** The rule a low rating sets off at this step (where the request goes back to, and what it tells the investor), if any. */
+function reopenedBy(serviceId: ServiceId, step: number, rating: ActPayload['rating']) {
   const rule = LOW_RATING[serviceId];
   const stars = starsOf(rating);
-  return rule && rule.step === step && stars !== undefined && stars <= rule.atMost ? rule.to : undefined;
+  return rule && rule.step === step && stars !== undefined && stars <= rule.atMost ? rule : undefined;
 }
 
 /**
  * The steps an investor step may go on to besides its usual successor, because an option or a rating
- * says so (B2 step 3 → 9, D1 step 11 → 10). For checks that a request's walk is one the engine allows.
+ * says so (B2 step 3 → 9; D1 step 11 → 10, E1 step 9 → 5, E6 step 10 → 6). For checks that a request's walk is one the engine allows.
  */
 export function steeredMoves(serviceId: ServiceId, step: number): number[] {
   const moves = Object.values(CHOICES[serviceId]?.[step] ?? {}).flatMap((effect) => (effect.to !== undefined ? [effect.to] : []));
@@ -464,7 +469,7 @@ export function actIn(world: World, id: string, payload: ActPayload, now: number
   const stepId = request.current;
   const action = service.actions.find((candidate) => candidate.step === stepId);
   const steer = choiceEffect(service.id, stepId, payload.choice);
-  const reopenAt = reopenedBy(service.id, stepId, payload.rating);
+  const reopening = reopenedBy(service.id, stepId, payload.rating);
 
   // The investor answered what the request asked of them.
   let next = resolveRequestAsks(world, id, now);
@@ -476,16 +481,16 @@ export function actIn(world: World, id: string, payload: ActPayload, now: number
   if (!ready) return next;
   const gate = steer?.gate;
   let steered: RequestState = gate ? { ...ready, decisions: { ...(ready.decisions ?? {}), [gate.step]: gate.outcome } } : ready;
-  if (reopenAt !== undefined && ready.rating) steered = { ...steered, reopenedAt: now, reopenedRating: ready.rating };
-  const to = steer?.to ?? reopenAt;
+  if (reopening && ready.rating) steered = { ...steered, reopenedAt: now, reopenedRating: ready.rating };
+  const to = steer?.to ?? reopening?.to;
   const result = act(steered, service.workflow, now, env.timing(service), to !== undefined ? { to } : (steer?.route ?? 'yes'));
   next = putRequest(next, result.req);
-  if (reopenAt !== undefined) {
+  if (reopening) {
     next = notify(next, {
       at: now,
       kind: 'update',
-      title: text.reopened,
-      body: dots(fill(text.reopenedBody, { stars: starsOf(payload.rating) ?? 1 }), plotNumberOf(next, result.req)),
+      title: text[reopening.title],
+      body: dots(fill(text[reopening.body], { stars: starsOf(payload.rating) ?? 1 }), plotNumberOf(next, result.req)),
       route: `/requests/${id}`,
       subject: { requestId: id },
     });

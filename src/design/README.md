@@ -146,6 +146,9 @@ to one letter, so a layout that squeezes words splits them mid-word. Use these i
 - The document's scroll padding already clears the pinned bars (top: `--chrome-top`; end: tab bar plus the action
   bar's `--actionbar-h`), so `element.focus()` and `scrollIntoView()` bring a field into view above the action bar.
   Do not add your own offsets for that.
+- `PassCard` status: `active` · `upcoming` · `expired` · `revoked`. A pass that starts on a later day is `upcoming`
+  (the caller tells it from the dates): its badge says so and the line under the code says from when the code
+  opens the gate. Never draw such a pass as active, and do not repeat its state in a pill beside the card.
 - Timeline states: `done` · `current` · `upcoming` · `skipped` · `stopped` (the step that was open when the request
   was withdrawn: hollow neutral marker, muted words, "Stopped:" for screen readers, no time shown).
 - `fmt.relative` says tomorrow / yesterday only for days; then always a number: days up to 60, months up to 24,

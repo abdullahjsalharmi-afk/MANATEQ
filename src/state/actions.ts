@@ -6,6 +6,7 @@
  */
 import { peekServiceDetail } from '@/data/catalog';
 import type { Lang, ServiceDetail, ServiceId } from '@/data/types';
+import { withdrawable } from '@/domain/chains';
 import { timingFor } from '@/domain/simulation';
 import type { AppState, Draft, EligibilityResult, FormValue, Persona, TextSize, ThemeChoice, World } from '@/domain/types';
 import type { Timing } from '@/domain/workflow';
@@ -164,10 +165,16 @@ export function fastForwardRequest(requestId: string): void {
   changeWorld((world, state) => fastForwardIn(world, requestId, now, liveEnv(state.demo.speed)));
 }
 
-/** Withdraws a request that has not finished. */
+/**
+ * The investor withdraws a request that has not finished. Only an application of their own can be withdrawn
+ * (see `withdrawable`): for a request Manateq started this does nothing.
+ */
 export function cancelRequest(requestId: string): void {
   const now = Date.now();
-  changeWorld((world, state) => cancelIn(world, requestId, now, liveEnv(state.demo.speed)));
+  changeWorld((world, state) => {
+    const request = world.requests.find((candidate) => candidate.id === requestId);
+    return request && withdrawable(request.serviceId) ? cancelIn(world, requestId, now, liveEnv(state.demo.speed)) : world;
+  });
 }
 
 /**

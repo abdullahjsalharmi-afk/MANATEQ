@@ -49,7 +49,6 @@ export const strings = {
   doneHeadline: { ar: 'التصريح جاهز.', en: 'The pass is ready.' },
   doneTagline: { ar: 'يُعرض الرمز عند البوابة.', en: 'Show the code at the gate.' },
   doneTaglineUpcoming: { ar: 'يبدأ سريانه في {date}، ويُعرض الرمز عند البوابة من ذلك اليوم.', en: 'It starts on {date}. Show the code at the gate from that day.' },
-  upcoming: { ar: 'قادم · يبدأ في {date}', en: 'Upcoming · Starts on {date}' },
   noMessageSent: {
     ar: 'في هذه النسخة التجريبية لا تُرسل رسالة إلى {phone}. أرسِل التصريح بنفسك من الزر أدناه.',
     en: 'In this prototype no message is sent to {phone}. Send the pass yourself with the button below.',

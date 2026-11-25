@@ -99,6 +99,9 @@ test('a pass that starts on a later day says so on its confirmation (gate n=16)'
   await dates.nth(1).fill('2026-12-10');
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('button', { name: 'Issue the pass' }).click();
-  await expect(main.getByText('Upcoming · Starts on 1 Dec 2026')).toBeVisible();
+  const card = main.locator('article[data-status]');
+  await expect(card).toHaveAttribute('data-status', 'upcoming');
+  await expect(card.getByText('Upcoming', { exact: true })).toBeVisible();
+  await expect(card.getByText('Active', { exact: true })).toHaveCount(0);
   await expect(main.getByText('It starts on 1 Dec 2026. Show the code at the gate from that day.')).toBeVisible();
 });

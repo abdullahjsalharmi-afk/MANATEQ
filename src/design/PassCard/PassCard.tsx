@@ -9,14 +9,19 @@ import { Pill, type Tone } from '../Pill/Pill';
 import styles from './PassCard.module.css';
 import { strings } from './strings';
 
-export type PassStatus = Pass['status'];
+/**
+ * What the card says about the pass. `upcoming` is a pass that is valid but starts on a later day: the caller
+ * tells it from the dates (the stored status of such a pass is still `active`).
+ */
+export type PassStatus = Pass['status'] | 'upcoming';
 
 const KIND_ICON: Record<PassKind, LucideIcon> = { visitor: UserRound, worker: HardHat, vehicle: Truck };
 
-const STATUS: Record<PassStatus, { tone: Tone; icon: LucideIcon }> = {
-  active: { tone: 'ok', icon: CircleCheck },
-  expired: { tone: 'neutral', icon: Clock },
-  revoked: { tone: 'bad', icon: Ban },
+const STATUS: Record<PassStatus, { tone: Tone; icon: LucideIcon; hint: 'showAtGate' | 'showFrom' | 'notValid'; spent: boolean }> = {
+  active: { tone: 'ok', icon: CircleCheck, hint: 'showAtGate', spent: false },
+  upcoming: { tone: 'info', icon: Clock, hint: 'showFrom', spent: false },
+  expired: { tone: 'neutral', icon: Clock, hint: 'notValid', spent: true },
+  revoked: { tone: 'bad', icon: Ban, hint: 'notValid', spent: true },
 };
 
 export interface PassCardProps {
@@ -44,15 +49,15 @@ export interface PassCardProps {
 
 /**
  * A gate pass on a clean card: who, where, until when, and below a hairline the QR the gate scans with
- * its code in large type.
+ * its code in large type. A pass that starts later says so in its badge and under its code; one that is over
+ * is drawn muted.
  */
 export function PassCard({ kind, holder, idOrPlate, company, zone, plot, validFrom, validTo, status, code, qr, className }: PassCardProps) {
   const t = useT(strings);
   const titleId = useId();
   const state = STATUS[status];
-  const valid = status === 'active';
   return (
-    <article className={cx(styles.pass, !valid && styles.spent, className)} aria-labelledby={titleId} data-status={status}>
+    <article className={cx(styles.pass, state.spent && styles.spent, className)} aria-labelledby={titleId} data-status={status}>
       <div className={styles.main}>
         <div className={styles.mainInner}>
           <header className={styles.head}>
@@ -103,7 +108,7 @@ export function PassCard({ kind, holder, idOrPlate, company, zone, plot, validFr
         <div className={styles.stubInner}>
           {qr ? <div className={styles.qr}>{qr}</div> : null}
           {code ? <p className={cx(styles.code, styles.whole, 'ltr')}>{code}</p> : null}
-          <p className={styles.hint}>{t(valid ? 'showAtGate' : 'notValid')}</p>
+          <p className={styles.hint}>{state.hint === 'showFrom' ? keepWhole(t('showFrom', { from: validFrom })) : t(state.hint)}</p>
         </div>
       </div>
     </article>

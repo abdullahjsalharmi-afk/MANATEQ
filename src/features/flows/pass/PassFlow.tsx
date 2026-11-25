@@ -4,12 +4,12 @@
  * at once: it goes to the wallet, the D2 request records it, and the success state shows the pass with
  * its QR, ready to send.
  */
-import { Clock, MapPin, Share2 } from 'lucide-react';
+import { MapPin, Share2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { useQuery } from '@/app/routes';
 import type { FieldDef, ServiceDetail } from '@/data/types';
-import { Button, CardChoiceGroup, Chip, ChipRow, Container, Grid, Icon, List, Pill, Row, Screen, Section, toast } from '@/design/core';
+import { Button, CardChoiceGroup, Chip, ChipRow, Container, Grid, Icon, List, Row, Screen, Section, toast } from '@/design/core';
 import { DateField, EmptyState, isoDateToMs, msToIsoDate, StepHead, Stepper, TextField, QR, useStepLabel } from '@/design/forms';
 import { PassCard } from '@/design/signature';
 import type { PassKind } from '@/domain/types';
@@ -314,13 +314,6 @@ function PassIssued({ passId, phone, onAnother }: { passId: string; phone?: stri
       }
     >
       <ConfirmationTile headline={t('doneHeadline')} tagline={upcoming ? t('doneTaglineUpcoming', { date: upcoming }) : t('doneTagline')}>
-        {upcoming ? (
-          <p className={styles.upcoming}>
-            <Pill tone="info" icon={Clock}>
-              {t('upcoming', { date: upcoming })}
-            </Pill>
-          </p>
-        ) : null}
         <div className={styles.pass}>
           <PassCard
             kind={pass.kind}

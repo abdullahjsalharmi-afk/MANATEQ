@@ -184,9 +184,14 @@ export interface RatingFacts {
   askAgain: boolean;
 }
 
+/** What a low rating reopened, in the words of its service: a fault report (D1), a complaint (E6), otherwise a request. */
+export function reopenedWhat(serviceId: ServiceId): 'whatReport' | 'whatComplaint' | 'whatRequest' {
+  return serviceId === 'D1' ? 'whatReport' : serviceId === 'E6' ? 'whatComplaint' : 'whatRequest';
+}
+
 /**
- * What the request page says about ratings: a low rating (D1, 1 or 2 stars) reopens the report for the
- * supervisor. While it is open again the tile says so (and, while the supervisor holds it, names them);
+ * What the request page says about ratings: a low rating (1 or 2 stars on D1, E1 or E6) reopens the request
+ * for the supervisor. While it is open again the tile says so (and, while the supervisor holds it, names them);
  * the rating the investor gave is shown; when the workflow comes back to the rating step it asks again.
  */
 export function ratingFacts(

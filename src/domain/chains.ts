@@ -88,3 +88,24 @@ export const chainFrom = (id: ServiceId): ServiceId[] => catalogueChains.chainFr
 const ONCE_PER_PLOT = new Set<ServiceId>(['C4']);
 
 export const oncePerPlot = (id: ServiceId): boolean => ONCE_PER_PLOT.has(id);
+
+/**
+ * Whether the investor may withdraw a request of this service: only an application of their own, which
+ * they can make again. That is a service the investor starts, and the stages their application then runs
+ * through by itself (the review, the offer and the contract of a land application: each follows that one
+ * service only). A service Manateq starts (an invoice, a renewal, an inspection, a notice, the tracking of
+ * a ministry permit) and one that follows from several others (the deposit, the utilities connection) are
+ * not theirs to withdraw: nothing in the app could start them again.
+ */
+export function withdrawable(id: ServiceId, list: readonly Trigger[] = services): boolean {
+  let at: ServiceId | undefined = id;
+  for (let hops = 0; at !== undefined && hops < 12; hops++) {
+    const service = list.find((candidate) => candidate.id === at);
+    if (!service) return false;
+    const { kind, after } = service.triggeredBy;
+    if (kind === 'investor') return true;
+    if (kind !== 'after' || after?.length !== 1) return false;
+    at = after[0];
+  }
+  return false;
+}

@@ -77,8 +77,13 @@ test('a pass that starts later reads as upcoming on its page, with its start dat
   await page.getByRole('button', { name: /Issue/ }).click();
   await page.getByRole('link', { name: /Documents and passes/ }).click();
   await expect(page).toHaveURL(/#\/account\/wallet\//);
-  await expect(page.getByRole('main').getByText(/Upcoming/).first()).toBeVisible();
+  // The card's own badge says it, as the passes list does: never "Active" before its first day.
+  const card = page.getByRole('main').locator('article[data-status]');
+  await expect(card).toHaveAttribute('data-status', 'upcoming');
+  await expect(card.getByText('Upcoming', { exact: true })).toBeVisible();
+  await expect(card.getByText('Active', { exact: true })).toHaveCount(0);
   const shown = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(from);
-  await expect(page.getByRole('main').getByText(`Starts on ${shown}`)).toBeVisible();
+  // The date is kept whole with no-break spaces.
+  await expect(card.getByText(new RegExp(`Show this code at the gate from ${shown.replace(/ /g, '\\s')}`))).toBeVisible();
   expect(errors).toEqual([]);
 });
