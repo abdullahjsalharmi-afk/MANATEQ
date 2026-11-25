@@ -79,9 +79,6 @@ export function ZonesScreen() {
               { value: 'list', label: t('viewList') },
             ]}
           />
-          <Button variant="quiet" to="/solutions" className={styles.pricesLink}>
-            {t('pricesLink')}
-          </Button>
         </div>
 
         <ChipRow label={t('filter')} className={styles.chips}>
@@ -91,6 +88,10 @@ export function ZonesScreen() {
             </Chip>
           ))}
         </ChipRow>
+
+        <Button variant="quiet" to="/solutions" className={styles.pricesLink}>
+          {t('pricesLink')}
+        </Button>
       </Container>
 
       {view === 'map' ? (

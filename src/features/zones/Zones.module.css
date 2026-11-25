@@ -18,11 +18,10 @@
   white-space: nowrap;
 }
 
-/* The view switch takes the full width of a phone, as on the other list screens (420 px at most, start-aligned,
-   on wide screens); the link to the prices sits under it. */
+/* The view switch takes the full width of a phone, as on the other list screens (420 px at most, start-aligned);
+   the filters follow it, then the link to the prices. */
 .controls {
   display: grid;
-  gap: var(--s-3);
   max-inline-size: 420px;
 }
 
@@ -32,6 +31,33 @@
 
 .chips {
   margin-block-start: calc(var(--s-1) * -1);
+}
+
+/* From 1280 px (where the six filters fit beside the switch in both languages) the three share one line under
+   the figures: the switch at the start, the filters beside it, the link at the end. The filters wrap rather
+   than scroll there, so a larger text size never hides one behind the link. */
+@media (min-width: 1280px) {
+  .top {
+    grid-template-columns: 320px minmax(0, 1fr) auto;
+    column-gap: var(--s-6);
+    align-items: center;
+  }
+
+  .top > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .top .chips {
+    flex-wrap: wrap;
+    overflow: visible;
+    margin-block-start: 0;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  .pricesLink {
+    justify-self: end;
+  }
 }
 
 /* The map rests on a white tile; the card for the chosen zone sits under it on phones (and is scrolled into view
