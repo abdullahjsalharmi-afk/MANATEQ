@@ -62,9 +62,17 @@ export function HomeScreen() {
 
   const actions = (
     <>
-      {/* From 834 px the global bar carries search; the bar here keeps only the bell. */}
+      {/* From 834 px the global bar carries search and the bell; this bar stays bare, like every other tab root. */}
       <IconButton icon={Search} label={t('search')} to="/search" className={styles.phoneOnly} />
-      {guest ? null : <IconButton icon={Bell} label={unread > 0 ? t('notificationsUnread', { n: fmt.num(unread) }) : t('notifications')} badge={unread > 0 ? unread : undefined} to="/notifications" />}
+      {guest ? null : (
+        <IconButton
+          icon={Bell}
+          label={unread > 0 ? t('notificationsUnread', { n: fmt.num(unread) }) : t('notifications')}
+          badge={unread > 0 ? unread : undefined}
+          to="/notifications"
+          className={styles.phoneOnly}
+        />
+      )}
     </>
   );
 

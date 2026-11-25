@@ -140,6 +140,7 @@
 }
 
 .iconLink {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -149,6 +150,13 @@
   transition:
     color var(--d-1) var(--ease),
     transform var(--d-1) var(--ease);
+}
+
+/* The unread count rides the upper inline-end corner of the bell. */
+.count {
+  position: absolute;
+  inset-block-start: 5px;
+  inset-inline-end: 3px;
 }
 
 /* The compact utility rectangle: a step lighter than the bar, 8 px corners. */

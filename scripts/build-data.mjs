@@ -379,7 +379,7 @@ if (errors.length) {
 }
 const sizes = {};
 sizes['catalog.json'] = write('catalog.json', {
-  edition: bi('دليل الخدمات ودليل أتمتة الخدمات والربط، الإصدار 4.1، أكتوبر 2026', 'Service Guide and Services Automation & Integration Manual, version 4.1, October 2026'),
+  edition: bi('دليل الخدمات ودليل أتمتة الخدمات والربط (الإصدار 4.1) وكتاب «سير عمل الخدمات» (الإصدار 1.1)، أكتوبر 2026', 'Service Guide and Services Automation & Integration Manual (version 4.1) and the Service Workflows book (version 1.1), October 2026'),
   generated: guide.generated ?? '',
   domains,
   services: details.map(({ description, benefits, who, steps, inputs, outputs, note, example, channel, kpi, trigger, output, flow, patterns: _p, integrations: _i, systems: _s, provides, fetched, receives, fields, actions, next, appNote, workflow, ...summary }) => summary),

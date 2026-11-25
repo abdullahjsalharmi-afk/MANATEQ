@@ -189,6 +189,7 @@ const strings = {
   shellHead: { ar: 'هيكل التطبيق', en: 'The shell' },
   shellHint: { ar: 'على الهاتف: شريط زجاجي في الأعلى وشريط تبويب في الأسفل. من 834 بكسل: الشريط العام الأسود والتذييل.', en: 'Phones: a frosted bar at the top and the tab bar at the bottom. From 834 px: the black global bar and the footer.' },
   globalBar: { ar: 'الشريط العام (من 834 بكسل)', en: 'Global bar (from 834 px)' },
+  bell: { ar: 'الإشعارات، 3 غير مقروءة', en: 'Notifications, 3 unread' },
   frostedBar: { ar: 'الشريط الزجاجي', en: 'Frosted bar' },
   tabBar: { ar: 'شريط التبويب (الهاتف)', en: 'Tab bar (phones)' },
   actionBar: { ar: 'شريط الإجراء الثابت', en: 'Sticky action bar' },
@@ -734,7 +735,7 @@ export function CoreGallery() {
         <Section title={t('shellHead')} hint={t('shellHint')}>
           <Specimen label={t('globalBar')}>
             <div style={frame}>
-              <GlobalNav inline label={t('navLabel')} items={tabs} activeKey="services" brand={t('appName')} homeTo="/gallery" search={{ to: '/gallery', label: t('search') }} language={{ name: t('utility'), lang: 'en', onSwitch: () => undefined }} />
+              <GlobalNav inline label={t('navLabel')} items={tabs} activeKey="services" brand={t('appName')} homeTo="/gallery" search={{ to: '/gallery', label: t('search') }} notifications={{ to: '/gallery', label: t('bell'), count: 3 }} language={{ name: t('utility'), lang: 'en', onSwitch: () => undefined }} />
             </div>
           </Specimen>
           <Specimen label={t('frostedBar')}>

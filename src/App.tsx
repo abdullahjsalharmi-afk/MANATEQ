@@ -9,6 +9,7 @@ import { useAppearance } from '@/app/theme';
 import { catalog } from '@/data/catalog';
 import { Button, Footer, GlobalNav, Render, Screen, TabBar, Tile, ToastHost, type FooterColumn, type TabItem } from '@/design/core';
 import { enterAs, setLang, tick } from '@/state/actions';
+import { selectUnreadCount } from '@/state/selectors';
 import { useApp } from '@/state/store';
 import styles from './App.module.css';
 
@@ -53,11 +54,12 @@ export function App() {
  */
 function Shell() {
   const t = useT(shell);
-  const { lang, pick } = useLang();
+  const { lang, pick, fmt } = useLang();
   const location = useLocation();
   const onboarded = useApp((s) => s.settings.onboarded);
   const persona = useApp((s) => s.world.persona);
   const waiting = useApp((s) => s.world.requests.filter((r) => r.status === 'needs_you').length);
+  const unread = useApp(selectUnreadCount);
   const match = useMemo(() => resolveRoute(location.path), [location.path]);
 
   // A first visit meets the welcome. The address the visitor came for travels with it as ?next=, so a shared
@@ -146,6 +148,11 @@ function Shell() {
           activeKey={activeTab}
           brand={t('appName')}
           search={{ to: '/search', label: t('search') }}
+          notifications={
+            persona === 'guest'
+              ? undefined
+              : { to: '/notifications', label: unread > 0 ? t('notificationsUnread', { n: fmt.num(unread) }) : t('notifications'), count: unread, current: location.path === '/notifications' }
+          }
           language={{ name: t('otherLanguage'), lang: lang === 'ar' ? 'en' : 'ar', onSwitch: () => setLang(lang === 'ar' ? 'en' : 'ar') }}
         />
       ) : null}

@@ -157,7 +157,7 @@ export const aboutStrings = {
 
   sources: { ar: 'مصدر المحتوى', en: 'Where the content comes from' },
   sourcesText: {
-    ar: 'الخدمات ومعاييرها من دليل الخدمات ودليل أتمتة الخدمات والربط (الإصدار 4.1)، ومسارات العمل من كتاب مسارات عمل الخدمات (الإصدار 1.1): {workflows} مسار عمل و{steps} خطوة، أكتوبر 2026.',
+    ar: 'الخدمات ومعاييرها من دليل الخدمات ودليل أتمتة الخدمات والربط (الإصدار 4.1)، ومسارات العمل من كتاب «سير عمل الخدمات» (الإصدار 1.1): {workflows} مسار عمل و{steps} خطوة، أكتوبر 2026.',
     en: 'The services and their standards come from the Service Guide and the Services Automation & Integration Manual (version 4.1), and the workflows from the Service Workflows book (version 1.1): {workflows} workflows and {steps} steps, October 2026.',
   },
   sourcesCaveat: {

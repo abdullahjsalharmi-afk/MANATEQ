@@ -12,7 +12,7 @@
   margin-block-start: var(--s-8);
 }
 
-/* From 834 px the global bar carries search. */
+/* From 834 px the global bar carries search and the bell. */
 @media (min-width: 834px) {
   .phoneOnly {
     display: none;

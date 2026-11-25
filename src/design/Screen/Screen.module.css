@@ -168,8 +168,20 @@
   }
 }
 
-/* On wide tabbed screens the global bar carries the capsule. */
+/* On wide tabbed screens the global bar carries the capsule, search and the bell, so the bar of a tab root is
+   empty while its large title is in view. Bare, it is clear glass: it takes its material only once it carries
+   the page name or content scrolls underneath. */
 @media (min-width: 834px) {
+  :global(html[data-chrome='tabs']) .bar:not(.barInline) {
+    transition: background-color var(--d-2) var(--ease);
+  }
+
+  :global(html[data-chrome='tabs']) .bar.barBare:not(.barInline) {
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
   :global(html[data-chrome='tabs']) .bar:not(.barInline) .proto {
     display: none;
   }

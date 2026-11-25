@@ -7,6 +7,8 @@ export const shell = {
   /** The other language, written in that language: what the switch in the global bar offers. */
   otherLanguage: { ar: 'English', en: 'العربية' },
   search: { ar: 'بحث', en: 'Search' },
+  notifications: { ar: 'الإشعارات', en: 'Notifications' },
+  notificationsUnread: { ar: 'الإشعارات، {n} غير مقروءة', en: 'Notifications, {n} unread' },
   tabHome: { ar: 'الرئيسية', en: 'Home' },
   tabServices: { ar: 'الخدمات', en: 'Services' },
   tabRequests: { ar: 'طلباتي', en: 'Requests' },

@@ -294,8 +294,21 @@ describe('the shell and the mark', () => {
     expect(markStroke(14)).toBeGreaterThan(markStroke(64));
   });
 
-  it('renders the global bar: dark tone, the current link, the waiting count, the language switch', () => {
-    const out = markup(el(GlobalNav, { label: 'Main navigation', items, activeKey: 'requests', brand: 'Manateq One', search: { to: '/search', label: 'Search' }, language: { name: 'العربية', lang: 'ar', onSwitch: () => undefined } }));
+  it('renders the global bar: dark tone, the current link, the waiting count, the bell, the language switch', () => {
+    const out = markup(
+      el(GlobalNav, {
+        label: 'Main navigation',
+        items,
+        activeKey: 'requests',
+        brand: 'Manateq One',
+        search: { to: '/search', label: 'Search' },
+        notifications: { to: '/notifications', label: 'Notifications, 12 unread', count: 12 },
+        language: { name: 'العربية', lang: 'ar', onSwitch: () => undefined },
+      }),
+    );
+    // The bell names its unread count for assistive technology and caps the visible one.
+    expect(out).toMatch(/<a[^>]*href="#\/notifications"[^>]*aria-label="Notifications, 12 unread"|<a[^>]*aria-label="Notifications, 12 unread"[^>]*href="#\/notifications"/);
+    expect(out).toContain('>9+<');
     expect(out).toMatch(/^<nav[^>]*aria-label="Main navigation"[^>]*data-tone="dark"/);
     expect(out).toContain('Manateq One');
     expect(out).toContain('Prototype');
@@ -305,6 +318,16 @@ describe('the shell and the mark', () => {
     expect(out).toContain('aria-label="Search"');
     expect(out).toMatch(/<button[^>]*lang="ar"[^>]*>العربية<\/button>/);
     expect(out).toContain('Skip to content');
+  });
+
+  it('leaves the bell out of the global bar for a guest, and marks it current on its own page', () => {
+    const base = { label: 'Main navigation', items, activeKey: null, brand: 'Manateq One' };
+    expect(markup(el(GlobalNav, base))).not.toContain('#/notifications');
+    const here = markup(el(GlobalNav, { ...base, notifications: { to: '/notifications', label: 'Notifications', count: 0, current: true } }));
+    expect(here).toMatch(/aria-label="Notifications"/);
+    expect(count(here, 'aria-current="page"')).toBe(1);
+    // Nothing unread: no count on the bell.
+    expect(here).not.toMatch(/aria-label="Notifications"[^>]*>(?:(?!<\/a>).)*<span[^>]*aria-hidden="true">\d/s);
   });
 
   it('renders the tab bar with the same items', () => {

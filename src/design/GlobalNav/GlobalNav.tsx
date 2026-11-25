@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react';
+import { Bell, Search } from 'lucide-react';
 import { useT } from '@/app/i18n';
 import { Link } from '@/app/router';
 import { cx } from '../cx';
@@ -21,6 +21,11 @@ export interface GlobalNavProps {
   homeTo?: string;
   /** The search link at the inline end. */
   search?: { to: string; label: string };
+  /**
+   * The bell at the inline end, for signed-in visitors: where notifications open, its accessible name (say
+   * the unread count in it when there is one), the count on the bell and whether that page is the current one.
+   */
+  notifications?: { to: string; label: string; count?: number; current?: boolean };
   /** The language switch at the inline end: the other language, written in that language. */
   language?: { name: string; lang: string; onSwitch: () => void };
   /** Draw the bar in the flow of the page instead of pinning it (documentation only). */
@@ -29,10 +34,10 @@ export interface GlobalNavProps {
 
 /**
  * The global bar of wide screens (from 834 px): near-black, 44 px, pinned to the top. The mark, the product
- * name and the prototype capsule at the inline start; the five destinations as quiet 12 px links; search
- * and the language switch at the inline end. Below 834 px it does not exist: phones use the tab bar.
+ * name and the prototype capsule at the inline start; the five destinations as quiet 12 px links; the bell,
+ * search and the language switch at the inline end. Below 834 px it does not exist: phones use the tab bar.
  */
-export function GlobalNav({ label, items, activeKey, brand, homeTo = '/', search, language, inline = false }: GlobalNavProps) {
+export function GlobalNav({ label, items, activeKey, brand, homeTo = '/', search, notifications, language, inline = false }: GlobalNavProps) {
   const t = useT(strings);
   const d = useT(designStrings);
   const skip = () => document.querySelector<HTMLElement>('main')?.focus();
@@ -74,6 +79,22 @@ export function GlobalNav({ label, items, activeKey, brand, homeTo = '/', search
         </ul>
 
         <div className={styles.end}>
+          {notifications ? (
+            <Link
+              to={notifications.to}
+              className={cx(styles.iconLink, notifications.current && styles.active)}
+              aria-label={notifications.label}
+              title={notifications.label}
+              aria-current={notifications.current ? 'page' : undefined}
+            >
+              <Icon icon={Bell} size={16} strokeWidth={2} />
+              {notifications.count ? (
+                <span className={cx(styles.badge, styles.count)} aria-hidden="true">
+                  {notifications.count > 9 ? '9+' : notifications.count}
+                </span>
+              ) : null}
+            </Link>
+          ) : null}
           {search ? (
             <Link to={search.to} className={styles.iconLink} aria-label={search.label} title={search.label}>
               <Icon icon={Search} size={16} strokeWidth={2} />

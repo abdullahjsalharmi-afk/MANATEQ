@@ -215,7 +215,7 @@ export interface ScreenBarProps {
 export function ScreenBar({ title, showTitle = true, nav = 'none', navLabel, onNav, actions, header, line = false, width = 'content', inline = false, ref }: ScreenBarProps) {
   const t = useT(designStrings);
   return (
-    <header ref={ref} className={cx(styles.bar, 'mq-frost', line && !header && styles.barLine, inline && styles.barInline)}>
+    <header ref={ref} className={cx(styles.bar, 'mq-frost', line && !header && styles.barLine, !line && styles.barBare, inline && styles.barInline)}>
       <div className={cx(styles.column, WIDTH[width], styles.barInner)}>
         <div className={styles.barStart}>
           {nav === 'back' ? <IconButton icon={ChevronLeft} flip label={navLabel ?? t('back')} onClick={onNav} /> : null}
