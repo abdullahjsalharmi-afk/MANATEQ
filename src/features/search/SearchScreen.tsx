@@ -15,7 +15,7 @@ import { ServiceRow } from '@/features/services';
 import { matchesReference, readRecent, serviceSearch, startTarget } from '@/features/services/catalogue';
 import { DocRow, PassRow } from '@/features/wallet';
 import { ZoneRow } from '@/features/zones';
-import { selectDocs, selectInvoices, selectPasses, selectPersona, selectPlots, useApp } from '@/state';
+import { selectDocs, selectDocsOfPlot, selectInvoices, selectLeaseOfPlot, selectPasses, selectPersona, selectPlots, useApp } from '@/state';
 import { makeZoneNamer, namedPlot } from './rank';
 import { keywords, resultsCount, strings } from './strings';
 import styles from './SearchScreen.module.css';
@@ -112,9 +112,21 @@ export function SearchScreen() {
     // The plot the query names leads, also when it was typed without its hyphen.
     return plotNamed ? [plotNamed, ...found.filter((plot) => plot !== plotNamed)].slice(0, OWN_LIMIT) : found;
   }, [own, plots, plotsIdx, trimmed, plotNamed]);
-  const foundInvoices = useMemo(() => (own ? inOrder(invoices, invoicesIdx.search(trimmed, invoices.length)) : []), [own, invoices, invoicesIdx, trimmed]);
-  const foundDocs = useMemo(() => (own ? inOrder(docs, docsIdx.search(trimmed, docs.length)) : []), [own, docs, docsIdx, trimmed]);
-  const foundPasses = useMemo(() => (own ? inOrder(passes, passesIdx.search(trimmed, passes.length)) : []), [own, passes, passesIdx, trimmed]);
+  // The records of a named plot are found by what they belong to, however the number was typed ("BA121" matches
+  // no invoice title as text): the invoices of its lease, the documents filed for it, the passes issued for it.
+  const plotLease = useApp(useMemo(() => selectLeaseOfPlot(plotNamed?.id), [plotNamed?.id]));
+  const plotDocs = useApp(useMemo(() => selectDocsOfPlot(plotNamed?.id), [plotNamed?.id]));
+  const foundInvoices = useMemo(() => {
+    if (!own) return [];
+    const ofPlot = plotLease ? invoices.filter((invoice) => invoice.leaseId === plotLease.id) : [];
+    return inOrder(invoices, [...ofPlot, ...invoicesIdx.search(trimmed, invoices.length)]);
+  }, [own, invoices, invoicesIdx, trimmed, plotLease]);
+  const foundDocs = useMemo(() => (own ? inOrder(docs, [...plotDocs, ...docsIdx.search(trimmed, docs.length)]) : []), [own, docs, docsIdx, trimmed, plotDocs]);
+  const foundPasses = useMemo(() => {
+    if (!own) return [];
+    const ofPlot = plotNamed ? passes.filter((pass) => pass.plotId === plotNamed.id) : [];
+    return inOrder(passes, [...ofPlot, ...passesIdx.search(trimmed, passes.length)]);
+  }, [own, passes, passesIdx, trimmed, plotNamed]);
 
   const shownServices = foundServices.slice(0, SERVICE_LIMIT);
   const total = foundInvoices.length + foundPlots.length + foundRequests.length + foundDocs.length + foundPasses.length + shownServices.length + foundZones.length;

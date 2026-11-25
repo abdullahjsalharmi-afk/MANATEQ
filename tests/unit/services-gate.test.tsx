@@ -98,6 +98,31 @@ describe('search: a query that names one of the investor’s plots (second look)
   });
 });
 
+describe('search: an English word matches from its start, not inside another word (last look)', () => {
+  const search = makeServiceSearch();
+
+  it('"rent" finds the rent services and not "current" or "transparent"', () => {
+    const found = search.search('rent');
+    expect(found.map((service) => service.id)).toContain('B1');
+    for (const service of found) {
+      const text = `${service.label.en} ${service.name.en} ${service.summary.en} ${service.promise?.en ?? ''}`.toLowerCase();
+      expect(/\brent/.test(text), `${service.id}: ${text.slice(0, 80)}`).toBe(true);
+    }
+  });
+
+  it('still matches the start of a word, a whole word and Arabic inside a word', () => {
+    expect(search.search('perm').length).toBeGreaterThan(0);
+    expect(search.search('permit').length).toBeGreaterThan(0);
+    // «إيجار» with the article and an attached preposition.
+    const index = buildIndex([{ item: 'x', fields: ['سداد فواتير بالإيجار السنوي'] }]);
+    expect(index.search('ايجار')).toEqual(['x']);
+    // A number inside a reference.
+    const refs = buildIndex([{ item: 'inv', fields: ['INV-2026-0051'] }]);
+    expect(refs.search('0051')).toEqual(['inv']);
+    expect(refs.search('005')).toEqual(['inv']);
+  });
+});
+
 describe('plot services without a plot (gate n=21)', () => {
   const prospect: PlotGateInput = { persona: 'prospect', candidates: 0, hasPlots: false, active: [], hasCheck: true };
 

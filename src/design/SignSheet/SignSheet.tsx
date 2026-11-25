@@ -69,6 +69,14 @@ export function SignSheet({ open, onClose, title, documentName, lines, signerNam
     if (phase === 'success') document.getElementById(doneId)?.focus();
   }, [phase, doneId]);
 
+  // The line that says what is missing sits under its field, which may end below the fold of the sheet:
+  // once it has rendered, bring it into view with the field (inside the sheet's body; the sheet stays put).
+  useEffect(() => {
+    if (!checked || phase !== 'review') return;
+    const missing = !hasSignature ? padId : !consent ? consentId : null;
+    if (missing) document.getElementById(`${missing}-error`)?.scrollIntoView({ block: 'nearest' });
+  }, [checked, hasSignature, consent, phase, padId, consentId]);
+
   const sign = () => {
     if (!hasSignature || !consent) {
       // Say what is missing and take the person to it.

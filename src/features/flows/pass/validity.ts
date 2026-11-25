@@ -65,11 +65,16 @@ export function isPhone(text: string): boolean {
   return digits >= 8 && digits <= 15;
 }
 
-/** The details a pass type cannot do without that are missing. */
+/** A personal ID number as typed: the eleven digits of a QID, with optional spaces. */
+export function isQid(text: string): boolean {
+  return /^\d{11}$/.test(text.replace(/\s/g, ''));
+}
+
+/** The details a pass type cannot do without that are missing, or not in the form they must have. */
 export function missingDetails(kind: PassKind, details: PassDetails): DetailError[] {
   const missing: DetailError[] = [];
   if (!details.name.trim()) missing.push('name');
-  if (kind === 'worker' && !details.qid.trim()) missing.push('qid');
+  if (kind === 'worker' && !isQid(details.qid)) missing.push('qid');
   if (kind === 'vehicle' && !details.plate.trim()) missing.push('plate');
   if (kind === 'visitor' && !isPhone(details.phone)) missing.push('phone');
   return missing;
@@ -77,6 +82,6 @@ export function missingDetails(kind: PassKind, details: PassDetails): DetailErro
 
 /** The number on the pass: the ID for a worker, the plate for a vehicle, nothing for a visitor. */
 export function idOrPlateOf(kind: PassKind, details: PassDetails): string | undefined {
-  const value = kind === 'worker' ? details.qid.trim() : kind === 'vehicle' ? details.plate.trim().toUpperCase() : '';
+  const value = kind === 'worker' ? details.qid.replace(/\s/g, '') : kind === 'vehicle' ? details.plate.trim().toUpperCase() : '';
   return value || undefined;
 }

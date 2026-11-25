@@ -102,6 +102,10 @@ test('from the application to a handed-over plot, and the handover confirmation 
   await advanceUntil(page, main.getByRole('heading', { name: 'Request complete' }));
   await page.evaluate(() => (window.location.hash = '#/account/plots'));
   await expect(main.getByText('Handed over').first()).toBeVisible();
+  // Home is now the tenant's: the journey of the new plot, not the introduction for newcomers.
+  await page.evaluate(() => (window.location.hash = '#/'));
+  await expect(main.getByRole('heading', { name: 'Your journey' })).toBeVisible();
+  await expect(main.getByText('How the journey goes')).toHaveCount(0);
   // Opened again, the service now says that no plot needs it: the gate is judged when a flow opens.
   await page.evaluate(() => (window.location.hash = '#/start/A8'));
   await expect(main.getByText('None of your plots needs this service now')).toBeVisible();

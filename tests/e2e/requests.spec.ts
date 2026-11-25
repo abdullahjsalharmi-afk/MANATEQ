@@ -56,6 +56,39 @@ test('the investor accepts, signs and pays the renewal, and the request moves on
   expect(errors).toEqual([]);
 });
 
+test('the signing sheet stays in place at the largest text: its title and close button never leave the screen', async ({ page }) => {
+  const errors = watchErrors(page);
+  for (const [lang, agree, accept, sign] of [
+    ['en', 'I agree', 'Accept and renew', 'Sign'],
+    ['ar', 'أوافق', 'اقبل وجدّد', 'وقّع'],
+  ] as const) {
+    await openApp(page, { route: '/requests/r85', lang, text: 3, speed: 1 });
+    await page.getByRole('main').getByRole('button', { name: accept }).click();
+    const sheet = page.getByRole('dialog');
+    await sheet.getByRole('button', { name: agree, exact: true }).click();
+    // Refuse to sign: focus goes to the signature, and the line that says what is missing is brought into view.
+    await sheet.getByRole('button', { name: sign, exact: true }).click();
+    await page.waitForTimeout(400);
+    const box = await page.evaluate(() => {
+      const dialog = document.querySelector('dialog[open]') as HTMLElement;
+      const panel = (dialog.firstElementChild as HTMLElement).getBoundingClientRect();
+      const close = dialog.querySelector('button[aria-label]')?.getBoundingClientRect();
+      const error = dialog.querySelector('[id$="-error"]')?.getBoundingClientRect();
+      const footer = dialog.querySelector('[class*="footer"]')?.getBoundingClientRect();
+      return { scrollTop: dialog.scrollTop, scrollHeight: dialog.scrollHeight, clientHeight: dialog.clientHeight, top: panel.top, bottom: panel.bottom, closeTop: close?.top ?? -1, errorBottom: error?.bottom ?? -1, footerTop: footer?.top ?? 0, height: window.innerHeight };
+    });
+    expect([lang, box.scrollTop]).toEqual([lang, 0]);
+    expect(box.scrollHeight).toBe(box.clientHeight);
+    expect(box.top).toBeGreaterThanOrEqual(0);
+    expect(box.bottom).toBeLessThanOrEqual(box.height + 1);
+    expect(box.closeTop).toBeGreaterThanOrEqual(0);
+    // The message under the signature is visible above the Sign button.
+    expect(box.errorBottom).toBeGreaterThan(0);
+    expect(box.errorBottom).toBeLessThanOrEqual(box.footerTop + 1);
+  }
+  expect(errors).toEqual([]);
+});
+
 test('declining the offer records nothing and keeps the request waiting', async ({ page }) => {
   await openApp(page, { route: '/requests', lang: 'en', speed: 1 });
   await page.getByRole('link', { name: /Your lease renewal offer/ }).first().click();
@@ -120,6 +153,8 @@ test('a low rating reopens the fault report, the page says so and asks again (n=
   }
   await rateNow.click();
   const sheet = page.getByRole('dialog');
+  // The sheet rises into place first; the dialog itself never scrolls to meet a control.
+  await expect(sheet.getByRole('radio').first()).toBeInViewport();
   await sheet.getByRole('radio').first().check({ force: true });
   await sheet.locator('textarea').fill('Still dark');
   await sheet.getByRole('button', { name: 'Submit' }).click();

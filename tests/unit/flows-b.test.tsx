@@ -7,7 +7,7 @@ import { alertedParties, incidentIcon } from '@/features/flows/incident/alerted'
 import { initialPlotId } from '@/features/flows/maintenance/parts/plots';
 import { categoryIcon, stageStates, trackStage, type TrackStage } from '@/features/flows/maintenance/track';
 import { passKinds } from '@/features/flows/pass/kinds';
-import { customRange, endOfLocalDay, idOrPlateOf, missingDetails, quickRange, startOfLocalDay } from '@/features/flows/pass/validity';
+import { isQid, customRange, endOfLocalDay, idOrPlateOf, missingDetails, quickRange, startOfLocalDay } from '@/features/flows/pass/validity';
 import { emptyWorld } from '@/state/seed';
 import { issuePassIn, startIn, tickWorld } from '@/state/sim';
 import type { Env } from '@/state/types';
@@ -117,6 +117,15 @@ describe('D2 pass', () => {
     expect(missingDetails('visitor', { ...empty, name: 'Sara', phone: '+974 5512 3456' })).toEqual([]);
     expect(idOrPlateOf('vehicle', { ...empty, plate: ' 12345 q ' })).toBe('12345 Q');
     expect(idOrPlateOf('visitor', { ...empty, qid: '1' })).toBeUndefined();
+  });
+
+  it('takes a worker’s personal ID number only as eleven digits (last look)', () => {
+    const worker = { name: 'Ali', qid: '', plate: '', company: '', phone: '' };
+    for (const qid of ['abc', 'سارة', '123', '2876341234', '287634123456', '2876341234a']) expect([qid, missingDetails('worker', { ...worker, qid })]).toEqual([qid, ['qid']]);
+    for (const qid of ['28763412345', ' 287 6341 2345 ']) expect([qid, missingDetails('worker', { ...worker, qid })]).toEqual([qid, []]);
+    expect(isQid('28763412345')).toBe(true);
+    // What is printed on the pass is the number without its spaces.
+    expect(idOrPlateOf('worker', { ...worker, qid: ' 287 6341 2345 ' })).toBe('28763412345');
   });
 
   it('issues the pass once: the D2 request finds it and adds no second one', () => {

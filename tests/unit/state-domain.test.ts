@@ -239,10 +239,43 @@ describe('journey', () => {
     expect(startable('operating')).toEqual([]);
   });
 
-  it('marks everything behind an operating plot as done', () => {
+  it('marks everything behind an operating plot as done, and never calls a repeating service done', () => {
     const journey = journeyOf(withPlot('operating'), 'p1');
     expect(journey.stations.map((s) => s.state)).toEqual(['done', 'done', 'done', 'current']);
-    for (const station of journey.stations) for (const item of station.items) expect(item.state, item.serviceId).toBe('done');
+    for (const station of journey.stations.slice(0, 3)) for (const item of station.items) expect(item.state, item.serviceId).toBe('done');
+    // The last station repeats for as long as the plot is held: with no request behind them its services say
+    // what is true of them now. None is "done", none is "next".
+    const operate = journey.stations[3]?.items ?? [];
+    expect(Object.fromEntries(operate.map((item) => [item.serviceId, item.standing]))).toEqual({ B1: 'automatic', D2: 'on_demand', D1: 'on_demand', D4: 'automatic', B3: 'automatic' });
+    for (const item of operate) {
+      expect(item.state, item.serviceId).toBe('upcoming');
+      expect(item.requestId, item.serviceId).toBeUndefined();
+    }
+  });
+
+  it('reads rent from the invoices of the plot, whatever its stage', () => {
+    const tenant = seedWorld('tenant', NOW);
+    const rent = (plotId: string) => checklist(tenant, 'operate', plotId).find((item) => item.serviceId === 'B1');
+    // One invoice due in five days.
+    expect(rent('BA-121')).toMatchObject({ standing: 'due', state: 'current', open: false });
+    // Everything paid: also on the plot that is still being built, whose rent is already billed.
+    expect(rent('AK-113')).toMatchObject({ standing: 'clear', state: 'done' });
+    expect(rent('AW-116')).toMatchObject({ standing: 'clear', state: 'done' });
+  });
+
+  it('says "done" in the last station only with a finished request behind it', () => {
+    const tenant = seedWorld('tenant', NOW);
+    for (const plot of tenant.plots) {
+      for (const item of checklist(tenant, 'operate', plot.id)) {
+        if (item.state !== 'done' || item.standing === 'clear') continue;
+        const request = tenant.requests.find((candidate) => candidate.id === item.requestId);
+        expect(request, `${plot.id} ${item.serviceId}`).toMatchObject({ serviceId: item.serviceId, plotId: plot.id, status: 'done' });
+      }
+    }
+    // The gate pass issued for the plot under construction is a finished request; the others have none.
+    expect(checklist(tenant, 'operate', 'AW-116').find((item) => item.serviceId === 'D2')).toMatchObject({ state: 'done' });
+    expect(checklist(tenant, 'operate', 'BA-121').map((item) => `${item.serviceId}:${item.standing ?? (item.open ? 'open' : item.state)}`)).toEqual(['B1:due', 'D2:on_demand', 'D1:open', 'D4:automatic', 'B3:automatic']);
+    expect(checklist(tenant, 'operate', 'AK-113').map((item) => `${item.serviceId}:${item.standing ?? (item.open ? 'open' : item.state)}`)).toEqual(['B1:clear', 'D2:on_demand', 'D1:on_demand', 'D4:automatic', 'B3:open']);
   });
 
   it('shows the tenant’s build in progress', () => {

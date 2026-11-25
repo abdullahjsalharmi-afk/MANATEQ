@@ -15,6 +15,7 @@ import {
   selectCompany,
   selectDues,
   selectInvoices,
+  selectHasPlots,
   selectJourney,
   selectNextSteps,
   selectPersona,
@@ -59,7 +60,10 @@ export function HomeScreen() {
   const [payOpen, setPayOpen] = useState(false);
 
   const guest = persona === 'guest';
-  const tenant = persona === 'tenant';
+  // Home follows what the company holds, not the profile it signed in with: once a new investor has leased a
+  // plot, Home is the tenant's (the journey of that plot, the shortcuts), not the introduction for newcomers.
+  const holdsPlot = useApp(selectHasPlots);
+  const tenant = persona === 'tenant' || (!guest && holdsPlot);
   const greeting = t(greetingOf(new Date(now).getHours()));
 
   const actions = (
@@ -109,7 +113,7 @@ export function HomeScreen() {
           <Skeleton variant="block" height={420} label={t('loading')} />
         </Container>
       ) : (
-        <HomeHero persona={persona} steps={steps} station={station} now={now} onPay={(id) => pay(invoices.find((invoice) => invoice.id === id))} />
+        <HomeHero persona={tenant ? 'tenant' : persona} steps={steps} station={station} now={now} onPay={(id) => pay(invoices.find((invoice) => invoice.id === id))} />
       )}
 
       {tenant || requests.length > 0 ? (

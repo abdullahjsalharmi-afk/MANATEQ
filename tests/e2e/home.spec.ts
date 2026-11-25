@@ -88,6 +88,24 @@ test('a request Manateq started cannot be cancelled, and the Build checklist tel
   expect(errors).toEqual([]);
 });
 
+test('the shortcuts sit four, two or one to a row, never three with a lone fourth', async ({ page }) => {
+  for (const [width, lang] of [
+    [430, 'ar'],
+    [430, 'en'],
+    [390, 'ar'],
+    [600, 'ar'],
+    [834, 'en'],
+  ] as const) {
+    await page.setViewportSize({ width, height: 844 });
+    await openApp(page, { lang });
+    const tiles = page.getByRole('main').locator('[class*="shortcuts"] > *');
+    await expect(tiles).toHaveCount(4);
+    const tops = await tiles.evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().top)));
+    const perRow = tops.filter((top) => top === tops[0]).length;
+    expect([width, lang, [1, 2, 4].includes(perRow)]).toEqual([width, lang, true]);
+  }
+});
+
 test('paying settles its reminder: done, not "Needs you", and the bell count drops (n=6)', async ({ page }) => {
   const errors = watchErrors(page);
   await openApp(page, { lang: 'en' });

@@ -5,6 +5,10 @@
  * A plot's station follows its status; an investor without a plot is joining. Checklist items are
  * services: an item is done when a finished request says so or when the plot is already past it,
  * current when a request is open or it is the next thing to do, upcoming otherwise.
+ *
+ * The services of the last station repeat for as long as the plot is held (rent, passes, fault reports,
+ * inspections, renewal): they are never "done". Between requests such an item has a `standing` instead:
+ * what is true of it now.
  */
 import { getService } from '@/data/catalog';
 import type { L10n, ServiceId } from '@/data/types';
@@ -12,6 +16,12 @@ import type { Plot, PlotStatus, RequestState, World } from './types';
 
 export type StationKey = 'join' | 'contract' | 'build' | 'operate';
 export type ItemState = 'done' | 'current' | 'upcoming';
+/**
+ * What holds, between requests, for a service that repeats while the plot is held: rent is `due` or `clear`
+ * (read from the plot's invoices); a service the investor starts is there `on_demand`; one Manateq starts
+ * (inspections, the renewal offer) is `automatic`.
+ */
+export type Standing = 'due' | 'clear' | 'on_demand' | 'automatic';
 
 interface ItemDef {
   serviceId: ServiceId;
@@ -100,6 +110,11 @@ export interface JourneyItem {
   stoppedRequestId?: string;
   /** The investor can start this service now. */
   canStart: boolean;
+  /**
+   * Set for a repeating service of the last station while nothing is open for it and no finished request
+   * stands behind it: what is true of it now. Such an item is never "done" and never "next".
+   */
+  standing?: Standing;
 }
 
 export interface JourneyStation {
@@ -152,8 +167,11 @@ export function stationOf(world: World, plotId?: string): StationKey {
   return plot ? STATION_OF_STATUS[plot.status] : 'join';
 }
 
-function hasDues(world: World, plot: Plot): boolean {
-  return world.invoices.some((invoice) => invoice.status !== 'paid' && invoice.leaseId !== undefined && invoice.leaseId === plot.leaseId);
+/** Rent, read from the invoices of the plot's lease: something is unpaid, everything is paid, or nothing was billed yet. */
+function rentStanding(world: World, plot: Plot): Standing | undefined {
+  const invoices = world.invoices.filter((invoice) => invoice.leaseId !== undefined && invoice.leaseId === plot.leaseId);
+  if (invoices.some((invoice) => invoice.status !== 'paid')) return 'due';
+  return invoices.length > 0 ? 'clear' : undefined;
 }
 
 /** The stations with their checklists, for one plot or for the investor's current journey. */
@@ -181,20 +199,36 @@ export function journeyOf(world: World, plotId?: string): Journey {
       else if (item.serviceId === 'A2' && world.eligibility) state = 'done';
       else if (item.serviceId === 'A3' && world.company) state = 'done';
 
-      if (definition.key === 'operate' && plot?.status === 'operating' && !open) {
-        // Operating never ends: an item is "current" while something is open for it, settled otherwise.
-        state = item.serviceId === 'B1' && hasDues(world, plot) ? 'current' : 'done';
+      // The last station never ends: its services repeat. With nothing open and no finished request behind
+      // it, an item says what is true of it now instead of "done" or "next".
+      let standing: Standing | undefined;
+      if (definition.key === 'operate' && plot && !open) {
+        // Rent is billed from the signature of the lease on, by itself.
+        if (item.serviceId === 'B1') standing = rentStanding(world, plot) ?? (atLeast(plot, 'leased') ? 'automatic' : undefined);
+        else if (!done && plot.status === 'operating') standing = getService(item.serviceId)?.startable ? 'on_demand' : 'automatic';
+        if (standing === 'due') state = 'current';
+        else if (standing === 'clear') state = 'done';
+        else if (standing) state = 'upcoming';
       }
 
-      const requestId = (open ?? done)?.id;
+      const requestId = standing ? undefined : (open ?? done)?.id;
       const newest = latest(item.serviceId, () => true);
       const stoppedRequestId = newest?.status === 'stopped' ? newest.id : undefined;
-      return { serviceId: item.serviceId, state, open: open !== undefined, ...(requestId ? { requestId } : {}), ...(stoppedRequestId ? { stoppedRequestId } : {}), canStart: false };
+      return {
+        serviceId: item.serviceId,
+        state,
+        open: open !== undefined,
+        ...(requestId ? { requestId } : {}),
+        ...(stoppedRequestId ? { stoppedRequestId } : {}),
+        canStart: false,
+        ...(standing ? { standing } : {}),
+      };
     });
 
-    // In the station the investor stands in, the first thing not yet done is what comes next.
+    // In the station the investor stands in, the first thing not yet done is what comes next. A repeating
+    // service that is simply available is not "next".
     if (index === stationIndex) {
-      const next = items.find((item) => item.state !== 'done');
+      const next = items.find((item) => item.state !== 'done' && item.standing === undefined);
       if (next && next.state === 'upcoming') next.state = 'current';
     }
 

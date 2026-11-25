@@ -107,7 +107,8 @@ function PassSteps({ service, onIssued }: { service: ServiceDetail; onIssued: (p
     const company = kind === 'visitor' ? details.company.trim() : '';
     const phone = kind === 'visitor' ? details.phone.trim() : '';
     const passId = issuePass({ kind, holder, plotId: plot.id, from: range.from, to: range.to, ...(idOrPlate ? { idOrPlate } : {}), ...(company ? { company } : {}) });
-    // The request records the pass in the D2 workflow; when it reaches the gates it finds this pass and issues no second one.
+    // The request records the pass in the D2 workflow and is tied to it: when it reaches the gates it finds
+    // this pass and issues no second one; withdrawing the request cancels the pass, and the other way round.
     startRequest(
       'D2',
       {
@@ -121,7 +122,7 @@ function PassSteps({ service, onIssued }: { service: ServiceDetail; onIssued: (p
         validTo: range.to,
         plot: plot.id,
       },
-      { plotId: plot.id },
+      { plotId: plot.id, passId },
     );
     onIssued(passId, phone || undefined);
   };

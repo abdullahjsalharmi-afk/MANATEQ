@@ -43,6 +43,14 @@ test('a plot page opens the checklist of each stage of that plot’s journey', a
   // The fault report that is open on this plot is in progress and leads to its request.
   const report = operate.getByRole('link', { name: /Fault report/ });
   await expect(report).toContainText('In progress');
+  // The services of this stage repeat: none reads "Done" without a finished request, none reads "Next".
+  await expect(operate.getByRole('link', { name: /rent invoices/i })).toContainText('Payment due');
+  await expect(operate.getByRole('link', { name: /rent invoices/i })).toHaveAttribute('href', '#/account/payments');
+  await expect(operate.getByRole('link', { name: /Gate pass/ })).toContainText('When you need it');
+  await expect(operate.getByRole('link', { name: /inspections/i })).toContainText('Starts by itself');
+  await expect(operate.getByRole('link', { name: /renewal/i })).toContainText('Starts by itself');
+  await expect(operate.getByText('Done', { exact: true })).toHaveCount(0);
+  await expect(operate.getByText('Next', { exact: true })).toHaveCount(0);
   await report.click();
   await expect(page).toHaveURL(/#\/requests\/r94/);
 
@@ -52,6 +60,12 @@ test('a plot page opens the checklist of each stage of that plot’s journey', a
   await expect(build.getByText(/Plot\W*AW\W+116/)).toBeVisible();
   await expect(build.getByRole('link', { name: /building permit/i })).toContainText('In progress');
   await expect(build.getByRole('link', { name: /^Design review/ })).toContainText('Done');
+  // Rent is already billed for this plot and paid: its stage says so, while its other services have not begun.
+  await build.getByRole('button', { name: /Operate/ }).click();
+  const later = page.getByRole('dialog', { name: 'Operate' });
+  await expect(later.getByRole('link', { name: /rent invoices/i })).toContainText('Nothing due');
+  await expect(later.getByRole('link', { name: /Gate pass/ })).toContainText('Done');
+  await expect(later.getByRole('link', { name: /Fault report/ })).toContainText('Not started yet');
   expect(errors).toEqual([]);
 });
 

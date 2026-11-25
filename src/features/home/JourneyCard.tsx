@@ -16,10 +16,10 @@ export interface JourneyCardProps {
   plotNumber: string;
 }
 
-/** In progress (a request is open) has the filled dot; "next" with nothing open a dashed ring. */
+/** In progress (a request is open) has the filled dot; "next" with nothing open, or rent that is due, a dashed ring. */
 function itemIcon(item: JourneyItem) {
-  if (item.state === 'done') return { icon: CircleCheck, className: styles.itemDone };
   if (item.open) return { icon: CircleDot, className: styles.itemCurrent };
+  if (item.state === 'done') return { icon: CircleCheck, className: styles.itemDone };
   if (item.state === 'current') return { icon: CircleDashed, className: styles.itemCurrent };
   return { icon: Circle, className: styles.itemUpcoming };
 }

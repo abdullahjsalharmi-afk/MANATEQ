@@ -15,7 +15,10 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  /* The dialog itself never scrolls: only the sheet's body does. `clip` also refuses the scroll a browser does
+     to bring a focused field into view (`hidden` would allow it and push the sheet off the top). */
   overflow: hidden;
+  overflow: clip;
 }
 
 .dialog:not([open]) {
@@ -99,7 +102,10 @@
   margin-inline-end: -6px;
 }
 
+/* The body is the one scroller, and the containing block of what it holds: a visually hidden label or status
+   (absolutely positioned) scrolls with the content instead of sitting below the sheet and stretching the dialog. */
 .body {
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow-y: auto;

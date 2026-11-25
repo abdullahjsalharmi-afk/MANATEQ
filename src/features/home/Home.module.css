@@ -75,14 +75,30 @@
 /* Shortcuts */
 /*
  * Shortcuts: titles break between words only, so a column is never narrower than the longest word with the
- * card's padding. Columns are at least --sc-min wide (in em, so it grows with the text size): two side by side
- * on a phone when they fit, one column when they do not, at most four on wide screens.
+ * card's padding (--sc-min, in em, so it grows with the text size). The four tiles sit four in a row when a
+ * quarter of the width is enough, else two by two when a half is, else one under the other: never three with a
+ * lone fourth. Each `clamp` below is a switch: it is the wider track when the narrower one is too small, else 0.
  */
 [data-columns].shortcuts {
   --sc-gap: var(--s-3);
   --sc-min: 9em; /* "appointment" at 600 weight is about 6.2em, plus 2 × 21 px of card padding */
+  --sc-quarter: calc((100% - 3 * var(--sc-gap)) / 4);
+  --sc-half: calc((100% - var(--sc-gap)) / 2);
   gap: var(--sc-gap);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, max(var(--sc-min), (100% - 3 * var(--sc-gap)) / 4)), 1fr));
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(
+      min(
+        100%,
+        max(
+          var(--sc-quarter),
+          clamp(0px, calc((var(--sc-min) - var(--sc-quarter)) * 9999), var(--sc-half)),
+          clamp(0px, calc((var(--sc-min) - var(--sc-half)) * 9999), 100%)
+        )
+      ),
+      1fr
+    )
+  );
 }
 
 [data-columns].shortcuts:lang(ar) {

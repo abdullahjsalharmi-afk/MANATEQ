@@ -49,6 +49,11 @@ export interface StartOptions {
   threadId?: string;
   /** The request that led to this one. */
   parentId?: string;
+  /**
+   * A pass that was issued on the spot for this request (D2): it is tied to the request, so the two never
+   * disagree. Withdrawing the request revokes the pass; revoking the pass closes the request.
+   */
+  passId?: string;
 }
 
 export interface FileValue {

@@ -73,6 +73,9 @@ interface Prepared<T> {
 
 const FIELD_WEIGHT = [10, 5, 3, 2, 1];
 
+/** A word written in Latin letters (a number or a reference keeps matching inside: "0051" in a longer code). */
+const LATIN_WORD = /^[a-z]+$/;
+
 export function buildIndex<T>(docs: SearchDoc<T>[]): SearchIndex<T> {
   const prepared: Prepared<T>[] = docs.map((doc) => ({
     item: doc.item,
@@ -99,7 +102,9 @@ export function buildIndex<T>(docs: SearchDoc<T>[]): SearchIndex<T> {
             for (const have of fieldTokens) {
               if (have === want) best = Math.max(best, weight * 3);
               else if (have.startsWith(want) && want.length >= 2) best = Math.max(best, weight * 2);
-              else if (want.length >= 3 && have.includes(want)) best = Math.max(best, weight);
+              // Inside a word: for Arabic, whose words carry attached letters. In Latin script it is noise
+              // ("rent" inside "current" and "transparent"), so a Latin word matches from its start only.
+              else if (want.length >= 3 && !LATIN_WORD.test(want) && have.includes(want)) best = Math.max(best, weight);
             }
           });
           if (best === 0) matchedAll = false;

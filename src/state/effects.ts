@@ -264,9 +264,20 @@ const issueRequestedPass: Effect = (world, ctx) => {
   // A pass is for one of the investor's plots: the one the request names, or else the first one held.
   const plotId = findPlotRecord(world, request.plotId)?.id ?? findPlotRecord(world, asText(form.plot))?.id ?? world.plots.find((plot) => plot.leaseId !== undefined)?.id;
   if (plotId === undefined) return world;
+  // The request already has its pass (issued on the spot when it was sent), whatever became of it since.
+  if (world.passes.some((pass) => pass.requestId === request.id)) return world;
   const duplicate = world.passes.some((pass) => pass.kind === kind && pass.holder === holder && pass.plotId === plotId && pass.from === from && pass.status !== 'revoked');
   if (duplicate) return world;
   return addPass(world, { kind, holder, ...(idOrPlate ? { idOrPlate } : {}), ...(company ? { company } : {}), plotId, from, to, requestId: request.id }, ctx.at).world;
+};
+
+/**
+ * D2 withdrawn: the pass its request issued no longer opens the gate. A request and its pass never disagree:
+ * a closed request with a pass still live at the gates would be one.
+ */
+const revokeRequestedPasses: Effect = (world, ctx) => {
+  if (!world.passes.some((pass) => pass.requestId === ctx.id && pass.status === 'active')) return world;
+  return { ...world, passes: world.passes.map((pass) => (pass.requestId === ctx.id && pass.status === 'active' ? { ...pass, status: 'revoked' } : pass)) };
 };
 
 /* ───────────────────────────── money ───────────────────────────── */
@@ -473,6 +484,7 @@ export const whenStopped: Partial<Record<ServiceId, Effect>> = {
   A5: releasePlot,
   A6: releasePlot,
   A7: releasePlot,
+  D2: revokeRequestedPasses,
 };
 
 /** When the investor completes a step: one effect per atomic task of the step's flow. */

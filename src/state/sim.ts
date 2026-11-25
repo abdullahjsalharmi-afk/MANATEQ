@@ -422,7 +422,11 @@ export function startIn(world: World, input: StartInput, at: number, env: Env, n
     investorMs: 0,
     docIds: [],
   };
-  const booked = withBookedAppointment(putRequest(slot.world, queued), queued, at);
+  let booked = withBookedAppointment(putRequest(slot.world, queued), queued, at);
+  // A pass issued on the spot belongs to this request from the start.
+  if (input.passId !== undefined && booked.passes.some((pass) => pass.id === input.passId && pass.requestId === undefined)) {
+    booked = { ...booked, passes: booked.passes.map((pass) => (pass.id === input.passId ? { ...pass, requestId: slot.id } : pass)) };
+  }
   return { world: run(booked, slot.id, env, now), id: slot.id };
 }
 

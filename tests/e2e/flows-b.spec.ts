@@ -77,6 +77,54 @@ test('the tenant issues a visitor pass for today and finds its QR in the wallet'
   expect(real(errors)).toEqual([]);
 });
 
+test('a pass and the request that issued it never disagree, and a worker’s ID number is checked', async ({ page }) => {
+  const errors = watchErrors(page);
+  const issue = async (speed: number) => {
+    await openApp(page, { route: '/start/D2?plot=BA-121', lang: 'en', speed });
+    const main = page.locator('main');
+    await main.getByRole('radio', { name: /Worker/ }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByLabel(/Worker/).fill('Ali');
+    return main;
+  };
+
+  // An ID number that is not eleven digits is refused, with the reason.
+  let main = await issue(1);
+  await page.getByLabel(/QID/).fill('abc');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(main.getByText('Enter the 11-digit personal ID number.')).toBeVisible();
+  await page.getByLabel(/QID/).fill('28763412345');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Issue the pass' }).click();
+  await page.getByRole('link', { name: /Documents and passes/ }).click();
+  await expect(page).toHaveURL(/#\/account\/wallet\/gp\d+/);
+  const passUrl = page.url().split('#')[1] ?? '';
+  const card = page.getByRole('main').locator('article[data-status]');
+  await expect(card).toHaveAttribute('data-status', 'active');
+
+  // Withdrawing the request cancels the pass it issued.
+  await page.evaluate(() => (window.location.hash = '#/requests'));
+  await page.getByRole('main').getByRole('link', { name: /Gate pass/ }).first().click();
+  await page.getByRole('button', { name: 'Cancel the request' }).first().click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Cancel the request' }).click();
+  await expect(page.getByRole('heading', { name: 'Request closed' })).toBeVisible();
+  await page.evaluate((hash) => (window.location.hash = hash), passUrl);
+  await expect(card).toHaveAttribute('data-status', 'revoked');
+
+  // The other way round: cancelling the pass closes the request that was still tracking it.
+  main = await issue(1);
+  await page.getByLabel(/QID/).fill('28763412345');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Issue the pass' }).click();
+  await page.getByRole('link', { name: /Documents and passes/ }).click();
+  await page.getByRole('button', { name: 'Cancel pass' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Cancel/ }).first().click();
+  await expect(card).toHaveAttribute('data-status', 'revoked');
+  await page.evaluate(() => (window.location.hash = '#/requests'));
+  await expect(page.getByRole('main').getByRole('link', { name: /Gate pass/ }).filter({ hasText: /In progress|With / })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test('an emergency: one tap on the type, then send', async ({ page }) => {
   await openApp(page, { route: '/start/D3', lang: 'en' });
   await expect(page.getByRole('link', { name: 'Call emergency 999' })).toHaveAttribute('href', 'tel:999');

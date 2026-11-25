@@ -230,8 +230,18 @@ export function issuePass(input: PassInput): string {
   return id;
 }
 
+/**
+ * The investor cancels a pass. A pass and the request that issued it never disagree: when that request is
+ * still open it is closed with the pass (there is nothing left for it to track).
+ */
 export function revokePass(id: string): void {
-  changeWorld((world) => revokePassIn(world, id));
+  const now = Date.now();
+  changeWorld((world, state) => {
+    const pass = world.passes.find((candidate) => candidate.id === id);
+    const revoked = revokePassIn(world, id);
+    const request = pass?.requestId === undefined ? undefined : revoked.requests.find((candidate) => candidate.id === pass.requestId);
+    return request && request.status !== 'done' && request.status !== 'stopped' ? cancelIn(revoked, request.id, now, liveEnv(state.demo.speed)) : revoked;
+  });
 }
 
 /* ───────────────────────────── notifications ───────────────────────────── */

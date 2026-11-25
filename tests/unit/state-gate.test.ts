@@ -14,7 +14,7 @@ import { currentVisit, progress } from '@/domain/workflow';
 import { renewalTerms } from '@/state/effects';
 import { calendarTiming, emptyWorld, initialSettings, seedWorld, STATE_VERSION } from '@/state/seed';
 import { selectAppointments, selectCanWithdraw, selectHasPlots, selectPlotsFor, selectRenewalTerms, selectUnreadCount } from '@/state/selectors';
-import { actIn, cancelIn, fastForwardIn, payInvoiceIn, startIn, tickWorld } from '@/state/sim';
+import { actIn, cancelIn, fastForwardIn, issuePassIn, payInvoiceIn, revokePassIn, startIn, tickWorld } from '@/state/sim';
 import type { Env } from '@/state/types';
 import { requestView, standardClockOf } from '@/state/view';
 
@@ -257,6 +257,48 @@ describe('n=8, at its root · the investor withdraws only an application of thei
     const closed = cancelIn(world, of('D1').id, NOW + 1000, live);
     expect(selectCanWithdraw(of('D1').id)(stateOf(closed))).toBe(false);
     expect(selectCanWithdraw(undefined)(stateOf(world))).toBe(false);
+  });
+});
+
+describe('last look · a request and the pass it issued never disagree', () => {
+  // As the gate pass flow does: the pass is issued on the spot, then the request that records it is started.
+  const issued = () => {
+    const pass = issuePassIn(seedWorld('tenant', NOW), { kind: 'worker', holder: 'Ali', idOrPlate: '28763412345', plotId: 'BA-121', from: NOW, to: NOW + 5 * DAY }, NOW);
+    const form = { passType: 'worker', holder: 'Ali', qid: '28763412345', validFrom: NOW, validTo: NOW + 5 * DAY, plot: 'BA-121' };
+    const started = startIn(pass.world, { serviceId: 'D2', plotId: 'BA-121', passId: pass.id, form }, NOW + 1000, live);
+    return { world: started.world, requestId: started.id, passId: pass.id };
+  };
+  const passOf = (world: World, id: string) => world.passes.find((pass) => pass.id === id);
+  const requestOf = (world: World, id: string) => world.requests.find((request) => request.id === id) as RequestState;
+
+  it('ties the pass to its request from the start', () => {
+    const { world, requestId, passId } = issued();
+    expect(passOf(world, passId)).toMatchObject({ status: 'active', requestId });
+    expect(requestOf(world, requestId).status).toBe('active');
+    expect(selectCanWithdraw(requestId)(stateOf(world))).toBe(true);
+  });
+
+  it('withdrawing the request revokes its pass, and no other', () => {
+    const { world, requestId, passId } = issued();
+    const after = cancelIn(world, requestId, NOW + 5000, live);
+    expect(requestOf(after, requestId).status).toBe('stopped');
+    expect(passOf(after, passId)?.status).toBe('revoked');
+    for (const other of after.passes.filter((pass) => pass.id !== passId)) expect(other.status).toBe(passOf(world, other.id)?.status);
+  });
+
+  it('run to its end, the request keeps its one pass and issues no second one', () => {
+    const { world, requestId, passId } = issued();
+    const done = drive(world, requestId, NOW + 2000, (request) => request.status === 'done' || request.status === 'stopped').world;
+    expect(requestOf(done, requestId).status).toBe('done');
+    expect(done.passes.filter((pass) => pass.requestId === requestId).map((pass) => [pass.id, pass.status])).toEqual([[passId, 'active']]);
+  });
+
+  it('a pass cancelled while its request runs is not issued again when the request ends', () => {
+    const { world, requestId, passId } = issued();
+    const revoked = revokePassIn(world, passId);
+    const done = drive(revoked, requestId, NOW + 2000, (request) => request.status === 'done' || request.status === 'stopped').world;
+    expect(done.passes.filter((pass) => pass.requestId === requestId).map((pass) => [pass.id, pass.status])).toEqual([[passId, 'revoked']]);
+    expect(done.passes.filter((pass) => pass.holder === 'Ali' && pass.status === 'active')).toEqual([]);
   });
 });
 

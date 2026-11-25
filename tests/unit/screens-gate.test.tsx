@@ -99,6 +99,43 @@ describe('n=8, n=12 · the Home journey checklist', () => {
   });
 });
 
+describe('last look · the last station never says "done" without a request, nor "next"', () => {
+  it('words a repeating service by what is true of it now', () => {
+    expect(itemWords({ serviceId: 'B1', state: 'current', open: false, canStart: false, standing: 'due' })).toEqual({ name: 'noun', status: ['itemDue'], closedLink: undefined });
+    expect(itemWords({ serviceId: 'B1', state: 'done', open: false, canStart: false, standing: 'clear' })).toEqual({ name: 'noun', status: ['itemClear'], closedLink: undefined });
+    expect(itemWords({ serviceId: 'D2', state: 'upcoming', open: false, canStart: false, standing: 'on_demand' }).status).toEqual(['itemOnDemand']);
+    expect(itemWords({ serviceId: 'D4', state: 'upcoming', open: false, canStart: false, standing: 'automatic' }).status).toEqual(['itemAutomatic']);
+    // An open request still reads in progress; a finished one behind the item still reads done.
+    expect(itemWords({ serviceId: 'D1', state: 'current', open: true, requestId: 'r94', canStart: false }).status).toEqual(['itemCurrent']);
+    expect(itemWords({ serviceId: 'D2', state: 'done', open: false, requestId: 'r90', canStart: false }).status).toEqual(['itemDone']);
+  });
+
+  it('sends rent to the invoices, the others to their service', () => {
+    expect(itemRoute({ serviceId: 'B1', state: 'current', open: false, canStart: false, standing: 'due' })).toBe('/account/payments');
+    expect(itemRoute({ serviceId: 'B1', state: 'done', open: false, canStart: false, standing: 'clear' })).toBe('/account/payments');
+    expect(itemRoute({ serviceId: 'D2', state: 'upcoming', open: false, canStart: false, standing: 'on_demand' })).toBe('/services/D2');
+  });
+
+  it('for the seeded tenant, every "done" of the last station has its finished request, on every plot', () => {
+    const world = seedWorld('tenant', NOW);
+    for (const plot of world.plots) {
+      const operate = journeyOf(world, plot.id).stations.find((station) => station.key === 'operate');
+      for (const item of operate?.items ?? []) {
+        const words = itemWords(item).status;
+        if (words.includes('itemDone')) expect(world.requests.find((request) => request.id === item.requestId), `${plot.id} ${item.serviceId}`).toMatchObject({ status: 'done', plotId: plot.id });
+        expect(words, `${plot.id} ${item.serviceId}`).not.toContain('itemNext');
+      }
+    }
+  });
+
+  it('has the new words in both languages', () => {
+    for (const key of ['itemDue', 'itemClear', 'itemOnDemand', 'itemAutomatic'] as const) {
+      expect(homeStrings[key].ar).toBeTruthy();
+      expect(homeStrings[key].en).toBeTruthy();
+    }
+  });
+});
+
 describe('n=10 · the renewal sheet shows what is agreed', () => {
   it('lists the new end date, the term, the rate, the yearly rent and the first instalment', () => {
     const world = seedWorld('tenant', NOW);

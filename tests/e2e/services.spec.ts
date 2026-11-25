@@ -118,6 +118,17 @@ test('searching one of your plot numbers puts the plot first, with the requests 
     expect(report).toBeGreaterThan(0);
     expect(report).toBeLessThan(firstInvoice);
   }
+  // Typed without its hyphen, the plot still brings its invoices and documents: they are found by what they
+  // belong to, not by the text of their titles.
+  await page.getByRole('searchbox').fill('BA121');
+  await expect(page.locator('main a[href="#/account/plots/BA-121"]')).toBeVisible();
+  await expect(page.locator('main a[href^="#/account/payments/"]').first()).toBeVisible();
+  await expect(page.locator('main a[href^="#/account/wallet/"]').first()).toBeVisible();
+  const hyphenless = await page.locator('main a[href^="#/"]').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href') ?? ''));
+  await page.getByRole('searchbox').fill('BA-121');
+  await expect(page.locator('main a[href^="#/account/payments/"]').first()).toBeVisible();
+  const hyphened = await page.locator('main a[href^="#/"]').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href') ?? ''));
+  expect(hyphenless).toEqual(hyphened);
   // Another plot: its two running requests are found without typing their references.
   await page.getByRole('searchbox').fill('AW-116');
   await expect(page.locator('main a[href="#/requests/r95"]')).toBeVisible();

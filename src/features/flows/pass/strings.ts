@@ -20,7 +20,7 @@ export const strings = {
   phoneInvalid: { ar: 'اكتب رقم جوال صحيحًا، من 8 أرقام على الأقل.', en: 'Enter a valid mobile number of at least 8 digits.' },
   rowPhone: { ar: 'جوال الزائر', en: 'Visitor’s mobile' },
   nameMissing: { ar: 'اكتب الاسم.', en: 'Enter the name.' },
-  qidMissing: { ar: 'اكتب الرقم الشخصي.', en: 'Enter the personal ID number.' },
+  qidMissing: { ar: 'اكتب الرقم الشخصي من 11 رقمًا.', en: 'Enter the 11-digit personal ID number.' },
   plateMissing: { ar: 'اكتب رقم اللوحة.', en: 'Enter the plate number.' },
   plot: { ar: 'القطعة', en: 'Plot' },
   plotHint: { ar: 'المنشأة التي سيدخل إليها.', en: 'The facility the holder will enter.' },

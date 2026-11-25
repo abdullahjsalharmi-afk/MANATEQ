@@ -44,6 +44,11 @@ export const strings = {
   itemStartAgain: { ar: 'يمكنك البدء من جديد', en: 'You can start again' },
   itemClosedLink: { ar: 'اعرض الطلب المغلق', en: 'View the closed request' },
   itemUpcoming: { ar: 'لم يبدأ بعد', en: 'Not started yet' },
+  /* a repeating service of the last station, between requests */
+  itemDue: { ar: 'عليك مستحقات', en: 'Payment due' },
+  itemClear: { ar: 'لا مستحقات', en: 'Nothing due' },
+  itemOnDemand: { ar: 'عند الحاجة', en: 'When you need it' },
+  itemAutomatic: { ar: 'تبدأ تلقائيًا', en: 'Starts by itself' },
   stationSheetBody: { ar: 'القطعة {plot}', en: 'Plot {plot}' },
 
   /* requests */

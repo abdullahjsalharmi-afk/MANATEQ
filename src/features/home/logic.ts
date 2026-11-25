@@ -35,13 +35,34 @@ export const SOLUTION_RENDER: Record<SolutionKey, RenderName> = {
  */
 export function itemRoute(item: JourneyItem): string {
   if (item.requestId) return `/requests/${item.requestId}`;
+  // Rent between requests is read from the invoices: that is where it leads.
+  if (item.standing === 'due' || item.standing === 'clear') return '/account/payments';
   if (item.canStart) return `/start/${item.serviceId}`;
   if (item.stoppedRequestId) return `/requests/${item.stoppedRequestId}`;
   return `/services/${item.serviceId}`;
 }
 
 /** The words of a checklist item, as keys of the Home strings table. */
-export type ItemWord = 'itemDone' | 'itemCurrent' | 'itemNext' | 'itemClosed' | 'itemStart' | 'itemStartAgain' | 'itemUpcoming';
+export type ItemWord =
+  | 'itemDone'
+  | 'itemCurrent'
+  | 'itemNext'
+  | 'itemClosed'
+  | 'itemStart'
+  | 'itemStartAgain'
+  | 'itemUpcoming'
+  | 'itemDue'
+  | 'itemClear'
+  | 'itemOnDemand'
+  | 'itemAutomatic';
+
+/** A repeating service between requests: what is true of it now. */
+const STANDING_WORD: Record<NonNullable<JourneyItem['standing']>, ItemWord> = {
+  due: 'itemDue',
+  clear: 'itemClear',
+  on_demand: 'itemOnDemand',
+  automatic: 'itemAutomatic',
+};
 
 export interface ItemWords {
   /**
@@ -57,13 +78,19 @@ export interface ItemWords {
 
 /**
  * How one item of the journey checklist reads. In progress only while a request is open (`open`); the
- * first item not done with nothing open is "next". A withdrawn request is said to be closed.
+ * first item not done with nothing open is "next". A withdrawn request is said to be closed. A repeating
+ * service of the last station, between requests, says what is true of it now (`standing`): it is never
+ * "done" without a finished request behind it, and never "next".
  */
 export function itemWords(item: JourneyItem): ItemWords {
   const startable = item.canStart && !item.open && item.state !== 'done';
   const name = startable ? 'cta' : 'noun';
-  if (item.state === 'done') return { name, status: ['itemDone'], closedLink: undefined };
   if (item.open) return { name, status: ['itemCurrent'], closedLink: undefined };
+  if (item.standing) {
+    const closed = item.stoppedRequestId ? `/requests/${item.stoppedRequestId}` : undefined;
+    return { name: 'noun', status: [STANDING_WORD[item.standing]], closedLink: closed };
+  }
+  if (item.state === 'done') return { name, status: ['itemDone'], closedLink: undefined };
   const status: ItemWord[] = [];
   if (item.state === 'current') status.push('itemNext');
   if (item.stoppedRequestId) status.push('itemClosed');
