@@ -38,7 +38,7 @@ test('a new investor checks eligibility, applies for a plot and lands on the req
   // Documents: two sample files, each checked on the spot.
   for (let i = 0; i < 2; i++) {
     await page.getByRole('button', { name: 'Use a sample file' }).first().click();
-    await expect(page.getByText('Checked: the document is readable').nth(i)).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Replace / })).toHaveCount(i + 1);
   }
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
 
