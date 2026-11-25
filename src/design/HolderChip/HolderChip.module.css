@@ -7,22 +7,29 @@
   border-radius: var(--r-pill);
   background: var(--sunken);
   color: var(--ink-2);
-  font-weight: 500;
-  line-height: 1.5;
+  font-weight: 400;
   white-space: nowrap;
   vertical-align: middle;
+}
+
+.chip > svg {
+  flex: none;
 }
 
 .sm {
   min-height: 24px;
   padding: 2px 10px;
   font-size: var(--t-cap);
+  line-height: 1.33;
+  letter-spacing: var(--ls-caption);
 }
 
 .md {
   min-height: 30px;
-  padding: 3px 12px;
-  font-size: var(--t-foot);
+  padding: 4px 12px;
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
 }
 
 .label {
@@ -31,9 +38,9 @@
   text-overflow: ellipsis;
 }
 
-/* The only loud holder: the request is waiting for the investor. */
+/* The only holder that stands out: the request is waiting for the investor. Solid ink, never a colour. */
 .you {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--ink);
+  color: var(--surface);
   font-weight: 600;
 }

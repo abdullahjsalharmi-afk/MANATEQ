@@ -1,4 +1,4 @@
-import { Check, CircleAlert, FileCheck2, FileText } from 'lucide-react';
+import { CircleAlert, CircleCheck, FileText } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { Button } from '../Button/Button';
@@ -153,7 +153,7 @@ export function FilePickView({ id, label, hint, required = false, error, state, 
   return (
     <div role="group" aria-labelledby={labelId} className={cx(styles.pick, error && state === 'empty' && styles.invalid, className)} data-state={state}>
       <span className={cx(styles.tile, state === 'verified' && styles.tileOk)} aria-hidden="true">
-        {checking ? <span className={styles.spinner} /> : <Icon icon={state === 'verified' ? FileCheck2 : FileText} size={20} />}
+        {checking ? <span className={styles.spinner} /> : <Icon icon={state === 'verified' ? CircleCheck : FileText} size={22} />}
       </span>
       <div className={styles.body}>
         <p id={labelId} className={styles.label}>
@@ -183,7 +183,6 @@ export function FilePickView({ id, label, hint, required = false, error, state, 
         ) : null}
         {state !== 'empty' ? (
           <p className={cx(styles.status, state === 'verified' && styles.statusOk)}>
-            {state === 'verified' ? <Icon icon={Check} size={15} strokeWidth={2.5} className={styles.statusIcon} /> : null}
             <span>{checking ? t('checking') : t('verified')}</span>
           </p>
         ) : null}

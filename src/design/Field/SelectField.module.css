@@ -1,8 +1,9 @@
-/* radio tiles: a handful of options, all visible */
+/* Configurator chips: a handful of options, all visible. A one-line option is a pill; an option with a
+   second line is an option card. The chosen one takes a 2 px blue edge and a check; the fill never changes. */
 .tiles {
   display: flex;
   flex-direction: column;
-  gap: var(--s-2);
+  gap: var(--s-3);
   min-width: 0;
 }
 
@@ -12,38 +13,55 @@
   align-items: center;
   gap: var(--s-3);
   min-height: 52px;
-  padding: 10px var(--s-4);
-  border-radius: var(--r-control);
+  padding: 12px var(--s-4);
+  border-radius: var(--r-pill);
   background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
-  transition:
-    box-shadow var(--d-1) var(--ease),
-    background-color var(--d-1) var(--ease);
+  transition: transform var(--d-1) var(--ease);
+}
+
+/* Two lines read better in a rounded rectangle than in a capsule. */
+.tile:has(.tileHint) {
+  border-radius: var(--r-control);
+  padding-block: 14px;
+}
+
+/* The edge sits on a layer above, so 1 px and 2 px never move the content. */
+.tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: inherit;
+  pointer-events: none;
+  transition: border-color var(--d-1) var(--ease);
 }
 
 @media (hover: hover) {
-  .tile:hover {
-    box-shadow: inset 0 0 0 1px var(--ink-3);
+  .tile:hover::after {
+    border-color: var(--ink-3);
   }
 }
 
 .tile:active {
-  background: var(--surface-2);
+  transform: scale(0.985);
 }
 
-.tileOn,
-.tileOn:hover,
-.tileOn:active {
-  background: var(--accent-tint);
-  box-shadow: inset 0 0 0 2px var(--accent);
+.tileOn::after,
+.tileOn:hover::after {
+  border: 2px solid var(--focus);
 }
 
 .tileDisabled {
-  opacity: 0.55;
+  opacity: 0.4;
   cursor: default;
+}
+
+.tileDisabled:active {
+  transform: none;
 }
 
 /* The native radio stays in the tile (for focus and scrolling) but is not seen. */
@@ -59,29 +77,15 @@
 }
 
 .tile:has(.radio:focus-visible) {
-  outline: 2px solid var(--field-focus);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
 @supports not selector(:has(*)) {
   .tile:focus-within {
-    outline: 2px solid var(--field-focus);
+    outline: 2px solid var(--focus);
     outline-offset: 2px;
   }
-}
-
-/* The radio mark: a ring that fills in when chosen. */
-.mark {
-  flex: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1.5px var(--ink-3);
-  transition: box-shadow var(--d-2) var(--ease);
-}
-
-.tileOn .mark {
-  box-shadow: inset 0 0 0 7px var(--accent);
 }
 
 .tileText {
@@ -93,24 +97,41 @@
 
 .tileLabel {
   font-size: var(--t-body);
-  font-weight: 500;
-  line-height: 1.5;
+  font-weight: 400;
+  line-height: 1.47;
+  letter-spacing: var(--ls-body);
   color: var(--ink);
 }
 
+.tileOn .tileLabel {
+  font-weight: 600;
+}
+
 .tileHint {
-  font-size: var(--t-foot);
-  line-height: 1.55;
-  color: var(--ink-2);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .tileIcon {
-  color: var(--ink-3);
-  transition: color var(--d-1) var(--ease);
+  flex: none;
+  color: var(--ink-2);
 }
 
-.tileOn .tileIcon {
+.tileCheck {
+  flex: none;
   color: var(--accent-ink);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity var(--d-1) var(--ease),
+    transform var(--d-2) var(--ease);
+}
+
+.tileOn .tileCheck {
+  opacity: 1;
+  transform: none;
 }
 
 /* the field-shaped button that opens the sheet */
@@ -119,6 +140,7 @@
   gap: var(--s-2);
   padding-inline: var(--s-4) 14px;
   font-size: max(16px, var(--t-body));
+  letter-spacing: var(--ls-body);
   line-height: 1.5;
   text-align: start;
   cursor: pointer;
@@ -172,7 +194,7 @@
   width: 100%;
   min-height: 52px;
   padding: var(--s-2) var(--s-3);
-  border-radius: 12px;
+  border-radius: var(--r-control);
   color: var(--ink);
   text-align: start;
   transition: background-color var(--d-1) var(--ease);
@@ -189,18 +211,12 @@
 }
 
 .option:focus-visible {
-  outline: 2px solid var(--field-focus, var(--accent));
+  outline: 2px solid var(--focus);
   outline-offset: -2px;
-  border-radius: 12px;
+  border-radius: var(--r-control);
 }
 
-.optionOn {
-  background: var(--accent-tint);
-}
-
-.optionOn:hover {
-  background: var(--accent-tint);
-}
+/* The chosen option is marked by its check and a stronger label, not by a wash of colour. */
 
 .optionIcon {
   color: var(--ink-3);
@@ -215,7 +231,8 @@
 
 .optionLabel {
   font-size: var(--t-body);
-  font-weight: 500;
+  font-weight: 400;
+  letter-spacing: var(--ls-body);
   line-height: 1.5;
 }
 
@@ -224,9 +241,9 @@
 }
 
 .optionHint {
-  font-size: var(--t-foot);
-  line-height: 1.55;
-  color: var(--ink-2);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  color: var(--ink-3);
 }
 
 .optionCheck {
@@ -237,35 +254,22 @@
   padding-block: var(--s-10);
   text-align: center;
   font-size: var(--t-callout);
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 
-/* Forced colours remove shadows and repaint backgrounds: the tile's edge and the radio mark are redrawn
-   with borders, and the chosen state uses the system's highlight colour. */
+/* Forced colours: the chip's edge and the chosen state use the system's own colours. */
 @media (forced-colors: active) {
-  .tile {
-    outline: 1px solid ButtonText;
-    outline-offset: -1px;
+  .tile::after {
+    border-color: ButtonText;
   }
 
-  .tileOn {
-    outline: 3px solid Highlight;
-    outline-offset: -3px;
+  .tileOn::after {
+    border: 3px solid Highlight;
   }
 
   .tile:has(.radio:focus-visible) {
     outline: 3px solid Highlight;
     outline-offset: 2px;
-  }
-
-  .mark {
-    border: 2px solid ButtonText;
-    box-shadow: none;
-  }
-
-  .tileOn .mark {
-    border: 7px solid Highlight;
-    box-shadow: none;
   }
 
   .optionOn {

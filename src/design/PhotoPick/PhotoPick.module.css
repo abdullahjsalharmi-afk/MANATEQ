@@ -1,18 +1,24 @@
-/* A photo to add: a thumbnail at the start, what the photo shows, and its actions. Measures match FilePick. */
+/* A photo to add. Empty: a quiet drop area with a dashed hairline and a camera in the thumbnail.
+   With a photo: a plain row with the thumbnail, its name and a check. Measures match FilePick. */
 .pick {
   display: flex;
   align-items: flex-start;
   gap: var(--s-3);
   min-width: 0;
-  padding: 14px var(--s-4) 10px;
+  padding: var(--s-4) var(--s-4) var(--s-3);
+  border: 1px dashed var(--line-strong);
   border-radius: var(--r-control);
   background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
-  transition: box-shadow var(--d-1) var(--ease);
+  transition: border-color var(--d-1) var(--ease);
+}
+
+.filled {
+  border-style: solid;
+  border-color: var(--line);
 }
 
 .invalid {
-  box-shadow: inset 0 0 0 1px var(--bad);
+  border-color: var(--bad);
 }
 
 .thumb {
@@ -21,26 +27,17 @@
   place-items: center;
   width: 64px;
   height: 64px;
-  margin-block-end: 4px;
+  margin-block-end: var(--s-1);
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: var(--r-tile);
   background: var(--sunken);
-  color: var(--ink-2);
-}
-
-.thumbFilled {
   color: var(--ink-3);
-  box-shadow: inset 0 0 0 1px var(--line);
-}
-
-.image,
-.standIn {
-  display: block;
-  width: 100%;
-  height: 100%;
 }
 
 .image {
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   animation: appear var(--d-2) var(--ease);
 }
@@ -53,9 +50,10 @@
 }
 
 .label {
-  font-size: var(--t-callout);
-  font-weight: 500;
-  line-height: 1.5;
+  font-size: var(--t-body);
+  font-weight: 400;
+  line-height: 1.47;
+  letter-spacing: var(--ls-body);
   color: var(--ink);
 }
 
@@ -66,14 +64,22 @@
 
 .hint,
 .file {
-  font-size: var(--t-foot);
-  line-height: 1.55;
-  color: var(--ink-2);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .file {
   display: flex;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
+}
+
+.fileCheck {
+  flex: none;
+  color: var(--ok);
 }
 
 .name {
@@ -88,14 +94,16 @@
   align-items: flex-start;
   gap: 5px;
   margin-block-start: 2px;
-  font-size: var(--t-foot);
-  font-weight: 500;
-  line-height: 1.55;
+  font-size: var(--t-callout);
+  font-weight: 400;
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
   color: var(--bad);
 }
 
 .errorIcon {
-  margin-block-start: 0.18em;
+  flex: none;
+  margin-block-start: 0.12em;
 }
 
 .actions {
@@ -133,10 +141,8 @@
   }
 }
 
-/* Forced colours remove the shadow edge: the picker gets a real border there. */
 @media (forced-colors: active) {
   .pick {
-    border: 1px solid ButtonText;
-    box-shadow: none;
+    border-color: ButtonText;
   }
 }

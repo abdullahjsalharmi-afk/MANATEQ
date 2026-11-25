@@ -16,7 +16,7 @@ export interface StepperProps {
 /** More steps than this are drawn as one continuous bar instead of segments. */
 const MAX_SEGMENTS = 10;
 
-/** A thin progress indicator for a flow: one segment per step, filled up to the current one. */
+/** A thin progress line for a flow, filled up to the current step, with an optional "step n of m" caption. */
 export function Stepper({ current, total, label, showLabel = false, className }: StepperProps) {
   const steps = Math.max(1, Math.floor(total));
   const now = Math.min(steps, Math.max(1, Math.floor(current)));

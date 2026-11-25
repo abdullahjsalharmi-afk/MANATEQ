@@ -1,46 +1,49 @@
-/* A document to upload: a tile that tells the state at a glance, the document's name, and its actions. */
+/* A document to upload. Empty: a quiet drop area with a dashed hairline. Once a file is chosen it becomes
+   a plain row: the document's name and size, and a check when it has passed. */
 .pick {
   display: flex;
   align-items: flex-start;
   gap: var(--s-3);
   min-width: 0;
-  padding: 14px var(--s-4) 10px;
+  padding: var(--s-4) var(--s-4) var(--s-3);
+  border: 1px dashed var(--line-strong);
   border-radius: var(--r-control);
   background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
-  transition: box-shadow var(--d-1) var(--ease);
+  transition: border-color var(--d-1) var(--ease);
+}
+
+.pick:not([data-state='empty']) {
+  border-style: solid;
+  border-color: var(--line);
 }
 
 .invalid {
-  box-shadow: inset 0 0 0 1px var(--bad);
+  border-color: var(--bad);
 }
 
+/* The leading glyph: a document while empty, a spinner while checking, a check once verified. */
 .tile {
   flex: none;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--sunken);
-  color: var(--ink-2);
-  transition:
-    background-color var(--d-2) var(--ease),
-    color var(--d-2) var(--ease);
+  width: 24px;
+  height: 24px;
+  margin-block-start: 1px;
+  color: var(--ink-3);
+  transition: color var(--d-2) var(--ease);
 }
 
 .tileOk {
-  background: var(--ok-tint);
   color: var(--ok);
 }
 
 .spinner {
   width: 18px;
   height: 18px;
-  border-radius: 50%;
-  border: 2px solid var(--ink-2);
-  border-inline-start-color: transparent;
-  animation: spin 0.7s linear infinite;
+  border-radius: var(--r-pill);
+  border: 2px solid var(--line-strong);
+  border-block-start-color: var(--ink-2);
+  animation: spin 0.8s linear infinite;
 }
 
 .body {
@@ -51,9 +54,10 @@
 }
 
 .label {
-  font-size: var(--t-callout);
-  font-weight: 500;
-  line-height: 1.5;
+  font-size: var(--t-body);
+  font-weight: 400;
+  line-height: 1.47;
+  letter-spacing: var(--ls-body);
   color: var(--ink);
 }
 
@@ -63,9 +67,10 @@
 }
 
 .hint {
-  font-size: var(--t-foot);
-  line-height: 1.55;
-  color: var(--ink-2);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 /* The file name can be long: it gives way with an ellipsis, the size always stays whole. */
@@ -74,9 +79,10 @@
   align-items: baseline;
   gap: 6px;
   min-width: 0;
-  font-size: var(--t-foot);
-  line-height: 1.55;
-  color: var(--ink-2);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .name {
@@ -103,18 +109,17 @@
   align-items: flex-start;
   gap: 5px;
   margin-block-start: 2px;
-  font-size: var(--t-foot);
-  line-height: 1.55;
-  color: var(--ink-2);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .statusOk {
-  font-weight: 500;
   color: var(--ok);
 }
 
 .error {
-  font-weight: 500;
   color: var(--bad);
 }
 
@@ -170,10 +175,8 @@
   }
 }
 
-/* Forced colours remove the shadow edge: the picker gets a real border there. */
 @media (forced-colors: active) {
   .pick {
-    border: 1px solid ButtonText;
-    box-shadow: none;
+    border-color: ButtonText;
   }
 }

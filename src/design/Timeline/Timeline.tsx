@@ -1,4 +1,4 @@
-import { Check, ChevronDown, ChevronUp, Clock, CornerDownRight, EllipsisVertical, Zap } from 'lucide-react';
+import { ChevronDown, ChevronUp, Clock, CornerDownRight, EllipsisVertical, Zap } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useT } from '@/app/i18n';
 import type { Lane } from '@/data/types';
@@ -47,9 +47,10 @@ export interface TimelineProps {
 const MIN_HIDDEN = 2;
 
 /**
- * The request timeline — "who has it now?" across Manateq and national entities.
- * A vertical rail: finished steps are ticked, the current step sits on a tinted card with its holder
- * and expected time, upcoming steps are muted. An ordered list; the current step is `aria-current`.
+ * The request timeline: "who has it now?" across Manateq and national entities.
+ * A thin vertical rail: finished steps are solid ink dots, the current step has the accent dot with its
+ * holder and expected time, upcoming steps are hollow and muted. An ordered list; the current step is
+ * `aria-current`.
  */
 export function Timeline({ items, collapsedCount, label, className }: TimelineProps) {
   const t = useT(strings);
@@ -98,11 +99,7 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
       {hiddenPast > 0 ? (
         <button type="button" className={cx(styles.toggle, pastFolded ? styles.past : styles.hide)} aria-expanded={pastOpen} aria-controls={listId} onClick={() => setPastOpen((open) => !open)}>
           <span className={styles.lead} aria-hidden="true">
-            {pastFolded ? (
-              <span className={cx(styles.dot, styles.stack)}>
-                <Icon icon={Check} size={11} strokeWidth={3} />
-              </span>
-            ) : null}
+            {pastFolded ? <span className={cx(styles.dot, styles.stack)} /> : null}
           </span>
           <span className={styles.toggleLabel}>
             {pastOpen ? t('hidePast') : t('showPast', { n: hiddenPast })}
@@ -120,9 +117,7 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
           const when = item.state === 'done' || item.state === 'skipped' ? item.time : (item.time ?? item.standard);
           return (
             <li key={item.id} className={cx(styles.item, styles[item.state])} aria-current={isCurrent ? 'step' : undefined} data-state={item.state} data-past={index < pastEnd || undefined}>
-              <span className={styles.dot} aria-hidden="true">
-                {item.state === 'done' ? <Icon icon={Check} size={11} strokeWidth={3} /> : null}
-              </span>
+              <span className={styles.dot} aria-hidden="true" />
               {isCurrent ? (
                 <div className={styles.card}>
                   <p className={styles.title}>
@@ -131,7 +126,7 @@ export function Timeline({ items, collapsedCount, label, className }: TimelinePr
                   </p>
                   {item.text ? <p className={styles.text}>{item.text}</p> : null}
                   <div className={styles.now}>
-                    <HolderChip lane={item.lane} name={item.holderName} size="sm" className={item.lane === 'inv' ? undefined : styles.chip} />{' '}
+                    <HolderChip lane={item.lane} name={item.holderName} size="sm" />{' '}
                     {item.auto && item.lane !== 'eng' ? (
                       <span className={styles.auto}>
                         <Icon icon={Zap} size={12} strokeWidth={2.25} />

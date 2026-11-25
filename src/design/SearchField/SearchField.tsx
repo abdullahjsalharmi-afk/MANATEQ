@@ -38,7 +38,7 @@ export function SearchField({ value, onChange, onSubmit, label, placeholder, onK
 
   return (
     <div className={cx(styles.search, className)}>
-      <Icon icon={Search} size={20} className={styles.glass} />
+      <Icon icon={Search} size={16} strokeWidth={2} className={styles.glass} />
       <input
         ref={inputRef}
         id={id}

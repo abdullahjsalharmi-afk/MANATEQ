@@ -1,30 +1,30 @@
+/* A thin progress line for a flow, with an optional "step n of m" caption under it. The line is made of
+   one part per step laid end to end, so it reads as a single 2 px line that fills in the reading direction. */
 .stepper {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--s-2);
   min-width: 0;
 }
 
 .track {
   display: flex;
-  gap: 4px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background: var(--sunken);
 }
 
 .segment {
   flex: 1;
   min-width: 0;
-  height: 4px;
-  border-radius: var(--r-pill);
-  background: var(--line-strong);
-  overflow: hidden;
+  height: 100%;
 }
 
-/* The fill grows from the start of the segment, in the reading direction. */
 .fill {
   display: block;
   width: 0;
   height: 100%;
-  border-radius: inherit;
   background: var(--accent);
   transition: width var(--d-3) var(--ease);
 }
@@ -34,18 +34,18 @@
 }
 
 .label {
-  font-size: var(--t-cap);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--ink-2);
+  font-size: var(--t-foot);
+  font-weight: 400;
+  line-height: 1.33;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
 
-/* Forced colours repaint backgrounds: the segments become outlines and the done ones are filled with the
-   system's highlight colour. */
+/* Forced colours repaint backgrounds: the line gets an outline and the done part the highlight colour. */
 @media (forced-colors: active) {
-  .segment {
-    height: 6px;
+  .track {
+    height: 4px;
     border: 1px solid ButtonText;
   }
 

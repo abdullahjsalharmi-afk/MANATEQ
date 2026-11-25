@@ -1,37 +1,34 @@
+/* The search pill: 44 px tall, a hairline edge, a small glass at the start. */
 .search {
-  --search-focus: var(--accent);
   position: relative;
   display: flex;
   align-items: center;
   min-width: 0;
-  height: 48px;
-  border-radius: var(--r-control);
-  background: var(--sunken);
+  height: var(--tap);
+  border-radius: var(--r-pill);
+  background: var(--surface);
   color: var(--ink);
 }
 
-:global([data-theme='dark']) .search {
-  --search-focus: var(--accent-ink);
-}
-
-/* The focus edge is drawn on top as an inset shadow: nothing moves when it appears. */
+/* The edge sits on a layer above, so the 2 px focus edge never moves the content. */
 .search::after {
   content: '';
   position: absolute;
   inset: 0;
+  border: 1px solid var(--line);
   border-radius: inherit;
-  box-shadow: inset 0 0 0 1px transparent;
   pointer-events: none;
-  transition: box-shadow var(--d-1) var(--ease);
+  transition: border-color var(--d-1) var(--ease);
 }
 
 .search:focus-within::after {
-  box-shadow: inset 0 0 0 2px var(--search-focus);
+  border: 2px solid var(--focus);
 }
 
 .glass {
-  margin-inline-start: 14px;
-  color: var(--ink-2);
+  flex: none;
+  margin-inline-start: var(--s-4);
+  color: var(--ink-3);
   pointer-events: none;
 }
 
@@ -47,7 +44,8 @@
   background: transparent;
   color: inherit;
   font-size: max(16px, var(--t-body));
-  line-height: 1.5;
+  line-height: 1.47;
+  letter-spacing: var(--ls-body);
   text-align: start;
   appearance: none;
   -webkit-appearance: none;
@@ -59,7 +57,7 @@
 }
 
 .input::placeholder {
-  color: var(--ink-2);
+  color: var(--ink-3);
   opacity: 1;
 }
 
@@ -76,23 +74,23 @@
   place-items: center;
   width: var(--tap);
   height: var(--tap);
-  margin-inline-end: 2px;
-  border-radius: 50%;
+  margin-inline-end: 0;
+  border-radius: var(--r-pill);
 }
 
 .clear:focus-visible {
   outline-offset: -6px;
-  border-radius: 50%;
+  border-radius: var(--r-pill);
 }
 
 .clearDisc {
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--r-pill);
   background: var(--ink-3);
-  color: var(--sunken);
+  color: var(--surface);
   transition: background-color var(--d-1) var(--ease);
 }
 
@@ -100,15 +98,13 @@
   background: var(--ink-2);
 }
 
-/* Forced colours remove the sunken fill and the shadow edge: the field gets a real border there. */
 @media (forced-colors: active) {
   .search::after {
-    border: 1px solid ButtonText;
-    box-shadow: none;
+    border-color: ButtonText;
   }
 
   .search:focus-within::after {
-    border: 2px solid Highlight;
+    border-color: Highlight;
   }
 
   .clearDisc {

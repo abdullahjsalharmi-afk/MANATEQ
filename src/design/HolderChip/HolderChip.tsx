@@ -56,15 +56,15 @@ export interface HolderChipProps {
 }
 
 /**
- * "Who has it now?" — an icon and a few words. Only "with you" is loud; every other holder is quiet,
- * because nothing is being asked of the investor.
+ * "Who has it now?": an icon and a few words in a neutral capsule. Only "with you" stands out, in solid
+ * ink, because only then is something asked of the investor.
  */
 export function HolderChip({ lane, name, size = 'md', className }: HolderChipProps) {
   const t = useT(strings);
   const label = useHolderLabel();
   return (
     <span className={cx(styles.chip, styles[size], lane === 'inv' && styles.you, className)} data-lane={lane}>
-      <Icon icon={LANE_ICON[lane]} size={size === 'sm' ? 13 : 15} strokeWidth={2} />
+      <Icon icon={LANE_ICON[lane]} size={size === 'sm' ? 14 : 16} strokeWidth={1.75} />
       <span className="visually-hidden">{t('question')} </span>
       <span className={styles.label}>{label(lane, name)}</span>
     </span>

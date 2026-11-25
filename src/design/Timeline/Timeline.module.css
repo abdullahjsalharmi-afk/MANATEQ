@@ -2,9 +2,10 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  --rail-done: var(--ink);
-  --rail-next: var(--line-strong);
-  --rail-gap: 3px;
+  --rail: var(--line-strong);
+  --rail-gap: 4px;
+  /* the centre of the first line of a 17 px title */
+  --line-mid: calc(var(--t-body) * var(--lh-body) / 2);
 }
 
 .list {
@@ -17,14 +18,11 @@
 .item {
   position: relative;
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-columns: 20px minmax(0, 1fr);
   column-gap: var(--s-3);
-  padding-block-end: var(--s-4);
-  /* The dot sits on the first line of the title. */
-  --dot-r: 9px;
-  --dot-y: calc(var(--t-callout) * 0.75);
-  --rail-above: var(--rail-next);
-  --rail-below: var(--rail-next);
+  padding-block-end: var(--s-5);
+  --dot: 8px;
+  --dot-y: var(--line-mid);
 }
 
 .item:last-child {
@@ -40,19 +38,18 @@
 .item::after {
   content: '';
   position: absolute;
-  inset-inline-start: 11px;
+  inset-inline-start: 9px;
   width: 2px;
+  background: var(--rail);
 }
 
 .item::before {
   inset-block-start: 0;
-  height: calc(var(--dot-y) - var(--dot-r) - var(--rail-gap));
-  background: var(--rail-above);
+  height: max(0px, calc(var(--dot-y) - var(--dot) / 2 - var(--rail-gap)));
 }
 
 .item::after {
-  inset-block: calc(var(--dot-y) + var(--dot-r) + var(--rail-gap)) 0;
-  background: var(--rail-below);
+  inset-block: calc(var(--dot-y) + var(--dot) / 2 + var(--rail-gap)) 0;
 }
 
 .item:first-child::before,
@@ -65,87 +62,33 @@
   display: block;
 }
 
-.done,
-.item[data-past] {
-  --rail-above: var(--rail-done);
-  --rail-below: var(--rail-done);
-}
-
 .current {
-  --dot-r: 10px;
-  --dot-y: calc(var(--s-3) + var(--t-body) * 0.75);
-  --rail-above: var(--rail-done);
-}
-
-.upcoming,
-.skipped {
-  --dot-r: 6px;
+  --dot: 10px;
 }
 
 /* dots */
 .dot {
-  position: relative;
   grid-column: 1;
   justify-self: center;
-  display: grid;
-  place-items: center;
-  width: calc(var(--dot-r) * 2);
-  height: calc(var(--dot-r) * 2);
-  margin-block-start: calc(var(--dot-y) - var(--dot-r));
+  width: var(--dot);
+  height: var(--dot);
+  margin-block-start: calc(var(--dot-y) - var(--dot) / 2);
   border-radius: 50%;
 }
 
 .done .dot,
 .stack {
   background: var(--ink);
-  color: var(--bg);
 }
 
+/* the current step: the accent dot with a soft halo */
 .current .dot {
   background: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-tint);
-}
-
-/* the small light centre of the current dot */
-.current .dot::after {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--on-accent);
-}
-
-/* a soft ring that breathes out from the current dot */
-.current .dot::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: var(--accent);
-  opacity: 0;
-  animation: pulse 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.4;
-  }
-  70%,
-  100% {
-    transform: scale(2.3);
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .current .dot::before {
-    animation: none !important;
-  }
+  outline: 4px solid var(--accent-tint);
 }
 
 .upcoming .dot {
-  box-shadow: inset 0 0 0 1.5px var(--ink-3);
+  border: 1.5px solid var(--ink-3);
 }
 
 .skipped .dot {
@@ -153,24 +96,24 @@
 }
 
 /* words */
-.body {
+.body,
+.card {
   grid-column: 2;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
 }
 
 .title {
-  font-size: var(--t-callout);
-  font-weight: 500;
-  line-height: 1.5;
+  font-size: var(--t-body);
+  font-weight: 400;
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
   color: var(--ink);
 }
 
 .upcoming .title,
 .skipped .title {
-  font-weight: 400;
   color: var(--ink-2);
 }
 
@@ -178,67 +121,59 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  font-size: var(--t-cap);
-  line-height: 1.6;
-  color: var(--ink-2);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .part {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
 
 .part + .part::before {
   content: '·';
   margin-inline: 6px;
-  color: var(--ink-3);
 }
 
 .auto {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  font-weight: 500;
+  gap: 4px;
 }
 
 .outcome {
   display: flex;
   align-items: flex-start;
-  gap: 5px;
-  margin-block-start: 2px;
-  font-size: var(--t-foot);
-  font-weight: 500;
-  line-height: 1.55;
-  color: var(--ink);
+  gap: 6px;
+  margin-block-start: 4px;
+  font-size: var(--t-callout);
+  font-weight: 400;
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-2);
 }
 
 .outcome > svg {
-  margin-block-start: 3px;
+  flex: none;
+  margin-block-start: 2px;
   color: var(--ink-3);
 }
 
-/* the current step */
-.card {
-  grid-column: 2;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: var(--s-3) var(--s-4) 14px;
-  border-radius: 16px;
-  background: var(--accent-tint);
-}
-
+/* the current step: the same rail, stronger words, its holder and when to expect it */
 .card .title {
-  font-size: var(--t-body);
   font-weight: 600;
 }
 
 .text {
-  font-size: var(--t-foot);
-  line-height: 1.65;
+  margin-block-start: 2px;
+  font-size: var(--t-callout);
+  line-height: 1.55;
+  letter-spacing: var(--ls-caption);
   color: var(--ink-2);
+  text-wrap: pretty;
 }
 
 .now {
@@ -246,13 +181,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 6px var(--s-3);
-  margin-block-start: 4px;
-}
-
-/* on the tinted card a quiet holder chip sits on the plain surface colour */
-.card .chip {
-  background: var(--surface);
-  color: var(--ink);
+  margin-block-start: var(--s-2);
 }
 
 .eta,
@@ -260,29 +189,51 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: var(--t-cap);
-  font-weight: 500;
-  line-height: 1.6;
-  color: var(--accent-ink);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
 
-/* "show earlier steps" and "show all steps" */
+.eta > svg,
+.now .auto > svg {
+  color: var(--ink-3);
+}
+
+/* "show earlier steps" and "show all steps": quiet links on the rail */
 .toggle {
   position: relative;
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-columns: 20px minmax(0, 1fr);
   column-gap: var(--s-3);
   align-items: center;
   width: 100%;
   min-height: var(--tap);
-  border-radius: 10px;
+  border-radius: var(--r-tile);
   color: var(--accent-ink);
   font-size: var(--t-callout);
-  font-weight: 500;
-  line-height: 1.5;
+  font-weight: 400;
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
   text-align: start;
-  --dot-r: 9px;
+  transition: transform var(--d-1) var(--ease);
+  --dot: 8px;
+}
+
+.toggle:active {
+  transform: scale(0.985);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle {
+    transition: none;
+  }
 }
 
 .toggle .dot {
@@ -296,7 +247,12 @@
   min-width: 0;
 }
 
-/* the rail column of a toggle: a folded stack of done steps, or the dots of steps still to come */
+.toggle:hover .toggleLabel {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* the rail column of a toggle: the folded finished steps, or the dots of steps still to come */
 .lead {
   justify-self: center;
   display: grid;
@@ -309,18 +265,17 @@
 .more::before {
   content: '';
   position: absolute;
-  inset-inline-start: 11px;
+  inset-inline-start: 9px;
   width: 2px;
+  background: var(--rail);
 }
 
 .past::after {
-  inset-block: calc(50% + var(--dot-r) + var(--rail-gap)) 0;
-  background: var(--rail-done);
+  inset-block: calc(50% + var(--dot) / 2 + var(--rail-gap)) 0;
 }
 
 .more::before {
   inset-block: 0 calc(50% + 8px + var(--rail-gap));
-  background: var(--rail-next);
 }
 
 /* once the steps are unfolded, the buttons that fold them again stand clear of the list */

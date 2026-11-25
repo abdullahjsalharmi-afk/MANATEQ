@@ -1,4 +1,4 @@
-import { Camera, CircleAlert } from 'lucide-react';
+import { Camera, CircleAlert, CircleCheck, Image as ImageGlyph } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useT } from '@/app/i18n';
 import { Button } from '../Button/Button';
@@ -106,9 +106,9 @@ export function PhotoPick({ label, hint, value, onChange, required = false, erro
   const describedBy = [invalid ? errorId : null, hint && !value ? hintId : null].filter(Boolean).join(' ') || undefined;
 
   return (
-    <div role="group" aria-labelledby={labelId} className={cx(styles.pick, invalid && styles.invalid, className)}>
-      <span className={cx(styles.thumb, value && styles.thumbFilled)} aria-hidden="true">
-        {value ? src ? <img src={src} alt="" className={styles.image} /> : <StandIn /> : <Icon icon={Camera} size={24} />}
+    <div role="group" aria-labelledby={labelId} className={cx(styles.pick, value && styles.filled, invalid && styles.invalid, className)}>
+      <span className={styles.thumb} aria-hidden="true">
+        {value ? src ? <img src={src} alt="" className={styles.image} /> : <Icon icon={ImageGlyph} size={24} /> : <Icon icon={Camera} size={24} />}
       </span>
       <div className={styles.body}>
         <p id={labelId} className={styles.label}>
@@ -124,6 +124,7 @@ export function PhotoPick({ label, hint, value, onChange, required = false, erro
         </p>
         {value ? (
           <p className={styles.file}>
+            <Icon icon={CircleCheck} size={16} className={styles.fileCheck} />
             <bdi className={styles.name}>{value.name}</bdi>
           </p>
         ) : hint ? (
@@ -177,16 +178,5 @@ export function PhotoPick({ label, hint, value, onChange, required = false, erro
         }}
       />
     </div>
-  );
-}
-
-/** A neutral line drawing that stands in for a photo: a horizon, two hills and a sun. */
-function StandIn() {
-  return (
-    <svg className={styles.standIn} viewBox="0 0 64 64" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" focusable="false">
-      <circle cx="45" cy="19" r="5.5" />
-      <path d="M-2 49 17 30l12 12 9-8 28 23" />
-      <path d="M-2 57h68" opacity="0.5" />
-    </svg>
   );
 }

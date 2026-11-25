@@ -29,8 +29,9 @@ export interface JourneyRibbonProps {
 }
 
 /**
- * The journey ribbon: the investor's whole path on one line — join, contract, build, operate.
- * Passed stations are ticked, the current one carries the accent, the rest wait quietly.
+ * The journey ribbon: the investor's whole path on one line: join, contract, build, operate.
+ * Four equal segments on a thin rail. Passed stations are solid ink dots, the current one carries the
+ * accent, the rest are hollow and wait quietly.
  */
 export function JourneyRibbon({ stations, label, caption, onSelect, size = 'compact', className }: JourneyRibbonProps) {
   const t = useT(strings);
@@ -42,10 +43,10 @@ export function JourneyRibbon({ stations, label, caption, onSelect, size = 'comp
           const content = (
             <>
               <span className={styles.node} aria-hidden="true">
-                {station.state === 'done' ? <Icon icon={Check} size={expanded ? 15 : 11} strokeWidth={expanded ? 2.5 : 3} /> : expanded ? <span className="num">{index + 1}</span> : null}
+                {expanded ? station.state === 'done' ? <Icon icon={Check} size={14} strokeWidth={2.25} /> : <span className="num">{index + 1}</span> : null}
               </span>
               <span className={styles.label}>{station.label}</span>
-              <span className="visually-hidden"> — {t(station.state)}</span>
+              <span className="visually-hidden">{t('stateOf', { state: t(station.state) })}</span>
             </>
           );
           return (
