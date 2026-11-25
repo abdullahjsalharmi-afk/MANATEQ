@@ -86,11 +86,14 @@ export function PhotoPick({ label, hint, value, onChange, required = false, erro
     add({ name: file.name, id: photoId }, url ? { id: photoId, url } : null);
   };
 
+  /** The take/replace button is the one control present in every state: focus rests there when another goes. */
+  const focusChoose = () => document.getElementById(`${baseId}-choose`)?.focus();
+
   const remove = () => {
     replacePreview(null);
     setAnnouncement(t('removed'));
     onChange(null);
-    document.getElementById(`${baseId}-choose`)?.focus();
+    focusChoose();
   };
 
   const labelId = `${baseId}-label`;
@@ -139,11 +142,20 @@ export function PhotoPick({ label, hint, value, onChange, required = false, erro
             {value ? t('replace') : capture ? t('take') : t('choose')}
           </Button>
           {value ? (
-            <Button id={removeId} size="sm" variant="quiet" className={styles.action} aria-labelledby={`${removeId} ${labelId}`} onClick={remove}>
+            <Button key="remove" id={removeId} size="sm" variant="quiet" className={styles.action} aria-labelledby={`${removeId} ${labelId}`} onClick={remove}>
               {t('remove')}
             </Button>
           ) : (
-            <Button size="sm" variant="quiet" className={styles.action} onClick={() => add({ name: t('sampleName'), id: SAMPLE_PHOTO_ID }, null)}>
+            <Button
+              key="sample"
+              size="sm"
+              variant="quiet"
+              className={styles.action}
+              onClick={() => {
+                add({ name: t('sampleName'), id: SAMPLE_PHOTO_ID }, null);
+                focusChoose();
+              }}
+            >
               {t('useSample')}
             </Button>
           )}

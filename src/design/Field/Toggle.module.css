@@ -17,106 +17,130 @@
 
 .label {
   font-size: var(--t-body);
-  font-weight: 500;
-  line-height: 1.5;
+  font-weight: 400;
+  line-height: 1.47;
+  letter-spacing: var(--ls-body);
   color: var(--ink);
   cursor: pointer;
 }
 
 .hint {
-  font-size: var(--t-foot);
-  line-height: 1.55;
-  color: var(--ink-2);
+  font-size: var(--t-callout);
+  line-height: 1.43;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
 .disabled .label {
   cursor: default;
 }
 
-/* The switch. Off: an outlined track with a grey thumb at the start. On: the track fills with the accent
-   and the thumb, now white, moves to the end. Position, fill and thumb colour all change, never colour alone. */
+/* The system switch: a 51 × 31 track and a white thumb. Off: a quiet track, the thumb at the start and a
+   small ring at the end. On: the track fills green, the thumb moves to the end and a short bar shows at
+   the start. Position and glyph tell the state as well as the colour. */
 .switch {
-  --switch-focus: var(--accent);
   position: relative;
   flex: none;
-  width: 52px;
-  height: 32px;
+  width: 51px;
+  height: 31px;
   border-radius: var(--r-pill);
-  background: transparent;
-  box-shadow: inset 0 0 0 1.5px var(--ink-3);
-  transition:
-    background-color var(--d-2) var(--ease),
-    box-shadow var(--d-2) var(--ease);
+  background: var(--sunken);
+  transition: background-color var(--d-2) var(--ease);
 }
 
-:global([data-theme='dark']) .switch {
-  --switch-focus: var(--accent-ink);
-}
-
-/* A 44px touch target around the 32px track. */
+/* A 44 px touch target around the 31 px track. */
 .switch::before {
   content: '';
   position: absolute;
-  inset: -6px 0;
+  inset: -7px -2px;
+}
+
+/* The state glyph: a ring when off (under where the thumb is not), a bar when on. */
+.switch::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: 9px;
+  width: 8px;
+  height: 8px;
+  margin-block-start: -4px;
+  border: 1.5px solid var(--ink-3);
+  border-radius: 50%;
+  box-sizing: border-box;
 }
 
 .switch[aria-checked='true'] {
-  background: var(--accent);
-  box-shadow: inset 0 0 0 1.5px var(--accent);
+  background: var(--ok);
+}
+
+.switch[aria-checked='true']::after {
+  inset-inline: 12px auto;
+  width: 1.5px;
+  height: 10px;
+  margin-block-start: -5px;
+  border: 0;
+  border-radius: 1px;
+  background: var(--on-accent);
+}
+
+.switch:active {
+  transform: scale(var(--press));
 }
 
 .switch:focus-visible {
-  outline: 2px solid var(--switch-focus);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
-  border-radius: var(--r-pill);
 }
 
 .switch:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
 }
 
 .thumb {
   position: absolute;
-  inset-block-start: 5px;
-  inset-inline-start: 5px;
-  width: 22px;
-  height: 22px;
+  z-index: 1;
+  inset-block-start: 2px;
+  inset-inline-start: 2px;
+  width: 27px;
+  height: 27px;
   border-radius: 50%;
-  background: var(--ink-3);
-  transition:
-    transform var(--d-2) var(--ease),
-    background-color var(--d-2) var(--ease);
+  background: var(--on-accent);
+  border: 0.5px solid var(--line);
+  box-sizing: border-box;
+  transition: transform var(--d-2) var(--ease);
 }
 
 .switch[aria-checked='true'] .thumb {
-  background: var(--on-accent);
-  transform: translateX(20px) scale(1.09);
+  border-color: transparent;
+  transform: translateX(20px);
 }
 
 :global([dir='rtl']) .switch[aria-checked='true'] .thumb {
-  transform: translateX(-20px) scale(1.09);
+  transform: translateX(-20px);
 }
 
-/* Forced colours repaint backgrounds and remove shadows: the track becomes a border and the two states
-   use the system's own pair of colours. */
+/* Forced colours repaint backgrounds: the track becomes a border and the two states use the system's
+   own pair of colours. */
 @media (forced-colors: active) {
   .switch {
     border: 2px solid ButtonText;
-    box-shadow: none;
     forced-color-adjust: none;
     background: Canvas;
   }
 
+  .switch::after {
+    display: none;
+  }
+
   .thumb {
-    inset-block-start: 3px;
-    inset-inline-start: 3px;
+    inset-block-start: 1px;
+    inset-inline-start: 1px;
     background: ButtonText;
   }
 
   .switch[aria-checked='true'] {
     border-color: Highlight;
     background: Highlight;
-    box-shadow: none;
   }
 
   .switch[aria-checked='true'] .thumb {

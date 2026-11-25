@@ -31,7 +31,7 @@
 
 .track {
   fill: none;
-  stroke: var(--line);
+  stroke: var(--sunken);
 }
 
 .arc {
@@ -50,6 +50,13 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .arc {
+    transition: none;
+    animation: none;
+  }
+}
+
 .centre {
   grid-area: 1 / 1;
   display: grid;
@@ -63,20 +70,23 @@
 }
 
 .sm .centre {
-  font-size: 0.6875rem;
+  font-size: var(--t-cap);
   font-weight: 600;
 }
 
 .md .centre {
-  font-size: var(--t-foot);
+  font-size: var(--t-body);
   font-weight: 600;
+  letter-spacing: var(--ls-body);
 }
 
 .lg .centre {
   font-size: var(--t-heading);
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: var(--ls-heading);
 }
 
+/* tone colours the arc; the figure stays ink unless the standard is passed */
 .warn {
   --ring-color: var(--warn);
 }

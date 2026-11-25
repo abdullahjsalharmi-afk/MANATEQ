@@ -11,7 +11,6 @@ import { useApp } from '@/state/store';
 const CoreGallery = lazy(() => import('./CoreGallery').then((m) => ({ default: m.CoreGallery })));
 const FormsGallery = lazy(() => import('./FormsGallery').then((m) => ({ default: m.FormsGallery })));
 const SignatureGallery = lazy(() => import('./SignatureGallery').then((m) => ({ default: m.SignatureGallery })));
-const SketchGallery = lazy(() => import('./SketchGallery').then((m) => ({ default: m.SketchGallery })));
 
 export function GalleryScreen() {
   const { lang } = useLang();
@@ -29,7 +28,6 @@ export function GalleryScreen() {
         <CoreGallery />
         <FormsGallery />
         <SignatureGallery />
-        <SketchGallery />
       </Suspense>
     </Screen>
   );

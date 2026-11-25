@@ -151,7 +151,7 @@ export interface Doc {
   lines: DocLine[];
 }
 
-export type PassKind = 'visitor' | 'contractor' | 'vehicle';
+export type PassKind = 'visitor' | 'worker' | 'vehicle';
 
 export interface Pass {
   id: string;

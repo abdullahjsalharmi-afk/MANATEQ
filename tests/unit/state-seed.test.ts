@@ -3,10 +3,11 @@ import { getService, getSolution, getZone, loadAllServiceDetails, peekServiceDet
 import type { L10n, ServiceDetail } from '@/data/types';
 import { VERIFY_CODE_PATTERN } from '@/domain/documents';
 import { collectNextSteps } from '@/domain/nextstep';
+import { timingFor } from '@/domain/simulation';
 import type { Persona, RequestState, World } from '@/domain/types';
 import { act, advance, findStep, firstStep, isTerminal, successor, waitsForInvestor, type Timing } from '@/domain/workflow';
 import { STATE_VERSION, calendarTiming, emptyWorld, initialSettings, initialState, seedIsPartial, seedWorld } from '@/state/seed';
-import { fastForwardIn, tickWorld } from '@/state/sim';
+import { actIn, cancelIn, fastForwardIn, payInvoiceIn, startIn, tickWorld } from '@/state/sim';
 import { holdOf, type Env } from '@/state/types';
 
 const DAY = 86_400_000;
@@ -15,6 +16,8 @@ const HOUR = 3_600_000;
 const MOMENTS = [new Date(2026, 10, 19, 9, 30).getTime(), new Date(2027, 1, 14, 23, 50).getTime(), new Date(2027, 0, 1, 0, 5).getTime()];
 const NOW = MOMENTS[0] as number;
 const PERSONAS: Persona[] = ['guest', 'prospect', 'tenant'];
+
+const APPLICATION = ['A4', 'A5', 'A6', 'A7'];
 
 const calendar: Env = { detail: peekServiceDetail, timing: calendarTiming };
 const instant: Timing = { duration: () => 0 };
@@ -65,8 +68,9 @@ function expectEngineState(request: RequestState, now: number): void {
   if (request.status === 'done' || request.status === 'stopped') {
     expect(request.current, label).toBeNull();
     expect(last?.doneAt, label).toBeDefined();
-    expect(lastStep && isTerminal(lastStep), `${label} ended on a step that is not an end`).toBe(true);
-    expect(lastStep?.kind === 'end' ? 'done' : 'stopped', label).toBe(request.status);
+    // A finished request ended on an end of its workflow; a withdrawn one stopped wherever it stood.
+    if (request.status === 'done') expect(lastStep?.kind, `${label} is done but did not reach an end`).toBe('end');
+    else if (lastStep && isTerminal(lastStep)) expect(lastStep.kind, label).toBe('stop');
     expect(holdOf(request), `${label}: a finished request is still held`).toBeUndefined();
   } else {
     expect(request.current, label).toBe(last?.step);
@@ -134,8 +138,10 @@ function expectValidWorld(world: World, now: number): void {
       expect(parent, `${request.id}: parent ${request.parentId}`).toBeDefined();
       expect(parent?.threadId).toBe(request.threadId);
       expect(parent?.status).toBe('done');
+      expect(parent?.updatedAt, `${request.id} began before its parent finished`).toBeLessThanOrEqual(request.createdAt);
     }
-    if (request.plotId !== undefined) expect(plotIds.has(request.plotId), `${request.id}: plot ${request.plotId}`).toBe(true);
+    // An application names the plot it asked for before that plot is on record, and after it was given back.
+    if (request.plotId !== undefined && !APPLICATION.includes(request.serviceId)) expect(plotIds.has(request.plotId), `${request.id}: plot ${request.plotId}`).toBe(true);
     for (const docId of request.docIds) expect(docIds.has(docId), `${request.id}: document ${docId}`).toBe(true);
     expect(request.createdAt).toBeLessThanOrEqual(request.updatedAt);
     expect(request.updatedAt).toBeLessThanOrEqual(now);
@@ -402,8 +408,8 @@ describe('the tenant', () => {
     for (const lease of world.leases) expect(world.docs.some((doc) => doc.kind === 'contract' && doc.ref === lease.ref && doc.signed), `contract of ${lease.ref}`).toBe(true);
   });
 
-  it('has one active contractor pass and one expired visitor pass', () => {
-    expect(world.passes.map((pass) => `${pass.kind}:${pass.status}`).sort()).toEqual(['contractor:active', 'visitor:expired']);
+  it('has one active worker pass and one expired visitor pass', () => {
+    expect(world.passes.map((pass) => `${pass.kind}:${pass.status}`).sort()).toEqual(['visitor:expired', 'worker:active']);
   });
 
   it('has a handful of notifications, some of them unread', () => {
@@ -453,3 +459,64 @@ describe('the tenant', () => {
     expectValidWorld(tomorrow, NOW + DAY + HOUR);
   });
 });
+
+describe('whatever the investor does', () => {
+  /** mulberry32: the same seed always plays the same game. */
+  const generator = (seed: number) => () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const live: Env = { detail: peekServiceDetail, timing: (service) => timingFor(service, 1) };
+  const LAND_ZONES = ['MIZ', 'SMI', 'AK', 'KH', 'BA', 'AW', 'JS', 'AS'];
+
+  it.each([
+    ['prospect', 11],
+    ['prospect', 12],
+    ['tenant', 21],
+    ['tenant', 22],
+    ['tenant', 23],
+    ['guest', 31],
+  ] as const)('the %s world stays valid (game %i)', (persona, seed) => {
+    const random = generator(seed);
+    const pick = <T>(list: readonly T[]): T => list[Math.floor(random() * list.length)] as T;
+    let now = NOW;
+    let world = seedWorld(persona, now);
+    const ids = allServiceIds();
+
+    for (let move = 0; move < 120; move++) {
+      const roll = random();
+      const open = world.requests.filter((request) => request.status === 'active' || request.status === 'needs_you');
+      const waiting = open.filter((request) => request.status === 'needs_you');
+      if (roll < 0.22) {
+        // Start anything at all: on a plot of the investor's, on a plot of a zone, or on nothing.
+        const zone = pick(LAND_ZONES);
+        const where = random() < 0.5 && world.plots.length ? { plotId: pick(world.plots).id } : random() < 0.6 ? { plotId: `${zone}-${101 + Math.floor(random() * 40)}`, zoneCode: zone } : {};
+        world = startIn(world, { serviceId: pick(ids), form: random() < 0.5 ? { area: 2000 + Math.floor(random() * 6000), passType: pick(['worker', 'vehicle', 'visitor']), docType: 'statement' } : {}, ...where }, now, live).world;
+      } else if (roll < 0.62 && waiting.length) {
+        const request = pick(waiting);
+        const options = detailOf(request).actions.find((action) => action.step === request.current)?.options;
+        world = actIn(world, request.id, { rating: 1 + Math.floor(random() * 5), files: [{ name: 'file.pdf' }], form: { reference: 'REF' }, ...(options?.length ? { choice: pick(options).value } : {}) }, now, live);
+      } else if (roll < 0.74 && open.length) {
+        world = fastForwardIn(world, pick(open).id, now, live);
+      } else if (roll < 0.78 && open.length) {
+        world = cancelIn(world, pick(open).id, now, live);
+      } else if (roll < 0.86) {
+        const unpaid = world.invoices.filter((invoice) => invoice.status !== 'paid');
+        if (unpaid.length) world = payInvoiceIn(world, pick(unpaid).id, now).world;
+      }
+      // Time passes: mostly seconds, now and then days or months.
+      now += roll > 0.97 ? 40 * DAY : roll > 0.9 ? 2 * DAY : 500 + Math.floor(random() * 15_000);
+      world = tickWorld(world, now, live);
+      if (move % 30 === 29) expectValidWorld(world, now);
+    }
+    expectValidWorld(world, now);
+    // The same game twice is the same world: nothing depends on the clock or on chance.
+    expect(tickWorld(world, now, live)).toBe(world);
+  });
+});
+
+function allServiceIds(): string[] {
+  return Object.values(import.meta.glob<{ default: ServiceDetail[] }>('../../src/data/generated/services-*.json', { eager: true })).flatMap((module) => module.default.map((service) => service.id));
+}

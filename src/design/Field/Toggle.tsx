@@ -39,11 +39,12 @@ export interface ToggleProps {
 export function Toggle({ label, hint, checked, onChange, disabled = false, id, className }: ToggleProps) {
   const autoId = useId();
   const switchId = id ?? `${autoId}-switch`;
+  const labelId = `${switchId}-label`;
   const hintId = `${switchId}-hint`;
   return (
     <div className={cx(styles.toggle, disabled && styles.disabled, className)}>
       <div className={styles.text}>
-        <label htmlFor={switchId} className={styles.label}>
+        <label id={labelId} htmlFor={switchId} className={styles.label}>
           {label}
         </label>
         {hint ? (
@@ -52,7 +53,7 @@ export function Toggle({ label, hint, checked, onChange, disabled = false, id, c
           </span>
         ) : null}
       </div>
-      <Switch id={switchId} checked={checked} onChange={onChange} disabled={disabled} aria-describedby={hint ? hintId : undefined} />
+      <Switch id={switchId} checked={checked} onChange={onChange} disabled={disabled} aria-labelledby={labelId} aria-describedby={hint ? hintId : undefined} />
     </div>
   );
 }

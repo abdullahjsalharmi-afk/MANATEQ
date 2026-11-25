@@ -1,143 +1,229 @@
 /* Manateq One — design tokens.
-   One accent (maroon), ink on warm paper, hairlines instead of shadows.
-   Status colours never carry meaning alone: every status also has an icon or a word. */
+
+   The visual language: near-invisible interface, so the content and the building renders can speak.
+   White and parchment canvases, near-black tiles, one quiet blue for everything that can be pressed,
+   hairlines instead of shadows, pills for actions, 17 px body text.
+
+   Rules the tokens encode:
+   - One accent. Every link, primary pill and focus signal is the blue. There is no second brand colour.
+   - No shadows on cards, buttons or text. The single soft shadow belongs to building renders.
+   - No decorative gradients. Depth comes from a change of surface (light tile, dark tile) and from blur on bars.
+   - Status colours never carry meaning alone: each status also has an icon or a word. */
 
 :root {
   color-scheme: light;
 
   /* surfaces */
-  --bg: #f6f4f0;
-  --surface: #ffffff;
-  --surface-2: #fbfaf8;
-  --sunken: #efece6;
+  --bg: #f5f5f7; /* parchment: the page */
+  --surface: #ffffff; /* cards and light tiles */
+  --surface-2: #fafafc; /* pearl: quiet buttons, insets on white */
+  --sunken: #e8e8ed; /* wells, tracks, pressed fills */
+
+  /* near-black tiles (the same in both themes) */
+  --tile-1: #272729;
+  --tile-2: #2a2a2c;
+  --tile-3: #252527;
+  --black: #000000;
 
   /* ink */
-  --ink: #1f1b1c;
-  --ink-2: #5c5553;
-  --ink-3: #807876;
-  --line: rgba(31, 27, 28, 0.1);
-  --line-strong: rgba(31, 27, 28, 0.2);
+  --ink: #1d1d1f;
+  --ink-2: #424245;
+  --ink-3: #6e6e73;
+  --ink-disabled: #86868b;
+  --line: rgba(0, 0, 0, 0.12); /* the card hairline (#e0e0e0 on white) */
+  --line-soft: rgba(0, 0, 0, 0.06); /* dividers inside a card */
+  --line-strong: #d2d2d7; /* inputs and chips */
 
   /* the one accent */
-  --accent: #862633;
-  --accent-press: #6e1e2a;
-  --accent-ink: #7a2130;
-  --accent-tint: #f6ecee;
+  --accent: #0066cc;
+  --accent-press: #0059b3;
+  --accent-ink: #0066cc; /* links */
+  --accent-tint: rgba(0, 113, 227, 0.08);
+  --focus: #0071e3;
   --on-accent: #ffffff;
 
-  /* "verified / official" only */
-  --gold: #7c6529;
-  --gold-tint: #f5f0e2;
+  /* "verified" uses the accent; there is no second brand colour */
+  --gold: var(--accent);
+  --gold-tint: var(--accent-tint);
 
   /* status */
-  --ok: #1b7046;
-  --ok-tint: #e7f3ec;
-  --warn: #8a5300;
-  --warn-tint: #faf0dc;
-  --bad: #b3261e;
-  --bad-tint: #fbe9e7;
-  --info: #2a5c8a;
-  --info-tint: #e6eef6;
+  --ok: #248a3d;
+  --ok-tint: rgba(36, 138, 61, 0.1);
+  --warn: #b64400;
+  --warn-tint: rgba(182, 68, 0, 0.09);
+  --bad: #d70015;
+  --bad-tint: rgba(215, 0, 21, 0.08);
+  --info: var(--accent);
+  --info-tint: var(--accent-tint);
 
-  --scrim: rgba(20, 16, 17, 0.42);
-  --bar: rgba(246, 244, 240, 0.86);
-  --float-shadow: 0 10px 40px rgba(20, 16, 17, 0.12), 0 1px 3px rgba(20, 16, 17, 0.06);
+  --scrim: rgba(0, 0, 0, 0.48);
+  --bar: rgba(245, 245, 247, 0.8); /* frosted bars: use with --bar-filter */
+  --bar-filter: saturate(180%) blur(20px);
+  --chip-on-image: rgba(210, 210, 215, 0.64);
+  /* Floating layers (sheets, menus, toasts) separate from the page with a scrim or a hairline, not a heavy shadow. */
+  --float-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.1), 0 16px 48px rgba(0, 0, 0, 0.1);
+  /* The only true shadow in the system: under a building render resting on a surface. */
+  --product-shadow: 3px 5px 30px rgba(0, 0, 0, 0.22);
 
   /* type */
-  --font: 'Manateq Sans', 'Tajawal', 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --t-display: 2.125rem; /* 34 */
-  --t-title: 1.625rem; /* 26 */
-  --t-heading: 1.25rem; /* 20 */
-  --t-body: 1rem; /* 16 */
-  --t-callout: 0.9375rem; /* 15 */
-  --t-foot: 0.8125rem; /* 13 */
-  --t-cap: 0.75rem; /* 12 */
+  --font: -apple-system, BlinkMacSystemFont, 'Manateq UI', 'Segoe UI', system-ui, sans-serif;
+  --t-hero: 2.353rem; /* 40; 56 on wide screens */
+  --t-display: 2rem; /* 34: large titles */
+  --t-title: 1.647rem; /* 28: lead */
+  --t-heading: 1.235rem; /* 21: tagline, section heads */
+  --t-body: 1rem; /* 17 */
+  --t-callout: 0.8235rem; /* 14: captions, utility buttons */
+  --t-foot: 0.7059rem; /* 12: fine print, nav */
+  --t-cap: 0.7059rem; /* 12 */
+  --w-light: 300;
+  --w-regular: 400;
+  --w-strong: 600;
+  --w-heavy: 700;
+  /* Arabic needs more room between lines than Latin, and takes no tracking. */
   --lh-tight: 1.3;
-  --lh-heading: 1.45;
-  --lh-body: 1.7;
+  --lh-heading: 1.4;
+  --lh-body: 1.65;
+  --ls-display: 0;
+  --ls-heading: 0;
+  --ls-body: 0;
+  --ls-caption: 0;
 
-  /* space: 4-pt grid */
+  /* space */
   --s-1: 4px;
   --s-2: 8px;
   --s-3: 12px;
-  --s-4: 16px;
+  --s-4: 17px;
   --s-5: 20px;
   --s-6: 24px;
   --s-8: 32px;
   --s-10: 40px;
+  --s-12: 48px;
   --s-14: 56px;
+  --s-16: 64px;
+  --s-20: 80px; /* inside a tile on wide screens */
   --gutter: 20px;
+  --tile-pad: 48px; /* vertical padding of a tile; 80 on wide screens */
 
   /* shape */
-  --r-card: 22px;
-  --r-control: 14px;
-  --r-tile: 10px;
-  --r-pill: 999px;
+  --r-card: 18px; /* cards */
+  --r-control: 11px; /* inputs, quiet capsules */
+  --r-tile: 8px; /* compact utility buttons, inline imagery */
+  --r-pill: 999px; /* actions, chips, search */
 
   /* motion */
-  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease: cubic-bezier(0.28, 0.11, 0.32, 1);
   --d-1: 160ms;
   --d-2: 240ms;
-  --d-3: 360ms;
+  --d-3: 400ms;
+  --press: 0.96; /* the press scale of every button */
 
   /* layout */
-  --content-max: 560px;
-  --side-w: 264px;
-  --tabbar-h: 64px;
-  --topbar-h: 52px;
+  --content-max: 980px; /* reading and forms */
+  --grid-max: 1440px; /* card grids */
+  --nav-h: 44px; /* global bar on wide screens */
+  --topbar-h: 52px; /* the frosted bar under it; the only top bar on phones */
+  --tabbar-h: 60px;
+  --side-w: 0px; /* no side rail: wide screens use the global bar */
   --tap: 44px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* English reads a little tighter than Arabic at the same size. */
+/* Latin: tighter leading and the tight display tracking. */
 :root[lang='en'] {
-  --lh-tight: 1.2;
-  --lh-heading: 1.3;
-  --lh-body: 1.55;
+  --lh-tight: 1.08;
+  --lh-heading: 1.19;
+  --lh-body: 1.47;
+  --ls-display: -0.005em;
+  --ls-heading: 0.011em;
+  --ls-body: -0.022em;
+  --ls-caption: -0.016em;
+}
+
+@media (min-width: 735px) {
+  :root {
+    --gutter: 24px;
+  }
+}
+
+@media (min-width: 1069px) {
+  :root {
+    --t-hero: 3.294rem; /* 56 */
+    --tile-pad: 80px;
+  }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #121011;
-  --surface: #1c191a;
-  --surface-2: #232021;
-  --sunken: #0d0b0c;
-  --ink: #f3efec;
-  --ink-2: #b8b0ac;
-  --ink-3: #8f8784;
-  --line: rgba(255, 255, 255, 0.11);
-  --line-strong: rgba(255, 255, 255, 0.22);
-  --accent: #a93345;
-  --accent-press: #8e2a3a;
-  --accent-ink: #f0a0ac;
-  --accent-tint: rgba(240, 160, 172, 0.13);
+  --bg: #000000;
+  --surface: #1d1d1f;
+  --surface-2: #272729;
+  --sunken: #2a2a2c;
+  --ink: #f5f5f7;
+  --ink-2: #cccccc;
+  --ink-3: #a1a1a6;
+  --ink-disabled: #6e6e73;
+  --line: rgba(255, 255, 255, 0.16);
+  --line-soft: rgba(255, 255, 255, 0.08);
+  --line-strong: #424245;
+  --accent: #0071e3;
+  --accent-press: #0066cc;
+  --accent-ink: #2997ff;
+  --accent-tint: rgba(41, 151, 255, 0.16);
+  --focus: #2997ff;
   --on-accent: #ffffff;
-  --gold: #cdb877;
-  --gold-tint: rgba(205, 184, 119, 0.14);
-  --ok: #6cc495;
-  --ok-tint: rgba(108, 196, 149, 0.14);
-  --warn: #e3ad55;
-  --warn-tint: rgba(227, 173, 85, 0.14);
-  --bad: #ee7c73;
-  --bad-tint: rgba(238, 124, 115, 0.14);
-  --info: #8ab6e0;
-  --info-tint: rgba(138, 182, 224, 0.14);
-  --scrim: rgba(0, 0, 0, 0.6);
-  --bar: rgba(18, 16, 17, 0.84);
-  --float-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --ok: #30d158;
+  --ok-tint: rgba(48, 209, 88, 0.16);
+  --warn: #ff9f0a;
+  --warn-tint: rgba(255, 159, 10, 0.16);
+  --bad: #ff453a;
+  --bad-tint: rgba(255, 69, 58, 0.16);
+  --scrim: rgba(0, 0, 0, 0.64);
+  --bar: rgba(29, 29, 31, 0.8);
+  --chip-on-image: rgba(66, 66, 69, 0.72);
+  --float-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.14), 0 16px 48px rgba(0, 0, 0, 0.5);
+  --product-shadow: 3px 5px 30px rgba(0, 0, 0, 0.5);
 }
 
-/* Text size setting: scales everything that is set in rem. */
-:root[data-text='0'] {
-  font-size: 15px;
+/* A near-black tile inside a light page: everything placed in it reads on dark.
+   Set data-tone="dark" on the tile; the tokens below reach every component inside. */
+[data-tone='dark'] {
+  color-scheme: dark;
+  --ink: #f5f5f7;
+  --ink-2: #cccccc;
+  --ink-3: #a1a1a6;
+  --ink-disabled: #6e6e73;
+  --surface: #1d1d1f;
+  --surface-2: #2a2a2c;
+  --sunken: #3a3a3c;
+  --line: rgba(255, 255, 255, 0.16);
+  --line-soft: rgba(255, 255, 255, 0.08);
+  --line-strong: #424245;
+  --accent: #0071e3;
+  --accent-press: #0066cc;
+  --accent-ink: #2997ff;
+  --accent-tint: rgba(41, 151, 255, 0.16);
+  --focus: #2997ff;
+  --ok: #30d158;
+  --ok-tint: rgba(48, 209, 88, 0.16);
+  --warn: #ff9f0a;
+  --warn-tint: rgba(255, 159, 10, 0.16);
+  --bad: #ff453a;
+  --bad-tint: rgba(255, 69, 58, 0.16);
+  --product-shadow: 3px 5px 30px rgba(0, 0, 0, 0.5);
+  color: var(--ink);
 }
-:root[data-text='1'] {
+
+/* Text size setting: scales everything that is set in rem. The default body size is 17 px. */
+:root[data-text='0'] {
   font-size: 16px;
 }
+:root[data-text='1'] {
+  font-size: 17px;
+}
 :root[data-text='2'] {
-  font-size: 17.5px;
+  font-size: 18.5px;
 }
 :root[data-text='3'] {
-  font-size: 19px;
+  font-size: 20px;
 }

@@ -85,12 +85,12 @@ function Tiles<V extends string>({ control, options, value, onChange, disabled }
         return (
           <label key={option.value} className={cx(styles.tile, selected && styles.tileOn, disabled && styles.tileDisabled)}>
             <input type="radio" className={styles.radio} name={name} value={option.value} checked={selected} disabled={disabled} onChange={() => onChange(option.value)} />
-            <span className={styles.mark} aria-hidden="true" />
+            {option.icon ? <Icon icon={option.icon} size={22} className={styles.tileIcon} /> : null}
             <span className={styles.tileText}>
               <span className={styles.tileLabel}>{option.label}</span>
               {option.hint ? <span className={styles.tileHint}>{option.hint}</span> : null}
             </span>
-            {option.icon ? <Icon icon={option.icon} size={22} className={styles.tileIcon} /> : null}
+            <Icon icon={Check} size={18} strokeWidth={2.25} className={styles.tileCheck} />
           </label>
         );
       })}

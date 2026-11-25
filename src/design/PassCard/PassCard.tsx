@@ -10,7 +10,7 @@ import { strings } from './strings';
 
 export type PassStatus = Pass['status'];
 
-const KIND_ICON: Record<PassKind, LucideIcon> = { visitor: UserRound, contractor: HardHat, vehicle: Truck };
+const KIND_ICON: Record<PassKind, LucideIcon> = { visitor: UserRound, worker: HardHat, vehicle: Truck };
 
 const STATUS: Record<PassStatus, { tone: Tone; icon: LucideIcon }> = {
   active: { tone: 'ok', icon: CircleCheck },

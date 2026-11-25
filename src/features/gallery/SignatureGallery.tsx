@@ -425,7 +425,7 @@ export function SignatureGallery() {
 
       <Section title="Gate pass">
         <PassCard
-          kind="contractor"
+          kind="worker"
           holder={t('holder')}
           company={t('contractor')}
           idOrPlate="28463401234"

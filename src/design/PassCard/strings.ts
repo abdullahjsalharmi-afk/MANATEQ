@@ -1,6 +1,6 @@
 export const strings = {
   visitor: { ar: 'تصريح زائر', en: 'Visitor pass' },
-  contractor: { ar: 'تصريح مقاول', en: 'Contractor pass' },
+  worker: { ar: 'تصريح عامل', en: 'Worker pass' },
   vehicle: { ar: 'تصريح مركبة', en: 'Vehicle pass' },
   id: { ar: 'رقم الهوية', en: 'ID number' },
   plate: { ar: 'رقم اللوحة', en: 'Plate number' },

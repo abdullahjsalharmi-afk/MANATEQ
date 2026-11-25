@@ -91,8 +91,9 @@ function ensurePlot(world: World, id: string): { world: World; plot: Plot | unde
 /** A6: the offer was accepted and the deposit paid, so the plot is held for the investor. */
 const reservePlot: Effect = (world, ctx) => ensurePlot(world, ctx.id).world;
 
-/** Raises the rent invoice of the billing period that starts at `at`. */
+/** Raises the rent invoice of the billing period that starts at `at`. Nothing is raised where Manateq sets no rent. */
 export function issueRentInvoice(world: World, lease: Lease, plot: Plot, at: number, requestId?: string): World {
+  if (lease.annualRent <= 0) return world;
   const slot = allocate(world, 'inv');
   const invoice: Invoice = {
     id: slot.id,
@@ -183,7 +184,7 @@ export function addPass(world: World, input: PassInput, at: number): { world: Wo
   return { world: { ...slot.world, passes: [...slot.world.passes, pass] }, id: slot.id };
 }
 
-const PASS_KIND: Record<string, PassKind> = { worker: 'contractor', contractor: 'contractor', vehicle: 'vehicle', visitor: 'visitor' };
+const PASS_KIND: Record<string, PassKind> = { worker: 'worker', contractor: 'worker', vehicle: 'vehicle', visitor: 'visitor' };
 
 const asText = (value: FormValue | undefined): string | undefined => (typeof value === 'string' && value.trim() ? value.trim() : undefined);
 const personName = (value: FormValue | undefined): string | undefined => (value !== null && typeof value === 'object' && value.name.trim() ? value.name.trim() : undefined);

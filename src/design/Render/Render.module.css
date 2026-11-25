@@ -1,0 +1,39 @@
+.render {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0;
+  transform: translateY(12px) scale(0.985);
+  transition:
+    opacity var(--d-3) var(--ease),
+    transform 700ms var(--ease);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.ready {
+  opacity: 1;
+  transform: none;
+}
+
+/* The one shadow of the system: it gives the model weight on its surface. */
+.shadow {
+  filter: drop-shadow(var(--product-shadow));
+}
+
+.mirror,
+.mirror.ready {
+  transform: scaleX(-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .render {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .mirror {
+    transform: scaleX(-1);
+  }
+}

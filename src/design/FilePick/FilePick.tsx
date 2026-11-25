@@ -72,13 +72,16 @@ export function FilePick({ label, hint, value, onChange, required = false, error
     }, FILE_CHECK_MS);
   };
 
+  /** The choose/replace button is the one control present in every state. */
+  const focusChoose = () => document.getElementById(`${baseId}-choose`)?.focus();
+
   const remove = () => {
     clearTimeout(timer.current);
     setPending(null);
     setAnnouncement(t('removed'));
     onChange(null);
     // The "remove" button is about to go: keep the keyboard on this document.
-    document.getElementById(`${baseId}-choose`)?.focus();
+    focusChoose();
   };
 
   return (
@@ -93,7 +96,11 @@ export function FilePick({ label, hint, value, onChange, required = false, error
         file={pending ?? value}
         announcement={announcement}
         onChoose={() => inputRef.current?.click()}
-        onSample={() => check({ name: t('sampleName', { label }), size: SAMPLE_BYTES })}
+        onSample={() => {
+          check({ name: t('sampleName', { label }), size: SAMPLE_BYTES });
+          // "Use a sample file" is about to go: keep the keyboard on this document.
+          focusChoose();
+        }}
         onRemove={remove}
         className={className}
       />
@@ -200,11 +207,11 @@ export function FilePickView({ id, label, hint, required = false, error, state, 
             {state === 'empty' ? t('choose') : t('replace')}
           </Button>
           {state === 'empty' ? (
-            <Button size="sm" variant="quiet" className={styles.action} onClick={onSample}>
+            <Button key="sample" size="sm" variant="quiet" className={styles.action} onClick={onSample}>
               {t('useSample')}
             </Button>
           ) : (
-            <Button id={removeId} size="sm" variant="quiet" className={styles.action} aria-labelledby={`${removeId} ${labelId}`} aria-disabled={checking || undefined} onClick={checking ? undefined : onRemove}>
+            <Button key="remove" id={removeId} size="sm" variant="quiet" className={styles.action} aria-labelledby={`${removeId} ${labelId}`} aria-disabled={checking || undefined} onClick={checking ? undefined : onRemove}>
               {t('remove')}
             </Button>
           )}
