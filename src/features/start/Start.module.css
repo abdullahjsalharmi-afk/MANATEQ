@@ -50,17 +50,13 @@
   margin-block-end: var(--s-2);
 }
 
-.companyCard {
-  overflow: hidden;
-}
-
 .companyHead {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--s-2) var(--s-4);
-  padding: var(--s-6) var(--s-6) var(--s-2);
+  padding-block-end: var(--s-2);
 }
 
 .companyName {

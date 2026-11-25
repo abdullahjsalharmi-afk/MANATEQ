@@ -21,7 +21,7 @@ export function KnownCard({ company, plot }: KnownCardProps) {
   const zone = plot ? getZone(plot.zoneCode) : undefined;
   return (
     <section aria-label={t('companyLabel')} className={styles.known}>
-      <Card pad="none" className={styles.companyCard}>
+      <Card>
         <div className={styles.companyHead}>
           <h3 className={styles.companyName}>{pick(company.name)}</h3>
           <p className={styles.verified}>
