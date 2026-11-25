@@ -67,8 +67,10 @@ describe('n=21 · a service that needs a plot never waives it', () => {
 
   it('the start screen explains instead of running the flow, generic and bespoke', () => {
     const screen = src('features/start/StartScreen.tsx');
-    expect(screen).toMatch(/Bespoke && summary && needsTenancy\(summary\) && candidates\.length === 0/);
-    expect(screen).toMatch(/needsTenancy\(detail\) && candidates\.length === 0/);
+    // Both gates are judged when the flow opens (useAdmitted): a flow that was let in is never replaced.
+    expect(screen).toMatch(/useAdmitted\(id, Bespoke && summary \? !\(needsTenancy\(summary\) && candidates\.length === 0\) : undefined\)/);
+    expect(screen).toMatch(/useAdmitted\(id, detail && company \? !\(needsTenancy\(detail\) && candidates\.length === 0\) : undefined\)/);
+    expect(screen.match(/if \((?:Bespoke && summary && )?!admitted\) return <NeedsPlot service=\{summary\} \/>/g)).toHaveLength(2);
   });
 
   it('offers one way forward: the running land application, else apply, else the eligibility check', () => {

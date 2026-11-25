@@ -147,6 +147,19 @@ test('a plot service offers the way to a plot, not Start, to a company without o
   const card = page.locator('li').filter({ has: page.locator('h3 a[href="#/services/A8"]') });
   await expect(card.getByText('Once you lease a plot')).toBeVisible();
   await expect(card.getByRole('link', { name: /^Start/ })).toHaveCount(0);
+
+  // The full list says it on each plot service too, and on nothing else.
+  await page.getByRole('radio', { name: 'All' }).click();
+  const row = (id: string) => page.locator(`main a[href="#/services/${id}"]`);
+  for (const id of ['A8', 'B7', 'B8', 'C1', 'D1', 'D2']) await expect(row(id).getByText('Once you lease a plot')).toBeVisible();
+  for (const id of ['A1', 'A4', 'E1', 'B1']) await expect(row(id).getByText('Once you lease a plot')).toHaveCount(0);
+  // A tenant with plots is never told to lease one. The handover, which none of their plots needs any more,
+  // says exactly that; a service their plots can use carries no tag.
+  await openApp(page, { route: '/services?view=all', lang: 'en' });
+  await expect(page.locator('main a[href="#/services/B7"]')).toBeVisible();
+  await expect(page.getByRole('main').getByText('Once you lease a plot')).toHaveCount(0);
+  await expect(page.locator('main a[href="#/services/A8"]').getByText('No plot needs it now')).toBeVisible();
+  await expect(page.locator('main a[href="#/services/B7"]').getByText('No plot needs it now')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

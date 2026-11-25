@@ -129,7 +129,7 @@ describe('plot services without a plot (gate n=21)', () => {
     expect(PLOT_GATE_ACTION.check.to({ kind: 'check' })).toBe('/eligibility');
     expect(PLOT_GATE_ACTION.track.to({ kind: 'track', requestId: 'r9' })).toBe('/requests/r9');
     expect(PLOT_GATE_ACTION.plots.to({ kind: 'plots' })).toBe('/account/plots');
-    for (const key of ['needsPlotContext', 'needsPlotNoneContext', 'needsPlotTag', 'gateTrackLand', 'gateApplyLand', 'gateCheckFirst', 'gateViewPlots'] as const) {
+    for (const key of ['needsPlotContext', 'needsPlotNoneContext', 'needsPlotTag', 'needsPlotNoneTag', 'gateTrackLand', 'gateApplyLand', 'gateCheckFirst', 'gateViewPlots'] as const) {
       expect(strings[key].ar).toMatch(/\p{Script=Arabic}/u);
       expect(strings[key].en).toMatch(/[a-z]/);
       expect(`${strings[key].ar} ${strings[key].en}`).not.toMatch(/—|\bcase\b|\bticket\b/i);

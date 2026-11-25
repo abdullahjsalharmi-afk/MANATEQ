@@ -63,6 +63,7 @@ export const strings = {
   needsPlotContext: { ar: 'تُفتح هذه الخدمة بعد استئجار قطعة', en: 'This service opens once you lease a plot' },
   needsPlotNoneContext: { ar: 'لا قطعة لديك تحتاج هذه الخدمة الآن', en: 'None of your plots needs this service now' },
   needsPlotTag: { ar: 'بعد استئجار قطعة', en: 'Once you lease a plot' },
+  needsPlotNoneTag: { ar: 'لا قطعة تحتاجها الآن', en: 'No plot needs it now' },
   gateTrackLand: { ar: 'تابِع طلب الأرض', en: 'Follow your land application' },
   gateApplyLand: { ar: 'قدّم على أرض', en: 'Apply for land' },
   gateCheckFirst: { ar: 'افحص أهلية نشاطك', en: 'Check your eligibility' },

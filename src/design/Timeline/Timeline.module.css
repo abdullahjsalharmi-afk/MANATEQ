@@ -154,7 +154,10 @@
 }
 
 .part::before {
+  /* Decoration only: the empty alternative keeps it out of what a screen reader says (every part has one,
+     the first too, where it is clipped away). Browsers without the syntax keep the plain dot. */
   content: '·';
+  content: '·' / '';
   position: absolute;
   inset-inline-start: 0;
   inline-size: var(--sep);

@@ -1,5 +1,5 @@
 import { CloudOff, SearchX } from 'lucide-react';
-import { Suspense, useEffect, useMemo } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useLang, useT } from '@/app/i18n';
 import { navigate } from '@/app/router';
 import { useParams, useQuery } from '@/app/routes';
@@ -16,6 +16,21 @@ import styles from './Start.module.css';
 import { strings } from './strings';
 
 /**
+ * Whether the flow of service `id` is let in by the plot gate. The gate is judged while the flow opens; a flow
+ * that was let in stays for as long as its screen does. Its own request can change the plots while its
+ * confirmation is still on screen: a handover makes its plot handed over, so no plot "needs" the service any
+ * more, and the confirmation must not turn into the gate's explanation. `openNow` is undefined while the service
+ * is still loading.
+ */
+export function useAdmitted(id: string, openNow: boolean | undefined): boolean {
+  const [admitted, setAdmitted] = useState<string | null>(null);
+  useEffect(() => {
+    if (openNow) setAdmitted(id);
+  }, [id, openNow]);
+  return openNow === true || admitted === id;
+}
+
+/**
  * `#/start/:id`: starts a service. A purpose-built flow when the service has one, a dedicated screen when it
  * redirects, otherwise the generic flow driven by the service's fields. Query: plot, zone, activity, from.
  */
@@ -29,6 +44,8 @@ export function StartScreen() {
   const guest = persona === 'guest' || !company;
   const candidates = useApp(useMemo(() => selectPlotsFor(id), [id]));
   const summary = getService(id);
+  // A service for a leased plot never runs for a company without one it could be for (D1, D2 …).
+  const admitted = useAdmitted(id, Bespoke && summary ? !(needsTenancy(summary) && candidates.length === 0) : undefined);
 
   useEffect(() => {
     if (guest) {
@@ -45,8 +62,7 @@ export function StartScreen() {
   }, [guest, redirect]);
 
   if (guest || redirect) return <StartLoading />;
-  // A service for a leased plot never runs for a company without one it could be for (D1, D2 …).
-  if (Bespoke && summary && needsTenancy(summary) && candidates.length === 0) return <NeedsPlot service={summary} />;
+  if (Bespoke && summary && !admitted) return <NeedsPlot service={summary} />;
   if (Bespoke) {
     return (
       <Suspense fallback={<StartLoading />}>
@@ -63,6 +79,8 @@ function GenericStart({ id }: { id: string }) {
   const company = useApp(selectCompany);
   const candidates = useApp(useMemo(() => selectPlotsFor(id), [id]));
   const { summary, detail, loading, failed } = useService(id);
+  // The full record decides (B6 asks for a plot it requires although prospects may see it).
+  const admitted = useAdmitted(id, detail && company ? !(needsTenancy(detail) && candidates.length === 0) : undefined);
 
   if (!summary) {
     return (
@@ -94,8 +112,7 @@ function GenericStart({ id }: { id: string }) {
   }
 
   if (loading || !detail || !company) return <StartLoading title={pick(summary.label)} />;
-  // The full record decides (B6 asks for a plot it requires although prospects may see it).
-  if (needsTenancy(detail) && candidates.length === 0) return <NeedsPlot service={summary} />;
+  if (!admitted) return <NeedsPlot service={summary} />;
   return <GenericFlow key={id} service={detail} company={company} />;
 }
 

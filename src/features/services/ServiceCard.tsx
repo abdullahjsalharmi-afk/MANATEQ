@@ -40,7 +40,7 @@ export function ServiceCard({ service, tone = 'plain' }: ServiceCardProps) {
           {draft && service.startable && !gate ? <Pill>{t('draft')}</Pill> : null}
         </span>
         {gate ? (
-          <Pill>{t('needsPlotTag')}</Pill>
+          <Pill>{t(gate.kind === 'plots' ? 'needsPlotNoneTag' : 'needsPlotTag')}</Pill>
         ) : service.startable ? (
           <Button variant="quiet" size="sm" to={startTarget(service.id, persona)} className={styles.start} aria-label={`${t('start')}: ${pick(service.label)}`}>
             {t('start')}
