@@ -141,7 +141,7 @@ export function EligibilityResultView({ input, outcome, persona, chosen, onChoos
   const options = choicesOf(outcome);
   const isAlternatives = kind !== 'eligible';
   const chosenOption = options.find((option) => choiceKey(option) === chosen);
-  const savedForProfile = outcome.verdict !== 'targeted' || outcome.matches.length > 0;
+  const savedForProfile = kind === 'eligible';
   const zone = input.zoneCode ? getZone(input.zoneCode) : undefined;
 
   return (
@@ -173,7 +173,7 @@ export function EligibilityResultView({ input, outcome, persona, chosen, onChoos
           </ul>
         ) : null}
         {outcome.note ? <p className={cx('type-body', styles.note)}>{pick(outcome.note)}</p> : null}
-        <p className={cx('type-foot', styles.saved)}>{persona === 'guest' ? t('savedGuest') : savedForProfile ? t('saved') : null}</p>
+        {savedForProfile ? <p className={cx('type-foot', styles.saved)}>{persona === 'guest' ? t('savedGuest') : t('saved')}</p> : null}
       </Tile>
 
       <Container width="grid">

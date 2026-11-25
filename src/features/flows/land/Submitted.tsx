@@ -20,7 +20,9 @@ export function Submitted({ requestId }: { requestId: string }) {
   const request = useApp(selectRequest(requestId));
 
   // The confirmation replaces the review in place: start it from the top.
-  useEffect(() => window.scrollTo({ top: 0 }), []);
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, []);
 
   const next: TimelineItem[] = [
     { id: 'eval', title: t('nEval'), text: t('nEvalText'), lane: 'eng', state: 'current', auto: true, standard: t('nEvalStd') },
