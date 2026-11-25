@@ -13,7 +13,7 @@ import {
   WifiOff,
   type LucideIcon,
 } from 'lucide-react';
-import { Button, Card, Container, Icon, List, Pill, Render, Screen, Section, Tile } from '@/design/core';
+import { Button, Card, Container, Icon, keepWhole, List, Pill, Render, Screen, Section, Tile } from '@/design/core';
 import { EmptyState, Skeleton } from '@/design/forms';
 import { FetchedList, LevelMeter, StandardBadge, type FetchedItem } from '@/design/signature';
 import { useLang, useT } from '@/app/i18n';
@@ -310,7 +310,7 @@ function Details({ detail }: { detail: ServiceDetail }) {
             <LevelMeter now={detail.level.now} target={detail.level.target} />
             {phase ? (
               <p className={styles.phase}>
-                {t('phase', { n: phase.n, name: pick(phase.name), when: pick(phase.when) })} <span className={styles.tag}>{t('indicative')}</span>
+                {keepWhole(t('phase', { n: phase.n, name: pick(phase.name), when: pick(phase.when) }))} <span className={styles.tag}>{t('indicative')}</span>
               </p>
             ) : null}
           </Disclosure>

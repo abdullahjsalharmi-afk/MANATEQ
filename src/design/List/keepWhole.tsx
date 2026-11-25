@@ -19,6 +19,13 @@ const WHOLE = new RegExp(
   'gu',
 );
 
+/**
+ * `keepWhole` also holds a range of numbers together («الأشهر 4–9», "steps 10–18"): a dash is a line-break
+ * opportunity, and a range cut after its dash reads as two numbers. A range does not make a row's subtitle wrap
+ * by default, so `hasWhole` does not count it.
+ */
+const KEPT = new RegExp(`${WHOLE.source}|${String.raw`\d+[\u2013-]\d+`}`, 'gu');
+
 /** True when `text` is a string with a code, a date or a time in it. */
 export function hasWhole(text: ReactNode): boolean {
   if (typeof text !== 'string') return false;
@@ -28,12 +35,12 @@ export function hasWhole(text: ReactNode): boolean {
   return found;
 }
 
-/** Wraps every code, date and time in `text` in a no-wrap span. Anything that is not a string is returned as it is. */
+/** Wraps every code, date, time and number range in `text` in a no-wrap span. Anything that is not a string is returned as it is. */
 export function keepWhole(text: ReactNode): ReactNode {
   if (typeof text !== 'string') return text;
   const parts: ReactNode[] = [];
   let last = 0;
-  for (const match of text.matchAll(WHOLE)) {
+  for (const match of text.matchAll(KEPT)) {
     const start = match.index ?? 0;
     if (start > last) parts.push(text.slice(last, start));
     parts.push(

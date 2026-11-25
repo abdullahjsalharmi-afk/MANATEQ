@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { LangProvider, makeFormatters } from '@/app/i18n';
 import type { Lang } from '@/data/types';
 import { List, Row } from '@/design/core';
-import { hasWhole } from '@/design/List/keepWhole';
+import { hasWhole, keepWhole } from '@/design/List/keepWhole';
 import { PassCard, Timeline, type TimelineItem } from '@/design/signature';
 
 const DAY = 86_400_000;
@@ -234,5 +234,21 @@ describe('the pass card of a pass that starts later (n=16)', () => {
     expect(card('active', 'en').textContent).toContain('Show this code at the gate');
     expect(card('active', 'en').textContent).not.toContain('gate from');
     expect(card('expired', 'en').textContent).toContain('This pass no longer opens the gate');
+  });
+});
+
+describe('a range of numbers stays whole (second look)', () => {
+  const wholes = (text: string) => [...still(<p>{keepWhole(text)}</p>, 'en').querySelectorAll('p > span')].map((span) => span.textContent);
+
+  it('keeps «4–9» and "10-18" on one line, with the codes, dates and times as before', () => {
+    expect(wholes('Digitisation and integration, months 4–9.')).toEqual(['4–9']);
+    expect(wholes('الخطوات 10–18 بعد الترخيص')).toEqual(['10–18']);
+    expect(wholes('Plot BA-121, due 30 Nov 2026 at 6:00 pm, steps 2-5')).toEqual(['BA-121', '30 Nov 2026', '6:00 pm', '2-5']);
+    expect(wholes('RCP-2026-0051')).toEqual(['RCP-2026-0051']);
+  });
+
+  it('does not make a row subtitle wrap by default', () => {
+    expect(hasWhole('months 4–9')).toBe(false);
+    expect(hasWhole('due 30 Nov 2026')).toBe(true);
   });
 });
