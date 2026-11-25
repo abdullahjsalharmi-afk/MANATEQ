@@ -54,22 +54,44 @@ export function shallowEqual(a: unknown, b: unknown): boolean {
   return true;
 }
 
+/** Structural equality for plain data (arrays and plain objects), a few levels deep. */
+export function deepEqual(a: unknown, b: unknown, depth = 6): boolean {
+  if (Object.is(a, b)) return true;
+  if (depth <= 0 || typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  const keysA = Object.keys(a as object);
+  const keysB = Object.keys(b as object);
+  if (keysA.length !== keysB.length) return false;
+  for (const key of keysA) {
+    if (!deepEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key], depth - 1)) return false;
+  }
+  return true;
+}
+
 /**
  * Subscribes a component to a slice of a store. The selector may build a new array or object on
- * every call; the component re-renders only when the result differs shallowly.
+ * every call; the component re-renders only when the result differs.
+ *
+ * The cached selection belongs to one state AND one selector. A component that passes a different
+ * selector for the same state (for example `selectDoc(id)` after the id arrived) gets that selector's
+ * answer, not the previous one's. A selector that is merely a new function returning the same data
+ * (an inline arrow, a factory called on every render) keeps the reference it had, so nothing loops.
  */
 export function useStoreOf<T, S>(store: Store<T>, selector: (state: T) => S, isEqual: (a: S, b: S) => boolean = shallowEqual): S {
-  const cache = useRef<{ state: T; selection: S } | null>(null);
+  const cache = useRef<{ state: T; selector: (state: T) => S; selection: S } | null>(null);
   const getSnapshot = (): S => {
     const state = store.getState();
     const cached = cache.current;
-    if (cached && cached.state === state) return cached.selection;
+    if (cached && cached.state === state && cached.selector === selector) return cached.selection;
     const selection = selector(state);
-    if (cached && isEqual(cached.selection, selection)) {
-      cache.current = { state, selection: cached.selection };
-      return cached.selection;
+    if (cached) {
+      const same = cached.state === state ? deepEqual(cached.selection, selection) : isEqual(cached.selection, selection);
+      if (same) {
+        cache.current = { state, selector, selection: cached.selection };
+        return cached.selection;
+      }
     }
-    cache.current = { state, selection };
+    cache.current = { state, selector, selection };
     return selection;
   };
   return useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot);
