@@ -130,6 +130,8 @@
    row is pulled back by that room and the line clips it, so a part that starts a line (the first one, or one
    that wrapped on a narrow screen) never shows a separator. */
 .meta {
+  /* `clip` keeps the other axis untouched; `hidden` is for browsers that do not know it yet. */
+  overflow-x: hidden;
   overflow-x: clip;
   font-size: var(--t-callout);
   line-height: 1.43;

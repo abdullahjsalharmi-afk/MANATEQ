@@ -100,6 +100,7 @@
   padding-inline: 8px;
   /* A facsimile, not reading text: it is sized by the sheet it is written on, not by the text setting, so the
      name stays whole on the narrowest phone at the largest text. */
+  font-size: 26px; /* for browsers without container units */
   font-size: clamp(20px, 11cqi, 28px);
   font-weight: 400;
   line-height: 1.5;
