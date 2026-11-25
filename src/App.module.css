@@ -1,25 +1,12 @@
+/* The page under the global bar: the screen, then (on wide tabbed screens) the footer.
+   The screen takes the room that is left, so a short page still ends at the bottom of the viewport. */
 .app {
-  min-height: 100dvh;
-  padding-inline-start: var(--side, 0px);
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - var(--chrome-nav, 0px));
 }
 
 .loading {
-  min-height: 100dvh;
-}
-
-.actions {
-  display: grid;
-  gap: var(--s-3);
-}
-
-.brandName {
-  font-size: var(--t-heading);
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-.sideNote {
-  font-size: var(--t-cap);
-  line-height: 1.6;
-  color: var(--ink-3);
+  flex: 1 0 auto;
+  min-height: calc(100dvh - var(--chrome-nav, 0px));
 }

@@ -1,0 +1,209 @@
+/* The global bar: true black, 44 px, quiet 12 px links. Wide screens only. data-tone="dark" on the
+   element switches the tokens inside it, so ink is near-white and surface is near-black here. */
+.nav {
+  display: none;
+}
+
+@media (min-width: 834px) {
+  .nav {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 40;
+    display: block;
+    padding-block-start: var(--safe-top);
+    background: var(--black);
+    color: var(--ink);
+  }
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
+  align-items: center;
+  column-gap: var(--s-3);
+  height: var(--nav-h);
+  max-width: calc(var(--content-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.start {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: var(--nav-h);
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform var(--d-1) var(--ease);
+}
+
+.brand:active,
+.link:active,
+.iconLink:active,
+.utility:active {
+  transform: scale(var(--press));
+}
+
+.brandName {
+  font-size: var(--t-callout);
+  font-weight: var(--w-strong);
+  line-height: 1;
+  letter-spacing: var(--ls-caption);
+  white-space: nowrap;
+}
+
+/* The persistent prototype capsule, beside the mark. */
+.proto {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding-inline: var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--sunken);
+  color: var(--ink-2);
+  font-size: var(--t-cap);
+  font-weight: var(--w-regular);
+  line-height: var(--lh-foot);
+  letter-spacing: var(--ls-caption);
+  white-space: nowrap;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+}
+
+/* Links sit about 20 px apart; each is as tall as the bar. Others at 80% white, the current one white. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--nav-h);
+  padding-inline: 10px;
+  font-size: var(--t-foot);
+  font-weight: var(--w-regular);
+  line-height: 1;
+  letter-spacing: var(--ls-caption);
+  color: color-mix(in srgb, var(--ink) 80%, transparent);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    color var(--d-1) var(--ease),
+    transform var(--d-1) var(--ease);
+}
+
+.active {
+  color: var(--ink);
+}
+
+.link:focus-visible,
+.brand:focus-visible,
+.iconLink:focus-visible {
+  outline-offset: -6px;
+  border-radius: var(--r-tile);
+}
+
+.badge {
+  min-width: 16px;
+  height: 16px;
+  padding-inline: 4px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.6176rem;
+  font-weight: var(--w-strong);
+  line-height: 16px;
+  letter-spacing: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.end {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.iconLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap);
+  height: var(--nav-h);
+  color: color-mix(in srgb, var(--ink) 80%, transparent);
+  transition:
+    color var(--d-1) var(--ease),
+    transform var(--d-1) var(--ease);
+}
+
+/* The compact utility rectangle: one step lighter than the bar, 8 px corners. */
+.utility {
+  position: relative;
+  min-height: 28px;
+  padding: 6px 12px;
+  border-radius: var(--r-tile);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--t-foot);
+  font-weight: var(--w-regular);
+  line-height: 1.33;
+  letter-spacing: 0;
+  white-space: nowrap;
+  transition: transform var(--d-1) var(--ease);
+}
+
+.utility::after {
+  content: '';
+  position: absolute;
+  inset: -8px 0;
+}
+
+@media (hover: hover) {
+  .link:hover,
+  .iconLink:hover {
+    color: var(--ink);
+  }
+
+  .utility:hover {
+    background: var(--surface-2);
+  }
+}
+
+/* Keyboard users can jump past the bar: the link appears only when it has focus. */
+.skip {
+  position: absolute;
+  inset-block-start: calc(100% + var(--s-2));
+  inset-inline-start: var(--gutter);
+  padding: 7px 14px;
+  border-radius: var(--r-tile);
+  background: var(--ink);
+  color: var(--black);
+  font-size: var(--t-callout);
+  line-height: 1.286;
+  letter-spacing: var(--ls-caption);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.skip:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* In the flow of a page, for the component gallery. */
+.inline {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  padding-block-start: 0;
+}

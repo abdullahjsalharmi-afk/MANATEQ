@@ -1,0 +1,73 @@
+/* The footer: the page colour, 12 px fine print, 14 px link columns with relaxed leading. Wide screens only. */
+.footer {
+  display: none;
+}
+
+@media (min-width: 834px) {
+  .footer {
+    display: block;
+  }
+}
+
+.footer.inline {
+  display: block;
+}
+
+.footer {
+  flex: none;
+  background: var(--bg);
+  color: var(--ink-3);
+  font-size: var(--t-foot);
+  line-height: var(--lh-foot);
+  letter-spacing: var(--ls-caption);
+}
+
+.inner {
+  max-width: calc(var(--content-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: 0 var(--gutter) calc(var(--s-8) + var(--safe-bottom));
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--s-6) var(--s-5);
+  padding-block: var(--s-8);
+  border-block-start: 1px solid var(--line);
+}
+
+.heading {
+  margin-block-end: var(--s-2);
+  font-size: var(--t-foot);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-foot);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink);
+}
+
+/* Relaxed leading is what lets dense link columns breathe. */
+.link {
+  display: inline-block;
+  font-size: var(--t-callout);
+  line-height: 2.2;
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .link:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+}
+
+.fine {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-6);
+  padding-block-start: var(--s-4);
+  border-block-start: 1px solid var(--line);
+}

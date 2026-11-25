@@ -1,27 +1,38 @@
-// Renders the app icons (public/icons/*) from the Manateq One mark. Usage: node scripts/build-icons.mjs
+// Renders the app icons (public/icons/*) from the Manateq One mark: a white mark on black.
+// Usage: node scripts/build-icons.mjs            writes the icons
+//        node scripts/build-icons.mjs --favicon  prints the inline favicon for index.html
 import fs from 'node:fs';
 import path from 'node:path';
-import { chromium } from 'playwright';
 
 const OUT = path.resolve('public/icons');
-fs.mkdirSync(OUT, { recursive: true });
 
-// The same geometry as src/design/Mark/Mark.tsx. `pad` shrinks the plots for maskable icons (safe zone).
-const svg = (size, { radius = 0.235, pad = 0 } = {}) => {
+// The same geometry as src/design/Mark/Mark.tsx: four plots of 18 units on a 64-unit grid, one of them filled.
+// `stroke` thickens the lines for small sizes; `pad` shrinks the plots for maskable icons (safe zone).
+const PLOTS = [
+  [12, 12, false],
+  [34, 12, true],
+  [12, 34, false],
+  [34, 34, false],
+];
+const svg = (size, { radius = 0.235, pad = 0, stroke = 3 } = {}) => {
   const s = 64;
   const k = 1 - pad * 2;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${s} ${s}">
-  <rect width="${s}" height="${s}" rx="${s * radius}" fill="#862633"/>
-  <g transform="translate(${s * pad} ${s * pad}) scale(${k})" fill="none" stroke-width="3" stroke-linejoin="round">
-    <rect x="13.5" y="13.5" width="15" height="15" rx="4" stroke="rgba(255,255,255,.92)"/>
-    <rect x="35.5" y="13.5" width="15" height="15" rx="4" stroke="#fff" fill="#fff"/>
-    <rect x="13.5" y="35.5" width="15" height="15" rx="4" stroke="rgba(255,255,255,.92)"/>
-    <rect x="35.5" y="35.5" width="15" height="15" rx="4" stroke="rgba(255,255,255,.92)"/>
-  </g>
-</svg>`;
+  const plots = PLOTS.map(
+    ([x, y, taken]) =>
+      `<rect x="${x + stroke / 2}" y="${y + stroke / 2}" width="${18 - stroke}" height="${18 - stroke}" rx="${5 - stroke / 2}"${taken ? ' fill="#fff"' : ''}/>`,
+  ).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${s} ${s}"><rect width="${s}" height="${s}" rx="${s * radius}" fill="#000"/><g transform="translate(${s * pad} ${s * pad}) scale(${k})" fill="none" stroke="#fff" stroke-width="${stroke}" stroke-linejoin="round">${plots}</g></svg>`;
 };
 
-fs.writeFileSync(path.join(OUT, 'icon.svg'), svg(512));
+if (process.argv.includes('--favicon')) {
+  // Browser tabs draw the icon at 16 to 32 px: use the heavier stroke.
+  console.log(`data:image/svg+xml,${encodeURIComponent(svg(64, { stroke: 4.5 })).replace(/'/g, '%27')}`);
+  process.exit(0);
+}
+
+const { chromium } = await import('playwright');
+fs.mkdirSync(OUT, { recursive: true });
+fs.writeFileSync(path.join(OUT, 'icon.svg'), svg(512) + '\n');
 
 const browser = await chromium.launch();
 const page = await browser.newPage();

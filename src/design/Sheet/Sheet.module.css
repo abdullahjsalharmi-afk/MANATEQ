@@ -1,3 +1,5 @@
+/* A sheet: a surface with 18 px top corners that rises from the bottom on phones, and a centred
+   18 px dialog (560 px at most) on wide screens. It floats, so it may carry the float shadow. */
 .dialog {
   position: fixed;
   inset: 0;
@@ -33,9 +35,8 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: var(--content-max);
   max-height: min(92dvh, 820px);
-  border-radius: 26px 26px 0 0;
+  border-radius: var(--r-card) var(--r-card) 0 0;
   background: var(--surface);
   box-shadow: var(--float-shadow);
   animation: rise var(--d-3) var(--ease);
@@ -47,17 +48,18 @@
   animation: sink 220ms var(--ease) forwards;
 }
 
+/* The grabber: 36 x 5, with a generous area to take hold of. */
 .grip {
   flex: none;
   display: flex;
   justify-content: center;
-  padding-block: 10px 6px;
+  padding-block: var(--s-2) var(--s-1);
   touch-action: none;
   cursor: grab;
 }
 
 .handle {
-  width: 38px;
+  width: 36px;
   height: 5px;
   border-radius: var(--r-pill);
   background: var(--line-strong);
@@ -69,30 +71,32 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--s-3);
-  padding: var(--s-1) var(--gutter) var(--s-3);
+  padding: var(--s-2) var(--gutter) var(--s-3);
 }
 
 .titles {
   min-width: 0;
-  padding-block-start: 6px;
+  padding-block-start: var(--s-2);
 }
 
 .title {
   font-size: var(--t-heading);
-  font-weight: 600;
+  font-weight: var(--w-strong);
   line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
 }
 
 .description {
-  margin-block-start: 4px;
+  margin-block-start: var(--s-1);
   font-size: var(--t-callout);
-  line-height: 1.65;
-  color: var(--ink-2);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
+/* The close circle is 32 px inside a 44 px target; pull it so the circle, not the target, meets the gutter. */
 .close {
-  width: 36px;
-  height: 36px;
+  margin-inline-end: -6px;
 }
 
 .body {
@@ -109,36 +113,53 @@
   flex-direction: column;
   gap: var(--s-2);
   padding: var(--s-3) var(--gutter) calc(var(--s-4) + var(--safe-bottom));
-  box-shadow: 0 -1px 0 var(--line);
+  border-block-start: 1px solid var(--line-soft);
 }
 
 .body:last-child {
   padding-block-end: calc(var(--s-6) + var(--safe-bottom));
 }
 
-/* On wide screens the sheet becomes a centred dialog. */
+/* In a sheet the block pill spans the sheet, also on wide screens. */
+.footer :global([data-block]) {
+  max-width: none;
+}
+
+/* From 640 px the sheet is a centred dialog. */
 @media (min-width: 640px) {
   .dialog {
     align-items: center;
     padding: var(--s-6);
   }
+
   .panel {
-    max-width: 520px;
-    border-radius: 26px;
+    max-width: 560px;
+    border-radius: var(--r-card);
     animation-name: pop;
   }
+
   .closing .panel {
     animation-name: fade-out;
   }
+
   .grip {
     display: none;
   }
+
   .head {
-    padding-block-start: var(--s-5);
+    padding: var(--s-5) var(--s-6) var(--s-3);
   }
-  .footer,
+
+  .body {
+    padding-inline: var(--s-6);
+  }
+
+  .footer {
+    padding: var(--s-4) var(--s-6) var(--s-5);
+  }
+
   .body:last-child {
-    padding-block-end: var(--s-5);
+    padding-block-end: var(--s-6);
   }
 }
 
@@ -147,27 +168,32 @@
     transform: translateY(100%);
   }
 }
+
 @keyframes sink {
   to {
     transform: translateY(100%);
   }
 }
+
 @keyframes pop {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.98);
+    transform: translateY(12px);
   }
 }
+
 @keyframes fade-out {
   to {
     opacity: 0;
   }
 }
+
 @keyframes scrim-in {
   from {
     opacity: 0;
   }
 }
+
 @keyframes scrim-out {
   to {
     opacity: 0;

@@ -1,0 +1,35 @@
+/* The contained column. The max-width counts the gutters, so the content itself is exactly the named width. */
+.container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.form {
+  max-width: calc(692px + 2 * var(--gutter));
+}
+
+.content {
+  max-width: calc(var(--content-max) + 2 * var(--gutter));
+}
+
+.grid {
+  max-width: calc(var(--grid-max) + 2 * var(--gutter));
+}
+
+/* A page section between tiles. */
+.section {
+  padding-block: var(--s-8);
+}
+
+@media (min-width: 735px) {
+  .section {
+    padding-block: var(--s-12);
+  }
+}
+
+@media (min-width: 1069px) {
+  .section {
+    padding-block: var(--s-16);
+  }
+}

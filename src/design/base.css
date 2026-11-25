@@ -28,7 +28,8 @@ html {
   /* What the app shell pins to the viewport, so anything sticky or anchored can clear it.
      html[data-chrome] is set by the shell: `tabs` for the five destinations, `plain` for flows and the welcome. */
   --chrome-nav: 0px; /* the global bar (wide screens, tabbed screens only) */
-  --chrome-top: calc(var(--safe-top) + var(--chrome-nav) + var(--topbar-h)); /* everything pinned to the top */
+  --bar-safe: var(--safe-top); /* the notch, inside the frosted bar when it is the topmost bar */
+  --chrome-top: calc(var(--chrome-nav) + var(--bar-safe) + var(--topbar-h)); /* everything pinned to the top */
   --chrome-bottom: 0px; /* the tab bar (phones, tabbed screens only) */
   --footer-safe: var(--safe-bottom); /* the home indicator, when nothing else covers it */
 
@@ -44,7 +45,8 @@ html[data-chrome='tabs'] {
 /* From 834 px the tab bar gives way to the global bar at the top and the footer at the end of the page. */
 @media (min-width: 834px) {
   html[data-chrome='tabs'] {
-    --chrome-nav: var(--nav-h);
+    --chrome-nav: calc(var(--safe-top) + var(--nav-h));
+    --bar-safe: 0px;
     --chrome-bottom: 0px;
     --footer-safe: var(--safe-bottom);
   }

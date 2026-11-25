@@ -1,4 +1,4 @@
-import { ChevronLeft } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link } from '@/app/router';
 import { cx } from '../cx';
@@ -7,13 +7,13 @@ import styles from './List.module.css';
 
 export interface ListProps {
   children: ReactNode;
-  /** `card` puts the rows on one surface with inset dividers; `plain` leaves them on the page. */
+  /** `card` puts the rows on one surface with inset dividers; `plain` leaves them on the surface behind (a sheet, a card). */
   variant?: 'card' | 'plain';
   className?: string;
   'aria-label'?: string;
 }
 
-/** A vertical group of rows. */
+/** A vertical group of rows. The `card` variant is itself a card: do not wrap it in one. */
 export function List({ children, variant = 'card', className, ...rest }: ListProps) {
   return (
     <ul className={cx(styles.list, styles[variant], className)} {...rest}>
@@ -25,7 +25,7 @@ export function List({ children, variant = 'card', className, ...rest }: ListPro
 export interface RowProps {
   title: ReactNode;
   subtitle?: ReactNode;
-  /** An icon tile, avatar, ring… at the start of the row. */
+  /** A plain glyph, an avatar, a ring… at the start of the row. */
   leading?: ReactNode;
   /** A value, pill or control at the end of the row. */
   trailing?: ReactNode;
@@ -42,21 +42,22 @@ export interface RowProps {
   'aria-label'?: string;
 }
 
-/** One row of a list: leading · title/subtitle · trailing · chevron. */
+/** One row of a list: leading · title and subtitle · trailing value · chevron. The divider starts where the text starts. */
 export function Row({ title, subtitle, leading, trailing, eyebrow, to, onClick, chevron, wrap = false, className, ...rest }: RowProps) {
-  const interactive = to !== undefined || onClick !== undefined;
   const showChevron = chevron ?? to !== undefined;
   const body = (
     <>
       {leading ? <span className={styles.leading}>{leading}</span> : null}
-      <span className={styles.text}>
-        {eyebrow ? <span className={styles.eyebrow}>{eyebrow}</span> : null}
-        <span className={styles.title}>{title}</span>
-        {subtitle ? <span className={cx(styles.subtitle, wrap && styles.wrap)}>{subtitle}</span> : null}
+      <span className={styles.body}>
+        <span className={styles.text}>
+          {eyebrow ? <span className={styles.eyebrow}>{eyebrow}</span> : null}
+          <span className={styles.title}>{title}</span>
+          {subtitle ? <span className={cx(styles.subtitle, wrap && styles.wrap)}>{subtitle}</span> : null}
+        </span>
+        {trailing ? <span className={styles.trailing}>{trailing}</span> : null}
+        {/* The chevron points forward: to the left in Arabic, to the right in English. */}
+        {showChevron ? <Icon icon={ChevronRight} size={16} strokeWidth={2} flip className={styles.chevron} /> : null}
       </span>
-      {trailing ? <span className={styles.trailing}>{trailing}</span> : null}
-      {/* The chevron points "forward": left in Arabic, mirrored to the right in English. */}
-      {showChevron ? <Icon icon={ChevronLeft} size={18} className={styles.chevron} /> : null}
     </>
   );
   return (
@@ -70,7 +71,7 @@ export function Row({ title, subtitle, leading, trailing, eyebrow, to, onClick, 
           {body}
         </button>
       ) : (
-        <div className={cx(styles.row, interactive && styles.interactive)} {...rest}>
+        <div className={styles.row} {...rest}>
           {body}
         </div>
       )}

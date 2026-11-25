@@ -1,7 +1,9 @@
+/* A toast: an ink pill with 14 px text and one small icon in the same colour. It floats above whatever
+   is pinned to the bottom: the tab bar, a screen's action bar, the home indicator. */
 .host {
   position: fixed;
-  inset-inline: var(--side, 0px) 0;
-  inset-block-end: calc(var(--chrome-bottom, 0px) + var(--footer-safe, 0px) + 14px);
+  inset-inline: 0;
+  inset-block-end: calc(var(--chrome-bottom, 0px) + max(var(--actionbar-h, 0px), var(--footer-safe, 0px)) + var(--s-3));
   z-index: 60;
   display: flex;
   justify-content: center;
@@ -13,43 +15,19 @@
   pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--s-2);
   max-width: min(100%, 460px);
-  min-height: 48px;
-  padding: 10px 16px;
-  border-radius: 16px;
+  min-height: var(--tap);
+  padding: 10px 18px;
+  border-radius: var(--r-pill);
   background: var(--ink);
-  color: var(--bg);
+  color: var(--surface);
   box-shadow: var(--float-shadow);
   font-size: var(--t-callout);
-  font-weight: 500;
-  line-height: 1.5;
+  font-weight: var(--w-regular);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
   animation: toast-in var(--d-2) var(--ease);
-}
-
-.ok :first-child {
-  color: #7fd3a4;
-}
-
-.bad :first-child {
-  color: #ff9a91;
-}
-
-.info :first-child {
-  color: #a9cbee;
-}
-
-:global([data-theme='dark']) .ok :first-child {
-  color: var(--ok-tint);
-  color: #1b7046;
-}
-
-:global([data-theme='dark']) .bad :first-child {
-  color: #b3261e;
-}
-
-:global([data-theme='dark']) .info :first-child {
-  color: #2a5c8a;
 }
 
 .message {
@@ -58,20 +36,30 @@
 }
 
 .action {
+  position: relative;
   flex: none;
-  min-height: 32px;
-  padding-inline: 8px;
-  margin-inline-end: -6px;
-  border-radius: 8px;
-  font-weight: 600;
+  margin-inline-start: var(--s-1);
+  border-radius: var(--r-tile);
+  font-weight: var(--w-strong);
   color: inherit;
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 0.18em;
+  transition: transform var(--d-1) var(--ease);
+}
+
+.action::after {
+  content: '';
+  position: absolute;
+  inset: -12px -8px;
+}
+
+.action:active {
+  transform: scale(var(--press));
 }
 
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
 }

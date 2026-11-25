@@ -25,9 +25,9 @@ export interface SheetProps {
 const CLOSE_MS = 220;
 
 /**
- * A modal sheet that rises from the bottom on phones and sits centred on wide screens.
+ * A modal sheet that rises from the bottom on phones and appears as a centred dialog on wide screens.
  * Built on the native <dialog>: focus is trapped, the page behind is inert, Escape closes it.
- * It can be dragged down by its handle to dismiss.
+ * On phones it can be dragged down by its grabber to dismiss. Give it one pill in `footer`.
  */
 export function Sheet({ open, onClose, title, description, children, footer, dismissible = true, closeLabel, className }: SheetProps) {
   const t = useT(designStrings);
@@ -129,7 +129,7 @@ export function Sheet({ open, onClose, title, description, children, footer, dis
             </h2>
             {description ? <p className={styles.description}>{description}</p> : null}
           </div>
-          {dismissible ? <IconButton icon={X} label={closeLabel ?? t('close')} variant="soft" onClick={onClose} className={styles.close} /> : null}
+          {dismissible ? <IconButton icon={X} label={closeLabel ?? t('close')} variant="soft" size="sm" onClick={onClose} className={styles.close} /> : null}
         </header>
         <div className={styles.body}>{children}</div>
         {footer ? <footer className={styles.footer}>{footer}</footer> : null}

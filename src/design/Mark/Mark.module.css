@@ -1,26 +1,14 @@
+/* One colour: the mark takes the text colour of wherever it stands. */
 .mark {
   flex: none;
   display: block;
 }
 
-.outline {
-  stroke: var(--ink);
-}
-
-.taken {
-  stroke: var(--accent);
-  fill: var(--accent);
+/* The tile variant, like the app icon: an ink tile with the mark in the surface colour. */
+.tile {
+  color: var(--surface);
 }
 
 .tileBg {
-  fill: var(--accent);
-}
-
-.tile .outline {
-  stroke: rgba(255, 255, 255, 0.92);
-}
-
-.tile .taken {
-  stroke: #ffffff;
-  fill: #ffffff;
+  fill: var(--ink);
 }

@@ -5,6 +5,7 @@ import { Icon } from '../Icon/Icon';
 import styles from './Toast.module.css';
 
 export interface ToastOptions {
+  /** Chooses the icon; the pill itself never changes colour. */
   tone?: 'ok' | 'info' | 'bad';
   /** How long the toast stays, in ms. Default 3200. */
   duration?: number;
@@ -60,8 +61,8 @@ export function ToastHost() {
   return (
     <div className={cx(styles.host, 'mq-keep-toast')} role="status" aria-live="polite" aria-atomic="true">
       {state ? (
-        <div key={state.id} className={cx(styles.toast, styles[state.tone ?? 'ok'])}>
-          <Icon icon={ICONS[state.tone ?? 'ok']} size={20} />
+        <div key={state.id} className={styles.toast}>
+          <Icon icon={ICONS[state.tone ?? 'ok']} size={18} />
           <span className={styles.message}>{state.message}</span>
           {state.action ? (
             <button

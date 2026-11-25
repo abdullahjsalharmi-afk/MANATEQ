@@ -5,16 +5,21 @@
   min-width: 0;
 }
 
-.section + .section {
+/* Air above every section that follows something. */
+.section:not(:first-child) {
   margin-block-start: var(--s-8);
+}
+
+/* A sub-section (level 3) sits closer to what it belongs to. */
+.sub:not(:first-child) {
+  margin-block-start: var(--s-5);
 }
 
 .head {
   display: flex;
-  align-items: flex-end;
+  align-items: baseline;
   justify-content: space-between;
   gap: var(--s-4);
-  padding-inline: 2px;
 }
 
 .titles {
@@ -23,36 +28,69 @@
 
 .title {
   font-size: var(--t-heading);
-  font-weight: 600;
+  font-weight: var(--w-strong);
   line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
   color: var(--ink);
 }
 
 .small {
-  font-size: var(--t-callout);
-  color: var(--ink-2);
+  font-size: var(--t-body);
+  letter-spacing: var(--ls-body);
 }
 
 .hint {
-  margin-block-start: 2px;
-  font-size: var(--t-foot);
-  line-height: 1.6;
-  color: var(--ink-2);
+  margin-block-start: var(--s-1);
+  font-size: var(--t-callout);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
 }
 
+/* The quiet link: blue text, a small chevron when it leads somewhere. The target is 44 px tall. */
 .action {
+  position: relative;
   flex: none;
-  min-height: 32px;
-  padding-inline: 6px;
-  margin-inline-end: -6px;
-  border-radius: 8px;
-  font-size: var(--t-callout);
-  font-weight: 500;
-  color: var(--accent-ink);
   display: inline-flex;
   align-items: center;
+  gap: var(--s-1);
+  border-radius: var(--r-tile);
+  font-size: var(--t-callout);
+  font-weight: var(--w-regular);
+  line-height: var(--lh-callout);
+  letter-spacing: var(--ls-caption);
+  color: var(--accent-ink);
+  white-space: nowrap;
+  transition: transform var(--d-1) var(--ease);
 }
 
-.action:hover {
-  background: var(--accent-tint);
+.action::after {
+  content: '';
+  position: absolute;
+  inset: -12px -8px;
+}
+
+.action:active {
+  transform: scale(var(--press));
+}
+
+@media (hover: hover) {
+  .action:hover span {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+}
+
+@media (min-width: 735px) {
+  .section {
+    gap: var(--s-4);
+  }
+
+  .section:not(:first-child) {
+    margin-block-start: var(--s-12);
+  }
+
+  .sub:not(:first-child) {
+    margin-block-start: var(--s-6);
+  }
 }
