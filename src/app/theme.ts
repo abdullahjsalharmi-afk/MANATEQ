@@ -5,10 +5,10 @@
 import { useEffect } from 'react';
 import type { Settings, ThemeChoice } from '@/domain/types';
 
-/** The page colour of each theme: parchment, and true black. Mirrors `--bg` in tokens.css. */
-const THEME_COLOR = { light: '#f5f5f7', dark: '#000000' } as const;
+/** The page colour of each theme: warm paper, and the warm near-black. Mirrors `--bg` in tokens.css. */
+const THEME_COLOR = { light: '#f4f2ef', dark: '#141112' } as const;
 
-/** A screen that is dark from edge to edge (the welcome) asks for its own chrome colour while it is open. */
+/** A screen that is one colour from edge to edge (the maroon welcome) asks for its own chrome colour while it is open. */
 let chromeOverride: string | null = null;
 
 function systemPrefersDark(): boolean {

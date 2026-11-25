@@ -4,7 +4,7 @@ import styles from './Mark.module.css';
 export interface MarkProps {
   /** Pixel size of the square mark. Default 40. */
   size?: number;
-  /** `plain` draws in the current text colour, on any surface; `tile` sets the mark on an ink tile, like the app icon. */
+  /** `plain` draws in the current text colour, on any surface; `tile` sets it in white on the maroon tile, like the app icon. */
   variant?: 'plain' | 'tile';
   /** Accessible name. Without it the mark is decorative. */
   label?: string;
@@ -27,8 +27,8 @@ export function markStroke(glyphPixels: number): number {
 }
 
 /**
- * The Manateq One mark: four plots, one of them taken (yours). One colour, so it sits on the black
- * global bar and on a white tile alike. An original mark made for this prototype; it is not Manateq's logo.
+ * The Manateq One mark: four plots, one of them taken (yours). One colour, so it sits on the near-black
+ * global bar, on the maroon tile and on a white tile alike. An original mark made for this prototype; it is not Manateq's logo.
  */
 export function Mark({ size = 40, variant = 'plain', label, className }: MarkProps) {
   const tile = variant === 'tile';
@@ -40,6 +40,7 @@ export function Mark({ size = 40, variant = 'plain', label, className }: MarkPro
       height={size}
       viewBox={tile ? '0 0 64 64' : '10 10 44 44'}
       fill="none"
+      data-tone={tile ? 'brand' : undefined}
       {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true })}
     >
       {tile ? <rect className={styles.tileBg} width="64" height="64" rx="15" /> : null}

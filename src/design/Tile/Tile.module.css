@@ -19,6 +19,11 @@
   background: var(--tile-1);
 }
 
+/* The maroon tile: the brand's one loud moment. */
+.brand {
+  background: var(--brand);
+}
+
 .shade2 {
   background: var(--tile-2);
 }
@@ -52,13 +57,14 @@
   margin-block-end: var(--s-5);
 }
 
+/* The eyebrow is the one place gold speaks on a light surface, beside the "verified" marks. */
 .eyebrow {
   margin-block-end: var(--s-2);
   font-size: var(--t-callout);
-  font-weight: var(--w-regular);
+  font-weight: var(--w-strong);
   line-height: var(--lh-callout);
   letter-spacing: var(--ls-caption);
-  color: var(--ink-3);
+  color: var(--gold);
 }
 
 .headline {
@@ -108,15 +114,15 @@
   margin-block-start: 0;
 }
 
-.media-small {
+.mediaSmall {
   width: min(100%, 280px);
 }
 
-.media-default {
+.mediaDefault {
   width: min(100%, 560px);
 }
 
-.media-wide {
+.mediaWide {
   width: 100%;
 }
 

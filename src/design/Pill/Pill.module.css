@@ -28,40 +28,48 @@
   color: var(--ink-2);
 }
 
-.accent,
-.info,
-.gold {
+.accent {
   background: var(--accent-tint);
   color: var(--accent-ink);
 }
 
-/* The status colours are deepened a little with ink, so 12 px text on the tint stays above 4.5 : 1. */
+/* The state colours take a touch of ink, so 12 px text on its tint clears 4.5 : 1 on paper as well as on white. */
+.gold {
+  background: var(--gold-tint);
+  color: var(--gold);
+  color: color-mix(in srgb, var(--gold) 88%, var(--ink));
+}
+
+.info {
+  background: var(--info-tint);
+  color: var(--info);
+  color: color-mix(in srgb, var(--info) 88%, var(--ink));
+}
+
 .ok {
   background: var(--ok-tint);
   color: var(--ok);
-  color: color-mix(in srgb, var(--ok) 70%, var(--ink));
+  color: color-mix(in srgb, var(--ok) 88%, var(--ink));
 }
 
 .warn {
   background: var(--warn-tint);
   color: var(--warn);
-  color: color-mix(in srgb, var(--warn) 70%, var(--ink));
+  color: color-mix(in srgb, var(--warn) 88%, var(--ink));
 }
 
 .bad {
   background: var(--bad-tint);
   color: var(--bad);
-  color: color-mix(in srgb, var(--bad) 70%, var(--ink));
+  color: color-mix(in srgb, var(--bad) 88%, var(--ink));
 }
 
-.solid.accent,
-.solid.info,
-.solid.gold {
+.solid.accent {
   background: var(--accent);
   color: var(--on-accent);
 }
 
 .solid.neutral {
   background: var(--ink);
-  color: var(--surface);
+  color: var(--on-accent);
 }

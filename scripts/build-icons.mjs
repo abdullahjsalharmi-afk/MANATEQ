@@ -1,10 +1,12 @@
-// Renders the app icons (public/icons/*) from the Manateq One mark: a white mark on black.
+// Renders the app icons (public/icons/*) from the Manateq One mark: a white mark on Manateq maroon,
+// the colour of the brand tile (--brand in src/design/tokens.css).
 // Usage: node scripts/build-icons.mjs            writes the icons
 //        node scripts/build-icons.mjs --favicon  prints the inline favicon for index.html
 import fs from 'node:fs';
 import path from 'node:path';
 
 const OUT = path.resolve('public/icons');
+const BRAND = '#862633';
 
 // The same geometry as src/design/Mark/Mark.tsx: four plots of 18 units on a 64-unit grid, one of them filled.
 // `stroke` thickens the lines for small sizes; `pad` shrinks the plots for maskable icons (safe zone).
@@ -21,7 +23,7 @@ const svg = (size, { radius = 0.235, pad = 0, stroke = 3 } = {}) => {
     ([x, y, taken]) =>
       `<rect x="${x + stroke / 2}" y="${y + stroke / 2}" width="${18 - stroke}" height="${18 - stroke}" rx="${5 - stroke / 2}"${taken ? ' fill="#fff"' : ''}/>`,
   ).join('');
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${s} ${s}"><rect width="${s}" height="${s}" rx="${s * radius}" fill="#000"/><g transform="translate(${s * pad} ${s * pad}) scale(${k})" fill="none" stroke="#fff" stroke-width="${stroke}" stroke-linejoin="round">${plots}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${s} ${s}"><rect width="${s}" height="${s}" rx="${s * radius}" fill="${BRAND}"/><g transform="translate(${s * pad} ${s * pad}) scale(${k})" fill="none" stroke="#fff" stroke-width="${stroke}" stroke-linejoin="round">${plots}</g></svg>`;
 };
 
 if (process.argv.includes('--favicon')) {

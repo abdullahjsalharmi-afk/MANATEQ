@@ -1,5 +1,5 @@
-/* The global bar: true black, 44 px, quiet 12 px links. Wide screens only. data-tone="dark" on the
-   element switches the tokens inside it, so ink is near-white and surface is near-black here. */
+/* The global bar: Manateq's near-black, 44 px, quiet 12 px links. Wide screens only. data-tone="dark" on
+   the element switches the tokens inside it, so ink is paper white and the accent is gold here. */
 .nav {
   display: none;
 }
@@ -121,7 +121,7 @@
   font-size: 0.6176rem;
   font-weight: var(--w-strong);
   line-height: 16px;
-  letter-spacing: 0;
+  letter-spacing: var(--ls-caption);
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
@@ -145,18 +145,18 @@
     transform var(--d-1) var(--ease);
 }
 
-/* The compact utility rectangle: one step lighter than the bar, 8 px corners. */
+/* The compact utility rectangle: a step lighter than the bar, 8 px corners. */
 .utility {
   position: relative;
   min-height: 28px;
   padding: 6px 12px;
   border-radius: var(--r-tile);
-  background: var(--surface);
+  background: var(--sunken);
   color: var(--ink);
   font-size: var(--t-foot);
   font-weight: var(--w-regular);
   line-height: 1.33;
-  letter-spacing: 0;
+  letter-spacing: var(--ls-caption);
   white-space: nowrap;
   transition: transform var(--d-1) var(--ease);
 }
@@ -174,7 +174,7 @@
   }
 
   .utility:hover {
-    background: var(--surface-2);
+    background: var(--line-strong);
   }
 }
 
@@ -186,7 +186,7 @@
   padding: 7px 14px;
   border-radius: var(--r-tile);
   background: var(--ink);
-  color: var(--black);
+  color: var(--on-accent);
   font-size: var(--t-callout);
   line-height: 1.286;
   letter-spacing: var(--ls-caption);

@@ -81,7 +81,7 @@ export interface ChipProps {
   className?: string;
 }
 
-/** A choice chip: on or off. Selected is a 2 px border in the focus blue; the fill does not change. */
+/** A choice chip: on or off. Selected is a 2 px border in the focus colour; the fill does not change. */
 export function Chip({ children, selected = false, onClick, detail, leading, disabled, className }: ChipProps) {
   return (
     <button type="button" aria-pressed={selected} disabled={disabled} className={cx(styles.chip, detail !== undefined && styles.twoLine, selected && styles.chipOn, className)} onClick={onClick}>

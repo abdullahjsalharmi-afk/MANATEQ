@@ -1,6 +1,6 @@
 /**
- * Gallery section for the building renders: every render on a white tile, a parchment tile and a
- * near-black tile, large (as on a hero) and small (as at the head of a card), each with its name.
+ * Gallery section for the building renders: every render on a white tile, a parchment tile, a near-black
+ * tile and the maroon tile, large (as on a hero) and small (as at the head of a card), each with its name.
  */
 import type { CSSProperties } from 'react';
 import { useT } from '@/app/i18n';
@@ -11,6 +11,7 @@ const strings = {
   light: { ar: 'على بلاطة بيضاء', en: 'On a white tile' },
   parchment: { ar: 'على بلاطة بلون الصفحة', en: 'On a parchment tile' },
   dark: { ar: 'على بلاطة داكنة', en: 'On a dark tile' },
+  brand: { ar: 'على البلاطة العنّابية', en: 'On the maroon tile' },
   tagline: {
     ar: 'المجسّم يستقر على السطح مباشرة: بلا إطار، بلا قصّ، وبالظل الوحيد في النظام.',
     en: 'The model rests directly on the surface: no frame, no crop, and the one shadow in the system.',
@@ -20,13 +21,14 @@ const strings = {
   small: { ar: 'صغير: 160 بكسل', en: 'Small: 160 px' },
 } as const;
 
-const TONES = ['light', 'parchment', 'dark'] as const;
+const TONES = ['light', 'parchment', 'dark', 'brand'] as const;
 /** The wide render is shown on its own row; the rest fill the grids. */
 const SQUARE: RenderName[] = RENDER_NAMES.filter((name) => name !== 'journey');
 
 const group: CSSProperties = { marginBlockStart: 'var(--s-10)' };
 const groupHead: CSSProperties = { marginBlockEnd: 'var(--s-6)', color: 'var(--ink-3)' };
-const figure: CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--s-2)', minWidth: 0 };
+/** Each model stands on the bottom of its cell, so the names of a row line up. */
+const figure: CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: 'var(--s-2)', minWidth: 0, height: '100%' };
 const caption: CSSProperties = { color: 'var(--ink-3)' };
 const largeBox: CSSProperties = { width: 'min(100%, 560px)' };
 const smallBox: CSSProperties = { width: 'min(100%, 160px)' };

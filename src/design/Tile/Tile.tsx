@@ -2,16 +2,21 @@ import type { ReactNode } from 'react';
 import { cx } from '../cx';
 import styles from './Tile.module.css';
 
+const MEDIA = { small: styles.mediaSmall, default: styles.mediaDefault, wide: styles.mediaWide } as const;
+
 export interface TileProps {
-  /** `light` white · `parchment` the page colour · `dark` near-black (everything inside reads on dark). */
-  tone?: 'light' | 'parchment' | 'dark';
+  /**
+   * `light` white · `parchment` the page colour · `dark` near-black · `brand` Manateq maroon (the one loud moment:
+   * the welcome and the next-step hero of Home). Inside `dark` and `brand` the tokens switch, so every component reads.
+   */
+  tone?: 'light' | 'parchment' | 'dark' | 'brand';
   /** Dark tiles only: the second or third near-black, for where two dark tiles touch. */
   shade?: 1 | 2 | 3;
   /** `hero` sets the headline in the hero size: the one big moment of a screen. */
   size?: 'default' | 'hero';
   /** A glyph or the product mark above everything else (a 44 px check on a confirmation). */
   lead?: ReactNode;
-  /** One short line above the headline, 14 px and quiet. */
+  /** One short line above the headline, 14 px, in gold. */
   eyebrow?: ReactNode;
   /** Two to five words, as on a product page. */
   headline?: ReactNode;
@@ -36,7 +41,7 @@ export interface TileProps {
 }
 
 /**
- * A full-bleed section for a big moment: white, parchment or near-black, edge to edge, no border,
+ * A full-bleed section for a big moment: white, parchment, near-black or maroon, edge to edge, no border,
  * no corner radius, no shadow. The change of surface is the divider. Text inside a tile is centred.
  * Use it directly inside a `<Screen bleed>`.
  */
@@ -61,13 +66,14 @@ export function Tile({
 }: TileProps) {
   const Heading = level === 1 ? 'h1' : level === 2 ? 'h2' : 'h3';
   const dark = tone === 'dark';
+  const toned = dark || tone === 'brand';
   return (
     <Tag
       id={id}
       aria-label={ariaLabel}
-      className={cx(styles.tile, styles[tone], dark && styles[`shade${shade}`], size === 'hero' && styles.hero, fill && styles.fill, className)}
+      className={cx(styles.tile, styles[tone], dark && shade === 2 && styles.shade2, dark && shade === 3 && styles.shade3, size === 'hero' && styles.hero, fill && styles.fill, className)}
       data-tile={tone}
-      data-tone={dark ? 'dark' : undefined}
+      data-tone={toned ? tone : undefined}
     >
       <div className={styles.inner}>
         {lead ? <div className={styles.lead}>{lead}</div> : null}
@@ -75,7 +81,7 @@ export function Tile({
         {headline ? <Heading className={styles.headline}>{headline}</Heading> : null}
         {tagline ? <p className={styles.tagline}>{tagline}</p> : null}
         {actions ? <div className={styles.actions}>{actions}</div> : null}
-        {media ? <div className={cx(styles.media, styles[`media-${mediaWidth}`])}>{media}</div> : null}
+        {media ? <div className={cx(styles.media, MEDIA[mediaWidth])}>{media}</div> : null}
         {children ? <div className={styles.more}>{children}</div> : null}
       </div>
     </Tag>

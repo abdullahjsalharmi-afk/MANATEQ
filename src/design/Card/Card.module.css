@@ -9,6 +9,16 @@
   text-decoration: none;
 }
 
+/* The list item around a card that is a link or an option: the card fills it, so a row of cards stays equal. */
+.item {
+  display: flex;
+  min-width: 0;
+}
+
+.item > .card {
+  flex: 1;
+}
+
 .plain {
   border-color: var(--line);
   background: var(--surface);
@@ -29,28 +39,28 @@
 }
 
 /* padding: 20 on phones, 24 from 735 px (the 1 px border is part of it) */
-.pad-none {
+.padNone {
   padding: 0;
 }
 
-.pad-sm {
+.padSm {
   padding: 11px 16px;
 }
 
-.pad-md {
+.padMd {
   padding: 19px;
 }
 
-.pad-lg {
+.padLg {
   padding: 23px;
 }
 
 @media (min-width: 735px) {
-  .pad-md {
+  .padMd {
     padding: 23px;
   }
 
-  .pad-lg {
+  .padLg {
     padding: 31px;
   }
 }
@@ -78,29 +88,29 @@
   transform: scale(0.985);
 }
 
-/* Selection is a 2 px border in the focus blue and nothing else; the padding gives up 1 px so nothing moves. */
+/* Selection is a 2 px border in the focus colour and nothing else; the padding gives up 1 px so nothing moves. */
 .selected {
   border: 2px solid var(--focus);
 }
 
-.selected.pad-sm {
+.selected.padSm {
   padding: 10px 15px;
 }
 
-.selected.pad-md {
+.selected.padMd {
   padding: 18px;
 }
 
-.selected.pad-lg {
+.selected.padLg {
   padding: 22px;
 }
 
 @media (min-width: 735px) {
-  .selected.pad-md {
+  .selected.padMd {
     padding: 22px;
   }
 
-  .selected.pad-lg {
+  .selected.padLg {
     padding: 30px;
   }
 }

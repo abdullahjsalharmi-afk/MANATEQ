@@ -79,7 +79,7 @@
   font-size: 0.6176rem;
   font-weight: var(--w-strong);
   line-height: 16px;
-  letter-spacing: 0;
+  letter-spacing: var(--ls-caption);
   text-align: center;
   font-variant-numeric: tabular-nums;
 }

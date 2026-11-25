@@ -8,10 +8,14 @@
   padding-block-end: var(--chrome-bottom, 0px);
 }
 
-/* A near-black screen (the welcome): the tokens inside switch through data-tone="dark". */
+/* A screen that is one tile from edge to edge: the maroon welcome, or a near-black screen.
+   The tokens inside switch through data-tone. */
 .dark {
   background: var(--tile-1);
-  color: var(--ink);
+}
+
+.brand {
+  background: var(--brand);
 }
 
 /* The shared column: centred, with the page gutters. The max-width counts the gutters. */
@@ -21,15 +25,15 @@
   padding-inline: var(--gutter);
 }
 
-.w-form {
+.wForm {
   max-width: calc(692px + 2 * var(--gutter));
 }
 
-.w-content {
+.wContent {
   max-width: calc(var(--content-max) + 2 * var(--gutter));
 }
 
-.w-grid {
+.wGrid {
   max-width: calc(var(--grid-max) + 2 * var(--gutter));
 }
 
@@ -41,12 +45,23 @@
   padding-block-start: var(--bar-safe, 0px);
 }
 
+/* On a screen that is one tile, the bars are that tile's colour, solid: at rest they are part of the surface. */
 .dark .bar,
 .dark .actionBar {
-  background: color-mix(in srgb, var(--tile-1) 80%, transparent);
+  background: var(--tile-1);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
-/* The hairline on the content side, once something scrolls underneath. */
+.brand .bar,
+.brand .actionBar {
+  background: var(--brand);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* The hairline on the content side. It is drawn whenever the bar carries the page name or content has
+   scrolled underneath: only a large title still in view leaves the bar bare. */
 .bar::after {
   content: '';
   position: absolute;
@@ -91,7 +106,7 @@
   margin-inline-start: -11px;
 }
 
-.barStart > :global([data-icon-button='soft']):first-child {
+.barStart > :global([data-icon-button='soft'][data-size='sm']):first-child {
   margin-inline: -6px 2px;
 }
 
@@ -103,13 +118,14 @@
   margin-inline-start: -8px;
 }
 
+/* The page name: 17 px on phones, where it shares the bar with the capsule and the actions; 21 px from 735 px. */
 .barTitle {
   min-width: 0;
   overflow: hidden;
-  font-size: var(--t-heading);
+  font-size: var(--t-body);
   font-weight: var(--w-strong);
   line-height: var(--lh-heading);
-  letter-spacing: var(--ls-heading);
+  letter-spacing: var(--ls-body);
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 0;
@@ -199,6 +215,11 @@
 }
 
 @media (min-width: 735px) {
+  .barTitle {
+    font-size: var(--t-heading);
+    letter-spacing: var(--ls-heading);
+  }
+
   .contentLarge,
   .heroRow {
     padding-block-start: var(--s-6);

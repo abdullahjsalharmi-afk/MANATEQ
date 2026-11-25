@@ -15,7 +15,7 @@ export interface GridProps extends HTMLAttributes<HTMLElement> {
 /** The responsive card grid: equal columns, cards of equal height in a row, 12 px apart on phones and 20 to 24 px on wide screens. */
 export function Grid({ children, columns = 3, compact = false, as: Tag = 'div', className, ...rest }: GridProps) {
   return (
-    <Tag className={cx(styles.grid, styles[`columns${columns}`], compact && styles.compact, className)} data-columns={columns} {...rest}>
+    <Tag className={cx(styles.grid, columns === 3 && styles.columns3, columns === 4 && styles.columns4, compact && styles.compact, className)} data-columns={columns} {...rest}>
       {children}
     </Tag>
   );

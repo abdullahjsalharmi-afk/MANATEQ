@@ -23,11 +23,13 @@ export interface CardProps extends Omit<HTMLAttributes<HTMLElement>, 'onClick'> 
   as?: 'div' | 'section' | 'article' | 'li';
 }
 
+const PAD = { none: styles.padNone, sm: styles.padSm, md: styles.padMd, lg: styles.padLg } as const;
+
 /** A surface that groups related content: hairline, 18 px corners, no shadow. Never put a card inside a card. */
 export function Card({ children, tone = 'plain', pad = 'md', to, onClick, selected, media, as: Tag = 'div', className, ...rest }: CardProps) {
   const interactive = to !== undefined || onClick !== undefined;
   const look = tone === 'accent' ? 'plain' : tone;
-  const classes = cx(styles.card, styles[look], styles[`pad-${pad}`], interactive && styles.interactive, selected && styles.selected, className);
+  const classes = cx(styles.card, styles[look], PAD[pad], interactive && styles.interactive, selected && styles.selected, className);
   const body = (
     <>
       {media ? (
@@ -38,11 +40,13 @@ export function Card({ children, tone = 'plain', pad = 'md', to, onClick, select
       {children}
     </>
   );
+  // In a list (`as="li"`) a link or an option keeps its list item around it.
+  const inList = (node: ReactNode) => (Tag === 'li' ? <li className={styles.item}>{node}</li> : node);
   if (to !== undefined) {
-    return (
+    return inList(
       <Link to={to} className={classes} aria-label={rest['aria-label']} aria-current={selected ? 'true' : undefined} onClick={onClick}>
         {body}
-      </Link>
+      </Link>,
     );
   }
   if (onClick !== undefined) {
@@ -52,10 +56,10 @@ export function Card({ children, tone = 'plain', pad = 'md', to, onClick, select
       event.preventDefault();
       event.currentTarget.click();
     };
-    return (
+    return inList(
       <div {...rest} role="button" tabIndex={0} className={classes} onClick={onClick} onKeyDown={onKeyDown} aria-pressed={selected ?? undefined}>
         {body}
-      </div>
+      </div>,
     );
   }
   return (

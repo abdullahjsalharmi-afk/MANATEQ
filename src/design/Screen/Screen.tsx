@@ -9,6 +9,9 @@ import { cx } from '../cx';
 import { designStrings } from '../strings';
 import styles from './Screen.module.css';
 
+/** The three column widths, shared by the bar, the content and the action bar. */
+const WIDTH = { form: styles.wForm, content: styles.wContent, grid: styles.wGrid } as const;
+
 export interface ScreenProps {
   /** The screen's name: shown large at the top of tab roots, or in the bar of every other screen. */
   title: string;
@@ -16,6 +19,8 @@ export interface ScreenProps {
   large?: boolean;
   /** One line under the large title. */
   subtitle?: ReactNode;
+  /** Keep the name out of the bar, where the content already shows it (the welcome). The h1 stays for assistive technology. */
+  hideTitle?: boolean;
   /** `back` for inner screens (a chevron), `close` for flows (a circle), `none` for tab roots. */
   nav?: 'none' | 'back' | 'close';
   /** Where "back" goes when there is no previous screen (deep link). Default: home. */
@@ -39,8 +44,11 @@ export interface ScreenProps {
   bleed?: boolean;
   /** The width of the column, the bar and the action bar: `form` 692 px, `content` 980 px (default), `grid` 1440 px. */
   width?: ContainerWidth;
-  /** `dark` makes the whole screen a near-black surface with a dark frosted bar (the welcome). Default `page`. */
-  tone?: 'page' | 'dark';
+  /**
+   * `brand` makes the whole screen the maroon tile, bar included (the welcome); `dark` the near-black one.
+   * Inside, the tokens switch, so every component reads. Default `page`.
+   */
+  tone?: 'page' | 'dark' | 'brand';
   children: ReactNode;
   className?: string;
 }
@@ -53,6 +61,7 @@ export function Screen({
   title,
   large = false,
   subtitle,
+  hideTitle = false,
   nav = 'none',
   backTo = '/',
   onNav,
@@ -72,7 +81,7 @@ export function Screen({
   const heroRef = useRef<HTMLDivElement>(null);
   const [collapsed, setCollapsed] = useState(!large);
   const [scrolled, setScrolled] = useState(false);
-  const dark = tone === 'dark';
+  const toned = tone === 'dark' || tone === 'brand';
 
   // Move focus to the new screen after a navigation, so keyboard and screen-reader users land on it.
   useEffect(() => {
@@ -100,12 +109,19 @@ export function Screen({
     return () => observer.disconnect();
   }, [large]);
 
-  // A dark screen colours the browser chrome to match while it is open.
+  // A screen that is one colour from edge to edge colours the browser chrome and the canvas behind the page to match.
   useEffect(() => {
-    if (!dark) return;
-    setChromeColor(getComputedStyle(document.documentElement).getPropertyValue('--tile-1').trim() || null);
-    return () => setChromeColor(null);
-  }, [dark]);
+    if (!toned) return;
+    const root = document.documentElement;
+    const color = getComputedStyle(root).getPropertyValue(tone === 'brand' ? '--brand' : '--tile-1').trim();
+    if (!color) return;
+    setChromeColor(color);
+    root.style.setProperty('background', color);
+    return () => {
+      setChromeColor(null);
+      root.style.removeProperty('background');
+    };
+  }, [toned, tone]);
 
   const hero = large ? (
     <div ref={heroRef} className={styles.hero}>
@@ -115,20 +131,20 @@ export function Screen({
   ) : (
     <h1 className="visually-hidden">{title}</h1>
   );
-  const column = cx(styles.column, styles[`w-${width}`]);
+  const column = cx(styles.column, WIDTH[width]);
 
   return (
-    <div className={cx(styles.screen, dark && styles.dark, footer ? styles.hasFooter : null, className)} data-tone={dark ? 'dark' : undefined}>
+    <div className={cx(styles.screen, toned && styles[tone], footer ? styles.hasFooter : null, className)} data-tone={toned ? tone : undefined}>
       <ScreenBar
         ref={barRef}
         title={title}
-        showTitle={collapsed}
+        showTitle={collapsed && !hideTitle}
         nav={nav}
         navLabel={navLabel}
         onNav={onNav ?? (() => back(backTo))}
         actions={actions}
         header={header}
-        line={scrolled}
+        line={scrolled || (collapsed && !hideTitle)}
         width={width}
       />
 
@@ -164,7 +180,7 @@ export interface ScreenBarProps {
   onNav?: () => void;
   actions?: ReactNode;
   header?: ReactNode;
-  /** Draw the hairline under the bar (once content scrolls beneath it). */
+  /** Draw the hairline under the bar. */
   line?: boolean;
   width?: ContainerWidth;
   /** Draw the bar in the flow of the page instead of pinning it (documentation only). */
@@ -180,7 +196,7 @@ export function ScreenBar({ title, showTitle = true, nav = 'none', navLabel, onN
   const t = useT(designStrings);
   return (
     <header ref={ref} className={cx(styles.bar, 'mq-frost', line && !header && styles.barLine, inline && styles.barInline)}>
-      <div className={cx(styles.column, styles[`w-${width}`], styles.barInner)}>
+      <div className={cx(styles.column, WIDTH[width], styles.barInner)}>
         <div className={styles.barStart}>
           {nav === 'back' ? <IconButton icon={ChevronLeft} flip label={navLabel ?? t('back')} onClick={onNav} /> : null}
           {nav === 'close' ? <IconButton icon={X} variant="soft" size="sm" label={navLabel ?? t('close')} onClick={onNav} /> : null}
@@ -234,7 +250,7 @@ export function ActionBar({ children, context, width = 'content', inline = false
 
   return (
     <div ref={ref} className={cx(styles.actionBar, 'mq-frost', inline && styles.actionInline)} data-action-bar="">
-      <div className={cx(styles.column, styles[`w-${width}`], styles.actionInner)}>
+      <div className={cx(styles.column, WIDTH[width], styles.actionInner)}>
         {context ? <div className={styles.actionContext}>{context}</div> : null}
         <div className={styles.actionButtons}>{children}</div>
       </div>

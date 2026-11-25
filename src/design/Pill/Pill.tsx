@@ -4,7 +4,7 @@ import { cx } from '../cx';
 import { Icon } from '../Icon/Icon';
 import styles from './Pill.module.css';
 
-/** `gold` ("verified") and `info` are the accent: the system has one accent colour. */
+/** `accent` is the investor's turn or a category; `gold` marks "verified / official"; the rest are states. */
 export type Tone = 'neutral' | 'accent' | 'ok' | 'warn' | 'bad' | 'info' | 'gold';
 
 export interface PillProps {

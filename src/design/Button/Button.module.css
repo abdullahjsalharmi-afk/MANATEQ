@@ -1,5 +1,6 @@
-/* Two button grammars: pills for actions, compact rectangles for utility. Pressed is always a small
-   scale-down; nothing has a shadow; the colour never jumps. */
+/* Two button grammars: accent pills for actions, compact rectangles for utility. The accent is the one of
+   the surface (maroon on light, gold on dark, paper on the maroon tile): the tokens switch by themselves.
+   Pressed is always a small scale-down; nothing has a shadow; the colour never jumps. */
 .button {
   --btn: var(--accent); /* the fill of the pill */
   --btn-hover: var(--accent-press);
@@ -32,15 +33,8 @@
 
 .danger {
   --btn: var(--bad);
-  --btn-hover: color-mix(in srgb, var(--bad) 88%, var(--black));
+  --btn-hover: color-mix(in srgb, var(--bad) 88%, var(--ink));
   --btn-ink: var(--bad);
-}
-
-/* On dark surfaces the error colour is light, so the label on it turns dark to stay readable. */
-:global([data-theme='dark']) .danger,
-:global([data-tone='dark']) .danger {
-  --on-btn: var(--black);
-  --btn-hover: color-mix(in srgb, var(--bad) 88%, var(--on-accent));
 }
 
 .content {
@@ -85,7 +79,7 @@
   font-size: 1.0588rem;
   font-weight: var(--w-light);
   line-height: 1.222;
-  letter-spacing: 0;
+  letter-spacing: var(--ls-caption);
 }
 
 /* Compact buttons look small but keep a 44 px target. */
@@ -130,10 +124,11 @@
   color: var(--btn-ink);
 }
 
+/* The label takes the colour that sits on a strong fill: paper on ink in the light, ink on paper in the dark. */
 .utility {
   border-radius: var(--r-tile);
   background: var(--ink);
-  color: var(--surface);
+  color: var(--on-accent);
 }
 
 .pearl {
@@ -273,7 +268,7 @@
   font-size: 0.6176rem;
   font-weight: var(--w-strong);
   line-height: 16px;
-  letter-spacing: 0;
+  letter-spacing: var(--ls-caption);
   text-align: center;
   font-variant-numeric: tabular-nums;
 }

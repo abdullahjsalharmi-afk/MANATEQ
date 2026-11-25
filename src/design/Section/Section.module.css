@@ -47,7 +47,7 @@
   color: var(--ink-3);
 }
 
-/* The quiet link: blue text, a small chevron when it leads somewhere. The target is 44 px tall. */
+/* The quiet link: accent text, a small chevron when it leads somewhere. The target is 44 px tall. */
 .action {
   position: relative;
   flex: none;

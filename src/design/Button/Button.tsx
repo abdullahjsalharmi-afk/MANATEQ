@@ -6,7 +6,7 @@ import { Icon } from '../Icon/Icon';
 import styles from './Button.module.css';
 
 /**
- * `primary` blue pill · `secondary` ghost pill · `quiet` text link · `danger` the pill in the error colour ·
+ * `primary` accent pill · `secondary` ghost pill · `quiet` text link · `danger` the pill in the error colour ·
  * `utility` compact dark rectangle · `pearl` quiet light capsule.
  */
 export type ButtonVariant = 'primary' | 'secondary' | 'quiet' | 'danger' | 'utility' | 'pearl';
@@ -113,13 +113,13 @@ export function IconButton({ icon, label, variant = 'plain', size = 'md', flip =
   );
   if (to !== undefined) {
     return (
-      <Link to={to} className={classes} aria-label={label} title={label} data-icon-button={variant}>
+      <Link to={to} className={classes} aria-label={label} title={label} data-icon-button={variant} data-size={size}>
         {content}
       </Link>
     );
   }
   return (
-    <button type={type ?? 'button'} className={classes} aria-label={label} title={label} data-icon-button={variant} {...rest}>
+    <button type={type ?? 'button'} className={classes} aria-label={label} title={label} data-icon-button={variant} data-size={size} {...rest}>
       {content}
     </button>
   );

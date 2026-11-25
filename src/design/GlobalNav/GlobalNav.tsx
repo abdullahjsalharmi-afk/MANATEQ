@@ -28,7 +28,7 @@ export interface GlobalNavProps {
 }
 
 /**
- * The global bar of wide screens (from 834 px): black, 44 px, pinned to the top. The mark, the product
+ * The global bar of wide screens (from 834 px): near-black, 44 px, pinned to the top. The mark, the product
  * name and the prototype capsule at the inline start; the five destinations as quiet 12 px links; search
  * and the language switch at the inline end. Below 834 px it does not exist: phones use the tab bar.
  */

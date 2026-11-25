@@ -4,11 +4,11 @@
   display: block;
 }
 
-/* The tile variant, like the app icon: an ink tile with the mark in the surface colour. */
+/* The tile variant, like the app icon: the maroon tile with the mark in white (data-tone="brand" switches the ink). */
 .tile {
-  color: var(--surface);
+  color: var(--ink);
 }
 
 .tileBg {
-  fill: var(--ink);
+  fill: var(--brand);
 }
